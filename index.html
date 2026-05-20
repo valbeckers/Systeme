@@ -1472,10 +1472,12 @@ function App(){
         if(obj.tiers && obj.tiers.length>0){
           const isMax = d >= (obj.target||obj.tiers[obj.tiers.length-1].at);
           if(isMax) return null;
-          return h("button",{
-            onClick:e=>{inputs.current[obj.id]="1";validate(obj,e);},
-            style:"width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px"
-          },"+1 "+obj.unit);
+          return h("div",{style:"display:flex;gap:8px;margin-top:8px"},
+            h("button",{
+              onClick:e=>{inputs.current[obj.id]="1";validate(obj,e);},
+              style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px;transition:all .2s"
+            },"+1 "+obj.unit)
+          );
         }
         const QUICK_IDS=["push","abs","squats","calves","reading","flex","balance","grips","med","water","mob","footwork"];
         const unitLabel={push:"rep",abs:"rep",squats:"rep",calves:"rep",reading:"page",flex:"min",balance:"min",grips:"min",med:"min",water:"verre",mob:"min",footwork:"min"};
