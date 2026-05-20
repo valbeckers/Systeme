@@ -138,7 +138,7 @@ html,body{height:100dvh;width:100%;overflow:hidden;background:#000000;color:var(
 @keyframes puatomGlitch{0%,65%,100%{transform:none;filter:none}67%{transform:translate(-4px,0);filter:hue-rotate(90deg) brightness(1.5)}69%{transform:translate(4px,0);filter:hue-rotate(-90deg)}71%{transform:translate(-2px,0);filter:none}73%{transform:none}75%{transform:translate(3px,-2px);filter:hue-rotate(60deg) brightness(1.3)}77%{transform:none;filter:none}}
 @keyframes pubadgePulse{0%,100%{text-shadow:0 0 20px #a855f7;opacity:.85}50%{text-shadow:0 0 40px #a855f7,0 0 80px #a855f744;opacity:1}}
 @keyframes pulineSlide{0%{transform-origin:center;transform:scaleX(0);opacity:0}50%{transform:scaleX(1);opacity:1}100%{transform:scaleX(0);opacity:0}}
-@keyframes capCardPulse{0%,100%{box-shadow:0 0 0 0 #fb923c44}50%{box-shadow:0 0 0 6px #fb923c00}}
+@keyframes capCardPulse{0%,100%{box-shadow:0 0 0 0 #ef444444}50%{box-shadow:0 0 0 6px #ef444400}}
 </style>
 </head>
 <body>
@@ -1411,7 +1411,7 @@ function App(){
     const remainingToCap = hasCap ? Math.max(0, capThreshold - d) : 0;
     // Couleur de la barre : du rang vers orange à l'approche du cap
     const rankColor = rank.color || "#9ca3af";
-    const capColor = "#fb923c";
+    const capColor = "#ef4444";
     let barColor = rankColor;
     if(isCapped){ barColor = capColor; }
     else if(isNearCap){
@@ -1427,7 +1427,7 @@ function App(){
       ? "width:100%;background:"+capColor
       : "width:"+Math.min(100,pct)+"%;background:"+barColor)
       + (haloShadow?";box-shadow:"+haloShadow:"");
-    return h("div",{class:"qi "+(d>=effectiveT&&effectiveT>0?"done":""),style:(isDebt&&!done?"border-color:#ef444466;background:rgba(239,68,68,0.04)":"")+(isCapped?";border-color:"+capColor+"66;background:linear-gradient(135deg,rgba(255,255,255,0.02),rgba(251,146,60,0.06))":"")},
+    return h("div",{class:"qi "+(d>=effectiveT&&effectiveT>0?"done":""),style:(isDebt&&!done?"border-color:#ef444466;background:rgba(239,68,68,0.04)":"")+(isCapped?";border-color:"+capColor+"66;background:linear-gradient(135deg,rgba(255,255,255,0.02),rgba(239,68,68,0.06))":"")},
       h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:center;gap:8px"},
         h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"},
           h("span",{style:isCapped?"filter:grayscale(60%);opacity:0.7;flex-shrink:0":"flex-shrink:0"},obj.icon),
@@ -1536,7 +1536,7 @@ function App(){
     const isCapped = hasCap && d >= capThreshold;
     const capProgress = hasCap ? Math.min(1, d/capThreshold) : 0;
     const isNearCap = hasCap && !isCapped && capProgress >= 0.75;
-    const capColor = "#fb923c";
+    const capColor = "#ef4444";
     const rankColor = rank.color || "#9ca3af";
     // Halo selon état (priorité : cap > done)
     const haloShadow = isCapped
@@ -2501,8 +2501,8 @@ function App(){
   function CapOverlay(){
     if(!capAnim)return null;
     const {obj,xMult}=capAnim;
-    const capColor="#fb923c";
-    const capGlow="#fb923c66";
+    const capColor="#ef4444";
+    const capGlow="#ef444466";
     const particles=Array.from({length:40},(_,i)=>({
       id:i,
       left:Math.random()*100,
