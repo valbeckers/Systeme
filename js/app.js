@@ -52,7 +52,7 @@ const DEFS = [
   // ─── SANTÉ ────────────────────────────────────────────────────────────
   {id:"water",  name:"Hydratation",     unit:"verre", xpPer:10,  daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDCA7",               base:10, baseHistory:[{until:"2026-04-29",base:8}]},
   {id:"sleep",  name:"8h de sommeil",   unit:"nuit",  xpPer:0,   daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDECF\uFE0F",         base:1,  binary:true, binaryXp:200},
-  {id:"adult",name:"",unit:"jour",xpPer:0,daily:true,weekly:false,optional:false,stat:"Discipline",icon:"🔞",base:1,binary:true,binaryXp:200,penaltyAll:true,startDate:"2026-05-21"},
+  {id:"adult",name:"",unit:"jour",xpPer:0,daily:true,weekly:false,optional:false,stat:"Discipline",icon:"🔴",base:1,binary:true,binaryXp:200,penaltyAll:true,startDate:"2026-05-21"},
   {id:"nosugar",name:"Pas de sucres transform\u00e9s", unit:"jour", xpPer:0, daily:true, weekly:false,optional:true, stat:"Sante", icon:"\uD83C\uDF4E",            base:1,  binary:true, binaryXp:200, penaltyXp:200},
   {id:"protein",name:"Repas \u00e9quilibr\u00e9",unit:"repas", xpPer:0,   daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83C\uDF4C",               base:1, target:2, validateAt:1, startDate:"2026-05-20", tiers:[{at:1,xp:200,stat:"Sante"},{at:2,xp:200,stat:"Sante",xp2:200,stat2:"Discipline"}]},
   // ─── FORCE ────────────────────────────────────────────────────────────
@@ -65,6 +65,7 @@ const DEFS = [
   {id:"reading",name:"Lecture",unit:"min",xpPer:10,daily:true,weekly:false,optional:false,stat:"Intelligence",icon:"📚",base:20,stat2:"Concentration",xpPer2:0,startDate:"2026-05-21",concBlock:10,concBlockXp:50},
   {id:"pod",    name:"\u00c9couter 1 podcast", unit:"jour", xpPer:0, daily:true, weekly:false,optional:true, stat:"Intelligence", icon:"\uD83C\uDF99\uFE0F",   base:1, binary:true, binaryXp:200},
   // ─── CONCENTRATION ────────────────────────────────────────────────────
+  {id:"memo",   name:"M\u00e9morisation", unit:"min",   xpPer:15,  daily:true, weekly:false,optional:true, stat:"Concentration",  icon:"\uD83E\uDDE0",               base:15, fixedBase:true, bonusHidden:true},
   {id:"med",    name:"M\u00e9ditation", unit:"min",   xpPer:15,  daily:true, weekly:false,optional:true, stat:"Concentration",  icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F", base:15, fixedBase:true, cap:2},
   // ─── ENDURANCE ────────────────────────────────────────────────────────
   {id:"run",    name:"Course",          unit:"km",    xpPer:100, daily:false,weekly:true, optional:false,stat:"Endurance",      icon:"\uD83C\uDFC3\uD83C\uDFFB",   base:7,  stat2:"Agilite", xpPer2:20, cap:3},
@@ -73,45 +74,46 @@ const DEFS = [
   {id:"flex",   name:"Souplesse",       unit:"min",   xpPer:50,  daily:true, weekly:false,optional:true, stat:"Agilite",        icon:"\uD83E\uDD38\uD83C\uDFFB",   base:15, fixedBase:true, cap:2},
   {id:"balance",name:"\u00c9quilibre sur un pied",unit:"min",xpPer:10,daily:true,weekly:false,optional:false,stat:"Agilite",    icon:"\uD83E\uDDB6\uD83C\uDFFB",   base:5, startDate:"2026-05-15", cap:3},
   // ─── DISCIPLINE ───────────────────────────────────────────────────────
-  {id:"mindmeal",name:"Manger sans stimulation",unit:"jour",xpPer:0,daily:true,weekly:false,optional:true,stat:"Sante",icon:"📵",base:1,binary:true,binaryXp:250,startDate:"2026-05-21"},
+  {id:"nophone",name:"T\u00e9l\u00e9phone hors de port\u00e9e 3h",unit:"jour",xpPer:0,daily:true,weekly:false,optional:true,stat:"Discipline",icon:"\uD83D\uDCF5", base:1, binary:true, binaryXp:200, bonusHidden:true},
+  {id:"mindmeal",name:"Manger sans stimulation",unit:"repas",xpPer:0,daily:true,weekly:false,optional:true,stat:"Sante",icon:"🧠",base:1,target:2,validateAt:1,startDate:"2026-05-21",tiers:[{at:1,xp:200,stat:"Sante"},{at:2,xp:200,stat:"Sante",xp2:200,stat2:"Discipline"}]},
 ];
 
 // Quetes speciales — par stat (25 au total)
 const SP = {
   Sante:[
-    {id:"sp_sun",     name:"10min de lumi\u00e8re naturelle", icon:"\u2600\uFE0F",                              unit:"min",  target:10,  xp:250, days:1, binary:true, desc:"10 min de lumi\u00e8re naturelle"},
-    {id:"sp_fruits",  name:"Manger 5 fruits & l\u00e9gumes",  icon:"\uD83C\uDF4F",                              unit:"f/l",  target:5,   xp:250, days:1, binary:true, desc:"Manger 5 fruits et l\u00e9gumes"},
-    {id:"sp_breath",  name:"10min de coh\u00e9rence cardiaque",icon:"\uD83D\uDC93",                             unit:"jour", target:1,   xp:250, days:1, binary:true, desc:"10 min de respiration contr\u00f4l\u00e9e"},
-    {id:"sp_nojunk",  name:"Pas de junk-food",                icon:"\uD83C\uDF55",                              unit:"jour", target:1,   xp:250, days:1, binary:true, desc:"Z\u00e9ro junk-food"},
+    {id:"sp_sun",     name:"10min de lumi\u00e8re naturelle", icon:"\u2600\uFE0F",                              unit:"min",  target:10,  xp:150, days:1, binary:true, desc:"10 min de lumi\u00e8re naturelle"},
+    {id:"sp_fruits",  name:"Manger 5 fruits & l\u00e9gumes",  icon:"\uD83C\uDF4F",                              unit:"f/l",  target:5,   xp:150, days:1, binary:true, desc:"Manger 5 fruits et l\u00e9gumes"},
+    {id:"sp_breath",  name:"10min de coh\u00e9rence cardiaque",icon:"\uD83D\uDC93",                             unit:"jour", target:1,   xp:150, days:1, binary:true, desc:"10 min de respiration contr\u00f4l\u00e9e"},
+    {id:"sp_nojunk",  name:"Pas de junk-food",                icon:"\uD83C\uDF55",                              unit:"jour", target:1,   xp:150, days:1, binary:true, desc:"Z\u00e9ro junk-food"},
     {id:"sp_fasting", name:"Je\u00fbne 24h",                  icon:"\u23F3",                                    unit:"jour", target:1,   xp:500, days:1, binary:true, desc:"Je\u00fbne 24h complet"},
   ],
   Force:[
     {id:"sp_pull",    name:"30 tractions",        icon:"\u270A\uD83C\uDFFB",                                   unit:"rep",  target:30,  xp:300, days:1, desc:"30 tractions"},
     {id:"sp_dips",    name:"100 dips",            icon:"\uD83D\uDC4A\uD83C\uDFFB",                             unit:"rep",  target:100, xp:300, days:1, desc:"100 dips"},
     {id:"sp_lunge",   name:"100 fentes",          icon:"\uD83E\uDDBF",                                         unit:"rep",  target:100, xp:300, xp2:100, stat2:"Endurance", days:1, desc:"100 fentes march\u00e9es"},
-    {id:"sp_plank",   name:"10min de gainage",    icon:"\uD83E\uDDCE\uD83C\uDFFB\u200D\u2642\uFE0F",           unit:"min",  target:10,  xp:300, xp2:100, stat2:"Endurance", days:1, desc:"10 min de gainage"},
+    {id:"sp_plank",   name:"10min de gainage",    icon:"\uD83E\uDDCE\uD83C\uDFFB\u200D\u2642\uFE0F",           unit:"min",  target:10,  xp:250, xp2:100, stat2:"Endurance", days:1, desc:"10 min de gainage"},
     {id:"sp_deadhang",name:"10min de dead hang",  icon:"\u270A\uD83C\uDFFB",                                   unit:"min",  target:10,  xp:250, xp2:100, stat2:"Endurance", days:1, desc:"10 min de dead hang"},
-    {id:"sp_wallsit", name:"10min de chaise",     icon:"\uD83E\uDE91",                                         unit:"min",  target:10,  xp:300, xp2:300, stat2:"Endurance", days:1, desc:"10 min de chaise"},
+    {id:"sp_wallsit", name:"10min de chaise",     icon:"\uD83E\uDE91",                                         unit:"min",  target:10,  xp:250, xp2:100, stat2:"Endurance", days:1, desc:"10 min de chaise"},
   ],
   Intelligence:[
-    {id:"sp_learning", name:"1h d\'apprentissage actif",  icon:"\uD83C\uDF93",                                  unit:"jour",     target:1,  xp:300, xp2:100, stat2:"Concentration", xp3:100, stat3:"Discipline", days:1, binary:true, desc:"1h d\'apprentissage actif"},
-    {id:"sp_memo30",   name:"30min de m\u00e9morisation",icon:"\uD83E\uDDE0",                                  unit:"jour", target:1,  xp:300, xp2:100, stat2:"Concentration", xp3:100, stat3:"Discipline", days:1, binary:true, desc:"30 min de m\u00e9morisation active"},
+    {id:"sp_learning", name:"1h d'apprentissage actif",  icon:"\uD83C\uDF93",                                  unit:"jour",     target:1,  xp:400, xp2:150, stat2:"Concentration", xp3:150, stat3:"Discipline", days:1, binary:true, desc:"1h d'apprentissage actif"},
   ],
   Concentration:[
     {id:"sp_silence30",name:"30min de silence",          icon:"\uD83E\uDD2B",                                  unit:"jour", target:1,  xp:500, xp2:250, stat2:"Discipline", days:1, binary:true, desc:"30 min sans parler ni consommer"},
-    {id:"sp_nophone3h", name:"T\u00e9l\u00e9phone hors de port\u00e9e 3h", icon:"\uD83D\uDCF5",                unit:"jour", target:1, xp:300, xp2:150, stat2:"Discipline", days:1, binary:true, desc:"T\u00e9l\u00e9phone hors de port\u00e9e 3h"},
+    {id:"sp_memo30",   name:"30min de m\u00e9morisation",icon:"\uD83E\uDDE0",                                  unit:"jour", target:1,  xp:500, xp2:250, stat2:"Discipline", days:1, binary:true, desc:"30 min de m\u00e9morisation active"},
+    {id:"sp_nophone3h", name:"T\u00e9l\u00e9phone hors de port\u00e9e 3h", icon:"\uD83D\uDCF5",                unit:"jour", target:1, xp:500, days:1, binary:true, desc:"T\u00e9l\u00e9phone hors de port\u00e9e 3h"},
   ],
   Endurance:[
     {id:"sp_sprint",  name:"10 s\u00e9ries fractionn\u00e9 100m",icon:"\u26A1",                                 unit:"s\u00e9r.",target:10, xp:500, days:1, desc:"10 x 100m sprint/r\u00e9cup", noRestMode:true},
     {id:"sp_stairs",  name:"30 mont\u00e9es d'escaliers", icon:"\uD83E\uDE9C",                                 unit:"A/R",  target:30, xp:250, xp2:100, stat2:"Agilite", days:1, desc:"30 mont\u00e9es/descentes"},
     {id:"sp_jump",    name:"20min de corde \u00e0 sauter",icon:"\uD83D\uDCA6",                                 unit:"min",  target:20, xp:500, xp2:250, stat2:"Agilite", days:1, desc:"20 min de corde \u00e0 sauter", noRestMode:true},
-    {id:"sp_walk30",  name:"30min de marche",     icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F",           unit:"min",  target:30, xp:300, days:1, desc:"30 min de marche"},
+    {id:"sp_walk30",  name:"30min de marche",     icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F",           unit:"min",  target:30, xp:250, days:1, desc:"30 min de marche"},
   ],
   Agilite:[
-    {id:"sp_flow20",  name:"20min d\'animal flow", icon:"\uD83D\uDC0A",                                         unit:"min",  target:20, xp:750, days:1, tiers:[{at:10,xp:250,stat:"Agilite"},{at:20,xp:500,stat:"Agilite"}], desc:"20 min d\'animal flow (palier \u00e0 10min)"},
-    {id:"sp_flex30",  name:"30min de souplesse",  icon:"\uD83E\uDD38\uD83C\uDFFB",                             unit:"jour", target:1,  xp:1000, days:1, binary:true, desc:"30 min de souplesse"},
+    {id:"sp_flow20",  name:"20min d'animal flow", icon:"\uD83D\uDC0A",                                         unit:"min",  target:20, xp:1000, days:1, tiers:[{at:10,xp:500,stat:"Agilite"},{at:20,xp:500,stat:"Agilite"}], desc:"20 min d'animal flow (palier \u00e0 10min)"},
+    {id:"sp_flex30",  name:"30min de souplesse",  icon:"\uD83E\uDD38\uD83C\uDFFB",                             unit:"jour", target:1,  xp:500, days:1, binary:true, desc:"30 min de souplesse"},
     {id:"sp_fluide",  name:"15min de flow martial", icon:"\uD83C\uDF0A",                              unit:"min",  target:15, xp:375, days:1, desc:"Capoeira flow / mouvement continu sans rupture"},
-    {id:"sp_silent",  name:"10min de d\u00e9placements silencieux", icon:"\uD83D\uDC08",                          unit:"min",  target:10, xp:300, days:1, desc:"Marcher sans bruit (escaliers, pi\u00e8ces)"},
+    {id:"sp_silent",  name:"10min de d\u00e9placements silencieux", icon:"\uD83D\uDC08",                          unit:"min",  target:10, xp:250, days:1, desc:"Marcher sans bruit (escaliers, pi\u00e8ces)"},
     {id:"sp_balance_eyes", name:"10min d'\u00e9quilibre yeux ferm\u00e9s", icon:"\uD83E\uDDB6\uD83C\uDFFB",          unit:"min",  target:10, xp:200, xp2:50, stat2:"Concentration", days:1, desc:"\u00c9quilibre sur un pied yeux ferm\u00e9s"},
     {id:"sp_footwork", name:"10min de footwork rapide", icon:"\u26A1",                                            unit:"min",  target:10, xp:250, step:5, days:1, desc:"Footwork rapide (carrelage, devant/derri\u00e8re/c\u00f4t\u00e9s)"},
   ],
@@ -130,15 +132,15 @@ const SQ_TIER_LABEL = {mineure:"Mineure", majeure:"Majeure", legendaire:"L\u00e9
 const EPREUVE_COOLDOWN = {mineure:2*86400000, majeure:5*86400000, legendaire:7*86400000};
 const EPREUVES = [
   // 12 épreuves au total, sans notion de tier
-  {id:"ep_150pull",  name:"150 tractions",                      icon:"\u270A\uD83C\uDFFB",                       stat:"Force",        xp:3000, days:7, unit:"rep", target:150,
+  {id:"ep_150pull",  name:"150 tractions",                      icon:"\u270A\uD83C\uDFFB",                       stat:"Force",        xp:2500, days:7, unit:"rep", target:150,
     desc:"Atteindre 150 tractions en 7 jours"},
   {id:"ep_wallsit60",name:"35min de chaise",                    icon:"\uD83E\uDE91",                             stat:"Force",        xp:1500, xp2:500, stat2:"Endurance", days:7, unit:"min", target:35, dailyTrack:true, dailyTrackMin:5,
     desc:"35 minutes cumul\u00e9es de chaise sur la semaine"},
-  {id:"ep_book",     name:"Lire un livre complet (300+ pages)", icon:"\uD83D\uDCDA",                             stat:"Intelligence", xp:2000, xp2:1000, stat2:"Concentration", days:7, binary:true,
+  {id:"ep_book",     name:"Lire un livre complet (300+ pages)", icon:"\uD83D\uDCDA",                             stat:"Intelligence", xp:1000, xp2:500, stat2:"Concentration", days:7, binary:true,
     desc:"Terminer un livre de 300 pages ou plus"},
-  {id:"ep_project",  name:"4h de travail sur un projet personnel",icon:"\uD83E\uDDE0",                           stat:"Intelligence", xp:1000,  xp2:1000, stat2:"Concentration", xp3:1000, stat3:"Discipline", days:7, unit:"min", target:240,
+  {id:"ep_project",  name:"4h de travail sur un projet personnel",icon:"\uD83E\uDDE0",                           stat:"Intelligence", xp:500,  xp2:500, stat2:"Concentration", xp3:500, stat3:"Discipline", days:7, unit:"min", target:240,
     desc:"4 heures de travail sur un projet personnel"},
-  {id:"ep_medweek",  name:"M\u00e9ditation quotidienne",        icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F",stat:"Concentration",xp:2500, days:7, streak7:true, streakDays:7, unit:"jour", target:7,
+  {id:"ep_medweek",  name:"M\u00e9ditation quotidienne",        icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F",stat:"Concentration",xp:1500, days:7, streak7:true, streakDays:7, unit:"jour", target:7,
     desc:"M\u00e9diter chaque jour pendant 7 jours"},
   {id:"ep_deepwork5",name:"Deep Work 60min",                    icon:"\u26AB",                                   stat:"Concentration",xp:2000, xp2:1000, stat2:"Discipline", days:7, cumDays:true, streakDays:5, unit:"jour", target:5,
     desc:"60 min de deep work 5 jours de suite"},
@@ -146,11 +148,11 @@ const EPREUVES = [
     desc:"Randonn\u00e9e de 5 heures minimum"},
   {id:"ep_10km",     name:"Courir un 10km non-stop",            icon:"\uD83C\uDFC3\uD83C\uDFFB\u200D\u27A1\uFE0F",stat:"Endurance",   xp:2500, xp2:500, stat2:"Agilite", days:7, binary:true,
     desc:"Courir 10km non-stop"},
-  {id:"ep_burpees",  name:"100 burpees",                        icon:"\uD83D\uDD25",                             stat:"Endurance",    xp:2000, xp2:1000, stat2:"Agilite", days:7, unit:"rep", target:100,
+  {id:"ep_burpees",  name:"100 burpees",                        icon:"\uD83D\uDD25",                             stat:"Endurance",    xp:1500, xp2:250, stat2:"Agilite", days:7, unit:"rep", target:100,
     desc:"100 burpees cumul\u00e9s"},
-  {id:"ep_wakeup",   name:"R\u00e9veil \u00e0 la m\u00eame heure",icon:"\uD83C\uDF05",                           stat:"Discipline",   xp:2000, xp2:1000, stat2:"Sante", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
+  {id:"ep_wakeup",   name:"R\u00e9veil \u00e0 la m\u00eame heure",icon:"\uD83C\uDF05",                           stat:"Discipline",   xp:1500, days:7, streak7:true, streakDays:7, unit:"jour", target:7,
     desc:"Se lever \u00e0 la m\u00eame heure 7 jours de suite"},
-  {id:"ep_coldweek", name:"Douche froide 10min quotidienne",    icon:"\u2744\uFE0F",                             stat:"Discipline",   xp:2000, xp2:1000, stat2:"Sante", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
+  {id:"ep_coldweek", name:"Douche froide 10min quotidienne",    icon:"\u2744\uFE0F",                             stat:"Discipline",   xp:1500, days:7, streak7:true, streakDays:7, unit:"jour", target:7,
     desc:"10 min de douche froide chaque jour pendant 7 jours"},
   {id:"ep_noscroll", name:"Pas de doomscrolling",               icon:"\uD83D\uDCF5",                             stat:"Intelligence", xp:2500, days:7, streak7:true, streakDays:7, unit:"jour", target:7,
     desc:"Z\u00e9ro scroll passif pendant 7 jours"},
@@ -160,7 +162,7 @@ const EPREUVES = [
     desc:"Nettoyer compl\u00e8tement une pi\u00e8ce"},
   {id:"ep_mob",      name:"Mobilit\u00e9 matinale",             icon:"\uD83E\uDD38\uD83C\uDFFB\u200D\u2642\uFE0F",stat:"Agilite",     xp:2500, days:7, cumDays:true, streakDays:5, unit:"jour", target:5,
     desc:"Faire 15 min de mobilit\u00e9 5 jours sur 7"},
-  {id:"ep_taichi",   name:"Tai Chi quotidien",                  icon:"\u262F\uFE0F",                             stat:"Agilite",      xp:2000, xp2:1000, stat2:"Concentration", days:7, cumDays:true, streakDays:5, dailyMin:20, unit:"jour", target:5,
+  {id:"ep_taichi",   name:"Tai Chi quotidien",                  icon:"\u262F\uFE0F",                             stat:"Agilite",      xp:800, xp2:200, stat2:"Concentration", days:7, cumDays:true, streakDays:5, dailyMin:20, unit:"jour", target:5,
     desc:"Faire 20 min de Tai Chi 5 jours sur 7"},
 ];
 
