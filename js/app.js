@@ -108,7 +108,7 @@ const SP = {
     {id:"sp_walk30",  name:"30min de marche",     icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F",           unit:"min",  target:30, xp:300, days:1, desc:"30 min de marche"},
   ],
   Agilite:[
-    {id:"sp_flow20",  name:"20min d\'animal flow", icon:"\uD83D\uDC0A",                                         unit:"min",  target:20, xp:750, days:1, tiers:[{at:10,xp:250,stat:"Agilite"},{at:20,xp:500,stat:"Agilite"}], desc:"20 min d\'animal flow (palier \u00e0 10min)"},{at:20,xp:500,stat:"Agilite"}], desc:"20 min d'animal flow (palier \u00e0 10min)"},
+    {id:"sp_flow20",  name:"20min d\'animal flow", icon:"\uD83D\uDC0A",                                         unit:"min",  target:20, xp:750, days:1, tiers:[{at:10,xp:250,stat:"Agilite"},{at:20,xp:500,stat:"Agilite"}], desc:"20 min d\'animal flow (palier \u00e0 10min)"},
     {id:"sp_flex30",  name:"30min de souplesse",  icon:"\uD83E\uDD38\uD83C\uDFFB",                             unit:"jour", target:1,  xp:1000, days:1, binary:true, desc:"30 min de souplesse"},
     {id:"sp_fluide",  name:"15min de flow martial", icon:"\uD83C\uDF0A",                              unit:"min",  target:15, xp:375, days:1, desc:"Capoeira flow / mouvement continu sans rupture"},
     {id:"sp_silent",  name:"10min de d\u00e9placements silencieux", icon:"\uD83D\uDC08",                          unit:"min",  target:10, xp:300, days:1, desc:"Marcher sans bruit (escaliers, pi\u00e8ces)"},
