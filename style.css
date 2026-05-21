@@ -225,3 +225,30 @@ html,body{height:100dvh;width:100%;overflow:hidden;background:#000000;color:var(
   top:-8px !important;
   z-index:2 !important;
 }
+
+
+/* ─── QUEST TITLE FIX — éviter la troncature des noms longs ─────────────── */
+.qhdr{
+  gap:10px;
+  align-items:flex-start;
+}
+
+.qname{
+  min-width:0;
+  flex:1 1 auto;
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+  line-height:1.15;
+}
+
+.qname span:last-child{
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+}
+
+.qhdr > div:last-child{
+  flex:0 0 auto;
+  text-align:right;
+}
