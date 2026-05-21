@@ -202,3 +202,9 @@ html,body{height:100dvh;width:100%;overflow:hidden;background:#000000;color:var(
   max-width:34px !important;
   transform:scale(1.22);
 }
+
+
+/* ─── NAVBAR TOP LINE TWEAK — remonte la ligne haute sans toucher aux icônes ─ */
+.nav{
+  height:calc(64px + env(safe-area-inset-bottom)) !important;
+}
