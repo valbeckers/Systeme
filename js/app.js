@@ -49,6 +49,70 @@ const STATS      = ["Sante","Force","Intelligence","Concentration","Endurance","
 const STAT_COLOR = {Sante:"#ef4444",Force:"#fb923c",Intelligence:"#ec4899",Concentration:"#22d3ee",Endurance:"#f59e0b",Agilite:"#4ade80",Discipline:"#c084fc"};
 const STAT_LBL   = {Sante:"Sant\u00e9",Force:"Force",Intelligence:"Intelligence",Concentration:"Concentration",Endurance:"Endurance",Agilite:"Agilit\u00e9",Discipline:"Discipline"};
 
+function navSvgData(svg){
+  return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+}
+
+function getNavIcon(kind, active=false){
+  const palette = active
+    ? { top:'#f3ecff', mid:'#c9adff', base:'#9f8cff', low:'#7a6bff', glow:'#a855f7' }
+    : { top:'#b8bfd0', mid:'#8f97ab', base:'#717a91', low:'#5f677d', glow:'#303545' };
+  const strokeW = kind === 'quests' ? 1.9 : 2.05;
+  const defs = `
+    <defs>
+      <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${palette.top}"/>
+        <stop offset="55%" stop-color="${palette.mid}"/>
+        <stop offset="100%" stop-color="${palette.low}"/>
+      </linearGradient>
+      <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+        <feDropShadow dx="0" dy="0" stdDeviation="1.8" flood-color="${palette.glow}" flood-opacity="${active ? '0.65' : '0.18'}"/>
+        <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="${palette.glow}" flood-opacity="${active ? '0.28' : '0.06'}"/>
+      </filter>
+    </defs>`;
+  let body = '';
+  if(kind === 'home'){
+    body = `
+      <path d="M6.5 13.8L14 7.3L21.5 13.8" fill="none" stroke="url(#g)" stroke-width="${strokeW}" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M8.4 12.9V21H19.6V12.9" fill="none" stroke="url(#g)" stroke-width="${strokeW}" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M11.9 21V16.6H16.1V21" fill="none" stroke="url(#g)" stroke-width="${strokeW-0.1}" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>`;
+  } else if(kind === 'quests'){
+    body = `
+      <g fill="none" stroke="url(#g)" stroke-width="${strokeW}" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 6.5L21.6 19.1"/>
+        <path d="M19.2 5.9L6.8 18.3"/>
+        <path d="M7.1 20.6L4.7 23"/>
+        <path d="M20.9 20.6L23.3 23"/>
+        <path d="M8.6 7.9L6.5 5.8L8.1 4.2L10.2 6.3" opacity="0.95"/>
+        <path d="M17.8 6.3L19.9 4.2L21.5 5.8L19.4 7.9" opacity="0.95"/>
+        <path d="M12.4 10.3L15.4 13.3" opacity="0.92"/>
+      </g>`;
+  } else if(kind === 'stats'){
+    body = `
+      <rect x="5" y="10.5" width="3.2" height="10.5" rx="1.5" fill="url(#g)" filter="url(#glow)"/>
+      <rect x="10.4" y="7.8" width="3.2" height="13.2" rx="1.5" fill="url(#g)" filter="url(#glow)"/>
+      <rect x="15.8" y="4.9" width="3.2" height="16.1" rx="1.5" fill="url(#g)" filter="url(#glow)"/>
+      <rect x="21.2" y="2.7" width="3.2" height="18.3" rx="1.5" fill="url(#g)" filter="url(#glow)"/>`;
+  } else if(kind === 'history'){
+    body = `
+      <g fill="none" stroke="url(#g)" stroke-width="${strokeW}" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 9.4H3.8V5.2"/>
+        <path d="M4.4 9.1A10 10 0 1 1 7.2 19.5"/>
+        <path d="M14 9V14.1L17.4 16"/>
+      </g>`;
+  } else if(kind === 'codex'){
+    body = `
+      <g fill="none" stroke="url(#g)" stroke-width="${strokeW}" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5.2 7.1C7.4 6.4 9.5 6.2 11.6 6.2C13.4 6.2 14.9 6.5 16 7V21.1C14.9 20.6 13.3 20.3 11.5 20.3C9.3 20.3 7.2 20.6 5.2 21.3Z"/>
+        <path d="M22.8 7.1C20.6 6.4 18.5 6.2 16.4 6.2C14.6 6.2 13.1 6.5 12 7V21.1C13.1 20.6 14.7 20.3 16.5 20.3C18.7 20.3 20.8 20.6 22.8 21.3Z"/>
+        <path d="M12 7.1V21" opacity="0.85"/>
+      </g>`;
+  }
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="28" height="28">${defs}<g filter="url(#glow)">${body}</g></svg>`;
+  return navSvgData(svg);
+}
+
+
 const DEFS = [
   // ─── SANTÉ ────────────────────────────────────────────────────────────
   {id:"water",  name:"Hydratation",     unit:"verre", xpPer:10,  daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDCA7",               base:10, baseHistory:[{until:"2026-04-29",base:8}]},
@@ -2971,63 +3035,6 @@ function App(){
     );
   }
 
-
-  function NavIcon({type}){
-    const common = {
-      class:"nav-svg",
-      viewBox:"0 0 24 24",
-      fill:"none",
-      stroke:"currentColor",
-      strokeWidth:"1.8",
-      strokeLinecap:"round",
-      strokeLinejoin:"round",
-      "aria-hidden":"true"
-    };
-    if(type==="home"){
-      return h("svg",common,
-        h("path",{d:"M4 10.5 12 4l8 6.5"}),
-        h("path",{d:"M6.5 9.5V20h11V9.5"}),
-        h("path",{d:"M9.5 20v-5h5v5"})
-      );
-    }
-    if(type==="quests"){
-      return h("svg",common,
-        h("path",{d:"M6 4l5.2 5.2"}),
-        h("path",{d:"M3.8 6.2 8.7 11"}),
-        h("path",{d:"M5.8 3.8 3.5 6.1l1.7 1.7 2.3-2.3"}),
-        h("path",{d:"M18 4l-5.2 5.2"}),
-        h("path",{d:"M20.2 6.2 15.3 11"}),
-        h("path",{d:"M18.2 3.8l2.3 2.3-1.7 1.7-2.3-2.3"}),
-        h("path",{d:"M8.5 13.5 5 17l2 2 3.5-3.5"}),
-        h("path",{d:"M15.5 13.5 19 17l-2 2-3.5-3.5"}),
-        h("path",{d:"M9 12h6"})
-      );
-    }
-    if(type==="stats"){
-      return h("svg",common,
-        h("path",{d:"M6 19V11"}),
-        h("path",{d:"M12 19V5"}),
-        h("path",{d:"M18 19V8"})
-      );
-    }
-    if(type==="history"){
-      return h("svg",common,
-        h("path",{d:"M4 12a8 8 0 1 0 2.35-5.65"}),
-        h("path",{d:"M4 5v5h5"}),
-        h("path",{d:"M12 8v5l3 2"})
-      );
-    }
-    if(type==="codex"){
-      return h("svg",common,
-        h("path",{d:"M4.5 5.5c2.2-.8 4.4-.4 6.5 1.2V19c-2.1-1.6-4.3-2-6.5-1.2V5.5Z"}),
-        h("path",{d:"M19.5 5.5c-2.2-.8-4.4-.4-6.5 1.2V19c2.1-1.6 4.3-2 6.5-1.2V5.5Z"}),
-        h("path",{d:"M12 6.7V19"})
-      );
-    }
-    return null;
-  }
-
-
   // ─── RENDU PRINCIPAL ──────────────────────────────────────────────────
 
   const parts=Array.from({length:15},(_,i)=>({id:i,s:Math.random()*3+1,l:Math.random()*100,dur:Math.random()*10+8,del:Math.random()*10}));
@@ -3054,23 +3061,23 @@ function App(){
       ),
       h("nav",{class:"nav"},
         h("button",{class:"nbtn "+(tab==="home"?"on":""),onClick:()=>switchTab("home")},
-          h(NavIcon,{type:"home"}),
+          h("img",{src:getNavIcon("home",tab==="home"),alt:"Accueil"}),
           h("span",null,"Accueil")
         ),
         h("button",{class:"nbtn "+(tab==="quests"?"on":""),onClick:()=>switchTab("quests")},
-          h(NavIcon,{type:"quests"}),
+          h("img",{src:getNavIcon("quests",tab==="quests"),alt:"Quêtes"}),
           h("span",null,"Quêtes")
         ),
         h("button",{class:"nbtn "+(tab==="stats"?"on":""),onClick:()=>switchTab("stats")},
-          h(NavIcon,{type:"stats"}),
+          h("img",{src:getNavIcon("stats",tab==="stats"),alt:"Stats"}),
           h("span",null,"Stats")
         ),
         h("button",{class:"nbtn "+(tab==="history"?"on":""),onClick:()=>switchTab("history")},
-          h(NavIcon,{type:"history"}),
+          h("img",{src:getNavIcon("history",tab==="history"),alt:"Historique"}),
           h("span",null,"Historique")
         ),
         h("button",{class:"nbtn "+(tab==="codex"?"on":""),onClick:()=>switchTab("codex")},
-          h(NavIcon,{type:"codex"}),
+          h("img",{src:getNavIcon("codex",tab==="codex"),alt:"Codex"}),
           h("span",null,"Codex")
         )
       ),
