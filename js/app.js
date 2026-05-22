@@ -86,7 +86,7 @@ const SP = {
     {id:"sp_fruits",  name:"Manger 5 fruits & l\u00e9gumes",  icon:"\uD83C\uDF4F",                              unit:"f/l",  target:5,   xp:250, days:1, binary:true, desc:"Manger 5 fruits et l\u00e9gumes"},
     {id:"sp_breath",  name:"10min de coh\u00e9rence cardiaque",icon:"\uD83D\uDC93",                             unit:"jour", target:1,   xp:250, days:1, binary:true, desc:"10 min de respiration contr\u00f4l\u00e9e"},
     {id:"sp_nojunk",  name:"Pas de junk-food",                icon:"\uD83C\uDF55",                              unit:"jour", target:1,   xp:250, days:1, binary:true, desc:"Z\u00e9ro junk-food"},
-    {id:"sp_fasting", name:"Je\u00fbne 24h",                  icon:"\u23F3",                                    unit:"jour", target:1,   xp:500, days:1, binary:true, desc:"Je\u00fbne 24h complet"},
+    {id:"sp_fasting", name:"Je\u00fbne 24h",                  icon:"\u23F3",                                    unit:"jour", target:1,   xp:1000, days:1, binary:true, desc:"Je\u00fbne 24h complet"},
   ],
   Force:[
     {id:"sp_pull",    name:"30 tractions",        icon:"\u270A\uD83C\uDFFB",                                   unit:"rep",  target:30,  xp:300, days:1, desc:"30 tractions"},
