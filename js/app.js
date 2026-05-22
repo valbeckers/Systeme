@@ -1190,7 +1190,7 @@ function App(){
           xp+=b*obj.xpPer;
         }
       } else {
-        // Quêtes obligatoires : 0 XP si objectif non atteint
+        // Quêtes journalières : 0 XP si objectif non atteint
         if(effectiveNext<b){xp=0;}
         else {
           const xpNext=effectiveNext*obj.xpPer;
@@ -1966,7 +1966,7 @@ function App(){
       : objs.filter(o=>o.weekly);
     const obligObjs = [...sortStat(objs.filter(o=>o.daily&&!o.optional)), ...sortStat(weeklyObjs)];
     const secs=[
-      {lb:"Qu\u00eates obligatoires",ob:obligObjs,iw:false,mixed:true},
+      {lb:"Qu\u00eates journalières",ob:obligObjs,iw:false,mixed:true},
       {lb:"Qu\u00eates bonus", ob:sortStat(objs.filter(o=>(o.daily&&o.optional||o.id==="walk")&&!(restMode&&o.id==="walk")&&!o.bonusHidden)), iw:false},
     ];
 
@@ -2067,14 +2067,14 @@ function App(){
           },
           style:"width:100%;margin-top:12px;padding:12px;background:rgba(168,85,247,0.1);border:1px solid #a855f7;border-radius:10px;color:#a855f7;font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:3px;cursor:pointer;text-transform:uppercase;text-shadow:0 0 12px #a855f7"
         },"\u269B\uFE0F Mont\u00e9e en Ascension"),
-        h("div",{style:"height:54px;margin-top:10px;padding-top:0;border-top:1px solid rgba(255,255,255,0.06);display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);align-items:center;justify-items:stretch"},
-          h("div",{style:"width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-sizing:border-box"},
+        h("div",{style:"display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);align-items:center;justify-items:stretch;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)"},
+          h("div",{style:"width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center"},
             h("div",{style:"font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:var(--rc);line-height:1;display:flex;align-items:center;justify-content:center;gap:4px;width:100%"},"\uD83D\uDD25 "+state.streak),
             h("div",{style:"font-size:8px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px;text-align:center;width:100%"},"Streak"),
             bonusGiven&&h("div",{style:"font-size:8px;color:#c084fc;font-family:Orbitron,sans-serif;margin-top:2px;text-align:center;width:100%"},"+250 XP \u2713")
           ),
-          h("div",{style:"width:1px;height:30px;background:rgba(255,255,255,0.06);justify-self:center;align-self:center"}),
-          h("div",{style:"width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-sizing:border-box"},
+          h("div",{style:"width:1px;height:32px;background:rgba(255,255,255,0.06);justify-self:center"}),
+          h("div",{style:"width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center"},
             h("div",{style:"font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:var(--rc);line-height:1;text-align:center;width:100%"},todayXp.toFixed(0)),
             h("div",{style:"font-size:8px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px;text-align:center;width:100%"},"XP du jour")
           )
@@ -2923,7 +2923,7 @@ function App(){
         h("div",{class:"ctitle"},"Codex"),
         h("div",{style:"font-size:12px;color:var(--td);line-height:1.45"},"Catalogue complet des quêtes existantes. Les objectifs des quêtes quotidiennes et hebdomadaires sont calculés au rang actuel.")
       ),
-      h(Section,{id:"obl",title:"⚔️ Quêtes obligatoires",count:required.length},required.map(renderQuest)),
+      h(Section,{id:"obl",title:"⚔️ Quêtes journalières",count:required.length},required.map(renderQuest)),
       h(Section,{id:"bonus",title:"🎁 Quêtes bonus",count:bonus.length+hiddenBonus.length},
         h(Fragment,null,
           bonus.map(renderQuest),
