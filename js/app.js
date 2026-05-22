@@ -2119,6 +2119,17 @@ function App(){
           )
         )
       ),
+      h("div",{class:"card"},
+        h("div",{class:"ctitle"},"🧬 État du personnage"),
+        h("div",{style:"display:flex;align-items:flex-start;gap:12px"},
+          h("div",{style:"font-size:28px;line-height:1"},characterState.icon),
+          h("div",{style:"flex:1;min-width:0"},
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:13px;font-weight:800;letter-spacing:1px;color:"+characterState.color+";text-transform:uppercase"},characterState.name),
+            h("div",{style:"font-size:12px;color:var(--td);line-height:1.35;margin-top:4px"},characterState.desc)
+          )
+        )
+      ),
+
       h("div",{class:"card",style:"border-color:#f59e0b44"},
         h("div",{class:"ctitle",style:"color:"+(activeEp?{mineure:"#fbbf24",majeure:"#f59e0b",legendaire:"#f97316"}[activeEp.tier]||"#f59e0b":"#f59e0b")+";margin-bottom:8px"},"\u00c9preuve"),
         activeEp
@@ -2135,17 +2146,6 @@ function App(){
         h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Qu\u00eate urgente"),
         h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:4px 0;font-family:Orbitron,sans-serif"},"\u23F3 Prochaine qu\u00eate dans "+fmtCD(sqCooldownUntil-now))
       ),
-      h("div",{class:"card"},
-        h("div",{class:"ctitle"},"🧬 État du personnage"),
-        h("div",{style:"display:flex;align-items:flex-start;gap:12px"},
-          h("div",{style:"font-size:28px;line-height:1"},characterState.icon),
-          h("div",{style:"flex:1;min-width:0"},
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:13px;font-weight:800;letter-spacing:1px;color:"+characterState.color+";text-transform:uppercase"},characterState.name),
-            h("div",{style:"font-size:12px;color:var(--td);line-height:1.35;margin-top:4px"},characterState.desc)
-          )
-        )
-      ),
-
       secs.map(({lb,ob,iw,mixed})=>ob.length===0?null:
         h("div",{key:lb,class:"card"},h("div",{class:"ctitle"},lb),ob.map(o=>h(RR,{key:o.id,obj:o,isW:mixed?(o.weekly||o.id==="walk"):iw})))
       )
