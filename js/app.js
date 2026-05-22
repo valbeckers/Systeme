@@ -1,3 +1,4 @@
+
 const { h, render, Fragment } = preact;
 const { useState, useEffect, useRef } = preactHooks;
 
@@ -69,7 +70,7 @@ const DEFS = [
   {id:"med",    name:"M\u00e9ditation", unit:"min",   xpPer:15,  daily:true, weekly:false,optional:true, stat:"Concentration",  icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F", base:15, fixedBase:true, cap:2},
   // ─── ENDURANCE ────────────────────────────────────────────────────────
   {id:"run",    name:"Course",          unit:"km",    xpPer:100, daily:false,weekly:true, optional:false,stat:"Endurance",      icon:"\uD83C\uDFC3\uD83C\uDFFB",   base:7,  stat2:"Agilite", xpPer2:20, cap:3},
-  {id:"walk",   name:"Marche",          unit:"km",    xpPer:50,  daily:false,weekly:false,optional:true, stat:"Endurance",      icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F", base:5, fixedBase:true, bonusHidden:true},
+  {id:"walk",   name:"Marche",          unit:"km",    xpPer:50,  daily:false,weekly:false,optional:true, stat:"Endurance",      icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F", base:5, fixedBase:true},
   // ─── AGILITÉ ──────────────────────────────────────────────────────────
   {id:"flex",   name:"Souplesse",       unit:"min",   xpPer:50,  daily:true, weekly:false,optional:true, stat:"Agilite",        icon:"\uD83E\uDD38\uD83C\uDFFB",   base:15, fixedBase:true, cap:2},
   {id:"balance",name:"\u00c9quilibre sur un pied",unit:"min",xpPer:10,daily:true,weekly:false,optional:false,stat:"Agilite",    icon:"\uD83E\uDDB6\uD83C\uDFFB",   base:5, startDate:"2026-05-15", cap:3},
@@ -602,9 +603,14 @@ function App(){
       const base=getRankBase(obj.id,ri,state.prestige||0);
       const validated=v>=base;
       if(!validated){
-        const p=obj.penaltyXp;
+        if(obj.penaltyAll){
+          totalPenalty+=7000;
+          STATS.forEach(st=>{sxDelta[st]=(sxDelta[st]||0)-1000;});
+          penaltiesApplied.push(obj.id);
+          return;
+        }
+        const p=obj.penaltyXp||0;
         const baseStat=obj.stat;
-        const rangeMult=1; // pas de mult sur p\u00e9nalit\u00e9
         totalPenalty+=p;
         sxDelta[baseStat]=(sxDelta[baseStat]||0)-p;
         penaltiesApplied.push(obj.id);
@@ -1339,7 +1345,7 @@ function App(){
               h("button",{
                 onClick:e=>setBinary(1,e),
                 style:"flex:1;padding:10px;border-radius:8px;border:1px solid "+(validated&&done?"var(--rc)":"rgba(255,255,255,0.08)")+";background:"+(validated&&done?"rgba(255,255,255,0.06)":"rgba(255,255,255,0.02)")+";color:"+(validated&&done?"#4ade80":"rgba(255,255,255,0.7)")+";font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px;transition:all .2s;white-space:nowrap;overflow:hidden"
-              }, validated&&done ? "Succès ✓" : "Succès")
+              }, "Succès ✓")
             )
           : h("div",{style:"display:flex;gap:8px;margin-top:8px"},
               h("button",{
