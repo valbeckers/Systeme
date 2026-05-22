@@ -2264,6 +2264,41 @@ function App(){
   // ─── ONGLET STATS ─────────────────────────────────────────────────────
 
   function Stats(){
+    const statBalance = (()=>{
+      const rows = STATS.map(s=>({
+        id:s,
+        label:STAT_LBL[s]||s,
+        color:STAT_COLOR[s]||"#fff",
+        level:state.stats[s]||0,
+        xp:state.statXp[s]||0
+      })).sort((a,b)=>b.xp-a.xp);
+
+      const strongest = rows[0];
+      const weakest = [...rows].sort((a,b)=>a.xp-b.xp)[0];
+      const avgXp = Math.round(rows.reduce((sum,r)=>sum+r.xp,0)/Math.max(1,rows.length));
+      const gapXp = strongest.xp - weakest.xp;
+      const gapLvl = strongest.level - weakest.level;
+      const weakPct = avgXp>0 ? Math.round((weakest.xp/avgXp)*100) : 100;
+      const strongestShare = avgXp>0 ? Math.round((strongest.xp/avgXp)*100) : 100;
+
+      let status, statusColor, message;
+      if(gapLvl>=10 || weakPct<55){
+        status="Déséquilibre marqué";
+        statusColor="#ef4444";
+        message=(weakest.label||weakest.id)+" est nettement en retard. Si tu ignores ça, ton build va se spécialiser par défaut.";
+      } else if(gapLvl>=6 || weakPct<70){
+        status="Déséquilibre modéré";
+        statusColor="#f59e0b";
+        message=(strongest.label||strongest.id)+" domine, "+(weakest.label||weakest.id)+" traîne. Corrige sans dramatiser.";
+      } else {
+        status="Équilibre sain";
+        statusColor="#4ade80";
+        message="Tes stats restent relativement cohérentes. Continue à répartir l'effort.";
+      }
+
+      return {rows,strongest,weakest,avgXp,gapXp,gapLvl,weakPct,strongestShare,status,statusColor,message};
+    })();
+
     return h("div",{class:"tab"},
       h("div",{class:"card"},
         h("div",{class:"ctitle"},"Chemin vers le rang S"),
@@ -2300,6 +2335,44 @@ function App(){
           h("div",{class:"xpbar"},h("div",{class:"xpfill",style:"width:"+rankPct+"%"}))
         )
       ),
+      h("div",{class:"card"},
+        h("div",{class:"ctitle"},"⚖️ Équilibre des stats"),
+        h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px"},
+          h("div",{style:"flex:1;min-width:0"},
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;font-weight:800;letter-spacing:1px;color:"+statBalance.statusColor+";text-transform:uppercase"},statBalance.status),
+            h("div",{style:"font-size:12px;color:var(--td);line-height:1.35;margin-top:4px"},statBalance.message)
+          ),
+          h("div",{style:"text-align:right;flex:0 0 auto"},
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:13px;color:var(--rc)"},"+"+statBalance.gapLvl),
+            h("div",{style:"font-size:9px;color:var(--td);text-transform:uppercase"},"écart niv.")
+          )
+        ),
+        h("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px"},
+          h("div",{style:"background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:8px"},
+            h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;text-transform:uppercase;margin-bottom:4px"},"Stat dominante"),
+            h("div",{style:"font-size:13px;font-weight:700;color:"+statBalance.strongest.color},statBalance.strongest.label+" niv. "+statBalance.strongest.level)
+          ),
+          h("div",{style:"background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:8px"},
+            h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;text-transform:uppercase;margin-bottom:4px"},"Stat en retard"),
+            h("div",{style:"font-size:13px;font-weight:700;color:"+statBalance.weakest.color},statBalance.weakest.label+" niv. "+statBalance.weakest.level)
+          )
+        ),
+        h("div",{style:"display:flex;flex-direction:column;gap:5px"},
+          statBalance.rows.map(r=>{
+            const pct = statBalance.avgXp>0 ? Math.max(4,Math.min(100,(r.xp/statBalance.avgXp)*70)) : 4;
+            const isWeak = r.id===statBalance.weakest.id;
+            const isStrong = r.id===statBalance.strongest.id;
+            return h("div",{key:r.id},
+              h("div",{style:"display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px"},
+                h("span",{style:"color:"+r.color},r.label+" · niv. "+r.level),
+                h("span",{style:"font-family:Orbitron,sans-serif;color:"+(isWeak?statBalance.statusColor:"var(--td)")},(r.xp||0).toLocaleString("fr-FR")+" XP"+(isStrong?" ▲":isWeak?" ▼":""))
+              ),
+              h("div",{class:"qbar"},h("div",{class:"qfill"+(isStrong?" over":isWeak?" partial":""),style:"width:"+pct+"%;background:"+r.color}))
+            );
+          })
+        )
+      ),
+
       h("div",{class:"card"},
         h("div",{class:"ctitle"},"Caract\u00e9ristiques"),
         STATS.map(s=>{
