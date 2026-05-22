@@ -2224,7 +2224,7 @@ function App(){
               complete&&h("span",{style:"font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:#4ade80"},"\u2713")
             );
           }
-          const val=tots[obj.id]||0, wt=obj.weekly?(obj.id==="walk"&&restMode&&walkObj?walkObj.base:getRankBase(obj.id,ri)):obj.id==="walk"?obj.base:getRankBase(obj.id,ri,prestige)*7;
+          const val=tots[obj.id]||0, wt=(obj.id==="protein"||obj.id==="mindmeal")?14:obj.weekly?(obj.id==="walk"&&restMode&&walkObj?walkObj.base:getRankBase(obj.id,ri)):obj.id==="walk"?obj.base:getRankBase(obj.id,ri,prestige)*7;
           const pct=Math.min(100,(val/wt)*100), complete=val>=wt, over=val>wt;
           return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:10px;margin-bottom:10px"},
             h("span",{style:"font-size:18px"},obj.icon),
