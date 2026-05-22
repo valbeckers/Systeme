@@ -618,6 +618,7 @@ function App(){
   const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,ep:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
   const [showStatReqDetail,setShowStatReqDetail] = useState(false);
+  const [showRankReqStats,setShowRankReqStats] = useState(false);
   const [mobOpen,setMobOpen] = useState(false);
   const [floats,setFloats] = useState([]);
   const [showSet,setShowSet]       = useState(false);
@@ -2066,16 +2067,16 @@ function App(){
           },
           style:"width:100%;margin-top:12px;padding:12px;background:rgba(168,85,247,0.1);border:1px solid #a855f7;border-radius:10px;color:#a855f7;font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:3px;cursor:pointer;text-transform:uppercase;text-shadow:0 0 12px #a855f7"
         },"\u269B\uFE0F Mont\u00e9e en Ascension"),
-        h("div",{style:"display:grid;grid-template-columns:1fr 1px 1fr;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)"},
+        h("div",{style:"display:grid;grid-template-columns:1fr 1px 1fr;align-items:center;margin-top:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,0.06)"},
           h("div",{style:"text-align:center"},
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--rc)"},"\uD83D\uDD25 "+state.streak),
-            h("div",{style:"font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:2px"},"Streak"),
-            bonusGiven&&h("div",{style:"font-size:10px;color:#c084fc;font-family:Orbitron,sans-serif;margin-top:3px"},"+250 XP quotidien \u2713")
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:var(--rc);line-height:1"},"\uD83D\uDD25 "+state.streak),
+            h("div",{style:"font-size:8px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:2px"},"Streak"),
+            bonusGiven&&h("div",{style:"font-size:8px;color:#c084fc;font-family:Orbitron,sans-serif;margin-top:2px"},"+250 XP \u2713")
           ),
-          h("div",{style:"width:1px;height:32px;background:rgba(255,255,255,0.06)"}),
+          h("div",{style:"width:1px;height:24px;background:rgba(255,255,255,0.06)"}),
           h("div",{style:"text-align:center"},
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--rc)"},todayXp.toFixed(0)),
-            h("div",{style:"font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:2px"},"XP du jour")
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:var(--rc);line-height:1"},todayXp.toFixed(0)),
+            h("div",{style:"font-size:8px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:2px"},"XP du jour")
           )
         )
       ),
@@ -2312,13 +2313,14 @@ function App(){
           const reached = countStatsAtLevel(state.stats, threshold);
           const summaryColor = ok ? "#4ade80" : (rankBlocked || prestigeBlocked) ? "#fb923c" : "var(--td)";
           return h("div",{
-            style:"margin-top:10px;padding:9px 10px;background:rgba(255,255,255,0.02);border:1px solid "+(ok?"#4ade8033":(rankBlocked||prestigeBlocked)?"#fb923c44":"rgba(255,255,255,0.06)")+";border-radius:8px"
+            onClick:()=>setShowRankReqStats(v=>!v),
+            style:"margin-top:10px;padding:9px 10px;background:rgba(255,255,255,0.02);border:1px solid "+(ok?"#4ade8033":(rankBlocked||prestigeBlocked)?"#fb923c44":"rgba(255,255,255,0.06)")+";border-radius:8px;cursor:pointer;user-select:none"
           },
-            h("div",{style:"display:flex;justify-content:space-between;align-items:center;font-size:10px;font-family:Orbitron,sans-serif;letter-spacing:1px;margin-bottom:8px"},
+            h("div",{style:"display:flex;justify-content:space-between;align-items:center;font-size:10px;font-family:Orbitron,sans-serif;letter-spacing:1px"},
               h("span",{style:"color:var(--td);text-transform:uppercase"},"Condition "+label),
-              h("span",{style:"color:"+summaryColor},(ok?"✓ ":"")+reached+"/"+count+" stats niv. "+threshold)
+              h("span",{style:"color:"+summaryColor},(ok?"✓ ":"")+reached+"/"+count+" stats niv. "+threshold+" "+(showRankReqStats?"▲":"▼"))
             ),
-            h("div",{style:"display:grid;grid-template-columns:repeat(2,1fr);gap:4px"},
+            showRankReqStats&&h("div",{style:"margin-top:8px;display:grid;grid-template-columns:repeat(2,1fr);gap:4px"},
               STATS.map(s=>{
                 const lvl = state.stats[s]||0;
                 const statOk = lvl>=threshold;
