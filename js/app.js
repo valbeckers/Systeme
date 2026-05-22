@@ -2067,14 +2067,14 @@ function App(){
           },
           style:"width:100%;margin-top:12px;padding:12px;background:rgba(168,85,247,0.1);border:1px solid #a855f7;border-radius:10px;color:#a855f7;font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:3px;cursor:pointer;text-transform:uppercase;text-shadow:0 0 12px #a855f7"
         },"\u269B\uFE0F Mont\u00e9e en Ascension"),
-        h("div",{style:"display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);align-items:center;justify-items:stretch;margin-top:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,0.06)"},
-          h("div",{style:"width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center"},
+        h("div",{style:"display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);align-items:stretch;justify-items:stretch;margin-top:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,0.06);min-height:74px"},
+          h("div",{style:"width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding-bottom:2px;box-sizing:border-box"},
             h("div",{style:"font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:var(--rc);line-height:1;display:flex;align-items:center;justify-content:center;gap:4px;width:100%"},"\uD83D\uDD25 "+state.streak),
             h("div",{style:"font-size:8px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:2px;text-align:center;width:100%"},"Streak"),
             bonusGiven&&h("div",{style:"font-size:8px;color:#c084fc;font-family:Orbitron,sans-serif;margin-top:2px;text-align:center;width:100%"},"+250 XP \u2713")
           ),
-          h("div",{style:"width:1px;height:24px;background:rgba(255,255,255,0.06);justify-self:center"}),
-          h("div",{style:"width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center"},
+          h("div",{style:"width:1px;height:32px;background:rgba(255,255,255,0.06);justify-self:center;align-self:center"}),
+          h("div",{style:"width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding-bottom:2px;box-sizing:border-box"},
             h("div",{style:"font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:var(--rc);line-height:1;text-align:center;width:100%"},todayXp.toFixed(0)),
             h("div",{style:"font-size:8px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:2px;text-align:center;width:100%"},"XP du jour")
           )
@@ -2116,15 +2116,45 @@ function App(){
   // ─── ONGLET QUETES ────────────────────────────────────────────────────
 
   function Quests(){
-    const req=sortStat(objs.filter(o=>o.daily&&!o.optional));
-    const bon=sortStat(objs.filter(o=>(o.daily&&o.optional||o.id==="walk")&&!(restMode&&o.id==="walk")&&!o.bonusHidden));
-    const wkq=restMode&&walkObj
+    const reqBase=sortStat(objs.filter(o=>o.daily&&!o.optional));
+    const bonBase=sortStat(objs.filter(o=>(o.daily&&o.optional||o.id==="walk")&&!(restMode&&o.id==="walk")&&!o.bonusHidden));
+    const wkBase=restMode&&walkObj
       ? [...sortStat(objs.filter(o=>o.weekly)), walkObj]
       : sortStat(objs.filter(o=>o.weekly));
+
+    const isQuestDone=(obj)=>{
+      const isWeekly = obj.weekly || obj.id==="walk";
+      const t = getEffectiveTarget(obj.id, isWeekly);
+      const effectiveT = (sleepDebtMed > 0 && obj.id==="med") ? Math.max(t, sleepDebtMed) : t;
+      const target = (obj.target && !obj.binary) ? obj.target : effectiveT;
+      const d = isWeekly ? (wLog[obj.id]||0) : (tLog[obj.id]||0);
+      return obj.binary ? d>=1 : d>=target;
+    };
+    const moveCompletedLast=(list)=>[
+      ...list.filter(o=>!isQuestDone(o)),
+      ...list.filter(o=>isQuestDone(o))
+    ];
+
+    const req=moveCompletedLast(reqBase);
+    const bon=moveCompletedLast(bonBase);
+    const wkq=moveCompletedLast(wkBase);
+
+    const reqDone=reqBase.filter(isQuestDone).length + (sleepDebtMed>0 && (tLog["med"]||0)>=sleepDebtMed ? 1 : 0);
+    const reqTotal=reqBase.length + (sleepDebtMed>0 ? 1 : 0);
+    const bonDone=bonBase.filter(isQuestDone).length;
+    const bonTotal=bonBase.length;
+    const wkDone=wkBase.filter(isQuestDone).length;
+    const wkTotal=wkBase.length;
+
+    const SectionHeader = ({title,done,total}) => h("div",{class:"shdr",style:"margin-bottom:10px"},
+      h("div",{class:"ctitle",style:"margin:0"},title),
+      h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;color:"+(done===total&&total>0?"#4ade80":"var(--td)")},done+"/"+total)
+    );
+
     return h("div",{class:"tab"},
       // ── ÉPREUVE ────────────────────────────────────────────────────────
       h("div",{class:"card",style:"border-color:#f59e0b44"},
-        h("div",{class:"ctitle",style:"color:#f59e0b;margin-bottom:8px"},"\u00c9preuve"),
+        h("div",{class:"ctitle",style:"color:#f59e0b;margin-bottom:8px"},"Épreuve"),
         activeEp
           ? h(EpCard,{ep:activeEp})
           : completedEp
@@ -2132,27 +2162,26 @@ function App(){
                 h("div",{style:"display:flex;align-items:center;gap:10px"},
                   h("span",{style:"font-size:20px"},completedEp.icon),
                   h("div",{style:"flex:1"},
-                    h("div",{style:"font-size:13px;font-weight:700;color:#4ade80"},completedEp.name+" \u2014 COMPL\u00c9T\u00c9 \u2705"),
+                    h("div",{style:"font-size:13px;font-weight:700;color:#4ade80"},completedEp.name+" — COMPLÉTÉ ✅"),
                     h("div",{style:"font-size:11px;color:var(--td);margin-top:2px"},
-                      ("+"+completedEp.xp+" XP \u00b7 "+(STAT_LBL[completedEp.stat]||completedEp.stat))
-                      +(completedEp.xp2&&completedEp.stat2?(" \u00b7 +"+completedEp.xp2+" XP "+(STAT_LBL[completedEp.stat2]||completedEp.stat2)):"")
-                      +(completedEp.xp3&&completedEp.stat3?(" \u00b7 +"+completedEp.xp3+" XP "+(STAT_LBL[completedEp.stat3]||completedEp.stat3)):"")
+                      ("+"+completedEp.xp+" XP · "+(STAT_LBL[completedEp.stat]||completedEp.stat))
+                      +(completedEp.xp2&&completedEp.stat2?(" · +"+completedEp.xp2+" XP "+(STAT_LBL[completedEp.stat2]||completedEp.stat2)):"")
+                      +(completedEp.xp3&&completedEp.stat3?(" · +"+completedEp.xp3+" XP "+(STAT_LBL[completedEp.stat3]||completedEp.stat3)):"")
                     )
                   )
                 ),
-                cooldownActive&&h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:8px 0 4px;font-family:Orbitron,sans-serif"},"\u23F3 Prochain d\u00e9fi dans "+fmtCD(cooldownUntil-now))
+                cooldownActive&&h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:8px 0 4px;font-family:Orbitron,sans-serif"},"⏳ Prochain défi dans "+fmtCD(cooldownUntil-now))
               )
             : cooldownActive
               ? h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:8px 0;font-family:Orbitron,sans-serif"},
-                  "\u23F3 Prochain d\u00e9fi dans "+fmtCD(cooldownUntil-now))
+                  "⏳ Prochain défi dans "+fmtCD(cooldownUntil-now))
               : h("div",{style:"font-size:12px;color:#f59e0b;text-align:center;padding:8px 0"},
-                  "\uD83D\uDD0D Le syst\u00e8me d\u00e9tecte une nouvelle \u00e9preuve...")
+                  "🔍 Le système détecte une nouvelle épreuve...")
       ),
       h("div",{class:"card",style:"border-color:#ef444444"},
         h("div",{class:"shdr"},
           h("div",null,
-            h("div",{class:"ctitle",style:"margin:0;color:#ef4444"},"Qu\u00eate urgente"+(activeSq&&activeSq.tier?" \u00b7 "+(SQ_TIER_LABEL[activeSq.tier]||""):"")),
-            
+            h("div",{class:"ctitle",style:"margin:0;color:#ef4444"},"Quête urgente"+(activeSq&&activeSq.tier?" · "+(SQ_TIER_LABEL[activeSq.tier]||""):""))
           )
         ),
         activeSq
@@ -2161,24 +2190,23 @@ function App(){
           h("div",{style:"display:flex;align-items:center;gap:10px"},
             h("span",{style:"font-size:20px"},completedSq.icon),
             h("div",{style:"flex:1"},
-              h("div",{style:"font-size:13px;font-weight:700;color:#4ade80"},completedSq.name+" \u2014 COMPL\u00c9T\u00c9 \u2705"),
-              h("div",{style:"font-size:11px;color:var(--td);margin-top:2px"},"+"+completedSq.xp+" XP \u00b7 "+(STAT_LBL[completedSq.stat]||completedSq.stat))
+              h("div",{style:"font-size:13px;font-weight:700;color:#4ade80"},completedSq.name+" — COMPLÉTÉ ✅"),
+              h("div",{style:"font-size:11px;color:var(--td);margin-top:2px"},"+"+completedSq.xp+" XP · "+(STAT_LBL[completedSq.stat]||completedSq.stat))
             )
           ),
-          sqCooldownActive&&h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:8px 0 4px;font-family:Orbitron,sans-serif"},"\u23F3 Prochaine qu\u00eate dans "+fmtCD(sqCooldownUntil-now))
+          sqCooldownActive&&h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:8px 0 4px;font-family:Orbitron,sans-serif"},"⏳ Prochaine quête dans "+fmtCD(sqCooldownUntil-now))
         ),
         !activeSq&&!completedSq&&(sqCooldownActive
           ? h("div",{class:"card"},
-              h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Qu\u00eate urgente"),
-              h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:4px 0;font-family:Orbitron,sans-serif"},"\u23F3 Prochaine qu\u00eate dans "+fmtCD(sqCooldownUntil-now))
+              h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Quête urgente"),
+              h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:4px 0;font-family:Orbitron,sans-serif"},"⏳ Prochaine quête dans "+fmtCD(sqCooldownUntil-now))
             )
-          : h("div",{style:"font-size:12px;color:var(--td);text-align:center;padding:8px 0"},"Chargement du d\u00e9fi...")
+          : h("div",{style:"font-size:12px;color:var(--td);text-align:center;padding:8px 0"},"Chargement du défi...")
         )
       ),
       h("div",{class:"card"},
-        h("div",{class:"shdr"},h("div",{class:"ctitle",style:"margin:0"},"Qu\u00eates obligatoires")),
+        h(SectionHeader,{title:"Quêtes obligatoires",done:reqDone,total:reqTotal}),
         req.map(o=>h(QI,{key:o.id,obj:o})),
-        // Carte dette sommeil : méditation 30min obligatoire, sans XP
         sleepDebtMed>0&&(()=>{
           const medDone = tLog["med"]||0;
           const done = medDone >= sleepDebtMed;
@@ -2186,10 +2214,10 @@ function App(){
           return h("div",{class:"qi"+(done?" done":""),style:done?"":"border-color:#ef444466;background:rgba(239,68,68,0.04)"},
             h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:center"},
               h("div",{class:"qname"},
-                h("span",null,"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F")," M\u00e9ditation",
-                !done&&h("span",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;border:1px solid #ef444455;border-radius:4px;padding:1px 5px;margin-left:6px"},"\u26A0 DETTE \uD83D\uDECF\uFE0F")
+                h("span",null,"🧘🏻‍♂️")," Méditation",
+                !done&&h("span",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;border:1px solid #ef444455;border-radius:4px;padding:1px 5px;margin-left:6px"},"⚠ DETTE 🛏️")
               ),
-              h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px"},"0 XP \u00b7 obligatoire")
+              h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px"},"0 XP · obligatoire")
             ),
             h("div",{class:"qrow"},
               h("div",{class:"qbar"},h("div",{class:"qfill"+(done?" done":pct>0?" partial":""),style:"width:"+pct+"%"})),
@@ -2212,13 +2240,16 @@ function App(){
               },"+10 min")
             )
           );
-        })(),
-        wkq.length>0&&h(Fragment,null,
-          h("div",{style:"height:1px;background:rgba(255,255,255,0.06);margin:12px 0"}),
-          wkq.map(o=>h(QI,{key:o.id,obj:o}))
-        )
+        })()
       ),
-      bon.length>0&&h("div",{class:"card"},h("div",{class:"ctitle"},"Qu\u00eates bonus"),bon.map(o=>h(QI,{key:o.id,obj:o})))
+      wkq.length>0&&h("div",{class:"card"},
+        h(SectionHeader,{title:"Quêtes hebdomadaires",done:wkDone,total:wkTotal}),
+        wkq.map(o=>h(QI,{key:o.id,obj:o}))
+      ),
+      bon.length>0&&h("div",{class:"card"},
+        h(SectionHeader,{title:"Quêtes bonus",done:bonDone,total:bonTotal}),
+        bon.map(o=>h(QI,{key:o.id,obj:o}))
+      )
     );
   }
 
