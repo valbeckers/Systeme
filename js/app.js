@@ -328,26 +328,55 @@ function calcXp(obj,total,baseOverride){
   }
 }
 
-function pickRandomSq(usedIds,restMode,statCycle){
+function pickRandomSq(usedIds,restMode,statCycle,completedLog){
   const stats=["Sante","Force","Intelligence","Concentration","Endurance","Agilite","Discipline"];
-  // Stats encore disponibles dans le cycle actuel
   const cycle = statCycle||[];
   const remaining = stats.filter(s=>!cycle.includes(s));
-  // Si toutes passées, on redémarre le cycle
-  const pool = remaining.length===0 ? stats : remaining;
-  // Filtrer pour ne garder que les stats qui ont au moins une quête disponible
-  const usable = pool.filter(s=>(SP[s]||[]).some(t=>!usedIds.includes(t.id)&&!(t.noRestMode&&restMode)));
+  const cycleReset = remaining.length===0;
+  const pool = cycleReset ? stats : remaining;
+
+  // Anti-répétition : une même quête urgente ne peut pas revenir avant 4 cycles complets.
+  // 4 cycles = 4 passages par les 7 stats = 28 quêtes urgentes tirées.
+  const recentWindow = stats.length * 4;
+  const recentIds = (completedLog||[])
+    .slice(-recentWindow)
+    .map(x=>typeof x==="string" ? x : x.id)
+    .filter(Boolean);
+
+  const availableForStat = (s, respectCooldown=true) => (SP[s]||[]).filter(t =>
+    !usedIds.includes(t.id) &&
+    !(t.noRestMode&&restMode) &&
+    (!respectCooldown || !recentIds.includes(t.id))
+  );
+
+  let usable = pool.filter(s=>availableForStat(s,true).length>0);
+
+  // Si le filtre 4 cycles bloque toutes les stats restantes, on garde le cycle par stat
+  // et on relâche uniquement l'anti-répétition pour éviter un blocage.
+  let respectCooldown = true;
   if(usable.length===0){
-    // Fallback : aucune quête dispo dans les stats restantes du cycle → on essaie toutes les stats
-    for(const s of stats){
-      const a=(SP[s]||[]).filter(t=>!usedIds.includes(t.id)&&!(t.noRestMode&&restMode));
-      if(a.length>0)return {tpl:{...a[Math.floor(Math.random()*a.length)],stat:s}, pickedStat:s, cycleReset:remaining.length===0};
+    usable = pool.filter(s=>availableForStat(s,false).length>0);
+    respectCooldown = false;
+  }
+
+  if(usable.length===0){
+    // Fallback global, d'abord avec cooldown, puis sans.
+    for(const respect of [true,false]){
+      for(const s of stats){
+        const a=availableForStat(s,respect);
+        if(a.length>0){
+          const chosen=a[Math.floor(Math.random()*a.length)];
+          return {tpl:{...chosen,stat:s}, pickedStat:s, cycleReset};
+        }
+      }
     }
     return null;
   }
+
   const stat = usable[Math.floor(Math.random()*usable.length)];
-  const avail=(SP[stat]||[]).filter(t=>!usedIds.includes(t.id)&&!(t.noRestMode&&restMode));
-  return {tpl:{...avail[Math.floor(Math.random()*avail.length)],stat}, pickedStat:stat, cycleReset:remaining.length===0};
+  const avail = availableForStat(stat,respectCooldown);
+  const chosen = avail[Math.floor(Math.random()*avail.length)];
+  return {tpl:{...chosen,stat}, pickedStat:stat, cycleReset};
 }
 
 const IMPORTED_VERSION = "2026-05-11-v4";
@@ -527,7 +556,7 @@ function App(){
     const sqCdUntil=base.sqCooldownUntil||0;
     const cooldownOk = now>=sqCdUntil;
     if(!hasActive&&cooldownOk){
-      const result=pickRandomSq(sqs.map(q=>q.id),base.restMode,base.sqStatCycle);
+      const result=pickRandomSq(sqs.map(q=>q.id),base.restMode,base.sqStatCycle,base.completedSqLog);
       if(result){
         const {tpl,pickedStat,cycleReset}=result;
         const sq={...tpl,sqid:"sq_"+now,progress:0,startedAt:now,expiresAt:next7AM(now),completedAt:null};
