@@ -168,6 +168,49 @@ const EPREUVES = [
     desc:"Faire 20 min de Tai Chi 5 jours sur 7"},
 ];
 
+// ─── DONJONS (slot hebdomadaire alternatif aux épreuves) ───────────────────
+// Un donjon = plusieurs objectifs légers sur 7 jours, avec XP uniquement à la complétion totale.
+const DONJONS = [
+  {id:"dj_moine", kind:"donjon", name:"Donjon du Moine", icon:"🕯️", stat:"Concentration", xp:1500, xp2:1000, stat2:"Discipline", xp3:500, stat3:"Sante", days:7,
+    desc:"Semaine orientée calme, attention et maîtrise de la stimulation",
+    goals:[
+      {id:"med3", label:"Méditation", target:3, unit:"sessions"},
+      {id:"silence1", label:"Silence 30min", target:1, unit:"fois"},
+      {id:"nophone1", label:"Téléphone hors de portée 3h", target:1, unit:"fois"},
+      {id:"cleaninput1", label:"Aucun contenu passif", target:1, unit:"jour"}
+    ]},
+  {id:"dj_corps_silencieux", kind:"donjon", name:"Donjon du Corps silencieux", icon:"🐾", stat:"Agilite", xp:2000, xp2:500, stat2:"Concentration", xp3:500, stat3:"Discipline", days:7,
+    desc:"Semaine de contrôle, coordination, mobilité et précision",
+    goals:[
+      {id:"footwork2", label:"Footwork rapide", target:2, unit:"sessions"},
+      {id:"silent2", label:"Déplacements silencieux", target:2, unit:"sessions"},
+      {id:"flow1", label:"Animal flow", target:1, unit:"session"},
+      {id:"flex1", label:"Souplesse longue", target:1, unit:"session"}
+    ]},
+  {id:"dj_fondation", kind:"donjon", name:"Donjon des Fondations", icon:"🏛️", stat:"Sante", xp:2000, xp2:1000, stat2:"Discipline", days:7,
+    desc:"Semaine de base : hydratation, repas, récupération et hygiène mentale",
+    goals:[
+      {id:"water5", label:"Hydratation complète", target:5, unit:"jours"},
+      {id:"protein6", label:"Repas équilibré", target:6, unit:"repas"},
+      {id:"mindmeal4", label:"Manger sans stimulation", target:4, unit:"repas"},
+      {id:"breath1", label:"Cohérence cardiaque", target:1, unit:"fois"}
+    ]},
+  {id:"dj_chasseur", kind:"donjon", name:"Donjon du Chasseur", icon:"🏹", stat:"Endurance", xp:2000, xp2:1000, stat2:"Agilite", days:7,
+    desc:"Semaine de mouvement : souffle, jambes, déplacement et résistance",
+    goals:[
+      {id:"run1", label:"Sortie course", target:1, unit:"sortie"},
+      {id:"walk1", label:"Marche longue", target:1, unit:"sortie"},
+      {id:"stairs1", label:"Escaliers", target:1, unit:"session"},
+      {id:"cardio1", label:"Corde ou fractionné", target:1, unit:"session"}
+    ]}
+];
+
+function pickRandomDonjon(completedIds){
+  const avail = DONJONS.filter(d=>!completedIds.includes(d.id));
+  if(avail.length===0) return null;
+  return {tpl:avail[Math.floor(Math.random()*avail.length)]};
+}
+
 // Spawn programmé : prochain lundi à 7h00 local (à partir de "from", défaut now)
 // Si on est lundi avant 7h, retourne aujourd'hui 7h.
 function nextMondayAt7(from){
@@ -1010,12 +1053,24 @@ function App(){
       const cd = s.epreuveCooldownUntil||0;
       if(hasActive || Date.now()<cd) return s;
       const completedIds = s.completedEpreuveIds||[];
-      const result = pickRandomEpreuve(completedIds, cd, s.epStatCycle);
+      const rollDonjon = Math.random() < 0.20;
+      let result = rollDonjon ? pickRandomDonjon(completedIds) : pickRandomEpreuve(completedIds, cd, s.epStatCycle);
+      let pickedStat = null, cycleReset = false;
+
+      // Fallback : si le type tiré n'a plus de contenu disponible, on prend l'autre.
+      if(!result && rollDonjon) result = pickRandomEpreuve(completedIds, cd, s.epStatCycle);
+      if(!result && !rollDonjon) result = pickRandomDonjon(completedIds);
       if(!result) return s;
-      const {tpl,pickedStat,cycleReset}=result;
+
+      if(!result.tpl.kind || result.tpl.kind!=="donjon"){
+        pickedStat = result.pickedStat;
+        cycleReset = result.cycleReset;
+      }
+
+      const {tpl}=result;
       const t = Date.now();
-      const ep={...tpl,epid:"ep_"+t,progress:0,startedAt:t,startedAtDay:today,expiresAt:nextMondayAt7(t),completedAt:null,failedAt:null,dailyValidations:[]};
-      const newCycle = cycleReset ? [pickedStat] : [...(s.epStatCycle||[]),pickedStat];
+      const ep={...tpl,epid:"ep_"+t,progress:0,goalProgress:{},startedAt:t,startedAtDay:today,expiresAt:nextMondayAt7(t),completedAt:null,failedAt:null,dailyValidations:[]};
+      const newCycle = tpl.kind==="donjon" ? (s.epStatCycle||[]) : (cycleReset ? [pickedStat] : [...(s.epStatCycle||[]),pickedStat]);
       return {...s,epreuves:[...(s.epreuves||[]).filter(e=>e.completedAt||e.failedAt),ep],epStatCycle:newCycle,epreuveCooldownUntil:nextMondayAt7(t)};
     });
   },[epReady]);
@@ -1571,6 +1626,75 @@ function App(){
     const barInProgress = !done && !failed && pct > 0;
     const barStyle = done?"width:100%;background:"+tierColor:failed?"width:100%;background:#ef4444;opacity:0.4":barInProgress?"width:"+pct+"%;background:repeating-linear-gradient(45deg,"+tierColor+","+tierColor+" 4px,"+tierColor+"44 4px,"+tierColor+"44 8px)":"width:0%";
 
+    if(ep.kind==="donjon"){
+      const goals = ep.goals||[];
+      const gp = ep.goalProgress||{};
+      const totalGoals = goals.length || 1;
+      const doneGoals = goals.filter(g=>(gp[g.id]||0)>=g.target).length;
+      const donjonPct = Math.min(100,(doneGoals/totalGoals)*100);
+      const donjonColor = "#a855f7";
+      const donjonDone = !!ep.completedAt;
+      const donjonFailed = !!ep.failedAt;
+      const donjonActive = !donjonDone && !donjonFailed;
+
+      function updateDonjonGoal(goal,delta){
+        if(donjonDone||donjonFailed) return;
+        const cur = gp[goal.id]||0;
+        const next = Math.max(0,Math.min(goal.target,cur+delta));
+        const newGp = {...gp,[goal.id]:next};
+        const nowComplete = goals.every(g=>(newGp[g.id]||0)>=g.target);
+        setState(s=>({...s, epreuves:s.epreuves.map(e=>e.epid===ep.epid?{...e,goalProgress:newGp,completedAt:nowComplete?Date.now():null}:e)}));
+        if(nowComplete){ grantEpXp(ep); }
+      }
+
+      const totalXp=(ep.xp||0)+(ep.xp2||0)+(ep.xp3||0);
+      return h("div",{class:"sqcard"+(donjonActive?" ep-pulse":""),style:"border-color:"+donjonColor+"55;background:"+donjonColor+"0A;--epc1:"+donjonColor+"44;--epc2:"+donjonColor+"00"},
+        h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px"},
+          h("div",{style:"display:flex;align-items:center;gap:8px;min-width:0"},
+            h("span",{style:"font-size:21px"},ep.icon||"🏰"),
+            h("div",{style:"min-width:0"},
+              h("div",{style:"font-size:13px;font-weight:800;color:var(--tx);letter-spacing:.3px"},ep.name),
+              ep.desc&&h("div",{style:"font-size:10px;color:var(--td);margin-top:2px;line-height:1.25"},ep.desc)
+            )
+          ),
+          showInput&&h("div",{style:"text-align:right;flex:0 0 auto"},
+            donjonDone?h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:#4ade80"},"✓ DONJON VALIDÉ")
+            :donjonFailed?h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:#ef4444"},"✘ DONJON ÉCHOUÉ")
+            :h(Fragment,null,
+              h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif"},totalXp+" XP total"),
+              h("div",{style:"font-size:9px;color:"+donjonColor+";font-family:Orbitron,sans-serif;margin-top:2px"},"DONJON")
+            )
+          )
+        ),
+        h("div",{class:"sqbar",style:"background:"+donjonColor+"22"},
+          h("div",{class:"sqbarfill",style:"width:"+donjonPct+"%;background:"+donjonColor+(donjonDone?";box-shadow:0 0 12px "+donjonColor:"")})
+        ),
+        h("div",{style:"display:flex;justify-content:space-between;font-size:10px;color:var(--td);margin-top:4px;margin-bottom:8px"},
+          h("span",null,doneGoals+"/"+totalGoals+" objectifs complétés"),
+          donjonActive&&h("span",{style:"color:"+donjonColor+";font-family:Orbitron,sans-serif"},"⏱ "+fmtCD(remaining)+" restants")
+        ),
+        h("div",{style:"display:flex;flex-direction:column;gap:7px;margin-top:8px"},
+          goals.map(goal=>{
+            const cur=gp[goal.id]||0;
+            const gDone=cur>=goal.target;
+            return h("div",{key:goal.id,style:"padding:8px;border:1px solid rgba(255,255,255,0.06);border-radius:8px;background:rgba(255,255,255,0.025)"},
+              h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:8px"},
+                h("div",{style:"font-size:12px;color:var(--tx);font-weight:600;line-height:1.15"},goal.label),
+                h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+(gDone?"#4ade80":"var(--td)")},cur+"/"+goal.target+" "+goal.unit)
+              ),
+              donjonActive&&showInput&&h("div",{style:"display:flex;gap:8px;margin-top:7px"},
+                h("button",{onClick:()=>updateDonjonGoal(goal,1),disabled:gDone,style:"flex:1;padding:8px;border-radius:7px;border:1px solid "+(gDone?"#4ade8055":donjonColor+"55")+";background:"+(gDone?"#4ade8011":donjonColor+"11")+";color:"+(gDone?"#4ade80":donjonColor)+";font-family:Orbitron,sans-serif;font-size:10px;cursor:"+(gDone?"default":"pointer")},gDone?"Validé ✓":"+1"),
+                cur>0&&h("button",{onClick:()=>updateDonjonGoal(goal,-1),style:"width:42px;padding:8px;border-radius:7px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);color:var(--td);font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},"-1")
+              )
+            );
+          })
+        ),
+        showInput&&!donjonDone&&!donjonFailed&&h("div",{style:"font-size:10px;color:var(--td);margin-top:9px;line-height:1.3"},
+          "XP accordée uniquement si tous les objectifs du donjon sont complétés."
+        )
+      );
+    }
+
     function completeEp(val){
       if(done||failed) return;
       let newProgress = ep.progress;
@@ -1625,7 +1749,7 @@ function App(){
       const totalXp=(ep.xp||0)+(ep.xp2||0)+(ep.xp3||0);
       setTimeout(()=>{
         const id1=Date.now()+Math.random(),id2=id1+0.1;
-        setFloats(f=>[...f,{id:id1,y:"28%",txt:"\uD83C\uDFC6 \u00c9PREUVE VALID\u00c9E !"},{id:id2,y:"34%",txt:"+"+totalXp+" XP total"}]);
+        setFloats(f=>[...f,{id:id1,y:"28%",txt:(ep.kind==="donjon"?"🏰 DONJON VALIDÉ !":"\uD83C\uDFC6 \u00c9PREUVE VALID\u00c9E !")},{id:id2,y:"34%",txt:"+"+totalXp+" XP total"}]);
         setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id1&&p.id!==id2)),2000);
       },200);
     }
@@ -2224,7 +2348,7 @@ function App(){
               complete&&h("span",{style:"font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:#4ade80"},"\u2713")
             );
           }
-          const val=tots[obj.id]||0, wt=(obj.id==="protein"||obj.id==="mindmeal")?14:obj.weekly?(obj.id==="walk"&&restMode&&walkObj?walkObj.base:getRankBase(obj.id,ri)):obj.id==="walk"?obj.base:getRankBase(obj.id,ri,prestige)*7;
+          const val=tots[obj.id]||0, wt=obj.weekly?(obj.id==="walk"&&restMode&&walkObj?walkObj.base:getRankBase(obj.id,ri)):obj.id==="walk"?obj.base:getRankBase(obj.id,ri,prestige)*7;
           const pct=Math.min(100,(val/wt)*100), complete=val>=wt, over=val>wt;
           return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:10px;margin-bottom:10px"},
             h("span",{style:"font-size:18px"},obj.icon),
