@@ -2069,14 +2069,14 @@ function App(){
         },"\u269B\uFE0F Mont\u00e9e en Ascension"),
         h("div",{style:"display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);align-items:center;justify-items:stretch;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)"},
           h("div",{style:"width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center"},
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:var(--rc);line-height:1;display:flex;align-items:center;justify-content:center;gap:4px;width:100%"},"\uD83D\uDD25 "+state.streak),
-            h("div",{style:"font-size:8px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px;text-align:center;width:100%"},"Streak"),
-            bonusGiven&&h("div",{style:"font-size:8px;color:#c084fc;font-family:Orbitron,sans-serif;margin-top:2px;text-align:center;width:100%"},"+250 XP \u2713")
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--rc);line-height:1;display:flex;align-items:center;justify-content:center;gap:4px;width:100%"},"\uD83D\uDD25 "+state.streak),
+            h("div",{style:"font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px;text-align:center;width:100%"},"Streak"),
+            bonusGiven&&h("div",{style:"font-size:10px;color:#c084fc;font-family:Orbitron,sans-serif;margin-top:2px;text-align:center;width:100%"},"+250 XP \u2713")
           ),
           h("div",{style:"width:1px;height:32px;background:rgba(255,255,255,0.06);justify-self:center"}),
           h("div",{style:"width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center"},
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:var(--rc);line-height:1;text-align:center;width:100%"},todayXp.toFixed(0)),
-            h("div",{style:"font-size:8px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px;text-align:center;width:100%"},"XP du jour")
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--rc);line-height:1;text-align:center;width:100%"},todayXp.toFixed(0)),
+            h("div",{style:"font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px;text-align:center;width:100%"},"XP du jour")
           )
         )
       ),
