@@ -2058,46 +2058,6 @@ function App(){
                 ? h("span",{style:"color:#fb923c"},"Stats requises non atteintes")
                 : h("span",{style:"color:var(--rc)"},Math.round(ASCENSION_XP_NEEDED-effectiveXp).toLocaleString("fr-FR")+" XP avant Ascension "+(ROMAN[prestige]||"I"))
         ),
-        // Condition de stats pour le prochain palier (rang ou ascension)
-        (()=>{
-          let label, count, threshold, target, ok;
-          if(nextRank && nextRankReq){
-            target = nextRank.id;
-            count = nextRankReq.count;
-            threshold = nextRankReq.level;
-            ok = nextRankStatsOk;
-            label = "Rang "+target;
-          } else if(!nextRank && ascReq && prestige<MAX_PRESTIGE){
-            target = "Ascension "+nextAscension;
-            count = ascReq.count;
-            threshold = ascReq.level;
-            ok = ascStatsOk;
-            label = target;
-          } else {
-            return null;
-          }
-          const reached = countStatsAtLevel(state.stats, threshold);
-          const summaryColor = ok ? "#4ade80" : (rankBlocked || prestigeBlocked) ? "#fb923c" : "var(--td)";
-          return h("div",{
-            onClick:()=>setShowStatReqDetail(v=>!v),
-            style:"margin-top:10px;padding:8px 10px;background:rgba(255,255,255,0.02);border:1px solid "+(ok?"#4ade8033":(rankBlocked||prestigeBlocked)?"#fb923c44":"rgba(255,255,255,0.06)")+";border-radius:8px;cursor:pointer;user-select:none"
-          },
-            h("div",{style:"display:flex;justify-content:space-between;align-items:center;font-size:10px;font-family:Orbitron,sans-serif;letter-spacing:1px"},
-              h("span",{style:"color:var(--td);text-transform:uppercase"},"Condition "+label),
-              h("span",{style:"color:"+summaryColor},(ok?"\u2713 ":"")+reached+"/"+count+" stats niv. "+threshold+" "+(showStatReqDetail?"\u25B2":"\u25BC"))
-            ),
-            showStatReqDetail && h("div",{style:"margin-top:8px;display:grid;grid-template-columns:repeat(2,1fr);gap:4px"},
-              STATS.map(s=>{
-                const lvl = state.stats[s]||0;
-                const reached = lvl>=threshold;
-                return h("div",{key:s,style:"display:flex;justify-content:space-between;align-items:center;font-size:10px;padding:3px 6px;background:rgba(255,255,255,0.02);border-radius:4px;border:1px solid "+(reached?"#4ade8033":"rgba(255,255,255,0.04)")},
-                  h("span",{style:"color:"+(STAT_COLOR[s]||"#fff")},STAT_LBL[s]||s),
-                  h("span",{style:"font-family:Orbitron,sans-serif;color:"+(reached?"#4ade80":"var(--td)")},(reached?"\u2713 ":"")+"niv. "+lvl)
-                );
-              })
-            )
-          );
-        })(),
         prestigeAvailable&&h("button",{
           onClick:()=>{
             const newPrestige=(state.prestige||0)+1;
@@ -2333,10 +2293,46 @@ function App(){
             h("span",null,effectiveXp.toFixed(0)+" / "+nextRank.xpRequired+" XP")
           ),
           h("div",{class:"xpbar"},h("div",{class:"xpfill",style:"width:"+rankPct+"%"}))
-        )
+        ),
+        (()=>{
+          let label, count, threshold, ok;
+          if(nextRank && nextRankReq){
+            count = nextRankReq.count;
+            threshold = nextRankReq.level;
+            ok = nextRankStatsOk;
+            label = "Rang "+nextRank.id;
+          } else if(!nextRank && ascReq && prestige<MAX_PRESTIGE){
+            count = ascReq.count;
+            threshold = ascReq.level;
+            ok = ascStatsOk;
+            label = "Ascension "+nextAscension;
+          } else {
+            return null;
+          }
+          const reached = countStatsAtLevel(state.stats, threshold);
+          const summaryColor = ok ? "#4ade80" : (rankBlocked || prestigeBlocked) ? "#fb923c" : "var(--td)";
+          return h("div",{
+            style:"margin-top:10px;padding:9px 10px;background:rgba(255,255,255,0.02);border:1px solid "+(ok?"#4ade8033":(rankBlocked||prestigeBlocked)?"#fb923c44":"rgba(255,255,255,0.06)")+";border-radius:8px"
+          },
+            h("div",{style:"display:flex;justify-content:space-between;align-items:center;font-size:10px;font-family:Orbitron,sans-serif;letter-spacing:1px;margin-bottom:8px"},
+              h("span",{style:"color:var(--td);text-transform:uppercase"},"Condition "+label),
+              h("span",{style:"color:"+summaryColor},(ok?"✓ ":"")+reached+"/"+count+" stats niv. "+threshold)
+            ),
+            h("div",{style:"display:grid;grid-template-columns:repeat(2,1fr);gap:4px"},
+              STATS.map(s=>{
+                const lvl = state.stats[s]||0;
+                const statOk = lvl>=threshold;
+                return h("div",{key:s,style:"display:flex;justify-content:space-between;align-items:center;font-size:10px;padding:4px 6px;background:rgba(255,255,255,0.02);border-radius:4px;border:1px solid "+(statOk?"#4ade8033":"rgba(255,255,255,0.04)")},
+                  h("span",{style:"color:"+(STAT_COLOR[s]||"#fff")},STAT_LBL[s]||s),
+                  h("span",{style:"font-family:Orbitron,sans-serif;color:"+(statOk?"#4ade80":"var(--td)")},lvl+"/"+threshold)
+                );
+              })
+            )
+          );
+        })()
       ),
       h("div",{class:"card"},
-        h("div",{class:"ctitle"},"⚖️ Équilibre des stats"),
+        h("div",{class:"ctitle"},"Équilibre des stats"),
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px"},
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;font-weight:800;letter-spacing:1px;color:"+statBalance.statusColor+";text-transform:uppercase"},statBalance.status),
