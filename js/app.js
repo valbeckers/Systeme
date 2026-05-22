@@ -1968,6 +1968,57 @@ function App(){
       {lb:"Qu\u00eates obligatoires",ob:obligObjs,iw:false,mixed:true},
       {lb:"Qu\u00eates bonus", ob:sortStat(objs.filter(o=>(o.daily&&o.optional||o.id==="walk")&&!(restMode&&o.id==="walk")&&!o.bonusHidden)), iw:false},
     ];
+
+    const characterState = (()=>{
+      const statWeek = {};
+      STATS.forEach(s=>statWeek[s]=0);
+      const days = [];
+      for(let i=6;i>=0;i--){
+        const d=new Date(today);
+        d.setDate(d.getDate()-i);
+        days.push(d.toISOString().slice(0,10));
+      }
+      days.forEach(day=>{
+        const log = state.dailyLog[day]||{};
+        Object.entries(log).forEach(([id,a])=>{
+          const o=objs.find(x=>x.id===id);
+          if(!o || a<=0) return;
+          const base = o.base && !RANK_BASES[o.id] ? o.base : getRankBase(o.id,ri,prestige);
+          const xp = calcXp(o,a,base);
+          if(o.stat) statWeek[o.stat]=(statWeek[o.stat]||0)+xp;
+          if(o.stat2 && o.xpPer2){
+            statWeek[o.stat2]=(statWeek[o.stat2]||0)+(o.id==="reading"?Math.floor(a/(o.concBlock||10))*(o.concBlockXp||50):a*o.xpPer2);
+          }
+        });
+      });
+      (state.specialQuests||[]).forEach(q=>{
+        if(!q.completedAt) return;
+        const qDay = new Date(q.completedAt).toISOString().slice(0,10);
+        if(!days.includes(qDay)) return;
+        if(q.stat) statWeek[q.stat]=(statWeek[q.stat]||0)+(q.xp||0);
+        if(q.stat2) statWeek[q.stat2]=(statWeek[q.stat2]||0)+(q.xp2||0);
+        if(q.stat3) statWeek[q.stat3]=(statWeek[q.stat3]||0)+(q.xp3||0);
+      });
+      const total = Object.values(statWeek).reduce((a,b)=>a+b,0);
+      const physical = (statWeek.Force||0)+(statWeek.Endurance||0)+(statWeek.Agilite||0);
+      const mental = (statWeek.Intelligence||0)+(statWeek.Concentration||0);
+      const discipline = statWeek.Discipline||0;
+      const sante = statWeek.Sante||0;
+      const maxEntry = Object.entries(statWeek).sort((a,b)=>b[1]-a[1])[0]||["",0];
+      const maxShare = total>0 ? maxEntry[1]/total : 0;
+
+      if(debtActive) return {icon:"⚠️", name:"En dette", desc:"Dette active : priorité au remboursement avant d'ajouter du volume.", color:"#fb923c"};
+      if(state.lastPenaltiesApplied && state.lastPenaltiesApplied.ids && state.lastPenaltiesApplied.ids.length>0) return {icon:"🔴", name:"Sous sanction", desc:"Une pénalité récente est enregistrée. Reviens à l'exécution simple.", color:"#ef4444"};
+      if(total<500) return {icon:"🌑", name:"Latent", desc:"Peu d'activité mesurée sur 7 jours. Le système manque de données.", color:"var(--td)"};
+      if(maxShare>.55) return {icon:"⚖️", name:"Déséquilibré", desc:STAT_LBL[maxEntry[0]]+" domine nettement ta semaine. Surveille les angles morts.", color:"#f59e0b"};
+      if(physical/total>.55) return {icon:"🔥", name:"Berserker", desc:"Semaine très physique. Utile, mais attention à ne pas fuir le mental.", color:"#fb923c"};
+      if(mental/total>.55) return {icon:"🧠", name:"Érudit", desc:"Semaine orientée esprit : lecture, attention et apprentissage dominent.", color:"#22d3ee"};
+      if(discipline/total>.28 && (statWeek.Concentration||0)>0) return {icon:"🕯️", name:"Ascète actif", desc:"Discipline et concentration solides. Bonne maîtrise de l'impulsion.", color:"#c084fc"};
+      if(sante/total>.30 && discipline>0) return {icon:"🌿", name:"Fondations solides", desc:"Santé et discipline soutiennent bien ta progression.", color:"#4ade80"};
+      if(computedStreak>=7) return {icon:"🛡️", name:"Stable", desc:"Rythme régulier sur la semaine. Continue sans chercher à surcharger.", color:"#4ade80"};
+      return {icon:"🧬", name:"En construction", desc:"Progression réelle, mais le profil de semaine n'est pas encore net.", color:"var(--rc)"};
+    })();
+
     return h("div",{class:"tab"},
       missedDays>=2&&h("div",{class:"warn"},"\u26A0\uFE0F P\u00e9nalit\u00e9 : -"+(missedDays*10)+" XP ("+missedDays+" jours manqu\u00e9s)"),
 
@@ -2084,6 +2135,17 @@ function App(){
         h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Qu\u00eate urgente"),
         h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:4px 0;font-family:Orbitron,sans-serif"},"\u23F3 Prochaine qu\u00eate dans "+fmtCD(sqCooldownUntil-now))
       ),
+      h("div",{class:"card"},
+        h("div",{class:"ctitle"},"🧬 État du personnage"),
+        h("div",{style:"display:flex;align-items:flex-start;gap:12px"},
+          h("div",{style:"font-size:28px;line-height:1"},characterState.icon),
+          h("div",{style:"flex:1;min-width:0"},
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:13px;font-weight:800;letter-spacing:1px;color:"+characterState.color+";text-transform:uppercase"},characterState.name),
+            h("div",{style:"font-size:12px;color:var(--td);line-height:1.35;margin-top:4px"},characterState.desc)
+          )
+        )
+      ),
+
       secs.map(({lb,ob,iw,mixed})=>ob.length===0?null:
         h("div",{key:lb,class:"card"},h("div",{class:"ctitle"},lb),ob.map(o=>h(RR,{key:o.id,obj:o,isW:mixed?(o.weekly||o.id==="walk"):iw})))
       )
