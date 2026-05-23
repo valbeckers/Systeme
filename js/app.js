@@ -2782,7 +2782,7 @@ function App(){
           h("button",{style:"background:none;border:none;color:var(--td);font-size:44px;line-height:1;cursor:pointer",onClick:()=>{setShowSet(false);setConfirmReset(false);}},"\u2715")
         ),
         h("div",{class:"msec"},
-          h("div",{class:"mlbl"},"\uD83E\uDE79 Mode blessure \u2014 Course"),
+          h("div",{class:"mlbl"},"Mode blessure — Course"),
           h("div",{style:"font-size:11px;color:var(--td);margin-bottom:10px;line-height:1.5"},
             restMode
               ? "Mode blessure actif \u2014 la marche remplace la course cette semaine."
@@ -2798,16 +2798,16 @@ function App(){
                 walkTargetRef.current=walkTarget;
                 setState(s=>({...s,restMode:true,walkTarget}));
                 setShowSet(false);
-              }},"\uD83E\uDE79 Blessure \u2014 activer la marche")
+              }},"Blessure — activer la marche")
             : h("button",{class:"mbtn",style:"width:100%;background:#4ade8011;border:1px solid #4ade8066;color:#4ade80",onClick:()=>{
                 walkTargetRef.current=0;
                 setState(s=>({...s,restMode:false,walkTarget:0}));
                 setShowSet(false);
-              }},"\u2705 R\u00e9tablissement \u2014 reprendre la course")
+              }},"Rétablissement — reprendre la course")
         ),
         h("div",{class:"divider"}),
         h("div",{class:"msec"},
-          h("div",{class:"mlbl"},"\uD83D\uDCDD Corriger les donn\u00e9es du jour"),
+          h("div",{class:"mlbl"},"Corriger les données du jour"),
           ordered.map(obj=>{
             const cur=(obj.weekly||obj.id==="walk")?(wLog[obj.id]||0):(tLog[obj.id]||0);
             return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:10px;margin-bottom:8px"},
@@ -2817,21 +2817,21 @@ function App(){
               h("span",{style:"font-size:11px;color:var(--td);min-width:28px"},obj.unit)
             );
           }),
-          h("button",{class:"mbtn mprim",style:"width:100%;margin-top:8px",onClick:applyEdit},"\u2705 Appliquer")
+          h("button",{class:"mbtn mprim",style:"width:100%;margin-top:8px",onClick:applyEdit},"Appliquer")
         ),
         h("div",{class:"divider"}),
         h("div",{class:"msec"},
-          h("div",{class:"mlbl"},"\uD83D\uDCBE Sauvegarde / Restauration"),
+          h("div",{class:"mlbl"},"Sauvegarde / Restauration"),
           h("div",{class:"mrow",style:"margin-bottom:8px"},
             h("button",{class:"mbtn mprim",style:"flex:1",onClick:()=>{
               const json=JSON.stringify(state);
               navigator.clipboard.writeText(json).then(()=>alert("\u2705 Donn\u00e9es copi\u00e9es !")).catch(()=>window.prompt("Copie ce texte :",json));
-            }},"\uD83D\uDCCB Exporter"),
+            }},"Exporter"),
             h("button",{class:"mbtn mprim",style:"flex:1",onClick:()=>{
               const json=window.prompt("Colle tes donn\u00e9es ici :");
               if(!json)return;
               try{const imported=JSON.parse(json);setState(s=>({...s,...imported,objectives:DEFS}));alert("\u2705 Restaur\u00e9 !");setShowSet(false);}catch{alert("\u274C Donn\u00e9es invalides.");}
-            }},"\uD83D\uDCE5 Importer")
+            }},"Importer")
           ),
           h("button",{class:"mbtn mprim",style:"width:100%",onClick:()=>{
             const json=JSON.stringify(state,null,2);
@@ -2843,16 +2843,16 @@ function App(){
             a.href=url; a.download="kaizen-backup-"+dateStr+".json";
             document.body.appendChild(a); a.click(); document.body.removeChild(a);
             URL.revokeObjectURL(url);
-          }},"\uD83D\uDCBE T\u00e9l\u00e9charger fichier"),
+          }},"Télécharger fichier"),
           h("div",{style:"font-size:10px;color:var(--td);margin-top:6px;line-height:1.4"},
             "L'app conserve automatiquement 4 sauvegardes internes (rotation \u00e0 chaque modification). En cas de probl\u00e8me, fais un t\u00e9l\u00e9chargement r\u00e9gulier."
           )
         ),
         h("div",{class:"divider"}),
         h("div",{class:"msec"},
-          h("div",{class:"mlbl"},"\uD83D\uDD01 Actualiser l'application"),
+          h("div",{class:"mlbl"},"Actualiser l'application"),
           h("div",{style:"font-size:11px;color:var(--td);margin-bottom:10px;line-height:1.5"},"Si l'app ne se charge pas correctement, actualise pour recharger tous les scripts."),
-          h("button",{class:"mbtn",style:"width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.2);color:var(--tx)",onClick:()=>window.location.reload(true)},"\uD83D\uDD01 Actualiser l'app")
+          h("button",{class:"mbtn",style:"width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.2);color:var(--tx)",onClick:()=>window.location.reload(true)},"Actualiser l'app")
         ),
 
       )
@@ -3138,7 +3138,7 @@ function App(){
           h("div",{class:"hdr-top",style:"position:relative"},
             h("div",null,h("div",{class:"pname"},"VAL")),
             prestige>0&&h("div",{class:"prestige-badge"},"\u269B\uFE0F Ascension "+ROMAN[prestige-1]),
-            h("button",{class:"gbtn",onClick:()=>setShowSet(true)},h("img",{src:"assets/nav/reglages.png",alt:"Réglages",style:"width:20px;height:20px;object-fit:contain;display:block;filter:drop-shadow(0 0 6px rgba(167,139,250,.45))"}))
+            h("button",{class:"gbtn",style:"display:flex;align-items:center;justify-content:center",onClick:()=>setShowSet(true)},h("img",{src:"assets/nav/reglages.png",alt:"Réglages",style:"width:40px;height:40px;object-fit:contain;display:block;filter:drop-shadow(0 0 6px rgba(167,139,250,.45))"}))
           )
         )
       ),
