@@ -149,7 +149,7 @@ function QuestIcon(id, fallback, size=18, extraStyle=""){
       src,
       alt:fallback||id,
       class:"quest-img-icon",
-      style:"width:"+size+"px;height:"+size+"px;object-fit:contain;display:inline-block;vertical-align:middle;flex-shrink:0;filter:drop-shadow(0 0 4px rgba(139,130,196,.55));"+extraStyle
+      style:"width:"+size+"px;height:"+size+"px;object-fit:contain;display:inline-block;vertical-align:top;flex-shrink:0;filter:drop-shadow(0 0 4px rgba(139,130,196,.55));"+extraStyle
     });
   }
   return h("span",{style:"font-size:"+size+"px;line-height:1;display:inline-block;flex-shrink:0;"+extraStyle},fallback);
@@ -1526,9 +1526,9 @@ function App(){
       const failFlex = validated && !done ? 3 : 1;
       const succFlex = validated && done ? 3 : 1;
       return h("div",{class:"qi "+(done?"done":"")},
-        h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:center"},
-          h("div",{class:"qname"},QuestIcon(obj.id,obj.icon,20),obj.name?" ":"",obj.name),
-          h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px"},
+        h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
+          h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:6px;line-height:1.25;white-space:normal;overflow:visible"},QuestIcon(obj.id,obj.icon,20,"margin-top:-2px"),h("span",{style:"line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip"},obj.name)),
+          h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.25;padding-top:1px"},
             obj.binaryXp+" XP · "+(STAT_LBL[obj.stat]||obj.stat)
           )
         ),
@@ -1581,14 +1581,14 @@ function App(){
       : "width:"+Math.min(100,pct)+"%;background:"+barColor)
       + (haloShadow?";box-shadow:"+haloShadow:"");
     return h("div",{class:"qi "+(d>=effectiveT&&effectiveT>0?"done":""),style:(isDebt&&!done?"border-color:#ef444466;background:rgba(239,68,68,0.04)":"")+(isCapped?";border-color:"+capColor+"66;background:linear-gradient(135deg,rgba(255,255,255,0.02),rgba(239,68,68,0.06))":"")},
-      h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:center;gap:8px"},
+      h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
         h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:6px;white-space:normal;overflow:visible;line-height:1.25"},
-          QuestIcon(obj.id,obj.icon,22,isCapped?"filter:grayscale(60%);opacity:0.7;line-height:1.25":"line-height:1.25"),
+          QuestIcon(obj.id,obj.icon,22,isCapped?"filter:grayscale(60%);opacity:0.7;margin-top:-2px;line-height:1.25":"margin-top:-2px;line-height:1.25"),
           h("span",{style:"white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;word-break:normal"},obj.name),
           hasCap&&!isCapped&&h("span",{style:"font-size:9px;font-family:Orbitron,sans-serif;letter-spacing:0.5px;padding:2px 6px;border-radius:4px;color:"+capColor+";border:1px solid "+capColor+"44;flex-shrink:0"},(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap))),
           isDebt&&!done&&h("span",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;border:1px solid #ef444455;border-radius:4px;padding:1px 5px;flex-shrink:0"},"\u26A0 DETTE "+debtLabel)
         ),
-        h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.5;align-self:center"},
+        h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.25;align-self:flex-start;padding-top:1px"},
           obj.tiers
             ?h(Fragment,null,
                 ...obj.tiers.map((tier,i)=>{
