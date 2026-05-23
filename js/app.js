@@ -92,6 +92,10 @@ const QUEST_ICON_ASSETS = {
   sp_task:"./assets/quests/urgent/task.png",
   sp_stairs:"./assets/quests/urgent/stairs.png",
   sp_wallsit:"./assets/quests/urgent/wallsit.png",
+  sp_sprint:"./assets/quests/run.png",
+  sp_walk30:"./assets/quests/walk.png",
+  sp_flex30:"./assets/quests/flex.png",
+  sp_balance_eyes:"./assets/quests/balance.png",
 };
 
 function QuestIcon(id, fallback, size=18, extraStyle=""){
