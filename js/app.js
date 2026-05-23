@@ -1475,20 +1475,20 @@ function App(){
       + (haloShadow?";box-shadow:"+haloShadow:"");
     return h("div",{class:"qi "+(d>=effectiveT&&effectiveT>0?"done":""),style:(isDebt&&!done?"border-color:#ef444466;background:rgba(239,68,68,0.04)":"")+(isCapped?";border-color:"+capColor+"66;background:linear-gradient(135deg,rgba(255,255,255,0.02),rgba(239,68,68,0.06))":"")},
       h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:center;gap:8px"},
-        h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"},
-          h("span",{style:isCapped?"filter:grayscale(60%);opacity:0.7;flex-shrink:0":"flex-shrink:0"},obj.icon),
-          h("span",{style:"overflow:hidden;text-overflow:ellipsis"},obj.name),
+        h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:6px;white-space:normal;overflow:visible;line-height:1.25"},
+          h("span",{style:isCapped?"filter:grayscale(60%);opacity:0.7;flex-shrink:0;line-height:1.25":"flex-shrink:0;line-height:1.25"},obj.icon),
+          h("span",{style:"white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;word-break:normal"},obj.name),
           hasCap&&!isCapped&&h("span",{style:"font-size:9px;font-family:Orbitron,sans-serif;letter-spacing:0.5px;padding:2px 6px;border-radius:4px;color:"+capColor+";border:1px solid "+capColor+"44;flex-shrink:0"},(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap))),
           isDebt&&!done&&h("span",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;border:1px solid #ef444455;border-radius:4px;padding:1px 5px;flex-shrink:0"},"\u26A0 DETTE "+debtLabel)
         ),
-        h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.5"},
+        h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.5;align-self:center"},
           obj.tiers
             ?h(Fragment,null,
                 ...obj.tiers.map((tier,i)=>{
                   const parts = [];
                   parts.push(tier.xp+" XP \u00b7 "+(STAT_LBL[tier.stat]||tier.stat));
                   if(tier.xp2 && tier.stat2) parts.push(tier.xp2+" XP \u00b7 "+(STAT_LBL[tier.stat2]||tier.stat2));
-                  return h("div",{key:i,style:"opacity:"+(d>=tier.at?"1":"0.6")},(d>=tier.at?"\u2713 ":"")+parts.join(" + "));
+                  return h("div",{key:i,style:"opacity:"+(d>=tier.at?"1":"0.6")+";white-space:nowrap"},(d>=tier.at?"\u2713 ":"")+parts.join(" + "));
                 })
               )
             :obj.binary
@@ -1504,7 +1504,7 @@ function App(){
       h("div",{class:"qrow"},
         h(Fragment,null,
             h("div",{class:"qbar"},h("div",{class:"qfill",style:barInnerStyle})),
-            h("div",{class:"qxp",style:isCapped?"color:"+capColor:isDebt&&!done?"color:#ef4444":""},(d%1===0?d:d.toFixed(2))+"/"+displayTarget+" "+((d>1||displayTarget>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres"}[obj.unit]||obj.unit))
+            h("div",{class:"qxp",style:(isCapped?"color:"+capColor:isDebt&&!done?"color:#ef4444":"")+";white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},(d%1===0?d:d.toFixed(2))+"/"+displayTarget+" "+((d>1||displayTarget>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas"}[obj.unit]||obj.unit))
           )
       ),
       isNearCap&&h("div",{style:"font-size:9px;color:"+capColor+";font-family:Orbitron,sans-serif;text-align:center;margin-top:6px;letter-spacing:0.5px;opacity:0.85"},"\u26A0 Cap dans "+remainingToCap+" "+obj.unit+(remainingToCap>1?"s":"")+" \u00b7 r\u00e9cup\u00e9ration forc\u00e9e"),
@@ -1596,8 +1596,8 @@ function App(){
       h("span",{style:"font-size:16px"+(isCapped?";filter:grayscale(60%);opacity:0.7":"")},obj.icon),
       h("div",{style:"flex:1"},
         h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center"},
-          h("div",{style:"display:flex;align-items:center;gap:6px"},
-            h("span",null,obj.name),
+          h("div",{style:"display:flex;align-items:flex-start;gap:6px;min-width:0;flex:1;white-space:normal;line-height:1.25"},
+            h("span",{style:"white-space:normal;line-height:1.25;word-break:normal"},obj.name),
             hasCap&&h("span",{style:"font-size:8px;font-family:Orbitron,sans-serif;letter-spacing:0.5px;padding:1px 5px;border-radius:3px;"+(isCapped?"background:"+capColor+"22;color:"+capColor+";border:1px solid "+capColor:"color:"+capColor+";border:1px solid "+capColor+"44")},isCapped?"CAP":(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap)))
           ),
           h("div",{style:"display:flex;align-items:center;gap:6px"},
