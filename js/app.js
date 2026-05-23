@@ -2778,7 +2778,7 @@ function App(){
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget){setShowSet(false);setConfirmReset(false);}}},
       h("div",{class:"modal"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"},
-          h("div",{class:"mtitle",style:"margin-bottom:0"},"\u2699 R\u00e9glages"),
+          h("div",{class:"mtitle",style:"margin-bottom:0;display:flex;align-items:center;gap:10px"},h("img",{src:"assets/nav/reglages.png",alt:"Réglages",style:"width:22px;height:22px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(167,139,250,.45));flex:0 0 auto"}),"Réglages"),
           h("button",{style:"background:none;border:none;color:var(--td);font-size:44px;line-height:1;cursor:pointer",onClick:()=>{setShowSet(false);setConfirmReset(false);}},"\u2715")
         ),
         h("div",{class:"msec"},
@@ -3138,7 +3138,7 @@ function App(){
           h("div",{class:"hdr-top",style:"position:relative"},
             h("div",null,h("div",{class:"pname"},"VAL")),
             prestige>0&&h("div",{class:"prestige-badge"},"\u269B\uFE0F Ascension "+ROMAN[prestige-1]),
-            h("button",{class:"gbtn",onClick:()=>setShowSet(true)},"\u2699")
+            h("button",{class:"gbtn",onClick:()=>setShowSet(true)},h("img",{src:"assets/nav/reglages.png",alt:"Réglages",style:"width:20px;height:20px;object-fit:contain;display:block;filter:drop-shadow(0 0 6px rgba(167,139,250,.45))"}))
           )
         )
       ),
