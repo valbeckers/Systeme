@@ -2195,7 +2195,7 @@ function App(){
         h("div",{style:"display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);align-items:center;justify-items:stretch;margin-top:12px;padding-top:14px;padding-bottom:4px;border-top:1px solid rgba(255,255,255,0.06)"},
           h("div",{style:"width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;transform:translateY(2px)"},
             h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--rc);line-height:1;display:flex;align-items:center;justify-content:center;gap:6px;width:100%"},
-              CharacterStateIcon("streak","🔥",19,"margin-top:-1px"),
+              CharacterStateIcon("streak","🔥",23,"margin-top:-2px"),
               h("span",null,state.streak)
             ),
             h("div",{style:"font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px;text-align:center;width:100%"},"Streak"),
