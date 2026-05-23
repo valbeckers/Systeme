@@ -68,6 +68,16 @@ const QUEST_ICON_ASSETS = {
   pod:"./assets/quests/podcast.png",
   nosugar:"./assets/quests/nosugar.png",
   walk:"./assets/quests/walk.png",
+  sp_flow20:"./assets/quests/urgent/animalflow.png",
+  sp_cold:"./assets/quests/urgent/coldshower.png",
+  sp_deadhang:"./assets/quests/urgent/deadhang.png",
+  sp_dips:"./assets/quests/urgent/dips.png",
+  sp_footwork:"./assets/quests/urgent/footwork.png",
+  sp_declutter:"./assets/quests/urgent/freestuff.png",
+  sp_fruits:"./assets/quests/urgent/fruits.png",
+  sp_breath:"./assets/quests/urgent/heart.png",
+  sp_fasting:"./assets/quests/urgent/jeune.png",
+  sp_jump:"./assets/quests/urgent/jumprope.png",
 };
 
 function QuestIcon(id, fallback, size=18, extraStyle=""){
@@ -1961,7 +1971,7 @@ function App(){
     return h("div",{class:"sqcard"+(urgent?" sq-urgent":"")},
       h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"},
         h("div",{style:"display:flex;align-items:center;gap:8px"},
-          h("span",{style:"font-size:18px"},sq.icon),
+          QuestIcon(sq.id,sq.icon,22),
           h("div",null,
             h("div",{style:"font-size:13px;font-weight:700;color:var(--tx)"},sq.name)
           )
