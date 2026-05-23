@@ -78,6 +78,16 @@ const QUEST_ICON_ASSETS = {
   sp_breath:"./assets/quests/urgent/heart.png",
   sp_fasting:"./assets/quests/urgent/jeune.png",
   sp_jump:"./assets/quests/urgent/jumprope.png",
+  sp_silent:"./assets/quests/urgent/silentmoving.png",
+  sp_learning:"./assets/quests/urgent/learning.png",
+  sp_lunge:"./assets/quests/urgent/lunges.png",
+  sp_fluide:"./assets/quests/urgent/martialflow.png",
+  sp_memo30:"./assets/quests/urgent/memory.png",
+  sp_nojunk:"./assets/quests/urgent/nojunkfood.png",
+  sp_nophone3h:"./assets/quests/urgent/nophone.png",
+  sp_plank:"./assets/quests/urgent/plank.png",
+  sp_pull:"./assets/quests/urgent/pullups.png",
+  sp_silence30:"./assets/quests/urgent/silence.png",
 };
 
 function QuestIcon(id, fallback, size=18, extraStyle=""){
