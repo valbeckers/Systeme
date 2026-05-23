@@ -48,29 +48,80 @@ function meetsStatRequirement(stats, reqKey){
 const STATS      = ["Sante","Force","Intelligence","Concentration","Endurance","Agilite","Discipline"];
 const STAT_COLOR = {Sante:"#ef4444",Force:"#fb923c",Intelligence:"#ec4899",Concentration:"#22d3ee",Endurance:"#f59e0b",Agilite:"#4ade80",Discipline:"#c084fc"};
 const STAT_LBL   = {Sante:"Sant\u00e9",Force:"Force",Intelligence:"Intelligence",Concentration:"Concentration",Endurance:"Endurance",Agilite:"Agilit\u00e9",Discipline:"Discipline"};
-const CHARACTER_STATE_ICON_ASSETS = {
-  sante:"./assets/character-state/sante.png",
-  mental:"./assets/character-state/mental.png",
-  energie:"./assets/character-state/energie.png",
-  discipline:"./assets/character-state/discipline.png",
-  force:"./assets/character-state/force.png",
-  serenite:"./assets/character-state/serenite.png",
-  sanction:"./assets/character-state/sanction.png",
-  latent:"./assets/character-state/latent.png",
-  desequilibre:"./assets/character-state/desequilibre.png",
-  berserker:"./assets/character-state/berserker.png",
-  construction:"./assets/character-state/construction.png",
-  streak:"./assets/character-state/streak.png",
+
+const QUEST_ICON_ASSETS = {
+  water:"./assets/quests/water.png",
+  sleep:"./assets/quests/sleep.png",
+  protein:"./assets/quests/protein.png",
+  mindmeal:"./assets/quests/mindmeal.png",
+  push:"./assets/quests/push.png",
+  abs:"./assets/quests/abs.png",
+  squats:"./assets/quests/squats.png",
+  reading:"./assets/quests/reading.png",
+  balance:"./assets/quests/balance.png",
+  adult:"./assets/quests/adult.png",
+  run:"./assets/quests/run.png",
+  calves:"./assets/quests/calves.png",
+  flex:"./assets/quests/flex.png",
+  grips:"./assets/quests/grips.png",
+  med:"./assets/quests/med.png",
+  pod:"./assets/quests/podcast.png",
+  nosugar:"./assets/quests/nosugar.png",
+  walk:"./assets/quests/walk.png",
+  sp_flow20:"./assets/quests/urgent/animalflow.png",
+  sp_cold:"./assets/quests/urgent/coldshower.png",
+  sp_deadhang:"./assets/quests/urgent/deadhang.png",
+  sp_dips:"./assets/quests/urgent/dips.png",
+  sp_footwork:"./assets/quests/urgent/footwork.png",
+  sp_declutter:"./assets/quests/urgent/freestuff.png",
+  sp_fruits:"./assets/quests/urgent/fruits.png",
+  sp_breath:"./assets/quests/urgent/heart.png",
+  sp_fasting:"./assets/quests/urgent/jeune.png",
+  sp_jump:"./assets/quests/urgent/jumprope.png",
+  sp_silent:"./assets/quests/urgent/silentmoving.png",
+  sp_learning:"./assets/quests/urgent/learning.png",
+  sp_lunge:"./assets/quests/urgent/lunges.png",
+  sp_fluide:"./assets/quests/urgent/martialflow.png",
+  sp_memo30:"./assets/quests/urgent/memory.png",
+  sp_nojunk:"./assets/quests/urgent/nojunkfood.png",
+  sp_nophone3h:"./assets/quests/urgent/nophone.png",
+  sp_plank:"./assets/quests/urgent/plank.png",
+  sp_pull:"./assets/quests/urgent/pullups.png",
+  sp_silence30:"./assets/quests/urgent/silence.png",
+  sp_sun:"./assets/quests/urgent/sun.png",
+  sp_task:"./assets/quests/urgent/task.png",
+  sp_stairs:"./assets/quests/urgent/stairs.png",
+  sp_wallsit:"./assets/quests/urgent/wallsit.png",
+  sp_sprint:"./assets/quests/run.png",
+  sp_walk30:"./assets/quests/walk.png",
+  sp_flex30:"./assets/quests/flex.png",
+  sp_balance_eyes:"./assets/quests/balance.png",
+  ep_pullups:"./assets/epreuves/pullups.png",
+  ep_wallsit:"./assets/epreuves/wallsit.png",
+  ep_reading:"./assets/epreuves/reading.png",
+  ep_4hwork:"./assets/epreuves/4hwork.png",
+  ep_med:"./assets/epreuves/med.png",
+  ep_deepwork:"./assets/epreuves/deepwork.png",
+  ep_hike:"./assets/epreuves/hike.png",
+  ep_run:"./assets/epreuves/run.png",
+  ep_burpees:"./assets/epreuves/burpees.png",
+  ep_clock:"./assets/epreuves/clock.png",
+  ep_coldshower:"./assets/epreuves/coldshower.png",
+  ep_nophone:"./assets/epreuves/nophone.png",
+  ep_nojunkfood:"./assets/epreuves/nojunkfood.png",
+  ep_broom:"./assets/epreuves/broom.png",
+  ep_flex:"./assets/epreuves/flex.png",
+  ep_martialflow:"./assets/epreuves/martialflow.png",
 };
 
-function CharacterStateIcon(id, fallback, size=26, extraStyle=""){
-  const src = CHARACTER_STATE_ICON_ASSETS[id];
+function QuestIcon(id, fallback, size=18, extraStyle=""){
+  const src = QUEST_ICON_ASSETS[id];
   if(src){
     return h("img",{
       src,
       alt:fallback||id,
-      class:"character-state-img-icon",
-      style:"width:"+size+"px;height:"+size+"px;object-fit:contain;display:inline-block;vertical-align:middle;flex-shrink:0;filter:drop-shadow(0 0 6px rgba(139,130,196,.62));"+extraStyle
+      class:"quest-img-icon",
+      style:"width:"+size+"px;height:"+size+"px;object-fit:contain;display:inline-block;vertical-align:middle;flex-shrink:0;filter:drop-shadow(0 0 4px rgba(139,130,196,.55));"+extraStyle
     });
   }
   return h("span",{style:"font-size:"+size+"px;line-height:1;display:inline-block;flex-shrink:0;"+extraStyle},fallback);
@@ -97,7 +148,7 @@ const DEFS = [
   
   {id:"med",    name:"M\u00e9ditation", unit:"min",   xpPer:15,  daily:true, weekly:false,optional:true, stat:"Concentration",  icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F", base:15, fixedBase:true, cap:2},
   // ─── ENDURANCE ────────────────────────────────────────────────────────
-  {id:"run",    name:"Course",          unit:"km",    xpPer:150, daily:false,weekly:true, optional:false,stat:"Endurance",      icon:"\uD83C\uDFC3\uD83C\uDFFB",   base:7,  stat2:"Agilite", xpPer2:30, cap:3},
+  {id:"run",    name:"Course",          iconKey:"run",          unit:"km",    xpPer:150, daily:false,weekly:true, optional:false,stat:"Endurance",      icon:"\uD83C\uDFC3\uD83C\uDFFB",   base:7,  stat2:"Agilite", xpPer2:30, cap:3},
   {id:"walk",   name:"Marche",          unit:"km",    xpPer:75,  daily:false,weekly:false,optional:true, stat:"Endurance",      icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F", base:5, fixedBase:true},
   // ─── AGILITÉ ──────────────────────────────────────────────────────────
   {id:"flex",   name:"Souplesse",       unit:"min",   xpPer:50,  daily:true, weekly:false,optional:true, stat:"Agilite",        icon:"\uD83E\uDD38\uD83C\uDFFB",   base:15, fixedBase:true, stat2:"Endurance", xpPer2:10, cap:2},
@@ -162,37 +213,37 @@ const SQ_TIER_LABEL = {mineure:"Mineure", majeure:"Majeure", legendaire:"L\u00e9
 const EPREUVE_COOLDOWN = {mineure:2*86400000, majeure:5*86400000, legendaire:7*86400000};
 const EPREUVES = [
   // 12 épreuves au total, sans notion de tier
-  {id:"ep_150pull",  name:"150 tractions",                      icon:"\u270A\uD83C\uDFFB",                       stat:"Force",        xp:3000, days:7, unit:"rep", target:150,
+  {id:"ep_150pull",  name:"150 tractions",                      iconId:"ep_pullups", icon:"\u270A\uD83C\uDFFB",                       stat:"Force",        xp:3000, days:7, unit:"rep", target:150,
     desc:"Atteindre 150 tractions en 7 jours"},
-  {id:"ep_wallsit60",name:"35min de chaise",                    icon:"\uD83E\uDE91",                             stat:"Force",        xp:1500, xp2:500, stat2:"Endurance", days:7, unit:"min", target:35, dailyTrack:true, dailyTrackMin:5,
+  {id:"ep_wallsit60",name:"35min de chaise",                    iconId:"ep_wallsit", icon:"\uD83E\uDE91",                             stat:"Force",        xp:1500, xp2:500, stat2:"Endurance", days:7, unit:"min", target:35, dailyTrack:true, dailyTrackMin:5,
     desc:"35 minutes cumul\u00e9es de chaise sur la semaine"},
-  {id:"ep_book",     name:"Lire un livre complet (300+ pages)", icon:"\uD83D\uDCDA",                             stat:"Intelligence", xp:2000, xp2:1000, stat2:"Concentration", days:7, binary:true,
+  {id:"ep_book",     name:"Lire un livre complet (300+ pages)", iconId:"ep_reading", icon:"\uD83D\uDCDA",                             stat:"Intelligence", xp:2000, xp2:1000, stat2:"Concentration", days:7, binary:true,
     desc:"Terminer un livre de 300 pages ou plus"},
-  {id:"ep_project",  name:"4h de travail sur un projet personnel",icon:"\uD83E\uDDE0",                           stat:"Intelligence", xp:1000,  xp2:1000, stat2:"Concentration", xp3:1000, stat3:"Discipline", days:7, unit:"min", target:240,
-    desc:"4 heures de travail sur un projet personnel"},
-  {id:"ep_medweek",  name:"M\u00e9ditation quotidienne",        icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F",stat:"Concentration",xp:2500, days:7, streak7:true, streakDays:7, unit:"jour", target:7,
+  {id:"ep_project",  name:"4h de travail sur un projet professionnel",iconId:"ep_4hwork", icon:"\uD83E\uDDE0",                           stat:"Intelligence", xp:1000,  xp2:1000, stat2:"Concentration", xp3:1000, stat3:"Discipline", days:7, unit:"min", target:240,
+    desc:"4 heures de travail sur un projet professionnel"},
+  {id:"ep_medweek",  name:"M\u00e9ditation quotidienne",        iconId:"ep_med", icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F",stat:"Concentration",xp:2500, days:7, streak7:true, streakDays:7, unit:"jour", target:7,
     desc:"M\u00e9diter chaque jour pendant 7 jours"},
-  {id:"ep_deepwork5",name:"Deep Work 60min",                    icon:"\u26AB",                                   stat:"Concentration",xp:2000, xp2:1000, stat2:"Discipline", days:7, cumDays:true, streakDays:5, unit:"jour", target:5,
+  {id:"ep_deepwork5",name:"Deep Work 60min",                    iconId:"ep_deepwork", icon:"\u26AB",                                   stat:"Concentration",xp:2000, xp2:1000, stat2:"Discipline", days:7, cumDays:true, streakDays:5, unit:"jour", target:5,
     desc:"60 min de deep work 5 jours de suite"},
-  {id:"ep_hike",     name:"Randonn\u00e9e longue (5h+)",        icon:"\u26F0\uFE0F",                             stat:"Endurance",    xp:2000, days:7, binary:true,
+  {id:"ep_hike",     name:"Randonn\u00e9e longue (5h+)",        iconId:"ep_hike", icon:"\u26F0\uFE0F",                             stat:"Endurance",    xp:2000, days:7, binary:true,
     desc:"Randonn\u00e9e de 5 heures minimum"},
-  {id:"ep_10km",     name:"Courir un 10km non-stop",            icon:"\uD83C\uDFC3\uD83C\uDFFB\u200D\u27A1\uFE0F",stat:"Endurance",   xp:2500, xp2:500, stat2:"Agilite", days:7, binary:true,
+  {id:"ep_10km",     name:"Courir un 10km non-stop",            iconId:"ep_run", icon:"\uD83C\uDFC3\uD83C\uDFFB\u200D\u27A1\uFE0F",stat:"Endurance",   xp:2500, xp2:500, stat2:"Agilite", days:7, binary:true,
     desc:"Courir 10km non-stop"},
-  {id:"ep_burpees",  name:"100 burpees",                        icon:"\uD83D\uDD25",                             stat:"Endurance",    xp:2000, xp2:1000, stat2:"Agilite", days:7, unit:"rep", target:100,
+  {id:"ep_burpees",  name:"100 burpees",                        iconId:"ep_burpees", icon:"\uD83D\uDD25",                             stat:"Endurance",    xp:2000, xp2:1000, stat2:"Agilite", days:7, unit:"rep", target:100,
     desc:"100 burpees cumul\u00e9s"},
-  {id:"ep_wakeup",   name:"R\u00e9veil \u00e0 la m\u00eame heure",icon:"\uD83C\uDF05",                           stat:"Discipline",   xp:2000, xp2:1000, stat2:"Sante", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
+  {id:"ep_wakeup",   name:"R\u00e9veil \u00e0 la m\u00eame heure",iconId:"ep_clock", icon:"\uD83C\uDF05",                           stat:"Discipline",   xp:2000, xp2:1000, stat2:"Sante", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
     desc:"Se lever \u00e0 la m\u00eame heure 7 jours de suite"},
-  {id:"ep_coldweek", name:"Douche froide 10min quotidienne",    icon:"\u2744\uFE0F",                             stat:"Discipline",   xp:2000, xp2:1000, stat2:"Sante", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
+  {id:"ep_coldweek", name:"Douche froide 10min quotidienne",    iconId:"ep_coldshower", icon:"\u2744\uFE0F",                             stat:"Discipline",   xp:2000, xp2:1000, stat2:"Sante", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
     desc:"10 min de douche froide chaque jour pendant 7 jours"},
-  {id:"ep_noscroll", name:"Pas de doomscrolling",               icon:"\uD83D\uDCF5",                             stat:"Intelligence", xp:2500, days:7, streak7:true, streakDays:7, unit:"jour", target:7,
+  {id:"ep_noscroll", name:"Pas de doomscrolling",               iconId:"ep_nophone", icon:"\uD83D\uDCF5",                             stat:"Intelligence", xp:2500, days:7, streak7:true, streakDays:7, unit:"jour", target:7,
     desc:"Z\u00e9ro scroll passif pendant 7 jours"},
-  {id:"ep_nojunkwk", name:"Pas de junk-food",                   icon:"\uD83C\uDF55",                             stat:"Sante",        xp:2000, xp2:1000, stat2:"Discipline", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
+  {id:"ep_nojunkwk", name:"Pas de junk-food",                   iconId:"ep_nojunkfood", icon:"\uD83C\uDF55",                             stat:"Sante",        xp:2000, xp2:1000, stat2:"Discipline", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
     desc:"Z\u00e9ro junk-food pendant 7 jours"},
-  {id:"ep_clean",    name:"Nettoyage total d'une pi\u00e8ce",   icon:"\uD83E\uDDF9",                             stat:"Discipline",   xp:1500, days:7, binary:true,
+  {id:"ep_clean",    name:"Nettoyage total d'une pi\u00e8ce",   iconId:"ep_broom", icon:"\uD83E\uDDF9",                             stat:"Discipline",   xp:1500, days:7, binary:true,
     desc:"Nettoyer compl\u00e8tement une pi\u00e8ce"},
-  {id:"ep_mob",      name:"Mobilit\u00e9 matinale",             icon:"\uD83E\uDD38\uD83C\uDFFB\u200D\u2642\uFE0F",stat:"Agilite",     xp:2500, days:7, cumDays:true, streakDays:5, unit:"jour", target:5,
+  {id:"ep_mob",      name:"Mobilit\u00e9 matinale",             iconId:"ep_flex", icon:"\uD83E\uDD38\uD83C\uDFFB\u200D\u2642\uFE0F",stat:"Agilite",     xp:2500, days:7, cumDays:true, streakDays:5, unit:"jour", target:5,
     desc:"Faire 15 min de mobilit\u00e9 5 jours sur 7"},
-  {id:"ep_taichi",   name:"Tai Chi quotidien",                  icon:"\u262F\uFE0F",                             stat:"Agilite",      xp:2000, xp2:1000, stat2:"Concentration", days:7, cumDays:true, streakDays:5, dailyMin:20, unit:"jour", target:5,
+  {id:"ep_taichi",   name:"Tai Chi quotidien",                  iconId:"ep_martialflow", icon:"\u262F\uFE0F",                             stat:"Agilite",      xp:2000, xp2:1000, stat2:"Concentration", days:7, cumDays:true, streakDays:5, dailyMin:20, unit:"jour", target:5,
     desc:"Faire 20 min de Tai Chi 5 jours sur 7"},
 ];
 
@@ -1448,7 +1499,7 @@ function App(){
       const succFlex = validated && done ? 3 : 1;
       return h("div",{class:"qi "+(done?"done":"")},
         h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:center"},
-          h("div",{class:"qname"},h("span",null,obj.icon),obj.name?" ":"",obj.name),
+          h("div",{class:"qname"},QuestIcon(obj.id,obj.icon,20),obj.name?" ":"",obj.name),
           h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px"},
             obj.binaryXp+" XP · "+(STAT_LBL[obj.stat]||obj.stat)
           )
@@ -1503,20 +1554,20 @@ function App(){
       + (haloShadow?";box-shadow:"+haloShadow:"");
     return h("div",{class:"qi "+(d>=effectiveT&&effectiveT>0?"done":""),style:(isDebt&&!done?"border-color:#ef444466;background:rgba(239,68,68,0.04)":"")+(isCapped?";border-color:"+capColor+"66;background:linear-gradient(135deg,rgba(255,255,255,0.02),rgba(239,68,68,0.06))":"")},
       h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:center;gap:8px"},
-        h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"},
-          h("span",{style:isCapped?"filter:grayscale(60%);opacity:0.7;flex-shrink:0":"flex-shrink:0"},obj.icon),
-          h("span",{style:"overflow:hidden;text-overflow:ellipsis"},obj.name),
+        h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:6px;white-space:normal;overflow:visible;line-height:1.25"},
+          QuestIcon(obj.id,obj.icon,22,isCapped?"filter:grayscale(60%);opacity:0.7;line-height:1.25":"line-height:1.25"),
+          h("span",{style:"white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;word-break:normal"},obj.name),
           hasCap&&!isCapped&&h("span",{style:"font-size:9px;font-family:Orbitron,sans-serif;letter-spacing:0.5px;padding:2px 6px;border-radius:4px;color:"+capColor+";border:1px solid "+capColor+"44;flex-shrink:0"},(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap))),
           isDebt&&!done&&h("span",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;border:1px solid #ef444455;border-radius:4px;padding:1px 5px;flex-shrink:0"},"\u26A0 DETTE "+debtLabel)
         ),
-        h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.5"},
+        h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.5;align-self:center"},
           obj.tiers
             ?h(Fragment,null,
                 ...obj.tiers.map((tier,i)=>{
                   const parts = [];
                   parts.push(tier.xp+" XP \u00b7 "+(STAT_LBL[tier.stat]||tier.stat));
                   if(tier.xp2 && tier.stat2) parts.push(tier.xp2+" XP \u00b7 "+(STAT_LBL[tier.stat2]||tier.stat2));
-                  return h("div",{key:i,style:"opacity:"+(d>=tier.at?"1":"0.6")},(d>=tier.at?"\u2713 ":"")+parts.join(" + "));
+                  return h("div",{key:i,style:"opacity:"+(d>=tier.at?"1":"0.6")+";white-space:nowrap"},(d>=tier.at?"\u2713 ":"")+parts.join(" + "));
                 })
               )
             :obj.binary
@@ -1532,7 +1583,7 @@ function App(){
       h("div",{class:"qrow"},
         h(Fragment,null,
             h("div",{class:"qbar"},h("div",{class:"qfill",style:barInnerStyle})),
-            h("div",{class:"qxp",style:isCapped?"color:"+capColor:isDebt&&!done?"color:#ef4444":""},(d%1===0?d:d.toFixed(2))+"/"+displayTarget+" "+((d>1||displayTarget>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres"}[obj.unit]||obj.unit))
+            h("div",{class:"qxp",style:(isCapped?"color:"+capColor:isDebt&&!done?"color:#ef4444":"")+";white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},(d%1===0?d:d.toFixed(2))+"/"+displayTarget+" "+((d>1||displayTarget>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas"}[obj.unit]||obj.unit))
           )
       ),
       isNearCap&&h("div",{style:"font-size:9px;color:"+capColor+";font-family:Orbitron,sans-serif;text-align:center;margin-top:6px;letter-spacing:0.5px;opacity:0.85"},"\u26A0 Cap dans "+remainingToCap+" "+obj.unit+(remainingToCap>1?"s":"")+" \u00b7 r\u00e9cup\u00e9ration forc\u00e9e"),
@@ -1586,11 +1637,12 @@ function App(){
 
   function RR({obj,isW}){
     const t=obj.base&&!RANK_BASES[obj.id]?obj.base:getRankBase(obj.id,ri,prestige), d=(isW||obj.id==="walk")?(wLog[obj.id]||0):(tLog[obj.id]||0);
-    const pct=Math.min(100,(d/t)*100), done=d>=t, over=d>t;
+    const displayTarget = (obj.target && !obj.binary) ? obj.target : t;
+    const pct=Math.min(100,(d/displayTarget)*100), done=d>=displayTarget, over=d>displayTarget;
     const validated=isW?(wLog[obj.id]!==undefined):(tLog[obj.id]!==undefined);
     if(obj.binary){
       return h("div",{style:"display:flex;align-items:center;gap:10px;margin-bottom:8px"},
-        h("span",{style:"font-size:16px"},obj.icon),
+        QuestIcon(obj.id,obj.icon,18),
         h("div",{style:"flex:1"},
           h("div",{style:"font-size:12px;color:var(--tx);display:flex;justify-content:space-between;align-items:center"},
             h("span",null,obj.name),
@@ -1620,15 +1672,15 @@ function App(){
         : "";
     const barInnerStyle = "width:"+(isCapped?100:Math.min(100,pct))+"%;background:"+(isCapped?capColor:isNearCap?"linear-gradient(90deg,"+rankColor+","+capColor+")":rankColor)+(haloShadow?";box-shadow:"+haloShadow:"");
     return h("div",{style:"display:flex;align-items:center;gap:10px;margin-bottom:8px"},
-      h("span",{style:"font-size:16px"+(isCapped?";filter:grayscale(60%);opacity:0.7":"")},obj.icon),
+      QuestIcon(obj.id,obj.icon,18,isCapped?"filter:grayscale(60%);opacity:0.7":""),
       h("div",{style:"flex:1"},
         h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center"},
-          h("div",{style:"display:flex;align-items:center;gap:6px"},
-            h("span",null,obj.name),
+          h("div",{style:"display:flex;align-items:flex-start;gap:6px;min-width:0;flex:1;white-space:normal;line-height:1.25"},
+            h("span",{style:"white-space:normal;line-height:1.25;word-break:normal"},obj.name),
             hasCap&&h("span",{style:"font-size:8px;font-family:Orbitron,sans-serif;letter-spacing:0.5px;padding:1px 5px;border-radius:3px;"+(isCapped?"background:"+capColor+"22;color:"+capColor+";border:1px solid "+capColor:"color:"+capColor+";border:1px solid "+capColor+"44")},isCapped?"CAP":(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap)))
           ),
           h("div",{style:"display:flex;align-items:center;gap:6px"},
-            h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+(isCapped?capColor:d>=t?"var(--rc)":d>0?"var(--tx)":"var(--td)")},(d%1===0?d:d.toFixed(2))+"/"+t+" "+((d>1||t>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres"}[obj.unit]||obj.unit)),
+            h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+(isCapped?capColor:d>=displayTarget?"var(--rc)":d>0?"var(--tx)":"var(--td)")},(d%1===0?d:d.toFixed(2))+"/"+displayTarget+" "+((d>1||displayTarget>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas"}[obj.unit]||obj.unit)),
             h("span",{style:"font-family:Orbitron,sans-serif;font-size:11px;font-weight:700;color:#4ade80;width:10px;text-align:center"},done?"\u2713":"")
           )
         ),
@@ -1787,7 +1839,7 @@ function App(){
     return h("div",{class:"sqcard"+(isActive?" ep-pulse":""),style:"border-color:"+tierColor+"44;background:"+tierColor+"08;--epc1:"+tierColor+"44;--epc2:"+tierColor+"00"},
       h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"},
         h("div",{style:"display:flex;align-items:center;gap:8px"},
-          h("span",{style:"font-size:20px"},ep.icon),
+          QuestIcon(ep.iconId,ep.icon||"⚔️",20,"line-height:1.1"),
           h("div",null,
             h("div",{style:"font-size:13px;font-weight:700;color:var(--tx)"},ep.name)
           )
@@ -1953,7 +2005,7 @@ function App(){
     return h("div",{class:"sqcard"+(urgent?" sq-urgent":"")},
       h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"},
         h("div",{style:"display:flex;align-items:center;gap:8px"},
-          h("span",{style:"font-size:18px"},sq.icon),
+          QuestIcon(sq.id,sq.icon,22),
           h("div",null,
             h("div",{style:"font-size:13px;font-weight:700;color:var(--tx)"},sq.name)
           )
@@ -2036,16 +2088,16 @@ function App(){
       const maxEntry = Object.entries(statWeek).sort((a,b)=>b[1]-a[1])[0]||["",0];
       const maxShare = total>0 ? maxEntry[1]/total : 0;
 
-      if(debtActive) return {iconId:"sanction", icon:"⚠️", name:"En dette", desc:"Dette active : priorité au remboursement avant d'ajouter du volume.", color:"#fb923c"};
-      if(state.lastPenaltiesApplied && state.lastPenaltiesApplied.ids && state.lastPenaltiesApplied.ids.length>0) return {iconId:"sanction", icon:"🔴", name:"Sous sanction", desc:"Une pénalité récente est enregistrée. Reviens à l'exécution simple.", color:"#ef4444"};
-      if(total<500) return {iconId:"latent", icon:"🌑", name:"Latent", desc:"Peu d'activité mesurée sur 7 jours. Le système manque de données.", color:"var(--td)"};
-      if(maxShare>.55) return {iconId:"desequilibre", icon:"⚖️", name:"Déséquilibré", desc:STAT_LBL[maxEntry[0]]+" domine nettement ta semaine. Surveille les angles morts.", color:"#f59e0b"};
-      if(physical/total>.55) return {iconId:"berserker", icon:"🔥", name:"Berserker", desc:"Semaine très physique. Utile, mais attention à ne pas fuir le mental.", color:"#fb923c"};
-      if(mental/total>.55) return {iconId:"mental", icon:"🧠", name:"Érudit", desc:"Semaine orientée esprit : lecture, attention et apprentissage dominent.", color:"#22d3ee"};
-      if(discipline/total>.28 && (statWeek.Concentration||0)>0) return {iconId:"discipline", icon:"🕯️", name:"Ascète actif", desc:"Discipline et concentration solides. Bonne maîtrise de l'impulsion.", color:"#c084fc"};
-      if(sante/total>.30 && discipline>0) return {iconId:"sante", icon:"🌿", name:"Fondations solides", desc:"Santé et discipline soutiennent bien ta progression.", color:"#4ade80"};
-      if(computedStreak>=7) return {iconId:"serenite", icon:"🛡️", name:"Stable", desc:"Rythme régulier sur la semaine. Continue sans chercher à surcharger.", color:"#4ade80"};
-      return {iconId:"construction", icon:"🧬", name:"En construction", desc:"Progression réelle, mais le profil de semaine n'est pas encore net.", color:"var(--rc)"};
+      if(debtActive) return {icon:"⚠️", name:"En dette", desc:"Dette active : priorité au remboursement avant d'ajouter du volume.", color:"#fb923c"};
+      if(state.lastPenaltiesApplied && state.lastPenaltiesApplied.ids && state.lastPenaltiesApplied.ids.length>0) return {icon:"🔴", name:"Sous sanction", desc:"Une pénalité récente est enregistrée. Reviens à l'exécution simple.", color:"#ef4444"};
+      if(total<500) return {icon:"🌑", name:"Latent", desc:"Peu d'activité mesurée sur 7 jours. Le système manque de données.", color:"var(--td)"};
+      if(maxShare>.55) return {icon:"⚖️", name:"Déséquilibré", desc:STAT_LBL[maxEntry[0]]+" domine nettement ta semaine. Surveille les angles morts.", color:"#f59e0b"};
+      if(physical/total>.55) return {icon:"🔥", name:"Berserker", desc:"Semaine très physique. Utile, mais attention à ne pas fuir le mental.", color:"#fb923c"};
+      if(mental/total>.55) return {icon:"🧠", name:"Érudit", desc:"Semaine orientée esprit : lecture, attention et apprentissage dominent.", color:"#22d3ee"};
+      if(discipline/total>.28 && (statWeek.Concentration||0)>0) return {icon:"🕯️", name:"Ascète actif", desc:"Discipline et concentration solides. Bonne maîtrise de l'impulsion.", color:"#c084fc"};
+      if(sante/total>.30 && discipline>0) return {icon:"🌿", name:"Fondations solides", desc:"Santé et discipline soutiennent bien ta progression.", color:"#4ade80"};
+      if(computedStreak>=7) return {icon:"🛡️", name:"Stable", desc:"Rythme régulier sur la semaine. Continue sans chercher à surcharger.", color:"#4ade80"};
+      return {icon:"🧬", name:"En construction", desc:"Progression réelle, mais le profil de semaine n'est pas encore net.", color:"var(--rc)"};
     })();
 
     return h("div",{class:"tab"},
@@ -2097,10 +2149,7 @@ function App(){
         },"\u269B\uFE0F Mont\u00e9e en Ascension"),
         h("div",{style:"display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);align-items:center;justify-items:stretch;margin-top:12px;padding-top:14px;padding-bottom:4px;border-top:1px solid rgba(255,255,255,0.06)"},
           h("div",{style:"width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;transform:translateY(2px)"},
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--rc);line-height:1;display:flex;align-items:center;justify-content:center;gap:6px;width:100%"},
-              CharacterStateIcon("streak","🔥",19,"margin-top:-1px"),
-              h("span",null,state.streak)
-            ),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--rc);line-height:1;display:flex;align-items:center;justify-content:center;gap:4px;width:100%"},"\uD83D\uDD25 "+state.streak),
             h("div",{style:"font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px;text-align:center;width:100%"},"Streak"),
             bonusGiven&&h("div",{style:"font-size:10px;color:#c084fc;font-family:Orbitron,sans-serif;margin-top:2px;text-align:center;width:100%"},"+250 XP \u2713")
           ),
@@ -2114,9 +2163,7 @@ function App(){
       h("div",{class:"card"},
         h("div",{class:"ctitle"},"État du personnage"),
         h("div",{style:"display:flex;align-items:flex-start;gap:12px"},
-          h("div",{style:"min-width:36px;width:36px;display:flex;align-items:center;justify-content:center;transform:translateY(-1px)"},
-            CharacterStateIcon(characterState.iconId,characterState.icon,32)
-          ),
+          h("div",{style:"font-size:18px;line-height:1;min-width:20px;text-align:center"},characterState.icon),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-family:Orbitron,sans-serif;font-size:13px;font-weight:800;letter-spacing:1px;color:"+characterState.color+";text-transform:uppercase"},characterState.name),
             h("div",{style:"font-size:12px;color:var(--td);line-height:1.35;margin-top:4px"},characterState.desc)
@@ -2506,7 +2553,7 @@ function App(){
       ),
       // Activité de la semaine (toujours ouvert, avec L M M J V S D en haut)
       h("div",{class:"card"},
-        h("div",{class:"ctitle"},"\uD83D\uDCCA Activit\u00e9 de la semaine"),
+        h("div",{class:"ctitle"},"Activit\u00e9 de la semaine"),
         // Bandeau jours L M M J V S D
         h("div",{class:"wgrid",style:"margin-top:8px;margin-bottom:14px"},weekDays.map((d,i)=>{
           const log=state.dailyLog[d]||{};
@@ -2531,7 +2578,7 @@ function App(){
             const successes=pastDays.filter(d=>(state.dailyLog[d]?.[obj.id]||0)>=1).length;
             const pct=Math.min(100,(successes/7)*100), complete=successes>=7;
             return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:10px;margin-bottom:10px"},
-              h("span",{style:"font-size:18px"},obj.icon),
+              QuestIcon(obj.id,obj.icon,18),
               h("div",{style:"flex:1"},
                 h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between"},
                   h("span",{style:"display:flex;align-items:center;gap:6px"},
@@ -2545,10 +2592,10 @@ function App(){
               complete&&h("span",{style:"font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:#4ade80"},"\u2713")
             );
           }
-          const val=tots[obj.id]||0, wt=obj.weekly?(obj.id==="walk"&&restMode&&walkObj?walkObj.base:getRankBase(obj.id,ri)):obj.id==="walk"?obj.base:getRankBase(obj.id,ri,prestige)*7;
+          const val=tots[obj.id]||0, wt=obj.weekly?(obj.id==="walk"&&restMode&&walkObj?walkObj.base:getRankBase(obj.id,ri)):obj.id==="walk"?obj.base:(obj.target&&!obj.binary?obj.target:getRankBase(obj.id,ri,prestige))*7;
           const pct=Math.min(100,(val/wt)*100), complete=val>=wt, over=val>wt;
           return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:10px;margin-bottom:10px"},
-            h("span",{style:"font-size:18px"},obj.icon),
+            QuestIcon(obj.id,obj.icon,18),
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between"},
                 h("span",{style:"display:flex;align-items:center;gap:6px"},
@@ -2560,7 +2607,7 @@ function App(){
 
                 ),
                 h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px"},
-                  (val%1===0?val:val.toFixed(2))+"/"+wt+" "+((val>1||wt>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres"}[obj.unit]||obj.unit))
+                  (val%1===0?val:val.toFixed(2))+"/"+wt+" "+((val>1||wt>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas"}[obj.unit]||obj.unit))
               ),
               h("div",{class:"qbar"},h("div",{class:"qfill"+(over?" over":complete?" done":pct>0?" partial":""),style:"width:"+pct+"%"}))
             ),
@@ -2573,7 +2620,7 @@ function App(){
       // Records personnels
       h("div",{class:"card"},
         h("div",{style:"display:flex;align-items:center;justify-content:space-between;cursor:pointer",onClick:()=>toggle("records")},
-          h("div",{class:"ctitle",style:"margin:0"},"\uD83C\uDFC6 Records personnels"),
+          h("div",{class:"ctitle",style:"margin:0"},"Records personnels"),
           h(ChevronBtn,{k:"records"})
         ),
         open.records&&h(Fragment,null,
@@ -2581,7 +2628,7 @@ function App(){
           [...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.binary)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.binary))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden))].map(o=>{
           const rec=records[o.id];
           if(!rec)return h("div",{key:o.id,style:"display:flex;align-items:center;gap:10px;margin-bottom:8px;opacity:.35"},
-            h("span",{style:"font-size:16px"},o.icon),
+            QuestIcon(o.id,o.icon,18),
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:12px;color:var(--td);display:flex;align-items:center;gap:5px"},
                 o.name,
@@ -2593,7 +2640,7 @@ function App(){
           );
           const fmt2=d=>{if(d.includes("-W"))return d.replace("-W","-S");const p=d.split("-");return p[2]+"/"+p[1];};
           return h("div",{key:o.id,style:"display:flex;align-items:center;gap:10px;margin-bottom:8px"},
-            h("span",{style:"font-size:16px"},o.icon),
+            QuestIcon(o.id,o.icon,18),
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:12px;color:var(--tx);display:flex;align-items:center;gap:5px"},
                 o.name,
@@ -2627,7 +2674,7 @@ function App(){
         const displayObjs=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.binary)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.binary))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden))];
         return h("div",{class:"card"},
           h("div",{style:"display:flex;align-items:center;justify-content:space-between;cursor:pointer",onClick:()=>toggle("totals")},
-            h("div",{class:"ctitle",style:"margin:0"},"\uD83E\uDDEE Totaux depuis le d\u00e9but"+(firstDay?" \u2014 "+fmtFirst(firstDay):"")),
+            h("div",{class:"ctitle",style:"margin:0"},"Totaux depuis le d\u00e9but"+(firstDay?" \u2014 "+fmtFirst(firstDay):"")),
             h(ChevronBtn,{k:"totals"})
           ),
           open.totals&&h(Fragment,null,
@@ -2636,7 +2683,7 @@ function App(){
               const total=totals[o.id]||0;
               const unitLbl=total>1?({rep:"reps",page:"pages",verre:"verres",km:"km",min:"min"}[o.unit]||o.unit):o.unit;
               return h("div",{key:o.id,style:"display:flex;align-items:center;gap:10px;margin-bottom:8px"+(total===0?";opacity:.35":"")},
-                h("span",{style:"font-size:16px"},o.icon),
+                QuestIcon(o.id,o.icon,18),
                 h("div",{style:"flex:1"},
                   h("div",{style:"font-size:12px;color:var(--tx);display:flex;align-items:center;gap:5px"},
                     o.name,
@@ -2714,7 +2761,7 @@ function App(){
           ordered.map(obj=>{
             const cur=(obj.weekly||obj.id==="walk")?(wLog[obj.id]||0):(tLog[obj.id]||0);
             return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:10px;margin-bottom:8px"},
-              h("span",{style:"font-size:16px;min-width:24px"},obj.icon),
+              QuestIcon(obj.id,obj.icon,20,"min-width:24px"),
               h("span",{style:"flex:1;font-size:13px"},obj.name),
               h("input",{id:"cd_"+obj.id,class:"min",type:"text",inputMode:"decimal",defaultValue:String(cur),style:"width:80px;margin:0;text-align:center"}),
               h("span",{style:"font-size:11px;color:var(--td);min-width:28px"},obj.unit)
@@ -2869,7 +2916,7 @@ function App(){
       const subtitle = obj.desc || obj.subtitle || "";
       return h("div",{key:obj.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:flex-start;gap:9px"},
-          h("span",{style:"font-size:18px;line-height:1.1"},obj.icon||"•"),
+          QuestIcon(obj.id,obj.icon||"•",20,"line-height:1.1"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},obj.name),
             subtitle&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},subtitle),
@@ -2892,7 +2939,7 @@ function App(){
     function renderSpecial(q){
       return h("div",{key:q.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:flex-start;gap:9px"},
-          h("span",{style:"font-size:18px;line-height:1.1"},q.icon||"🚨"),
+          QuestIcon(q.id,q.icon||"🚨",20,"line-height:1.1"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},q.name),
             q.desc&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},q.desc),
@@ -2917,7 +2964,7 @@ function App(){
     function renderEpreuve(ep){
       return h("div",{key:ep.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:flex-start;gap:9px"},
-          h("span",{style:"font-size:18px;line-height:1.1"},ep.icon||"⚔️"),
+          QuestIcon(ep.iconId,ep.icon||"⚔️",20,"line-height:1.1"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},ep.name),
             ep.desc&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},ep.desc),
@@ -2956,21 +3003,21 @@ function App(){
         h("div",{class:"ctitle"},"Codex"),
         h("div",{style:"font-size:12px;color:var(--td);line-height:1.45"},"Catalogue complet des quêtes existantes. Les objectifs des quêtes quotidiennes et hebdomadaires sont calculés au rang actuel.")
       ),
-      h(Section,{id:"obl",title:"⚔️ Quêtes journalières",count:required.length},required.map(renderQuest)),
-      h(Section,{id:"bonus",title:"🎁 Quêtes bonus",count:bonus.length+hiddenBonus.length},
+      h(Section,{id:"obl",title:"Quêtes journalières",count:required.length},required.map(renderQuest)),
+      h(Section,{id:"bonus",title:"Quêtes bonus",count:bonus.length+hiddenBonus.length},
         h(Fragment,null,
           bonus.map(renderQuest),
           hiddenBonus.length>0&&h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin:10px 0 8px"},"BONUS MASQUÉS / CONTEXTUELS"),
           hiddenBonus.map(renderQuest)
         )
       ),
-      h(Section,{id:"sq",title:"🚨 Quêtes urgentes",count:specialSections.reduce((n,s)=>n+s.list.length,0)},
+      h(Section,{id:"sq",title:"Quêtes urgentes",count:specialSections.reduce((n,s)=>n+s.list.length,0)},
         specialSections.map(section=>h("div",{key:section.stat,style:"margin-bottom:13px"},
           h("div",{style:"font-size:11px;color:"+(STAT_COLOR[section.stat]||"var(--rc)")+";font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin:2px 0 7px"},statLabel(section.stat)),
           section.list.map(q=>renderSpecial({...q,stat:q.stat||section.stat}))
         ))
       ),
-      h(Section,{id:"ep",title:"🏆 Épreuves",count:EPREUVES.length},EPREUVES.map(renderEpreuve))
+      h(Section,{id:"ep",title:"Épreuves",count:EPREUVES.length},EPREUVES.map(renderEpreuve))
     );
   }
 
