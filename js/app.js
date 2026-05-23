@@ -2537,7 +2537,7 @@ function App(){
       ),
       // Activité de la semaine (toujours ouvert, avec L M M J V S D en haut)
       h("div",{class:"card"},
-        h("div",{class:"ctitle"},"\uD83D\uDCCA Activit\u00e9 de la semaine"),
+        h("div",{class:"ctitle"},"Activit\u00e9 de la semaine"),
         // Bandeau jours L M M J V S D
         h("div",{class:"wgrid",style:"margin-top:8px;margin-bottom:14px"},weekDays.map((d,i)=>{
           const log=state.dailyLog[d]||{};
@@ -2604,7 +2604,7 @@ function App(){
       // Records personnels
       h("div",{class:"card"},
         h("div",{style:"display:flex;align-items:center;justify-content:space-between;cursor:pointer",onClick:()=>toggle("records")},
-          h("div",{class:"ctitle",style:"margin:0"},"\uD83C\uDFC6 Records personnels"),
+          h("div",{class:"ctitle",style:"margin:0"},"Records personnels"),
           h(ChevronBtn,{k:"records"})
         ),
         open.records&&h(Fragment,null,
@@ -2658,7 +2658,7 @@ function App(){
         const displayObjs=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.binary)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.binary))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden))];
         return h("div",{class:"card"},
           h("div",{style:"display:flex;align-items:center;justify-content:space-between;cursor:pointer",onClick:()=>toggle("totals")},
-            h("div",{class:"ctitle",style:"margin:0"},"\uD83E\uDDEE Totaux depuis le d\u00e9but"+(firstDay?" \u2014 "+fmtFirst(firstDay):"")),
+            h("div",{class:"ctitle",style:"margin:0"},"Totaux depuis le d\u00e9but"+(firstDay?" \u2014 "+fmtFirst(firstDay):"")),
             h(ChevronBtn,{k:"totals"})
           ),
           open.totals&&h(Fragment,null,
@@ -2987,21 +2987,21 @@ function App(){
         h("div",{class:"ctitle"},"Codex"),
         h("div",{style:"font-size:12px;color:var(--td);line-height:1.45"},"Catalogue complet des quêtes existantes. Les objectifs des quêtes quotidiennes et hebdomadaires sont calculés au rang actuel.")
       ),
-      h(Section,{id:"obl",title:"⚔️ Quêtes journalières",count:required.length},required.map(renderQuest)),
-      h(Section,{id:"bonus",title:"🎁 Quêtes bonus",count:bonus.length+hiddenBonus.length},
+      h(Section,{id:"obl",title:"Quêtes journalières",count:required.length},required.map(renderQuest)),
+      h(Section,{id:"bonus",title:"Quêtes bonus",count:bonus.length+hiddenBonus.length},
         h(Fragment,null,
           bonus.map(renderQuest),
           hiddenBonus.length>0&&h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin:10px 0 8px"},"BONUS MASQUÉS / CONTEXTUELS"),
           hiddenBonus.map(renderQuest)
         )
       ),
-      h(Section,{id:"sq",title:"🚨 Quêtes urgentes",count:specialSections.reduce((n,s)=>n+s.list.length,0)},
+      h(Section,{id:"sq",title:"Quêtes urgentes",count:specialSections.reduce((n,s)=>n+s.list.length,0)},
         specialSections.map(section=>h("div",{key:section.stat,style:"margin-bottom:13px"},
           h("div",{style:"font-size:11px;color:"+(STAT_COLOR[section.stat]||"var(--rc)")+";font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin:2px 0 7px"},statLabel(section.stat)),
           section.list.map(q=>renderSpecial({...q,stat:q.stat||section.stat}))
         ))
       ),
-      h(Section,{id:"ep",title:"🏆 Épreuves",count:EPREUVES.length},EPREUVES.map(renderEpreuve))
+      h(Section,{id:"ep",title:"Épreuves",count:EPREUVES.length},EPREUVES.map(renderEpreuve))
     );
   }
 
