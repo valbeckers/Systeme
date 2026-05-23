@@ -48,6 +48,34 @@ function meetsStatRequirement(stats, reqKey){
 const STATS      = ["Sante","Force","Intelligence","Concentration","Endurance","Agilite","Discipline"];
 const STAT_COLOR = {Sante:"#ef4444",Force:"#fb923c",Intelligence:"#ec4899",Concentration:"#22d3ee",Endurance:"#f59e0b",Agilite:"#4ade80",Discipline:"#c084fc"};
 const STAT_LBL   = {Sante:"Sant\u00e9",Force:"Force",Intelligence:"Intelligence",Concentration:"Concentration",Endurance:"Endurance",Agilite:"Agilit\u00e9",Discipline:"Discipline"};
+const CHARACTER_STATE_ICON_ASSETS = {
+  sante:"./assets/character-state/sante.png",
+  mental:"./assets/character-state/mental.png",
+  energie:"./assets/character-state/energie.png",
+  discipline:"./assets/character-state/discipline.png",
+  force:"./assets/character-state/force.png",
+  serenite:"./assets/character-state/serenite.png",
+  sanction:"./assets/character-state/sanction.png",
+  latent:"./assets/character-state/latent.png",
+  desequilibre:"./assets/character-state/desequilibre.png",
+  berserker:"./assets/character-state/berserker.png",
+  construction:"./assets/character-state/construction.png",
+  streak:"./assets/character-state/streak.png",
+};
+
+function CharacterStateIcon(id, fallback, size=26, extraStyle=""){
+  const src = CHARACTER_STATE_ICON_ASSETS[id];
+  if(src){
+    return h("img",{
+      src,
+      alt:fallback||id,
+      class:"character-state-img-icon",
+      style:"width:"+size+"px;height:"+size+"px;object-fit:contain;display:inline-block;vertical-align:middle;flex-shrink:0;filter:drop-shadow(0 0 6px rgba(139,130,196,.62));"+extraStyle
+    });
+  }
+  return h("span",{style:"font-size:"+size+"px;line-height:1;display:inline-block;flex-shrink:0;"+extraStyle},fallback);
+}
+
 
 const QUEST_ICON_ASSETS = {
   water:"./assets/quests/water.png",
@@ -2088,16 +2116,16 @@ function App(){
       const maxEntry = Object.entries(statWeek).sort((a,b)=>b[1]-a[1])[0]||["",0];
       const maxShare = total>0 ? maxEntry[1]/total : 0;
 
-      if(debtActive) return {icon:"⚠️", name:"En dette", desc:"Dette active : priorité au remboursement avant d'ajouter du volume.", color:"#fb923c"};
-      if(state.lastPenaltiesApplied && state.lastPenaltiesApplied.ids && state.lastPenaltiesApplied.ids.length>0) return {icon:"🔴", name:"Sous sanction", desc:"Une pénalité récente est enregistrée. Reviens à l'exécution simple.", color:"#ef4444"};
-      if(total<500) return {icon:"🌑", name:"Latent", desc:"Peu d'activité mesurée sur 7 jours. Le système manque de données.", color:"var(--td)"};
-      if(maxShare>.55) return {icon:"⚖️", name:"Déséquilibré", desc:STAT_LBL[maxEntry[0]]+" domine nettement ta semaine. Surveille les angles morts.", color:"#f59e0b"};
-      if(physical/total>.55) return {icon:"🔥", name:"Berserker", desc:"Semaine très physique. Utile, mais attention à ne pas fuir le mental.", color:"#fb923c"};
-      if(mental/total>.55) return {icon:"🧠", name:"Érudit", desc:"Semaine orientée esprit : lecture, attention et apprentissage dominent.", color:"#22d3ee"};
-      if(discipline/total>.28 && (statWeek.Concentration||0)>0) return {icon:"🕯️", name:"Ascète actif", desc:"Discipline et concentration solides. Bonne maîtrise de l'impulsion.", color:"#c084fc"};
-      if(sante/total>.30 && discipline>0) return {icon:"🌿", name:"Fondations solides", desc:"Santé et discipline soutiennent bien ta progression.", color:"#4ade80"};
-      if(computedStreak>=7) return {icon:"🛡️", name:"Stable", desc:"Rythme régulier sur la semaine. Continue sans chercher à surcharger.", color:"#4ade80"};
-      return {icon:"🧬", name:"En construction", desc:"Progression réelle, mais le profil de semaine n'est pas encore net.", color:"var(--rc)"};
+      if(debtActive) return {iconId:"sanction", icon:"⚠️", name:"En dette", desc:"Dette active : priorité au remboursement avant d'ajouter du volume.", color:"#fb923c"};
+      if(state.lastPenaltiesApplied && state.lastPenaltiesApplied.ids && state.lastPenaltiesApplied.ids.length>0) return {iconId:"sanction", icon:"🔴", name:"Sous sanction", desc:"Une pénalité récente est enregistrée. Reviens à l'exécution simple.", color:"#ef4444"};
+      if(total<500) return {iconId:"latent", icon:"🌑", name:"Latent", desc:"Peu d'activité mesurée sur 7 jours. Le système manque de données.", color:"var(--td)"};
+      if(maxShare>.55) return {iconId:"desequilibre", icon:"⚖️", name:"Déséquilibré", desc:STAT_LBL[maxEntry[0]]+" domine nettement ta semaine. Surveille les angles morts.", color:"#f59e0b"};
+      if(physical/total>.55) return {iconId:"berserker", icon:"🔥", name:"Berserker", desc:"Semaine très physique. Utile, mais attention à ne pas fuir le mental.", color:"#fb923c"};
+      if(mental/total>.55) return {iconId:"mental", icon:"🧠", name:"Érudit", desc:"Semaine orientée esprit : lecture, attention et apprentissage dominent.", color:"#22d3ee"};
+      if(discipline/total>.28 && (statWeek.Concentration||0)>0) return {iconId:"discipline", icon:"🕯️", name:"Ascète actif", desc:"Discipline et concentration solides. Bonne maîtrise de l'impulsion.", color:"#c084fc"};
+      if(sante/total>.30 && discipline>0) return {iconId:"sante", icon:"🌿", name:"Fondations solides", desc:"Santé et discipline soutiennent bien ta progression.", color:"#4ade80"};
+      if(computedStreak>=7) return {iconId:"serenite", icon:"🛡️", name:"Stable", desc:"Rythme régulier sur la semaine. Continue sans chercher à surcharger.", color:"#4ade80"};
+      return {iconId:"construction", icon:"🧬", name:"En construction", desc:"Progression réelle, mais le profil de semaine n'est pas encore net.", color:"var(--rc)"};
     })();
 
     return h("div",{class:"tab"},
@@ -2149,7 +2177,10 @@ function App(){
         },"\u269B\uFE0F Mont\u00e9e en Ascension"),
         h("div",{style:"display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);align-items:center;justify-items:stretch;margin-top:12px;padding-top:14px;padding-bottom:4px;border-top:1px solid rgba(255,255,255,0.06)"},
           h("div",{style:"width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;transform:translateY(2px)"},
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--rc);line-height:1;display:flex;align-items:center;justify-content:center;gap:4px;width:100%"},"\uD83D\uDD25 "+state.streak),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:700;color:var(--rc);line-height:1;display:flex;align-items:center;justify-content:center;gap:6px;width:100%"},
+              CharacterStateIcon("streak","🔥",19,"margin-top:-1px"),
+              h("span",null,state.streak)
+            ),
             h("div",{style:"font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px;text-align:center;width:100%"},"Streak"),
             bonusGiven&&h("div",{style:"font-size:10px;color:#c084fc;font-family:Orbitron,sans-serif;margin-top:2px;text-align:center;width:100%"},"+250 XP \u2713")
           ),
@@ -2163,7 +2194,9 @@ function App(){
       h("div",{class:"card"},
         h("div",{class:"ctitle"},"État du personnage"),
         h("div",{style:"display:flex;align-items:flex-start;gap:12px"},
-          h("div",{style:"font-size:18px;line-height:1;min-width:20px;text-align:center"},characterState.icon),
+          h("div",{style:"min-width:36px;width:36px;display:flex;align-items:center;justify-content:center;transform:translateY(-1px)"},
+            CharacterStateIcon(characterState.iconId,characterState.icon,32)
+          ),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-family:Orbitron,sans-serif;font-size:13px;font-weight:800;letter-spacing:1px;color:"+characterState.color+";text-transform:uppercase"},characterState.name),
             h("div",{style:"font-size:12px;color:var(--td);line-height:1.35;margin-top:4px"},characterState.desc)
