@@ -140,6 +140,10 @@ const QUEST_ICON_ASSETS = {
   ep_broom:"./assets/epreuves/broom.png",
   ep_flex:"./assets/epreuves/flex.png",
   ep_martialflow:"./assets/epreuves/martialflow.png",
+  dj_moine:"./assets/donjons/moine.png",
+  dj_corps_silencieux:"./assets/donjons/corps_silencieux.png",
+  dj_fondation:"./assets/donjons/fondations.png",
+  dj_chasseur:"./assets/donjons/chasseur.png",
 };
 
 function QuestIcon(id, fallback, size=18, extraStyle=""){
@@ -1768,7 +1772,7 @@ function App(){
       return h("div",{class:"sqcard"+(donjonActive?" ep-pulse":""),style:"border-color:"+donjonColor+"55;background:"+donjonColor+"0A;--epc1:"+donjonColor+"44;--epc2:"+donjonColor+"00"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px"},
           h("div",{style:"display:flex;align-items:center;gap:8px;min-width:0"},
-            h("span",{style:"font-size:21px"},ep.icon||"🏰"),
+            QuestIcon(ep.id,ep.icon||"🏰",21),
             h("div",{style:"min-width:0"},
               h("div",{style:"font-size:13px;font-weight:800;color:var(--tx);letter-spacing:.3px"},ep.name),
               ep.desc&&h("div",{style:"font-size:10px;color:var(--td);margin-top:2px;line-height:1.25"},ep.desc)
@@ -3023,7 +3027,7 @@ function App(){
     function renderDonjon(dj){
       return h("div",{key:dj.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:flex-start;gap:9px"},
-          h("span",{style:"font-size:20px;line-height:1.1;display:inline-block;min-width:22px;text-align:center;flex-shrink:0"},dj.icon||"🏰"),
+          QuestIcon(dj.id,dj.icon||"🏰",20,"line-height:1.1;min-width:22px;text-align:center"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},dj.name),
             dj.desc&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},dj.desc),
