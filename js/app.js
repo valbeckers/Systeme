@@ -2741,7 +2741,7 @@ function App(){
           ordered.map(obj=>{
             const cur=(obj.weekly||obj.id==="walk")?(wLog[obj.id]||0):(tLog[obj.id]||0);
             return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:10px;margin-bottom:8px"},
-              h("span",{style:"font-size:16px;min-width:24px"},obj.icon),
+              QuestIcon(obj.id,obj.icon,20,"min-width:24px"),
               h("span",{style:"flex:1;font-size:13px"},obj.name),
               h("input",{id:"cd_"+obj.id,class:"min",type:"text",inputMode:"decimal",defaultValue:String(cur),style:"width:80px;margin:0;text-align:center"}),
               h("span",{style:"font-size:11px;color:var(--td);min-width:28px"},obj.unit)
@@ -2896,7 +2896,7 @@ function App(){
       const subtitle = obj.desc || obj.subtitle || "";
       return h("div",{key:obj.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:flex-start;gap:9px"},
-          h("span",{style:"font-size:18px;line-height:1.1"},obj.icon||"•"),
+          QuestIcon(obj.id,obj.icon||"•",20,"line-height:1.1"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},obj.name),
             subtitle&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},subtitle),
@@ -2919,7 +2919,7 @@ function App(){
     function renderSpecial(q){
       return h("div",{key:q.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:flex-start;gap:9px"},
-          h("span",{style:"font-size:18px;line-height:1.1"},q.icon||"🚨"),
+          QuestIcon(q.id,q.icon||"🚨",20,"line-height:1.1"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},q.name),
             q.desc&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},q.desc),
