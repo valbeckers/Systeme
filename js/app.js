@@ -70,7 +70,7 @@ function CharacterStateIcon(id, fallback, size=26, extraStyle=""){
       src,
       alt:fallback||id,
       class:"character-state-img-icon",
-      style:"width:"+size+"px;height:"+size+"px;object-fit:contain;display:inline-block;vertical-align:middle;flex-shrink:0;filter:drop-shadow(0 0 6px rgba(139,130,196,.62));"+extraStyle
+      style:"width:"+size+"px;height:"+size+"px;object-fit:contain;display:inline-block;vertical-align:middle;flex-shrink:0;filter:var(--icon-filter,saturate(1.18)) drop-shadow(0 0 7px var(--rc));"+extraStyle
     });
   }
   return h("span",{style:"font-size:"+size+"px;line-height:1;display:inline-block;flex-shrink:0;"+extraStyle},fallback);
@@ -158,7 +158,7 @@ function QuestIcon(id, fallback, size=18, extraStyle=""){
       src,
       alt:fallback||id,
       class:"quest-img-icon",
-      style:"width:"+size+"px;height:"+size+"px;object-fit:contain;display:inline-block;vertical-align:top;flex-shrink:0;filter:drop-shadow(0 0 4px rgba(139,130,196,.55));"+extraStyle
+      style:"width:"+size+"px;height:"+size+"px;object-fit:contain;display:inline-block;vertical-align:top;flex-shrink:0;filter:var(--icon-filter,saturate(1.18)) drop-shadow(0 0 5px var(--rc));"+extraStyle
     });
   }
   return h("span",{style:"font-size:"+size+"px;line-height:1;display:inline-block;flex-shrink:0;"+extraStyle},fallback);
@@ -452,6 +452,37 @@ const sortStat   = arr => [...arr].sort((a,b)=>STATS.indexOf(a.stat)-STATS.index
 const xpForLvl   = l => Math.round(1000*Math.pow(1.1,l));
 const totForLvl  = l => { let t=0; for(let i=0;i<l;i++)t+=xpForLvl(i); return t; };
 const getLvl     = xp => { let l=0; while(xp>=totForLvl(l+1))l++; return l; };
+
+
+function hexToRgb(hex){
+  if(!hex) return null;
+  const clean=String(hex).trim().replace("#","");
+  const full=clean.length===3 ? clean.split("").map(c=>c+c).join("") : clean;
+  if(full.length!==6) return null;
+  const n=parseInt(full,16);
+  if(Number.isNaN(n)) return null;
+  return {r:(n>>16)&255,g:(n>>8)&255,b:n&255};
+}
+function rgbToHue({r,g,b}){
+  r/=255; g/=255; b/=255;
+  const max=Math.max(r,g,b), min=Math.min(r,g,b), d=max-min;
+  if(d===0) return 0;
+  let h;
+  if(max===r) h=((g-b)/d)%6;
+  else if(max===g) h=(b-r)/d+2;
+  else h=(r-g)/d+4;
+  h*=60;
+  if(h<0) h+=360;
+  return h;
+}
+function iconThemeFilter(color){
+  const rgb=hexToRgb(color);
+  if(!rgb) return "saturate(1.18)";
+  const hue=rgbToHue(rgb);
+  // Les glyphes sont violet de base (~265°). On fait une rotation modérée pour garder le relief cristal.
+  const rotate=Math.max(-95,Math.min(95,hue-265));
+  return "saturate(1.45) hue-rotate("+rotate.toFixed(1)+"deg)";
+}
 
 const fmtNum = (v, max=2) => {
   const n = Number(v);
@@ -1076,6 +1107,7 @@ function App(){
   useEffect(()=>{
     const r=document.documentElement.style;
     r.setProperty("--rc",rank.color); r.setProperty("--rg",rank.glow);
+    r.setProperty("--icon-filter",iconThemeFilter(rank.color));
     r.setProperty("--ra",rank.accent); r.setProperty("--bg",rank.bg);
     const app=document.querySelector("#app");
     if(app) app.style.background=rank.bg;
@@ -2778,7 +2810,7 @@ function App(){
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget){setShowSet(false);setConfirmReset(false);}}},
       h("div",{class:"modal"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"},
-          h("div",{class:"mtitle",style:"margin-bottom:0;display:flex;align-items:center;gap:10px"},h("img",{src:"assets/nav/reglages.png",alt:"Réglages",style:"width:22px;height:22px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(167,139,250,.45));flex:0 0 auto"}),"Réglages"),
+          h("div",{class:"mtitle",style:"margin-bottom:0;display:flex;align-items:center;gap:10px"},h("img",{src:"assets/nav/reglages.png",alt:"Réglages",style:"width:22px;height:22px;object-fit:contain;filter:var(--icon-filter,saturate(1.18)) drop-shadow(0 0 7px var(--rc));flex:0 0 auto"}),"Réglages"),
           h("button",{style:"background:none;border:none;color:var(--td);font-size:44px;line-height:1;cursor:pointer",onClick:()=>{setShowSet(false);setConfirmReset(false);}},"\u2715")
         ),
         h("div",{class:"msec"},
@@ -3138,7 +3170,7 @@ function App(){
           h("div",{class:"hdr-top",style:"position:relative"},
             h("div",null,h("div",{class:"pname"},"VAL")),
             prestige>0&&h("div",{class:"prestige-badge"},"\u269B\uFE0F Ascension "+ROMAN[prestige-1]),
-            h("button",{class:"gbtn",style:"display:flex;align-items:center;justify-content:center",onClick:()=>setShowSet(true)},h("img",{src:"assets/nav/reglages.png",alt:"Réglages",style:"width:40px;height:40px;object-fit:contain;display:block;filter:drop-shadow(0 0 6px rgba(167,139,250,.45))"}))
+            h("button",{class:"gbtn",style:"display:flex;align-items:center;justify-content:center",onClick:()=>setShowSet(true)},h("img",{src:"assets/nav/reglages.png",alt:"Réglages",style:"width:40px;height:40px;object-fit:contain;display:block;filter:var(--icon-filter,saturate(1.18)) drop-shadow(0 0 7px var(--rc))"}))
           )
         )
       ),
