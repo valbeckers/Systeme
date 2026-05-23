@@ -106,6 +106,12 @@ const QUEST_ICON_ASSETS = {
   ep_run:"./assets/epreuves/run.png",
   ep_burpees:"./assets/epreuves/burpees.png",
   ep_clock:"./assets/epreuves/clock.png",
+  ep_coldshower:"./assets/epreuves/coldshower.png",
+  ep_nophone:"./assets/epreuves/nophone.png",
+  ep_nojunkfood:"./assets/epreuves/nojunkfood.png",
+  ep_broom:"./assets/epreuves/broom.png",
+  ep_flex:"./assets/epreuves/flex.png",
+  ep_martialflow:"./assets/epreuves/martialflow.png",
 };
 
 function QuestIcon(id, fallback, size=18, extraStyle=""){
@@ -227,17 +233,17 @@ const EPREUVES = [
     desc:"100 burpees cumul\u00e9s"},
   {id:"ep_wakeup",   name:"R\u00e9veil \u00e0 la m\u00eame heure",iconId:"ep_clock", icon:"\uD83C\uDF05",                           stat:"Discipline",   xp:2000, xp2:1000, stat2:"Sante", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
     desc:"Se lever \u00e0 la m\u00eame heure 7 jours de suite"},
-  {id:"ep_coldweek", name:"Douche froide 10min quotidienne",    icon:"\u2744\uFE0F",                             stat:"Discipline",   xp:2000, xp2:1000, stat2:"Sante", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
+  {id:"ep_coldweek", name:"Douche froide 10min quotidienne",    iconId:"ep_coldshower", icon:"\u2744\uFE0F",                             stat:"Discipline",   xp:2000, xp2:1000, stat2:"Sante", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
     desc:"10 min de douche froide chaque jour pendant 7 jours"},
-  {id:"ep_noscroll", name:"Pas de doomscrolling",               icon:"\uD83D\uDCF5",                             stat:"Intelligence", xp:2500, days:7, streak7:true, streakDays:7, unit:"jour", target:7,
+  {id:"ep_noscroll", name:"Pas de doomscrolling",               iconId:"ep_nophone", icon:"\uD83D\uDCF5",                             stat:"Intelligence", xp:2500, days:7, streak7:true, streakDays:7, unit:"jour", target:7,
     desc:"Z\u00e9ro scroll passif pendant 7 jours"},
-  {id:"ep_nojunkwk", name:"Pas de junk-food",                   icon:"\uD83C\uDF55",                             stat:"Sante",        xp:2000, xp2:1000, stat2:"Discipline", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
+  {id:"ep_nojunkwk", name:"Pas de junk-food",                   iconId:"ep_nojunkfood", icon:"\uD83C\uDF55",                             stat:"Sante",        xp:2000, xp2:1000, stat2:"Discipline", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
     desc:"Z\u00e9ro junk-food pendant 7 jours"},
-  {id:"ep_clean",    name:"Nettoyage total d'une pi\u00e8ce",   icon:"\uD83E\uDDF9",                             stat:"Discipline",   xp:1500, days:7, binary:true,
+  {id:"ep_clean",    name:"Nettoyage total d'une pi\u00e8ce",   iconId:"ep_broom", icon:"\uD83E\uDDF9",                             stat:"Discipline",   xp:1500, days:7, binary:true,
     desc:"Nettoyer compl\u00e8tement une pi\u00e8ce"},
-  {id:"ep_mob",      name:"Mobilit\u00e9 matinale",             icon:"\uD83E\uDD38\uD83C\uDFFB\u200D\u2642\uFE0F",stat:"Agilite",     xp:2500, days:7, cumDays:true, streakDays:5, unit:"jour", target:5,
+  {id:"ep_mob",      name:"Mobilit\u00e9 matinale",             iconId:"ep_flex", icon:"\uD83E\uDD38\uD83C\uDFFB\u200D\u2642\uFE0F",stat:"Agilite",     xp:2500, days:7, cumDays:true, streakDays:5, unit:"jour", target:5,
     desc:"Faire 15 min de mobilit\u00e9 5 jours sur 7"},
-  {id:"ep_taichi",   name:"Tai Chi quotidien",                  icon:"\u262F\uFE0F",                             stat:"Agilite",      xp:2000, xp2:1000, stat2:"Concentration", days:7, cumDays:true, streakDays:5, dailyMin:20, unit:"jour", target:5,
+  {id:"ep_taichi",   name:"Tai Chi quotidien",                  iconId:"ep_martialflow", icon:"\u262F\uFE0F",                             stat:"Agilite",      xp:2000, xp2:1000, stat2:"Concentration", days:7, cumDays:true, streakDays:5, dailyMin:20, unit:"jour", target:5,
     desc:"Faire 20 min de Tai Chi 5 jours sur 7"},
 ];
 
