@@ -61,6 +61,13 @@ const QUEST_ICON_ASSETS = {
   balance:"./assets/quests/balance.png",
   adult:"./assets/quests/adult.png",
   run:"./assets/quests/run.png",
+  calves:"./assets/quests/calves.png",
+  flex:"./assets/quests/flex.png",
+  grips:"./assets/quests/grips.png",
+  med:"./assets/quests/med.png",
+  pod:"./assets/quests/podcast.png",
+  nosugar:"./assets/quests/nosugar.png",
+  walk:"./assets/quests/walk.png",
 };
 
 function QuestIcon(id, fallback, size=18, extraStyle=""){
