@@ -88,6 +88,10 @@ const QUEST_ICON_ASSETS = {
   sp_plank:"./assets/quests/urgent/plank.png",
   sp_pull:"./assets/quests/urgent/pullups.png",
   sp_silence30:"./assets/quests/urgent/silence.png",
+  sp_sun:"./assets/quests/urgent/sun.png",
+  sp_task:"./assets/quests/urgent/task.png",
+  sp_stairs:"./assets/quests/urgent/stairs.png",
+  sp_wallsit:"./assets/quests/urgent/wallsit.png",
 };
 
 function QuestIcon(id, fallback, size=18, extraStyle=""){
