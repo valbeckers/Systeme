@@ -730,7 +730,7 @@ function App(){
   const [rankUp,setRankUp] = useState(null);
   const [capAnim,setCapAnim] = useState(null);
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
-  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,ep:false});
+  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,ep:false,dj:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
   const [showStatReqDetail,setShowStatReqDetail] = useState(false);
   const [showRankReqStats,setShowRankReqStats] = useState(false);
@@ -2899,7 +2899,7 @@ function App(){
   // ─── ONGLET CODEX ─────────────────────────────────────────────────────
 
   function Codex(){
-    const toggleC = k => setCodexOpen(o=>({obl:false,bonus:false,sq:false,ep:false,[k]:!o[k]}));
+    const toggleC = k => setCodexOpen(o=>({obl:false,bonus:false,sq:false,ep:false,dj:false,[k]:!o[k]}));
     const statLabel = stat => STAT_LBL2[stat] || STAT_LBL[stat] || stat || "";
     const unitPlural = (unit, value) => {
       if(!unit) return "";
@@ -3020,6 +3020,30 @@ function App(){
       );
     }
 
+    function renderDonjon(dj){
+      return h("div",{key:dj.id,style:cardStyle},
+        h("div",{style:"display:flex;align-items:flex-start;gap:9px"},
+          h("span",{style:"font-size:20px;line-height:1.1;display:inline-block;min-width:22px;text-align:center;flex-shrink:0"},dj.icon||"🏰"),
+          h("div",{style:"flex:1;min-width:0"},
+            h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},dj.name),
+            dj.desc&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},dj.desc),
+            h("div",{style:"margin-top:7px"},renderXpPills(dj)),
+            h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:6px"},
+              h("div",{style:detailStyle},"▸ Objectif : compléter tous les objectifs du donjon"),
+              h("div",{style:detailStyle},"▸ Délai : "+(dj.days||7)+" jours"),
+              h("div",{style:detailStyle},"▸ Cap : —")
+            ),
+            dj.goals&&dj.goals.length>0&&h("div",{style:"margin-top:8px;border-top:1px solid rgba(255,255,255,0.05);padding-top:7px"},
+              h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-bottom:5px"},"OBJECTIFS"),
+              dj.goals.map(g=>h("div",{key:g.id,style:"font-size:10px;color:var(--td);line-height:1.45"},
+                "▸ "+g.label+" : "+g.target+" "+unitPlural(g.unit,g.target)
+              ))
+            )
+          )
+        )
+      );
+    }
+
     function Section({id,title,count,children}){
       const open=!!codexOpen[id];
       return h("div",{class:"card"},
@@ -3058,7 +3082,8 @@ function App(){
           section.list.map(q=>renderSpecial({...q,stat:q.stat||section.stat}))
         ))
       ),
-      h(Section,{id:"ep",title:"Épreuves",count:EPREUVES.length},EPREUVES.map(renderEpreuve))
+      h(Section,{id:"ep",title:"Épreuves",count:EPREUVES.length},EPREUVES.map(renderEpreuve)),
+      h(Section,{id:"dj",title:"Donjons",count:DONJONS.length},DONJONS.map(renderDonjon))
     );
   }
 
