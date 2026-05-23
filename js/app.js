@@ -49,6 +49,33 @@ const STATS      = ["Sante","Force","Intelligence","Concentration","Endurance","
 const STAT_COLOR = {Sante:"#ef4444",Force:"#fb923c",Intelligence:"#ec4899",Concentration:"#22d3ee",Endurance:"#f59e0b",Agilite:"#4ade80",Discipline:"#c084fc"};
 const STAT_LBL   = {Sante:"Sant\u00e9",Force:"Force",Intelligence:"Intelligence",Concentration:"Concentration",Endurance:"Endurance",Agilite:"Agilit\u00e9",Discipline:"Discipline"};
 
+const QUEST_ICON_ASSETS = {
+  water:"./assets/quests/water.png",
+  sleep:"./assets/quests/sleep.png",
+  protein:"./assets/quests/protein.png",
+  mindmeal:"./assets/quests/mindmeal.png",
+  push:"./assets/quests/push.png",
+  abs:"./assets/quests/abs.png",
+  squats:"./assets/quests/squats.png",
+  reading:"./assets/quests/reading.png",
+  balance:"./assets/quests/balance.png",
+  adult:"./assets/quests/adult.png",
+};
+
+function QuestIcon(id, fallback, size=18, extraStyle=""){
+  const src = QUEST_ICON_ASSETS[id];
+  if(src){
+    return h("img",{
+      src,
+      alt:fallback||id,
+      class:"quest-img-icon",
+      style:"width:"+size+"px;height:"+size+"px;object-fit:contain;display:inline-block;vertical-align:middle;flex-shrink:0;filter:drop-shadow(0 0 4px rgba(139,130,196,.55));"+extraStyle
+    });
+  }
+  return h("span",{style:"font-size:"+size+"px;line-height:1;display:inline-block;flex-shrink:0;"+extraStyle},fallback);
+}
+
+
 const DEFS = [
   // ─── SANTÉ ────────────────────────────────────────────────────────────
   {id:"water",  name:"Hydratation",     unit:"verre", xpPer:10,  daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDCA7",               base:10, baseHistory:[{until:"2026-04-29",base:8}]},
@@ -1420,7 +1447,7 @@ function App(){
       const succFlex = validated && done ? 3 : 1;
       return h("div",{class:"qi "+(done?"done":"")},
         h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:center"},
-          h("div",{class:"qname"},h("span",null,obj.icon),obj.name?" ":"",obj.name),
+          h("div",{class:"qname"},QuestIcon(obj.id,obj.icon,20),obj.name?" ":"",obj.name),
           h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px"},
             obj.binaryXp+" XP · "+(STAT_LBL[obj.stat]||obj.stat)
           )
@@ -1476,7 +1503,7 @@ function App(){
     return h("div",{class:"qi "+(d>=effectiveT&&effectiveT>0?"done":""),style:(isDebt&&!done?"border-color:#ef444466;background:rgba(239,68,68,0.04)":"")+(isCapped?";border-color:"+capColor+"66;background:linear-gradient(135deg,rgba(255,255,255,0.02),rgba(239,68,68,0.06))":"")},
       h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:center;gap:8px"},
         h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:6px;white-space:normal;overflow:visible;line-height:1.25"},
-          h("span",{style:isCapped?"filter:grayscale(60%);opacity:0.7;flex-shrink:0;line-height:1.25":"flex-shrink:0;line-height:1.25"},obj.icon),
+          QuestIcon(obj.id,obj.icon,22,isCapped?"filter:grayscale(60%);opacity:0.7;line-height:1.25":"line-height:1.25"),
           h("span",{style:"white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;word-break:normal"},obj.name),
           hasCap&&!isCapped&&h("span",{style:"font-size:9px;font-family:Orbitron,sans-serif;letter-spacing:0.5px;padding:2px 6px;border-radius:4px;color:"+capColor+";border:1px solid "+capColor+"44;flex-shrink:0"},(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap))),
           isDebt&&!done&&h("span",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;border:1px solid #ef444455;border-radius:4px;padding:1px 5px;flex-shrink:0"},"\u26A0 DETTE "+debtLabel)
@@ -1563,7 +1590,7 @@ function App(){
     const validated=isW?(wLog[obj.id]!==undefined):(tLog[obj.id]!==undefined);
     if(obj.binary){
       return h("div",{style:"display:flex;align-items:center;gap:10px;margin-bottom:8px"},
-        h("span",{style:"font-size:16px"},obj.icon),
+        QuestIcon(obj.id,obj.icon,18),
         h("div",{style:"flex:1"},
           h("div",{style:"font-size:12px;color:var(--tx);display:flex;justify-content:space-between;align-items:center"},
             h("span",null,obj.name),
@@ -1593,7 +1620,7 @@ function App(){
         : "";
     const barInnerStyle = "width:"+(isCapped?100:Math.min(100,pct))+"%;background:"+(isCapped?capColor:isNearCap?"linear-gradient(90deg,"+rankColor+","+capColor+")":rankColor)+(haloShadow?";box-shadow:"+haloShadow:"");
     return h("div",{style:"display:flex;align-items:center;gap:10px;margin-bottom:8px"},
-      h("span",{style:"font-size:16px"+(isCapped?";filter:grayscale(60%);opacity:0.7":"")},obj.icon),
+      QuestIcon(obj.id,obj.icon,18,isCapped?"filter:grayscale(60%);opacity:0.7":""),
       h("div",{style:"flex:1"},
         h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center"},
           h("div",{style:"display:flex;align-items:flex-start;gap:6px;min-width:0;flex:1;white-space:normal;line-height:1.25"},
@@ -2499,7 +2526,7 @@ function App(){
             const successes=pastDays.filter(d=>(state.dailyLog[d]?.[obj.id]||0)>=1).length;
             const pct=Math.min(100,(successes/7)*100), complete=successes>=7;
             return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:10px;margin-bottom:10px"},
-              h("span",{style:"font-size:18px"},obj.icon),
+              QuestIcon(obj.id,obj.icon,18),
               h("div",{style:"flex:1"},
                 h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between"},
                   h("span",{style:"display:flex;align-items:center;gap:6px"},
@@ -2516,7 +2543,7 @@ function App(){
           const val=tots[obj.id]||0, wt=obj.weekly?(obj.id==="walk"&&restMode&&walkObj?walkObj.base:getRankBase(obj.id,ri)):obj.id==="walk"?obj.base:(obj.target&&!obj.binary?obj.target:getRankBase(obj.id,ri,prestige))*7;
           const pct=Math.min(100,(val/wt)*100), complete=val>=wt, over=val>wt;
           return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:10px;margin-bottom:10px"},
-            h("span",{style:"font-size:18px"},obj.icon),
+            QuestIcon(obj.id,obj.icon,18),
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between"},
                 h("span",{style:"display:flex;align-items:center;gap:6px"},
@@ -2549,7 +2576,7 @@ function App(){
           [...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.binary)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.binary))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden))].map(o=>{
           const rec=records[o.id];
           if(!rec)return h("div",{key:o.id,style:"display:flex;align-items:center;gap:10px;margin-bottom:8px;opacity:.35"},
-            h("span",{style:"font-size:16px"},o.icon),
+            QuestIcon(o.id,o.icon,18),
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:12px;color:var(--td);display:flex;align-items:center;gap:5px"},
                 o.name,
@@ -2561,7 +2588,7 @@ function App(){
           );
           const fmt2=d=>{if(d.includes("-W"))return d.replace("-W","-S");const p=d.split("-");return p[2]+"/"+p[1];};
           return h("div",{key:o.id,style:"display:flex;align-items:center;gap:10px;margin-bottom:8px"},
-            h("span",{style:"font-size:16px"},o.icon),
+            QuestIcon(o.id,o.icon,18),
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:12px;color:var(--tx);display:flex;align-items:center;gap:5px"},
                 o.name,
@@ -2604,7 +2631,7 @@ function App(){
               const total=totals[o.id]||0;
               const unitLbl=total>1?({rep:"reps",page:"pages",verre:"verres",km:"km",min:"min"}[o.unit]||o.unit):o.unit;
               return h("div",{key:o.id,style:"display:flex;align-items:center;gap:10px;margin-bottom:8px"+(total===0?";opacity:.35":"")},
-                h("span",{style:"font-size:16px"},o.icon),
+                QuestIcon(o.id,o.icon,18),
                 h("div",{style:"flex:1"},
                   h("div",{style:"font-size:12px;color:var(--tx);display:flex;align-items:center;gap:5px"},
                     o.name,
