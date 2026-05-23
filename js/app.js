@@ -2082,9 +2082,9 @@ function App(){
         )
       ),
       h("div",{class:"card"},
-        h("div",{class:"ctitle"},"🧬 État du personnage"),
+        h("div",{class:"ctitle"},"État du personnage"),
         h("div",{style:"display:flex;align-items:flex-start;gap:12px"},
-          h("div",{style:"font-size:28px;line-height:1"},characterState.icon),
+          h("div",{style:"font-size:18px;line-height:1;min-width:20px;text-align:center"},characterState.icon),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-family:Orbitron,sans-serif;font-size:13px;font-weight:800;letter-spacing:1px;color:"+characterState.color+";text-transform:uppercase"},characterState.name),
             h("div",{style:"font-size:12px;color:var(--td);line-height:1.35;margin-top:4px"},characterState.desc)
