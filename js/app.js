@@ -2257,7 +2257,7 @@ function App(){
               h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:var(--rc);line-height:0.9"},
                 state.streak
               ),
-              h("div",{style:"font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px"},
+              h("div",{style:"font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px"},
                 "STREAK"
               ),
               bonusGiven&&h("div",{style:"font-size:10px;color:#c084fc;font-family:Orbitron,sans-serif;margin-top:3px"},
@@ -2277,7 +2277,7 @@ function App(){
               h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:var(--rc);line-height:0.9"},
                 todayXp.toFixed(0)
               ),
-              h("div",{style:"font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px"},
+              h("div",{style:"font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px"},
                 "XP DU JOUR"
               )
             )
