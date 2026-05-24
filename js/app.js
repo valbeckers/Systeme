@@ -2247,7 +2247,7 @@ function App(){
           },
           style:"width:100%;margin-top:12px;padding:12px;background:rgba(168,85,247,0.1);border:1px solid #a855f7;border-radius:10px;color:#a855f7;font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:3px;cursor:pointer;text-transform:uppercase;text-shadow:0 0 12px #a855f7"
         },"\u269B\uFE0F Mont\u00e9e en Ascension"),
-        h("div",{style:"display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);align-items:center;justify-items:stretch;margin-top:12px;padding-top:2px;padding-bottom:0px;border-top:1px solid rgba(255,255,255,0.06)"},
+        h("div",{style:"display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);align-items:center;justify-items:stretch;margin-top:12px;padding-top:10px;padding-bottom:0px;border-top:1px solid rgba(255,255,255,0.06)"},
           h("div",{style:"width:100%;display:flex;align-items:center;justify-content:center;gap:4px;padding:0"},
             h("img",{
               src:"./assets/ui/streak.png",
