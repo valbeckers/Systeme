@@ -790,7 +790,7 @@ function App(){
   const [rankUp,setRankUp] = useState(null);
   const [capAnim,setCapAnim] = useState(null);
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
-  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,ep:false,dj:false});
+  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,ep:false,dj:false,cs:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
   const [showStatReqDetail,setShowStatReqDetail] = useState(false);
   const [showRankReqStats,setShowRankReqStats] = useState(false);
@@ -2981,7 +2981,7 @@ function App(){
   // ─── ONGLET CODEX ─────────────────────────────────────────────────────
 
   function Codex(){
-    const toggleC = k => setCodexOpen(o=>({obl:false,bonus:false,sq:false,ep:false,dj:false,[k]:!o[k]}));
+    const toggleC = k => setCodexOpen(o=>({obl:false,bonus:false,sq:false,ep:false,dj:false,cs:false,[k]:!o[k]}));
     const statLabel = stat => STAT_LBL2[stat] || STAT_LBL[stat] || stat || "";
     const unitPlural = (unit, value) => {
       if(!unit) return "";
@@ -3145,6 +3145,32 @@ function App(){
     const hiddenBonus = sortStat(objs.filter(o=>o.optional&&o.bonusHidden));
     const specialSections = STATS.map(stat=>({stat,list:(SP[stat]||[])})).filter(s=>s.list.length>0);
 
+    const characterStatesCodex = [
+      {id:"sanction",icon:"⚠️",name:"En dette",color:"#fb923c",desc:"Dette active : priorité au remboursement avant d'ajouter du volume."},
+      {id:"sanction_red",icon:"🔴",name:"Sous sanction",color:"#ef4444",desc:"Une pénalité récente est enregistrée. Reviens à l'exécution simple."},
+      {id:"latent",icon:"🌑",name:"Latent",color:"var(--td)",desc:"Peu d'activité mesurée sur 7 jours. Le système manque de données."},
+      {id:"desequilibre",icon:"⚖️",name:"Déséquilibré",color:"#f59e0b",desc:"Une stat domine nettement la semaine. Surveille les angles morts."},
+      {id:"berserker",icon:"🔥",name:"Berserker",color:"#fb923c",desc:"Semaine très physique. Utile, mais attention à ne pas fuir le mental."},
+      {id:"mental",icon:"🧠",name:"Érudit",color:"#22d3ee",desc:"Semaine orientée esprit : lecture, attention et apprentissage dominent."},
+      {id:"discipline",icon:"🕯️",name:"Ascète actif",color:"#c084fc",desc:"Discipline et concentration solides. Bonne maîtrise de l'impulsion."},
+      {id:"sante",icon:"🌿",name:"Fondations solides",color:"#4ade80",desc:"Santé et discipline soutiennent bien ta progression."},
+      {id:"serenite",icon:"🛡️",name:"Stable",color:"#4ade80",desc:"Rythme régulier sur la semaine. Continue sans chercher à surcharger."},
+      {id:"construction",icon:"🧬",name:"En construction",color:"var(--rc)",desc:"Progression réelle, mais le profil de semaine n'est pas encore net."}
+    ];
+
+    function renderCharacterStateCodex(s){
+      return h("div",{key:s.id,style:cardStyle},
+        h("div",{style:"display:flex;align-items:flex-start;gap:9px"},
+          CharacterStateIcon(s.id,s.icon,22,"line-height:1.1;min-width:24px;text-align:center"),
+          h("div",{style:"flex:1;min-width:0"},
+            h("div",{style:"font-size:13px;color:"+s.color+";font-weight:800;line-height:1.15;text-transform:uppercase;font-family:Orbitron,sans-serif;letter-spacing:1px"},s.name),
+            h("div",{style:"font-size:10px;color:var(--td);margin-top:5px;line-height:1.35"},s.desc)
+          )
+        )
+      );
+    }
+
+
     return h("div",{class:"tab"},
       h("div",{class:"card"},
         h("div",{class:"ctitle"},"Codex"),
@@ -3165,7 +3191,8 @@ function App(){
         ))
       ),
       h(Section,{id:"ep",title:"Épreuves",count:EPREUVES.length},EPREUVES.map(renderEpreuve)),
-      h(Section,{id:"dj",title:"Donjons",count:DONJONS.length},DONJONS.map(renderDonjon))
+      h(Section,{id:"dj",title:"Donjons",count:DONJONS.length},DONJONS.map(renderDonjon)),
+      h(Section,{id:"cs",title:"États du personnage",count:characterStatesCodex.length},characterStatesCodex.map(renderCharacterStateCodex))
     );
   }
 
