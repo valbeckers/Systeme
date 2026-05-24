@@ -1495,8 +1495,8 @@ function App(){
       const failFlex = validated && !done ? 3 : 1;
       const succFlex = validated && done ? 3 : 1;
       return h("div",{class:"qi "+(done?"done":"")},
-        h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
-          h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px;line-height:1.25;white-space:normal;overflow:visible"},QuestIcon(obj.id,obj.icon,20,"margin-top:-2px"),h("span",{style:"line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip"},obj.name)),
+        h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:5px"},
+          h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:5px;line-height:1.25;white-space:normal;overflow:visible"},QuestIcon(obj.id,obj.icon,18,"margin-top:-2px"),h("span",{style:"line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip"},obj.name)),
           h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.25;padding-top:1px"},
             obj.binaryXp+" XP · "+(STAT_LBL[obj.stat]||obj.stat)
           )
@@ -1550,7 +1550,7 @@ function App(){
     return h("div",{class:"qi "+(d>=effectiveT&&effectiveT>0?"done":""),style:(isDebt&&!done?"border-color:#ef444466;background:rgba(239,68,68,0.04)":"")+(isCapped?";border-color:"+capColor+"66;background:linear-gradient(135deg,rgba(255,255,255,0.02),rgba(239,68,68,0.06))":"")},
       h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
         h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px;white-space:normal;overflow:visible;line-height:1.25"},
-          QuestIcon(obj.id,obj.icon,22,isCapped?"filter:grayscale(60%);opacity:0.7;margin-top:-2px;line-height:1.25":"margin-top:-2px;line-height:1.25"),
+          QuestIcon(obj.id,obj.icon,18,isCapped?"filter:grayscale(60%);opacity:0.7;margin-top:-2px;line-height:1.25":"margin-top:-2px;line-height:1.25"),
           h("span",{style:"white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;word-break:normal"},obj.name),
           hasCap&&!isCapped&&h("span",{style:"font-size:9px;font-family:Orbitron,sans-serif;letter-spacing:0.5px;padding:2px 6px;border-radius:4px;color:"+capColor+";border:1px solid "+capColor+"44;flex-shrink:0"},(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap))),
           isDebt&&!done&&h("span",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;border:1px solid #ef444455;border-radius:4px;padding:1px 5px;flex-shrink:0"},"\u26A0 DETTE "+debtLabel)
@@ -1833,7 +1833,7 @@ function App(){
     return h("div",{class:"sqcard"+(isActive?" ep-pulse":""),style:"border-color:"+tierColor+"44;background:"+tierColor+"08;--epc1:"+tierColor+"44;--epc2:"+tierColor+"00"},
       h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"},
         h("div",{style:"display:flex;align-items:center;gap:8px"},
-          QuestIcon(ep.iconId,ep.icon||"⚔️",20,"line-height:1.1;min-width:24px;text-align:center"),
+          QuestIcon(ep.iconId,ep.icon||"⚔️",18,"line-height:1.1;min-width:24px;text-align:center"),
           h("div",null,
             h("div",{style:"font-size:13px;font-weight:700;color:var(--tx)"},ep.name)
           )
@@ -1999,7 +1999,7 @@ function App(){
     return h("div",{class:"sqcard"+(urgent?" sq-urgent":"")},
       h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"},
         h("div",{style:"display:flex;align-items:center;gap:8px"},
-          QuestIcon(sq.id,sq.icon,20,"line-height:1.1;min-width:24px;text-align:center"),
+          QuestIcon(sq.id,sq.icon,18,"line-height:1.1;min-width:24px;text-align:center"),
           h("div",null,
             h("div",{style:"font-size:13px;font-weight:700;color:var(--tx)"},sq.name)
           )
@@ -2142,8 +2142,8 @@ function App(){
           style:"width:100%;margin-top:12px;padding:12px;background:rgba(168,85,247,0.1);border:1px solid #a855f7;border-radius:10px;color:#a855f7;font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:3px;cursor:pointer;text-transform:uppercase;text-shadow:0 0 12px #a855f7"
         },"\u269B\uFE0F Mont\u00e9e en Ascension"),
         h("div",{style:"display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);align-items:center;justify-items:stretch;margin-top:12px;padding-top:16px;padding-bottom:0px;border-top:1px solid rgba(255,255,255,0.06)"},
-          h("div",{style:"width:100%;display:flex;align-items:center;justify-content:center;gap:4px;padding:0"},
-            h("span",{style:"font-size:22px;line-height:1"},"🔥"),
+          h("div",{style:"width:100%;display:flex;align-items:center;justify-content:center;gap:5px;padding:0"},
+            h("span",{style:"font-size:18px;line-height:1"},"🔥"),
             h("div",{style:"display:flex;flex-direction:column;align-items:flex-start;justify-content:center"},
               h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:var(--rc);line-height:0.9"},
                 state.streak
@@ -2159,8 +2159,8 @@ function App(){
 
           h("div",{style:"width:1px;height:38px;background:rgba(255,255,255,0.06);justify-self:center"}),
 
-          h("div",{style:"width:100%;display:flex;align-items:center;justify-content:center;gap:4px;padding:0"},
-            h("span",{style:"font-size:22px;line-height:1"},"📅"),
+          h("div",{style:"width:100%;display:flex;align-items:center;justify-content:center;gap:5px;padding:0"},
+            h("span",{style:"font-size:18px;line-height:1"},"📅"),
             h("div",{style:"display:flex;flex-direction:column;align-items:flex-start;justify-content:center"},
               h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:var(--rc);line-height:0.9"},
                 todayXp.toFixed(0)
@@ -2173,13 +2173,13 @@ function App(){
         )
       ),
       h("div",{class:"card"},
-        h("div",{class:"ctitle"},"État du personnage"),
+        h("div",{class:"ctitle",style:"color:#22d3ee"},"ÉTAT DU PERSONNAGE"),
         h("div",{style:"display:flex;align-items:flex-start;gap:12px"},
           h("div",{style:"min-width:28px;width:28px;display:flex;align-items:center;justify-content:center;transform:translateY(-1px)"},
-            CharacterStateIcon(characterState.iconId,characterState.icon,22)
+            CharacterStateIcon(characterState.iconId,characterState.icon,18)
           ),
           h("div",{style:"flex:1;min-width:0"},
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:13px;font-weight:800;letter-spacing:1px;color:var(--tx);text-transform:uppercase"},characterState.name),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;font-weight:900;letter-spacing:1.2px;color:var(--tx);text-transform:uppercase"},characterState.name),
             h("div",{style:"font-size:12px;color:var(--td);line-height:1.35;margin-top:4px"},characterState.desc)
           )
         )
@@ -2282,7 +2282,7 @@ function App(){
           ? h(SqCard,{sq:activeSq,showInput:true})
           : completedSq && h("div",{class:"sqcard"},
           h("div",{style:"display:flex;align-items:flex-start;gap:10px"},
-            QuestIcon(completedSq.id,completedSq.icon,20,"line-height:1.1;min-width:24px;text-align:center"),
+            QuestIcon(completedSq.id,completedSq.icon,18,"line-height:1.1;min-width:24px;text-align:center"),
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:13px;font-weight:700;color:#4ade80"},completedSq.name+" — COMPLÉTÉ ✓"),
               h("div",{style:"font-size:11px;color:var(--td);margin-top:2px"},"+"+completedSq.xp+" XP · "+(STAT_LBL[completedSq.stat]||completedSq.stat))
@@ -2775,7 +2775,7 @@ function App(){
           ordered.map(obj=>{
             const cur=(obj.weekly||obj.id==="walk")?(wLog[obj.id]||0):(tLog[obj.id]||0);
             return h("div",{key:obj.id,style:"display:flex;align-items:flex-start;gap:10px;margin-bottom:8px"},
-              QuestIcon(obj.id,obj.icon,20,"min-width:24px"),
+              QuestIcon(obj.id,obj.icon,18,"min-width:24px"),
               h("span",{style:"flex:1;font-size:13px"},obj.name),
               h("input",{id:"cd_"+obj.id,class:"min",type:"text",inputMode:"decimal",defaultValue:String(cur),style:"width:80px;margin:0;text-align:center"}),
               h("span",{style:"font-size:11px;color:var(--td);min-width:28px"},obj.unit)
@@ -2930,7 +2930,7 @@ function App(){
       const subtitle = obj.desc || obj.subtitle || "";
       return h("div",{key:obj.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:flex-start;gap:9px"},
-          QuestIcon(obj.id,obj.icon||"•",20,"line-height:1.1;min-width:24px;text-align:center"),
+          QuestIcon(obj.id,obj.icon||"•",18,"line-height:1.1;min-width:24px;text-align:center"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},obj.name),
             subtitle&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},subtitle),
@@ -2953,7 +2953,7 @@ function App(){
     function renderSpecial(q){
       return h("div",{key:q.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:flex-start;gap:9px"},
-          QuestIcon(q.id,q.icon||"🚨",20,"line-height:1.1;min-width:24px;text-align:center"),
+          QuestIcon(q.id,q.icon||"🚨",18,"line-height:1.1;min-width:24px;text-align:center"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},q.name),
             q.desc&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},q.desc),
@@ -2978,7 +2978,7 @@ function App(){
     function renderEpreuve(ep){
       return h("div",{key:ep.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:flex-start;gap:9px"},
-          QuestIcon(ep.iconId,ep.icon||"⚔️",20,"line-height:1.1;min-width:24px;text-align:center"),
+          QuestIcon(ep.iconId,ep.icon||"⚔️",18,"line-height:1.1;min-width:24px;text-align:center"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},ep.name),
             ep.desc&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},ep.desc),
@@ -2996,7 +2996,7 @@ function App(){
     function renderDonjon(dj){
       return h("div",{key:dj.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:flex-start;gap:9px"},
-          QuestIcon(dj.id,dj.icon||"🏰",20,"line-height:1.1;min-width:22px;text-align:center"),
+          QuestIcon(dj.id,dj.icon||"🏰",18,"line-height:1.1;min-width:22px;text-align:center"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},dj.name),
             dj.desc&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},dj.desc),
@@ -3052,9 +3052,9 @@ function App(){
     function renderCharacterStateCodex(s){
       return h("div",{key:s.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:flex-start;gap:9px"},
-          CharacterStateIcon(s.id,s.icon,22,"line-height:1.1;min-width:24px;text-align:center"),
+          CharacterStateIcon(s.id,s.icon,18,"line-height:1.1;min-width:24px;text-align:center"),
           h("div",{style:"flex:1;min-width:0"},
-            h("div",{style:"font-size:13px;color:var(--tx);font-weight:800;line-height:1.15;text-transform:uppercase;font-family:Orbitron,sans-serif;letter-spacing:1px"},s.name),
+            h("div",{style:"font-size:12px;color:var(--tx);font-weight:900;line-height:1.15;text-transform:uppercase;font-family:Orbitron,sans-serif;letter-spacing:1.2px"},s.name),
             h("div",{style:"font-size:10px;color:var(--td);margin-top:5px;line-height:1.35"},s.desc)
           )
         )
@@ -3143,23 +3143,23 @@ function App(){
       ),
       h("nav",{class:"nav"},
         h("button",{class:"nbtn "+(tab==="home"?"on":""),onClick:()=>switchTab("home")},
-          QuestIcon("nav_home","🏠",24,"vertical-align:middle"),
+          QuestIcon("nav_home","🏠",18,"vertical-align:middle"),
           h("span",null,"Accueil")
         ),
         h("button",{class:"nbtn "+(tab==="quests"?"on":""),onClick:()=>switchTab("quests")},
-          QuestIcon("nav_quests","📖",24,"vertical-align:middle"),
+          QuestIcon("nav_quests","📖",18,"vertical-align:middle"),
           h("span",null,"Quêtes")
         ),
         h("button",{class:"nbtn "+(tab==="stats"?"on":""),onClick:()=>switchTab("stats")},
-          QuestIcon("nav_stats","📊",24,"vertical-align:middle"),
+          QuestIcon("nav_stats","📊",18,"vertical-align:middle"),
           h("span",null,"Stats")
         ),
         h("button",{class:"nbtn "+(tab==="history"?"on":""),onClick:()=>switchTab("history")},
-          QuestIcon("nav_history","↩️",24,"vertical-align:middle"),
+          QuestIcon("nav_history","↩️",18,"vertical-align:middle"),
           h("span",null,"Historique")
         ),
         h("button",{class:"nbtn "+(tab==="codex"?"on":""),onClick:()=>switchTab("codex")},
-          QuestIcon("nav_codex","📜",24,"vertical-align:middle"),
+          QuestIcon("nav_codex","📜",18,"vertical-align:middle"),
           h("span",null,"Codex")
         )
       ),
