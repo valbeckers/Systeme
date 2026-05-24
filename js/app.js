@@ -149,6 +149,7 @@ const QUEST_ICON_ASSETS = {
   nav_stats:"./assets/nav/stats.png",
   nav_history:"./assets/nav/historique.png",
   nav_codex:"./assets/nav/codex.png",
+  settings:"./assets/ui/reglages.png",
 };
 
 function QuestIcon(id, fallback, size=18, extraStyle=""){
@@ -2105,7 +2106,7 @@ function App(){
     return h("div",{class:"sqcard"+(urgent?" sq-urgent":"")},
       h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"},
         h("div",{style:"display:flex;align-items:center;gap:8px"},
-          QuestIcon(sq.id,sq.icon,22),
+          QuestIcon(sq.iconId||sq.id,sq.icon,22),
           h("div",null,
             h("div",{style:"font-size:13px;font-weight:700;color:var(--tx)"},sq.name)
           )
