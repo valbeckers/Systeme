@@ -1495,8 +1495,8 @@ function App(){
       const failFlex = validated && !done ? 3 : 1;
       const succFlex = validated && done ? 3 : 1;
       return h("div",{class:"qi "+(done?"done":"")},
-        h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:5px"},
-          h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:5px;line-height:1.25;white-space:normal;overflow:visible"},QuestIcon(obj.id,obj.icon,18,"margin-top:-2px"),h("span",{style:"line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip"},obj.name)),
+        h("div",{class:"qhdr",style:"align-items:center",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:5px"},
+          h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:5px;line-height:1.25;white-space:normal;overflow:visible"},QuestIcon(obj.id,obj.icon,18,"margin-top:-2px"),h("span",{style:"line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip"},obj.name)),
           h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.25;padding-top:1px"},
             obj.binaryXp+" XP · "+(STAT_LBL[obj.stat]||obj.stat)
           )
@@ -1548,8 +1548,8 @@ function App(){
         : (pct>0 ? " partial" : "");
     const barInnerStyle = "width:"+(isCapped?100:Math.min(100,pct))+"%";
     return h("div",{class:"qi "+(d>=effectiveT&&effectiveT>0?"done":""),style:(isDebt&&!done?"border-color:#ef444466;background:rgba(239,68,68,0.04)":"")+(isCapped?";border-color:"+capColor+"66;background:linear-gradient(135deg,rgba(255,255,255,0.02),rgba(239,68,68,0.06))":"")},
-      h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
-        h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px;white-space:normal;overflow:visible;line-height:1.25"},
+      h("div",{class:"qhdr",style:"align-items:center",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
+        h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px;white-space:normal;overflow:visible;line-height:1.25"},
           QuestIcon(obj.id,obj.icon,18,isCapped?"filter:grayscale(60%);opacity:0.7;margin-top:-2px;line-height:1.25":"margin-top:-2px;line-height:1.25"),
           h("span",{style:"white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;word-break:normal"},obj.name),
           hasCap&&!isCapped&&h("span",{style:"font-size:9px;font-family:Orbitron,sans-serif;letter-spacing:0.5px;padding:2px 6px;border-radius:4px;color:"+capColor+";border:1px solid "+capColor+"44;flex-shrink:0"},(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap))),
@@ -1636,7 +1636,7 @@ function App(){
     const pct=Math.min(100,(d/displayTarget)*100), done=d>=displayTarget, over=d>displayTarget;
     const validated=isW?(wLog[obj.id]!==undefined):(tLog[obj.id]!==undefined);
     if(obj.binary){
-      return h("div",{style:"display:flex;align-items:flex-start;gap:10px;margin-bottom:8px"},
+      return h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
         QuestIcon(obj.id,obj.icon,18),
         h("div",{style:"flex:1"},
           h("div",{style:"font-size:12px;color:var(--tx);display:flex;justify-content:space-between;align-items:center"},
@@ -1665,7 +1665,7 @@ function App(){
       ? " over"
       : (done ? " done" : (pct>0 ? " partial" : ""));
     const barInnerStyle = "width:"+(isCapped?100:Math.min(100,pct))+"%";
-    return h("div",{style:"display:flex;align-items:flex-start;gap:10px;margin-bottom:8px"},
+    return h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
       QuestIcon(obj.id,obj.icon,18,isCapped?"filter:grayscale(60%);opacity:0.7":""),
       h("div",{style:"flex:1"},
         h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center"},
@@ -2099,7 +2099,7 @@ function App(){
 
       h("div",{class:"card"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"},
-          h("div",{style:"display:flex;align-items:flex-start;gap:10px"},
+          h("div",{style:"display:flex;align-items:center;gap:8px"},
             h("div",{style:"font-family:Orbitron,sans-serif;font-size:36px;font-weight:900;color:var(--rc);text-shadow:0 0 12px var(--rg),0 0 30px var(--rg);line-height:1"},rank.id),
             h("div",null,
               
@@ -2108,7 +2108,7 @@ function App(){
           ),
           h("div",{style:"font-size:18px;color:var(--td)"},"\u2192"),
           nextRank
-            ? h("div",{style:"display:flex;align-items:flex-start;gap:10px"},
+            ? h("div",{style:"display:flex;align-items:center;gap:8px"},
                 h("div",{style:"text-align:right"},
                   
                   h("div",{style:"font-size:10px;color:var(--td);letter-spacing:1px;text-transform:uppercase;margin-top:2px"},"Rang suivant")
@@ -2253,7 +2253,7 @@ function App(){
           ? h(EpCard,{ep:activeEp})
           : completedEp
             ? h("div",{class:"sqcard"},
-                h("div",{style:"display:flex;align-items:flex-start;gap:10px"},
+                h("div",{style:"display:flex;align-items:center;gap:8px"},
                   h("span",{style:"font-size:20px"},completedEp.icon),
                   h("div",{style:"flex:1"},
                     h("div",{style:"font-size:13px;font-weight:700;color:#4ade80"},completedEp.name+" — COMPLÉTÉ ✓"),
@@ -2281,7 +2281,7 @@ function App(){
         activeSq
           ? h(SqCard,{sq:activeSq,showInput:true})
           : completedSq && h("div",{class:"sqcard"},
-          h("div",{style:"display:flex;align-items:flex-start;gap:10px"},
+          h("div",{style:"display:flex;align-items:center;gap:8px"},
             QuestIcon(completedSq.id,completedSq.icon,18,"line-height:1.1;min-width:24px;text-align:center"),
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:13px;font-weight:700;color:#4ade80"},completedSq.name+" — COMPLÉTÉ ✓"),
@@ -2306,8 +2306,8 @@ function App(){
           const done = medDone >= sleepDebtMed;
           const pct = Math.min(100,(medDone/sleepDebtMed)*100);
           return h("div",{class:"qi"+(done?" done":""),style:done?"":"border-color:#ef444466;background:rgba(239,68,68,0.04)"},
-            h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:center"},
-              h("div",{class:"qname"},
+            h("div",{class:"qhdr",style:"align-items:center",style:"display:flex;justify-content:space-between;align-items:center"},
+              h("div",{class:"qname",style:"align-items:center;gap:8px"},
                 h("span",null,"🧘🏻‍♂️")," Méditation",
                 !done&&h("span",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;border:1px solid #ef444455;border-radius:4px;padding:1px 5px;margin-left:6px"},"⚠ DETTE 🛏️")
               ),
@@ -2591,7 +2591,7 @@ function App(){
             const pastDays=weekDays.filter(d=>d<=today);
             const successes=pastDays.filter(d=>(state.dailyLog[d]?.[obj.id]||0)>=1).length;
             const pct=Math.min(100,(successes/7)*100), complete=successes>=7;
-            return h("div",{key:obj.id,style:"display:flex;align-items:flex-start;gap:10px;margin-bottom:10px"},
+            return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:10px"},
               QuestIcon(obj.id,obj.icon,18),
               h("div",{style:"flex:1"},
                 h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between"},
@@ -2608,7 +2608,7 @@ function App(){
           }
           const val=tots[obj.id]||0, wt=obj.weekly?(obj.id==="walk"&&restMode&&walkObj?walkObj.base:getRankBase(obj.id,ri)):obj.id==="walk"?obj.base:(obj.target&&!obj.binary?obj.target:getRankBase(obj.id,ri,prestige))*7;
           const pct=Math.min(100,(val/wt)*100), complete=val>=wt, over=val>wt;
-          return h("div",{key:obj.id,style:"display:flex;align-items:flex-start;gap:10px;margin-bottom:10px"},
+          return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:10px"},
             QuestIcon(obj.id,obj.icon,18),
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between"},
@@ -2641,7 +2641,7 @@ function App(){
           h("div",{style:"margin-top:12px"}),
           [...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.binary)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.binary))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden))].map(o=>{
           const rec=records[o.id];
-          if(!rec)return h("div",{key:o.id,style:"display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;opacity:.35"},
+          if(!rec)return h("div",{key:o.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px;opacity:.35"},
             QuestIcon(o.id,o.icon,18),
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:12px;color:var(--td);display:flex;align-items:center;gap:5px"},
@@ -2653,7 +2653,7 @@ function App(){
             h("span",{style:"font-size:11px;color:var(--td)"},"—")
           );
           const fmt2=d=>{if(d.includes("-W"))return d.replace("-W","-S");const p=d.split("-");return p[2]+"/"+p[1];};
-          return h("div",{key:o.id,style:"display:flex;align-items:flex-start;gap:10px;margin-bottom:8px"},
+          return h("div",{key:o.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
             QuestIcon(o.id,o.icon,18),
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:12px;color:var(--tx);display:flex;align-items:center;gap:5px"},
@@ -2696,7 +2696,7 @@ function App(){
             displayObjs.map(o=>{
               const total=totals[o.id]||0;
               const unitLbl=total>1?({rep:"reps",page:"pages",verre:"verres",km:"km",min:"min"}[o.unit]||o.unit):o.unit;
-              return h("div",{key:o.id,style:"display:flex;align-items:flex-start;gap:10px;margin-bottom:8px"+(total===0?";opacity:.35":"")},
+              return h("div",{key:o.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"+(total===0?";opacity:.35":"")},
                 QuestIcon(o.id,o.icon,18),
                 h("div",{style:"flex:1"},
                   h("div",{style:"font-size:12px;color:var(--tx);display:flex;align-items:center;gap:5px"},
@@ -2742,7 +2742,7 @@ function App(){
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget){setShowSet(false);setConfirmReset(false);}}},
       h("div",{class:"modal"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"},
-          h("div",{class:"mtitle",style:"margin-bottom:0;display:flex;align-items:flex-start;gap:10px"},"⚙️","Réglages"),
+          h("div",{class:"mtitle",style:"margin-bottom:0;display:flex;align-items:center;gap:8px"},"⚙️","Réglages"),
           h("button",{style:"background:none;border:none;color:var(--td);font-size:44px;line-height:1;cursor:pointer",onClick:()=>{setShowSet(false);setConfirmReset(false);}},"\u2715")
         ),
         h("div",{class:"msec"},
@@ -2774,7 +2774,7 @@ function App(){
           h("div",{class:"mlbl"},"Corriger les données du jour"),
           ordered.map(obj=>{
             const cur=(obj.weekly||obj.id==="walk")?(wLog[obj.id]||0):(tLog[obj.id]||0);
-            return h("div",{key:obj.id,style:"display:flex;align-items:flex-start;gap:10px;margin-bottom:8px"},
+            return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
               QuestIcon(obj.id,obj.icon,18,"min-width:24px"),
               h("span",{style:"flex:1;font-size:13px"},obj.name),
               h("input",{id:"cd_"+obj.id,class:"min",type:"text",inputMode:"decimal",defaultValue:String(cur),style:"width:80px;margin:0;text-align:center"}),
@@ -2929,7 +2929,7 @@ function App(){
     function renderQuest(obj){
       const subtitle = obj.desc || obj.subtitle || "";
       return h("div",{key:obj.id,style:cardStyle},
-        h("div",{style:"display:flex;align-items:flex-start;gap:9px"},
+        h("div",{style:"display:flex;align-items:center;gap:8px"},
           QuestIcon(obj.id,obj.icon||"•",18,"line-height:1.1;min-width:24px;text-align:center"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},obj.name),
@@ -2952,7 +2952,7 @@ function App(){
 
     function renderSpecial(q){
       return h("div",{key:q.id,style:cardStyle},
-        h("div",{style:"display:flex;align-items:flex-start;gap:9px"},
+        h("div",{style:"display:flex;align-items:center;gap:8px"},
           QuestIcon(q.id,q.icon||"🚨",18,"line-height:1.1;min-width:24px;text-align:center"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},q.name),
@@ -2977,7 +2977,7 @@ function App(){
 
     function renderEpreuve(ep){
       return h("div",{key:ep.id,style:cardStyle},
-        h("div",{style:"display:flex;align-items:flex-start;gap:9px"},
+        h("div",{style:"display:flex;align-items:center;gap:8px"},
           QuestIcon(ep.iconId,ep.icon||"⚔️",18,"line-height:1.1;min-width:24px;text-align:center"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},ep.name),
@@ -2995,7 +2995,7 @@ function App(){
 
     function renderDonjon(dj){
       return h("div",{key:dj.id,style:cardStyle},
-        h("div",{style:"display:flex;align-items:flex-start;gap:9px"},
+        h("div",{style:"display:flex;align-items:center;gap:8px"},
           QuestIcon(dj.id,dj.icon||"🏰",18,"line-height:1.1;min-width:22px;text-align:center"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},dj.name),
@@ -3051,7 +3051,7 @@ function App(){
 
     function renderCharacterStateCodex(s){
       return h("div",{key:s.id,style:cardStyle},
-        h("div",{style:"display:flex;align-items:flex-start;gap:9px"},
+        h("div",{style:"display:flex;align-items:center;gap:8px"},
           CharacterStateIcon(s.id,s.icon,18,"line-height:1.1;min-width:24px;text-align:center"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:12px;color:var(--tx);font-weight:900;line-height:1.15;text-transform:uppercase;font-family:Orbitron,sans-serif;letter-spacing:1.2px"},s.name),
