@@ -48,120 +48,17 @@ function meetsStatRequirement(stats, reqKey){
 const STATS      = ["Sante","Force","Intelligence","Concentration","Endurance","Agilite","Discipline"];
 const STAT_COLOR = {Sante:"#ef4444",Force:"#fb923c",Intelligence:"#ec4899",Concentration:"#22d3ee",Endurance:"#f59e0b",Agilite:"#4ade80",Discipline:"#c084fc"};
 const STAT_LBL   = {Sante:"Sant\u00e9",Force:"Force",Intelligence:"Intelligence",Concentration:"Concentration",Endurance:"Endurance",Agilite:"Agilit\u00e9",Discipline:"Discipline"};
-const CHARACTER_STATE_ICON_ASSETS = {
-  sante:"./assets/character-state/sante.png",
-  mental:"./assets/character-state/mental.png",
-  energie:"./assets/character-state/energie.png",
-  discipline:"./assets/character-state/discipline.png",
-  force:"./assets/character-state/force.png",
-  serenite:"./assets/character-state/serenite.png",
-  sanction:"./assets/character-state/sanction.png",
-  latent:"./assets/character-state/latent.png",
-  desequilibre:"./assets/character-state/desequilibre.png",
-  berserker:"./assets/character-state/berserker.png",
-  construction:"./assets/character-state/construction.png",
-  streak:"./assets/character-state/streak.png",
-};
-
 function CharacterStateIcon(id, fallback, size=26, extraStyle=""){
-  const src = CHARACTER_STATE_ICON_ASSETS[id];
-  if(src){
-    return h("img",{
-      src,
-      alt:fallback||id,
-      class:"character-state-img-icon",
-      style:"width:"+size+"px;height:"+size+"px;object-fit:contain;display:inline-block;vertical-align:middle;flex-shrink:0;filter:var(--icon-filter,saturate(1.22));"+extraStyle
-    });
-  }
-  return h("span",{style:"font-size:"+size+"px;line-height:1;display:inline-block;flex-shrink:0;"+extraStyle},fallback);
+  return h("span",{
+    style:"font-size:"+size+"px;line-height:1;display:inline-block;flex-shrink:0;"+extraStyle
+  },fallback);
 }
 
 
-const QUEST_ICON_ASSETS = {
-  water:"./assets/quests/water.png",
-  sleep:"./assets/quests/sleep.png",
-  protein:"./assets/quests/protein.png",
-  mindmeal:"./assets/quests/mindmeal.png",
-  push:"./assets/quests/push.png",
-  abs:"./assets/quests/abs.png",
-  squats:"./assets/quests/squats.png",
-  reading:"./assets/quests/reading.png",
-  balance:"./assets/quests/balance.png",
-  adult:"./assets/quests/adult.png",
-  run:"./assets/quests/run.png",
-  calves:"./assets/quests/calves.png",
-  flex:"./assets/quests/flex.png",
-  grips:"./assets/quests/grips.png",
-  med:"./assets/quests/med.png",
-  pod:"./assets/quests/podcast.png",
-  nosugar:"./assets/quests/nosugar.png",
-  walk:"./assets/quests/walk.png",
-  sp_flow20:"./assets/quests/urgent/animalflow.png",
-  sp_cold:"./assets/quests/urgent/coldshower.png",
-  sp_deadhang:"./assets/quests/urgent/deadhang.png",
-  sp_dips:"./assets/quests/urgent/dips.png",
-  sp_footwork:"./assets/quests/urgent/footwork.png",
-  sp_declutter:"./assets/quests/urgent/freestuff.png",
-  sp_fruits:"./assets/quests/urgent/fruits.png",
-  sp_breath:"./assets/quests/urgent/heart.png",
-  sp_fasting:"./assets/quests/urgent/jeune.png",
-  sp_jump:"./assets/quests/urgent/jumprope.png",
-  sp_silent:"./assets/quests/urgent/silentmoving.png",
-  sp_learning:"./assets/quests/urgent/learning.png",
-  sp_lunge:"./assets/quests/urgent/lunges.png",
-  sp_fluide:"./assets/quests/urgent/martialflow.png",
-  sp_memo30:"./assets/quests/urgent/memory.png",
-  sp_nojunk:"./assets/quests/urgent/nojunkfood.png",
-  sp_nophone3h:"./assets/quests/urgent/nophone.png",
-  sp_plank:"./assets/quests/urgent/plank.png",
-  sp_pull:"./assets/quests/urgent/pullups.png",
-  sp_silence30:"./assets/quests/urgent/silence.png",
-  sp_sun:"./assets/quests/urgent/sun.png",
-  sp_task:"./assets/quests/urgent/task.png",
-  sp_stairs:"./assets/quests/urgent/stairs.png",
-  sp_wallsit:"./assets/quests/urgent/wallsit.png",
-  sp_sprint:"./assets/quests/run.png",
-  sp_walk30:"./assets/quests/walk.png",
-  sp_flex30:"./assets/quests/flex.png",
-  sp_balance_eyes:"./assets/quests/balance.png",
-  ep_pullups:"./assets/epreuves/pullups.png",
-  ep_wallsit:"./assets/epreuves/wallsit.png",
-  ep_reading:"./assets/epreuves/reading.png",
-  ep_4hwork:"./assets/epreuves/4hwork.png",
-  ep_med:"./assets/epreuves/med.png",
-  ep_deepwork:"./assets/epreuves/deepwork.png",
-  ep_hike:"./assets/epreuves/hike.png",
-  ep_run:"./assets/epreuves/run.png",
-  ep_burpees:"./assets/epreuves/burpees.png",
-  ep_clock:"./assets/epreuves/clock.png",
-  ep_coldshower:"./assets/epreuves/coldshower.png",
-  ep_nophone:"./assets/epreuves/nophone.png",
-  ep_nojunkfood:"./assets/epreuves/nojunkfood.png",
-  ep_broom:"./assets/epreuves/broom.png",
-  ep_flex:"./assets/epreuves/flex.png",
-  ep_martialflow:"./assets/epreuves/martialflow.png",
-  dj_moine:"./assets/donjons/moine.png",
-  dj_corps_silencieux:"./assets/donjons/corps_silencieux.png",
-  dj_fondation:"./assets/donjons/fondations.png",
-  dj_chasseur:"./assets/donjons/chasseur.png",
-  nav_home:"./assets/nav/accueil.png",
-  nav_quests:"./assets/nav/quetes.png",
-  nav_stats:"./assets/nav/stats.png",
-  nav_history:"./assets/nav/historique.png",
-  nav_codex:"./assets/nav/codex.png",
-};
-
 function QuestIcon(id, fallback, size=18, extraStyle=""){
-  const src = QUEST_ICON_ASSETS[id];
-  if(src){
-    return h("img",{
-      src,
-      alt:fallback||id,
-      class:"quest-img-icon",
-      style:"width:"+size+"px;height:"+size+"px;object-fit:contain;display:inline-block;vertical-align:top;flex-shrink:0;filter:var(--icon-filter,saturate(1.22));"+extraStyle
-    });
-  }
-  return h("span",{style:"font-size:"+size+"px;line-height:1;display:inline-block;flex-shrink:0;"+extraStyle},fallback);
+  return h("span",{
+    style:"font-size:"+size+"px;line-height:1;display:inline-block;flex-shrink:0;"+extraStyle
+  },fallback);
 }
 
 
@@ -2246,10 +2143,7 @@ function App(){
         },"\u269B\uFE0F Mont\u00e9e en Ascension"),
         h("div",{style:"display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);align-items:center;justify-items:stretch;margin-top:12px;padding-top:16px;padding-bottom:0px;border-top:1px solid rgba(255,255,255,0.06)"},
           h("div",{style:"width:100%;display:flex;align-items:center;justify-content:center;gap:4px;padding:0"},
-            h("img",{
-              src:"./assets/ui/streak.png",
-              style:"width:42px;height:42px;object-fit:contain;display:block"
-            }),
+            h("span",{style:"font-size:22px;line-height:1"},"🔥"),
             h("div",{style:"display:flex;flex-direction:column;align-items:flex-start;justify-content:center"},
               h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:var(--rc);line-height:0.9"},
                 state.streak
@@ -2266,10 +2160,7 @@ function App(){
           h("div",{style:"width:1px;height:38px;background:rgba(255,255,255,0.06);justify-self:center"}),
 
           h("div",{style:"width:100%;display:flex;align-items:center;justify-content:center;gap:4px;padding:0"},
-            h("img",{
-              src:"./assets/ui/xpjour.png",
-              style:"width:42px;height:42px;object-fit:contain;display:block"
-            }),
+            h("span",{style:"font-size:22px;line-height:1"},"📅"),
             h("div",{style:"display:flex;flex-direction:column;align-items:flex-start;justify-content:center"},
               h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:var(--rc);line-height:0.9"},
                 todayXp.toFixed(0)
@@ -2851,7 +2742,7 @@ function App(){
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget){setShowSet(false);setConfirmReset(false);}}},
       h("div",{class:"modal"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"},
-          h("div",{class:"mtitle",style:"margin-bottom:0;display:flex;align-items:center;gap:10px"},h("img",{src:"assets/ui/reglages.png",alt:"Réglages",style:"width:22px;height:22px;object-fit:contain;filter:none;flex:0 0 auto"}),"Réglages"),
+          h("div",{class:"mtitle",style:"margin-bottom:0;display:flex;align-items:center;gap:10px"},"⚙️","Réglages"),
           h("button",{style:"background:none;border:none;color:var(--td);font-size:44px;line-height:1;cursor:pointer",onClick:()=>{setShowSet(false);setConfirmReset(false);}},"\u2715")
         ),
         h("div",{class:"msec"},
@@ -3238,7 +3129,7 @@ function App(){
           h("div",{class:"hdr-top",style:"position:relative"},
             h("div",null,h("div",{class:"pname"},"VAL")),
             prestige>0&&h("div",{class:"prestige-badge"},"\u269B\uFE0F Ascension "+ROMAN[prestige-1]),
-            h("button",{class:"gbtn",style:"display:flex;align-items:center;justify-content:center",onClick:()=>setShowSet(true)},h("img",{src:"assets/ui/reglages.png",alt:"Réglages",style:"width:40px;height:40px;object-fit:contain;display:block;filter:none"}))
+            h("button",{class:"gbtn",style:"display:flex;align-items:center;justify-content:center",onClick:()=>setShowSet(true)},"⚙️")
           )
         )
       ),
