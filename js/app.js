@@ -476,8 +476,13 @@ function rgbToHue({r,g,b}){
   return h;
 }
 function iconThemeFilter(color){
-  return {base:"none", active:"none"};
-}
+  const rgb=hexToRgb(color);
+  if(!rgb){
+    return {
+      base:"saturate(1.22) contrast(1.05)",
+      active:"saturate(1.38) contrast(1.08) brightness(1.04)"
+    };
+  }
 
   const hue=rgbToHue(rgb);
 
@@ -2849,7 +2854,7 @@ function App(){
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget){setShowSet(false);setConfirmReset(false);}}},
       h("div",{class:"modal"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"},
-          h("div",{class:"mtitle",style:"margin-bottom:0;display:flex;align-items:center;gap:10px"},h("img",{src:"assets/nav/reglages.png",alt:"Réglages",style:"width:22px;height:22px;object-fit:contain;filter:none;flex:0 0 auto"}),"Réglages"),
+          h("div",{class:"mtitle",style:"margin-bottom:0;display:flex;align-items:center;gap:10px"},h("img",{src:"assets/nav/reglages.png",alt:"Réglages",style:"width:22px;height:22px;object-fit:contain;filter:var(--icon-filter,saturate(1.18)) drop-shadow(0 0 7px var(--rc));flex:0 0 auto"}),"Réglages"),
           h("button",{style:"background:none;border:none;color:var(--td);font-size:44px;line-height:1;cursor:pointer",onClick:()=>{setShowSet(false);setConfirmReset(false);}},"\u2715")
         ),
         h("div",{class:"msec"},
@@ -3188,7 +3193,7 @@ function App(){
       )),
       h("div",{class:"rucont"},
         h("div",{class:"ruevol"},"R\u00e9cup\u00e9ration forc\u00e9e"),
-        h("div",{style:"font-size:64px;margin-bottom:8px;filter:"},"\u26A1"),
+        h("div",{style:"font-size:64px;margin-bottom:8px;filter:drop-shadow(0 0 20px "+capColor+")"},"\u26A1"),
         h("div",{style:"font-family:Orbitron,sans-serif;color:"+capColor+";font-size:18px;font-weight:700;letter-spacing:3px;margin-bottom:6px;text-shadow:0 0 14px "+capColor},obj.name.toUpperCase()),
         h("div",{style:"font-family:Orbitron,sans-serif;color:"+capColor+";font-size:12px;letter-spacing:2px;opacity:0.7"},"CAP \u00d7"+xMult+" ATTEINT"),
         h("div",{style:"font-family:Orbitron,sans-serif;color:#c084fc;font-size:16px;font-weight:700;letter-spacing:2px;margin-top:24px;text-shadow:0 0 12px #c084fc"},"+ 200 XP DISCIPLINE"),
@@ -3209,7 +3214,7 @@ function App(){
           h("div",{class:"hdr-top",style:"position:relative"},
             h("div",null,h("div",{class:"pname"},"VAL")),
             prestige>0&&h("div",{class:"prestige-badge"},"\u269B\uFE0F Ascension "+ROMAN[prestige-1]),
-            h("button",{class:"gbtn",style:"display:flex;align-items:center;justify-content:center",onClick:()=>setShowSet(true)},h("img",{src:"assets/nav/reglages.png",alt:"Réglages",style:"width:40px;height:40px;object-fit:contain;display:block;filter:var(--icon-filter,saturate(1.18)))"}))
+            h("button",{class:"gbtn",style:"display:flex;align-items:center;justify-content:center",onClick:()=>setShowSet(true)},h("img",{src:"assets/nav/reglages.png",alt:"Réglages",style:"width:40px;height:40px;object-fit:contain;display:block;filter:var(--icon-filter,saturate(1.18)) drop-shadow(0 0 7px var(--rc))"}))
           )
         )
       ),
