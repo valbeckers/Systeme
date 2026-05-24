@@ -70,7 +70,7 @@ function CharacterStateIcon(id, fallback, size=26, extraStyle=""){
       src,
       alt:fallback||id,
       class:"character-state-img-icon",
-      style:"width:"+size+"px;height:"+size+"px;object-fit:contain;display:inline-block;vertical-align:middle;flex-shrink:0;filter:var(--icon-filter,saturate(1.22)) drop-shadow(0 0 8px color-mix(in srgb, var(--rc) 78%, transparent));"+extraStyle
+      style:"width:"+size+"px;height:"+size+"px;object-fit:contain;display:inline-block;vertical-align:middle;flex-shrink:0;filter:var(--icon-filter,saturate(1.22));"+extraStyle
     });
   }
   return h("span",{style:"font-size:"+size+"px;line-height:1;display:inline-block;flex-shrink:0;"+extraStyle},fallback);
@@ -158,7 +158,7 @@ function QuestIcon(id, fallback, size=18, extraStyle=""){
       src,
       alt:fallback||id,
       class:"quest-img-icon",
-      style:"width:"+size+"px;height:"+size+"px;object-fit:contain;display:inline-block;vertical-align:top;flex-shrink:0;filter:var(--icon-filter,saturate(1.22)) drop-shadow(0 0 7px color-mix(in srgb, var(--rc) 72%, transparent));"+extraStyle
+      style:"width:"+size+"px;height:"+size+"px;object-fit:contain;display:inline-block;vertical-align:top;flex-shrink:0;filter:var(--icon-filter,saturate(1.22));"+extraStyle
     });
   }
   return h("span",{style:"font-size:"+size+"px;line-height:1;display:inline-block;flex-shrink:0;"+extraStyle},fallback);
@@ -2257,7 +2257,7 @@ function App(){
               h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:var(--rc);line-height:0.9"},
                 state.streak
               ),
-              h("div",{style:"font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px"},
+              h("div",{style:"font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px"},
                 "STREAK"
               ),
               bonusGiven&&h("div",{style:"font-size:10px;color:#c084fc;font-family:Orbitron,sans-serif;margin-top:3px"},
@@ -2277,7 +2277,7 @@ function App(){
               h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:var(--rc);line-height:0.9"},
                 todayXp.toFixed(0)
               ),
-              h("div",{style:"font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px"},
+              h("div",{style:"font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px"},
                 "XP DU JOUR"
               )
             )
