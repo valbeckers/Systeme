@@ -2206,7 +2206,7 @@ function App(){
       h("div",{class:"card"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"},
           h("div",{style:"display:flex;align-items:center;gap:10px"},
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:36px;font-weight:900;color:var(--rc);text-shadow:0 0 12px var(--rg),0 0 30px var(--rg);line-height:1"},rank.id),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:36px;font-weight:900;color:var(--rc);text-shadow:none;line-height:1"},rank.id),
             h("div",null,
               
               h("div",{style:"font-size:10px;color:var(--td);letter-spacing:1px;text-transform:uppercase;margin-top:2px"},"Rang actuel")
