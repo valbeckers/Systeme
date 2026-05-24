@@ -2365,7 +2365,7 @@ function App(){
                 h("div",{style:"display:flex;align-items:center;gap:10px"},
                   h("span",{style:"font-size:20px"},completedEp.icon),
                   h("div",{style:"flex:1"},
-                    h("div",{style:"font-size:13px;font-weight:700;color:#4ade80"},completedEp.name+" — COMPLÉTÉ ✅"),
+                    h("div",{style:"font-size:13px;font-weight:700;color:#4ade80"},completedEp.name+" — COMPLÉTÉ ✓"),
                     h("div",{style:"font-size:11px;color:var(--td);margin-top:2px"},
                       ("+"+completedEp.xp+" XP · "+(STAT_LBL[completedEp.stat]||completedEp.stat))
                       +(completedEp.xp2&&completedEp.stat2?(" · +"+completedEp.xp2+" XP "+(STAT_LBL[completedEp.stat2]||completedEp.stat2)):"")
@@ -2393,7 +2393,7 @@ function App(){
           h("div",{style:"display:flex;align-items:center;gap:10px"},
             QuestIcon(completedSq.id,completedSq.icon,22),
             h("div",{style:"flex:1"},
-              h("div",{style:"font-size:13px;font-weight:700;color:#4ade80"},completedSq.name+" — COMPLÉTÉ ✅"),
+              h("div",{style:"font-size:13px;font-weight:700;color:#4ade80"},completedSq.name+" — COMPLÉTÉ ✓"),
               h("div",{style:"font-size:11px;color:var(--td);margin-top:2px"},"+"+completedSq.xp+" XP · "+(STAT_LBL[completedSq.stat]||completedSq.stat))
             )
           ),
