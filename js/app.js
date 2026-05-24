@@ -852,8 +852,9 @@ function App(){
       const validated=v>=base;
       if(!validated){
         if(obj.penaltyAll){
-          totalPenalty+=7000;
-          STATS.forEach(st=>{sxDelta[st]=(sxDelta[st]||0)-1000;});
+          // Quête rouge : vraie régression si non respectée
+          totalPenalty+=14000;
+          STATS.forEach(st=>{sxDelta[st]=(sxDelta[st]||0)-2000;});
           penaltiesApplied.push(obj.id);
           return;
         }
