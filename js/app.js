@@ -513,13 +513,29 @@ const fmtNum = (v, max=2) => {
 
 
 
-function progressFillClass(value,target){
+function progressFillVisual(value,target){
   const v = Number(value)||0;
   const t = Number(target)||0;
-  if(t<=0) return "qfill";
-  if(v > t) return "qfill over";
-  if(v >= t) return "qfill done";
-  return "qfill partial";
+  if(t<=0) return {
+    bg:"repeating-linear-gradient(-45deg, transparent, transparent 4px, var(--rc) 4px, var(--rc) 8px)",
+    opacity:.8,
+    shadow:"none"
+  };
+  if(v > t) return {
+    bg:"linear-gradient(90deg,var(--ra),var(--rc))",
+    opacity:1,
+    shadow:"0 0 12px var(--rc),0 0 24px var(--rg)"
+  };
+  if(v >= t) return {
+    bg:"linear-gradient(90deg,var(--ra),var(--rc))",
+    opacity:1,
+    shadow:"none"
+  };
+  return {
+    bg:"repeating-linear-gradient(-45deg, transparent, transparent 4px, var(--rc) 4px, var(--rc) 8px)",
+    opacity:.8,
+    shadow:"none"
+  };
 }
 
 function calcXp(obj,total,baseOverride){
@@ -1692,7 +1708,7 @@ function App(){
       ),
       h("div",{class:"qrow"},
         h(Fragment,null,
-            h("div",{class:"qbar"},h("div",{class:"qfill partial",style:barInnerStyle})),
+            h("div",{class:"qbar"},h("div",{class:"qfill",style:barInnerStyle})),
             h("div",{class:"qxp",style:(isCapped?"color:"+capColor:isDebt&&!done?"color:#ef4444":"")+";white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},fmtNum(d)+"/"+fmtNum(displayTarget)+" "+((d>1||displayTarget>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas"}[obj.unit]||obj.unit))
           )
       ),
@@ -1794,7 +1810,7 @@ function App(){
             h("span",{style:"font-family:Orbitron,sans-serif;font-size:11px;font-weight:700;color:#4ade80;width:10px;text-align:center"},done?"\u2713":"")
           )
         ),
-        h("div",{class:"qbar"},h("div",{class:"qfill partial",style:barInnerStyle}))
+        h("div",{class:"qbar"},h("div",{class:"qfill",style:barInnerStyle}))
       )
     );
   }
@@ -2436,7 +2452,7 @@ function App(){
               h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px"},"0 XP · obligatoire")
             ),
             h("div",{class:"qrow"},
-              h("div",{class:"qbar"},h("div",{class:"qfill partial"+(done?" done":pct>0?" partial":""),style:"width:"+pct+"%"})),
+              h("div",{class:"qbar"},h("div",{class:"qfill"+(done?" done":pct>0?" partial":""),style:"width:"+pct+"%"})),
               h("div",{class:"qxp",style:done?"":"color:#ef4444"},medDone+"/"+sleepDebtMed+" min")
             ),
             h("div",{style:"display:flex;gap:8px;margin-top:8px"},
@@ -2612,7 +2628,7 @@ function App(){
                 h("span",{style:"color:"+r.color},r.label+" · niv. "+r.level),
                 h("span",{style:"font-family:Orbitron,sans-serif;color:"+(isWeak?statBalance.statusColor:"var(--td)")},(r.xp||0).toLocaleString("fr-FR")+" XP"+(isStrong?" ▲":isWeak?" ▼":""))
               ),
-              h("div",{class:"qbar"},h("div",{class:"qfill partial"+(isStrong?" over":isWeak?" partial":""),style:"width:"+pct+"%;background:"+r.color}))
+              h("div",{class:"qbar"},h("div",{class:"qfill"+(isStrong?" over":isWeak?" partial":""),style:"width:"+pct+"%;background:"+r.color}))
             );
           })
         )
@@ -2723,7 +2739,7 @@ function App(){
                   ),
                   h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px"},successes+"/7 "+(obj.id==="sleep"?"nuits":"jours"))
                 ),
-                h("div",{class:"qbar"},h("div",{class:"qfill partial"+(complete?" done":successes>0?" partial":""),style:"width:"+pct+"%"}))
+                h("div",{class:"qbar"},h("div",{class:"qfill"+(complete?" done":successes>0?" partial":""),style:"width:"+pct+"%"}))
               ),
               complete&&h("span",{style:"font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:#4ade80"},"\u2713")
             );
@@ -2745,7 +2761,7 @@ function App(){
                 h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px"},
                   fmtNum(val)+"/"+fmtNum(wt)+" "+((val>1||wt>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas"}[obj.unit]||obj.unit))
               ),
-              h("div",{class:"qbar"},h("div",{class:"qfill partial"+(over?" over":complete?" done":pct>0?" partial":""),style:"width:"+pct+"%"}))
+              h("div",{class:"qbar"},h("div",{class:"qfill"+(over?" over":complete?" done":pct>0?" partial":""),style:"width:"+pct+"%"}))
             ),
             complete&&h("span",{style:"font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:#4ade80"},"\u2713")
           );
