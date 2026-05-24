@@ -3143,23 +3143,23 @@ function App(){
       ),
       h("nav",{class:"nav"},
         h("button",{class:"nbtn "+(tab==="home"?"on":""),onClick:()=>switchTab("home")},
-          QuestIcon("nav_home","Accueil",28,"vertical-align:middle"),
+          QuestIcon("nav_home","🏠",28,"vertical-align:middle"),
           h("span",null,"Accueil")
         ),
         h("button",{class:"nbtn "+(tab==="quests"?"on":""),onClick:()=>switchTab("quests")},
-          QuestIcon("nav_quests","Quêtes",28,"vertical-align:middle"),
+          QuestIcon("nav_quests","📖",28,"vertical-align:middle"),
           h("span",null,"Quêtes")
         ),
         h("button",{class:"nbtn "+(tab==="stats"?"on":""),onClick:()=>switchTab("stats")},
-          QuestIcon("nav_stats","Stats",28,"vertical-align:middle"),
+          QuestIcon("nav_stats","📊",28,"vertical-align:middle"),
           h("span",null,"Stats")
         ),
         h("button",{class:"nbtn "+(tab==="history"?"on":""),onClick:()=>switchTab("history")},
-          QuestIcon("nav_history","Historique",28,"vertical-align:middle"),
+          QuestIcon("nav_history","↩️",28,"vertical-align:middle"),
           h("span",null,"Historique")
         ),
         h("button",{class:"nbtn "+(tab==="codex"?"on":""),onClick:()=>switchTab("codex")},
-          QuestIcon("nav_codex","Codex",28,"vertical-align:middle"),
+          QuestIcon("nav_codex","📜",28,"vertical-align:middle"),
           h("span",null,"Codex")
         )
       ),
