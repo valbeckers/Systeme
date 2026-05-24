@@ -151,11 +151,6 @@ const QUEST_ICON_ASSETS = {
   nav_codex:"./assets/nav/codex.png",
 };
 
-
-function SpecialQuestIcon(q, size=22, extraStyle=""){
-  return QuestIcon(q.iconId||q.id,q.icon,size,extraStyle);
-}
-
 function QuestIcon(id, fallback, size=18, extraStyle=""){
   const src = QUEST_ICON_ASSETS[id];
   if(src){
@@ -2110,7 +2105,7 @@ function App(){
     return h("div",{class:"sqcard"+(urgent?" sq-urgent":"")},
       h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"},
         h("div",{style:"display:flex;align-items:center;gap:8px"},
-          SpecialQuestIcon(sq,22),
+          QuestIcon(sq.id,sq.icon,22),
           h("div",null,
             h("div",{style:"font-size:13px;font-weight:700;color:var(--tx)"},sq.name)
           )
@@ -2399,7 +2394,7 @@ function App(){
           ? h(SqCard,{sq:activeSq,showInput:true})
           : completedSq && h("div",{class:"sqcard"},
           h("div",{style:"display:flex;align-items:center;gap:10px"},
-            h("span",{style:"font-size:20px"},completedSq.icon),
+            QuestIcon(completedSq.id,completedSq.icon,22),
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:13px;font-weight:700;color:#4ade80"},completedSq.name+" — COMPLÉTÉ ✅"),
               h("div",{style:"font-size:11px;color:var(--td);margin-top:2px"},"+"+completedSq.xp+" XP · "+(STAT_LBL[completedSq.stat]||completedSq.stat))
