@@ -149,7 +149,7 @@ const QUEST_ICON_ASSETS = {
   nav_stats:"./assets/nav/stats.png",
   nav_history:"./assets/nav/historique.png",
   nav_codex:"./assets/nav/codex.png",
-  settings:"../assets/ui/reglages.png",
+  settings:"./assets/ui/reglages.png",
 };
 
 function QuestIcon(id, fallback, size=18, extraStyle=""){
