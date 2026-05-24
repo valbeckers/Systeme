@@ -149,7 +149,6 @@ const QUEST_ICON_ASSETS = {
   nav_stats:"./assets/nav/stats.png",
   nav_history:"./assets/nav/historique.png",
   nav_codex:"./assets/nav/codex.png",
-  settings:"./assets/ui/reglages.png",
 };
 
 function QuestIcon(id, fallback, size=18, extraStyle=""){
@@ -2207,7 +2206,7 @@ function App(){
       h("div",{class:"card"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"},
           h("div",{style:"display:flex;align-items:center;gap:10px"},
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:36px;font-weight:900;color:var(--rc);text-shadow:none;line-height:1"},rank.id),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:36px;font-weight:900;color:var(--rc);text-shadow:0 0 12px var(--rg),0 0 30px var(--rg);line-height:1"},rank.id),
             h("div",null,
               
               h("div",{style:"font-size:10px;color:var(--td);letter-spacing:1px;text-transform:uppercase;margin-top:2px"},"Rang actuel")
@@ -2855,7 +2854,7 @@ function App(){
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget){setShowSet(false);setConfirmReset(false);}}},
       h("div",{class:"modal"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"},
-          h("div",{class:"mtitle",style:"margin-bottom:0;display:flex;align-items:center;gap:10px"},h("img",{src:"assets/nav/reglages.png",alt:"Réglages",style:"width:22px;height:22px;object-fit:contain;filter:var(--icon-filter,saturate(1.18)) drop-shadow(0 0 7px var(--rc));flex:0 0 auto"}),"Réglages"),
+          h("div",{class:"mtitle",style:"margin-bottom:0;display:flex;align-items:center;gap:10px"},h("img",{src:"assets/ui/reglages.png",alt:"Réglages",style:"width:22px;height:22px;object-fit:contain;filter:none;flex:0 0 auto"}),"Réglages"),
           h("button",{style:"background:none;border:none;color:var(--td);font-size:44px;line-height:1;cursor:pointer",onClick:()=>{setShowSet(false);setConfirmReset(false);}},"\u2715")
         ),
         h("div",{class:"msec"},
@@ -3215,7 +3214,7 @@ function App(){
           h("div",{class:"hdr-top",style:"position:relative"},
             h("div",null,h("div",{class:"pname"},"VAL")),
             prestige>0&&h("div",{class:"prestige-badge"},"\u269B\uFE0F Ascension "+ROMAN[prestige-1]),
-            h("button",{class:"gbtn",style:"display:flex;align-items:center;justify-content:center",onClick:()=>setShowSet(true)},h("img",{src:"assets/nav/reglages.png",alt:"Réglages",style:"width:40px;height:40px;object-fit:contain;display:block;filter:var(--icon-filter,saturate(1.18)) drop-shadow(0 0 7px var(--rc))"}))
+            h("button",{class:"gbtn",style:"display:flex;align-items:center;justify-content:center",onClick:()=>setShowSet(true)},h("img",{src:"assets/ui/reglages.png",alt:"Réglages",style:"width:40px;height:40px;object-fit:contain;display:block;filter:none"}))
           )
         )
       ),
