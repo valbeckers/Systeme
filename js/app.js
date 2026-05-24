@@ -70,7 +70,7 @@ function CharacterStateIcon(id, fallback, size=26, extraStyle=""){
       src,
       alt:fallback||id,
       class:"character-state-img-icon",
-      style:"width:"+size+"px;height:"+size+"px;object-fit:contain;display:inline-block;vertical-align:middle;flex-shrink:0;filter:none;"+extraStyle
+      style:"width:"+size+"px;height:"+size+"px;object-fit:contain;display:inline-block;vertical-align:middle;flex-shrink:0;filter:var(--icon-filter,saturate(1.22)) drop-shadow(0 0 8px color-mix(in srgb, var(--rc) 78%, transparent));"+extraStyle
     });
   }
   return h("span",{style:"font-size:"+size+"px;line-height:1;display:inline-block;flex-shrink:0;"+extraStyle},fallback);
@@ -158,7 +158,7 @@ function QuestIcon(id, fallback, size=18, extraStyle=""){
       src,
       alt:fallback||id,
       class:"quest-img-icon",
-      style:"width:"+size+"px;height:"+size+"px;object-fit:contain;display:inline-block;vertical-align:top;flex-shrink:0;filter:none;"+extraStyle
+      style:"width:"+size+"px;height:"+size+"px;object-fit:contain;display:inline-block;vertical-align:top;flex-shrink:0;filter:var(--icon-filter,saturate(1.22)) drop-shadow(0 0 7px color-mix(in srgb, var(--rc) 72%, transparent));"+extraStyle
     });
   }
   return h("span",{style:"font-size:"+size+"px;line-height:1;display:inline-block;flex-shrink:0;"+extraStyle},fallback);
