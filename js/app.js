@@ -512,32 +512,6 @@ const fmtNum = (v, max=2) => {
 };
 
 
-
-function progressFillVisual(value,target){
-  const v = Number(value)||0;
-  const t = Number(target)||0;
-  if(t<=0) return {
-    bg:"repeating-linear-gradient(-45deg, transparent, transparent 4px, var(--rc) 4px, var(--rc) 8px)",
-    opacity:.8,
-    shadow:"none"
-  };
-  if(v > t) return {
-    bg:"linear-gradient(90deg,var(--ra),var(--rc))",
-    opacity:1,
-    shadow:"0 0 12px var(--rc),0 0 24px var(--rg)"
-  };
-  if(v >= t) return {
-    bg:"linear-gradient(90deg,var(--ra),var(--rc))",
-    opacity:1,
-    shadow:"none"
-  };
-  return {
-    bg:"repeating-linear-gradient(-45deg, transparent, transparent 4px, var(--rc) 4px, var(--rc) 8px)",
-    opacity:.8,
-    shadow:"none"
-  };
-}
-
 function calcXp(obj,total,baseOverride){
   if(!obj||total<=0)return 0;
   const t = baseOverride!=null ? baseOverride : obj.base;
@@ -1668,16 +1642,14 @@ function App(){
     else if(isNearCap){
       barColor = "linear-gradient(90deg,"+rankColor+","+capColor+")";
     }
-    // Halo selon état (priorité : cap > done > debt > neutre)
-    const haloShadow = isCapped
-      ? "0 0 12px "+capColor+",0 0 24px "+capColor+"66"
+    // Barre alignée sur Historique :
+    // en cours = hachurée, complétée = pleine, dépassée/cap = pleine + glow
+    const fillStateClass = isCapped || over
+      ? " over"
       : (d>=effectiveT&&effectiveT>0)
-        ? "0 0 12px var(--rc),0 0 24px var(--rg)"
-        : "";
-    const barInnerStyle = (isCapped
-      ? "width:100%;background:"+capColor
-      : "width:"+Math.min(100,pct)+"%;background:"+barColor)
-      + (haloShadow?";box-shadow:"+haloShadow:"");
+        ? " done"
+        : (pct>0 ? " partial" : "");
+    const barInnerStyle = "width:"+(isCapped?100:Math.min(100,pct))+"%";
     return h("div",{class:"qi "+(d>=effectiveT&&effectiveT>0?"done":""),style:(isDebt&&!done?"border-color:#ef444466;background:rgba(239,68,68,0.04)":"")+(isCapped?";border-color:"+capColor+"66;background:linear-gradient(135deg,rgba(255,255,255,0.02),rgba(239,68,68,0.06))":"")},
       h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
         h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:6px;white-space:normal;overflow:visible;line-height:1.25"},
@@ -1708,7 +1680,7 @@ function App(){
       ),
       h("div",{class:"qrow"},
         h(Fragment,null,
-            h("div",{class:"qbar"},h("div",{class:"qfill",style:barInnerStyle})),
+            h("div",{class:"qbar"},h("div",{class:"qfill"+fillStateClass,style:barInnerStyle})),
             h("div",{class:"qxp",style:(isCapped?"color:"+capColor:isDebt&&!done?"color:#ef4444":"")+";white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},fmtNum(d)+"/"+fmtNum(displayTarget)+" "+((d>1||displayTarget>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas"}[obj.unit]||obj.unit))
           )
       ),
@@ -1790,13 +1762,12 @@ function App(){
     const isNearCap = hasCap && !isCapped && capProgress >= 0.75;
     const capColor = "#ef4444";
     const rankColor = rank.color || "#9ca3af";
-    // Halo selon état (priorité : cap > done)
-    const haloShadow = isCapped
-      ? "0 0 10px "+capColor+",0 0 20px "+capColor+"66"
-      : (d>=t&&t>0)
-        ? "0 0 10px var(--rc),0 0 20px var(--rg)"
-        : "";
-    const barInnerStyle = "width:"+(isCapped?100:Math.min(100,pct))+"%;background:"+(isCapped?capColor:isNearCap?"linear-gradient(90deg,"+rankColor+","+capColor+")":rankColor)+(haloShadow?";box-shadow:"+haloShadow:"");
+    // Barre alignée sur Historique :
+    // en cours = hachurée, complétée = pleine, dépassée/cap = pleine + glow
+    const fillStateClass = isCapped || over
+      ? " over"
+      : (done ? " done" : (pct>0 ? " partial" : ""));
+    const barInnerStyle = "width:"+(isCapped?100:Math.min(100,pct))+"%";
     return h("div",{style:"display:flex;align-items:center;gap:10px;margin-bottom:8px"},
       QuestIcon(obj.id,obj.icon,18,isCapped?"filter:grayscale(60%);opacity:0.7":""),
       h("div",{style:"flex:1"},
@@ -1810,7 +1781,7 @@ function App(){
             h("span",{style:"font-family:Orbitron,sans-serif;font-size:11px;font-weight:700;color:#4ade80;width:10px;text-align:center"},done?"\u2713":"")
           )
         ),
-        h("div",{class:"qbar"},h("div",{class:"qfill",style:barInnerStyle}))
+        h("div",{class:"qbar"},h("div",{class:"qfill"+fillStateClass,style:barInnerStyle}))
       )
     );
   }
