@@ -83,8 +83,8 @@ const DEFS = [
   {id:"med",    name:"M\u00e9ditation", unit:"min",   xpPer:15,  daily:true, weekly:false,optional:true, stat:"Concentration",  icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F", base:15, fixedBase:true, cap:2},
   // ─── ENDURANCE ────────────────────────────────────────────────────────
   {id:"run",    name:"Course",          iconKey:"run",          unit:"km",    xpPer:150, daily:false,weekly:true, optional:false,stat:"Endurance",      icon:"\uD83C\uDFC3\uD83C\uDFFB",   base:7,  stat2:"Agilite", xpPer2:30, cap:3},
-  {id:"lhh_contacts", name:"LHH - Contacts utiles", unit:"contact", xpPer:0, daily:false, weekly:true, optional:false, stat:"Discipline", icon:"💼", base:12, fixedBase:true, binary:true, binaryXp:500},
-  {id:"lhh_actions",  name:"LHH - Actions commerciales", unit:"action", xpPer:0, daily:false, weekly:true, optional:false, stat:"Discipline", icon:"💼", base:50, fixedBase:true, binary:true, binaryXp:500},
+  {id:"lhh_contacts", name:"LHH - Contacts utiles", unit:"contact", xpPer:0, daily:false, weekly:true, optional:false, stat:"Discipline", icon:"💼", base:12, target:12, fixedBase:true, tiers:[{at:12,xp:500,stat:"Discipline"}]},
+  {id:"lhh_actions",  name:"LHH - Actions commerciales", unit:"action", xpPer:0, daily:false, weekly:true, optional:false, stat:"Discipline", icon:"💼", base:50, target:50, fixedBase:true, tiers:[{at:50,xp:500,stat:"Discipline"}]},
   {id:"walk",   name:"Marche",          unit:"km",    xpPer:75,  daily:false,weekly:false,optional:true, stat:"Endurance",      icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F", base:5, fixedBase:true},
   // ─── AGILITÉ ──────────────────────────────────────────────────────────
   {id:"flex",   name:"Souplesse",       unit:"min",   xpPer:50,  daily:true, weekly:false,optional:true, stat:"Agilite",        icon:"\uD83E\uDD38\uD83C\uDFFB",   base:15, fixedBase:true, stat2:"Endurance", xpPer2:10, cap:2},
@@ -415,6 +415,12 @@ function calcXp(obj,total,baseOverride){
   if(!obj||total<=0)return 0;
   const t = baseOverride!=null ? baseOverride : obj.base;
   if(obj.binary){return total>=t?(obj.binaryXp||50):0;}
+  if(obj.tiers && obj.tiers.length>0){
+    return obj.tiers.reduce((sum,tier)=>{
+      if(total < tier.at) return sum;
+      return sum + (tier.xp||0) + (tier.xp2||0) + (tier.xp3||0);
+    },0);
+  }
   const xpPer=obj.xpPer;
   // Plafonner si cap défini
   const hasCap = (obj.cap || obj.capValue) && t && !obj.binary;
@@ -1207,6 +1213,10 @@ function App(){
       // Sauvegarder le log d'abord
       setState(s=>{
         const d={...s.dailyLog};d[today]={...(d[today]||{}),[obj.id]:(d[today]?.[obj.id]||0)+val};
+        if(obj.weekly||obj.id==="walk"){
+          const w={...s.weeklyLog};w[wk]={...(w[wk]||{}),[obj.id]:(w[wk]?.[obj.id]||0)+val};
+          return{...s,weeklyLog:w,dailyLog:d,lastActiveDay:todayStr()};
+        }
         return{...s,dailyLog:d,lastActiveDay:todayStr()};
       });
       // Calculer les tiers franchis
