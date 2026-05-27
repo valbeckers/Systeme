@@ -2657,7 +2657,7 @@ function App(){
               h("div",{style:"font-size:10px;color:var(--td);margin-top:1px"},fmt2(rec.date))
             ),
             h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--tx)"},
-              fmtNum(rec.val)+" "+((rec.val>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres"}[o.unit]||o.unit))
+              fmtNum(rec.val)+" "+((rec.val>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",contact:"contacts",action:"actions"}[o.unit]||o.unit))
           );
         })
         )// end Fragment
