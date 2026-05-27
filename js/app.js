@@ -1590,7 +1590,7 @@ function App(){
       h("div",{class:"qrow"},
         h(Fragment,null,
             h("div",{class:"qbar"},h("div",{class:"qfill"+fillStateClass,style:barInnerStyle})),
-            h("div",{class:"qxp",style:(isCapped?"color:"+capColor:isDebt&&!done?"color:#ef4444":"")+";white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},fmtNum(d)+"/"+fmtNum(displayTarget)+" "+((d>1||displayTarget>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas"}[obj.unit]||obj.unit))
+            h("div",{class:"qxp",style:(isCapped?"color:"+capColor:isDebt&&!done?"color:#ef4444":"")+";white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},fmtNum(d)+"/"+fmtNum(displayTarget)+" "+((d>1||displayTarget>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[obj.unit]||obj.unit))
           )
       ),
       isNearCap&&h("div",{style:"font-size:9px;color:"+capColor+";font-family:Orbitron,sans-serif;text-align:center;margin-top:6px;letter-spacing:0.5px;opacity:0.85"},"\u26A0 Cap dans "+fmtNum(remainingToCap)+" "+obj.unit+(remainingToCap>1?"s":"")+" \u00b7 r\u00e9cup\u00e9ration forc\u00e9e"),
@@ -1604,11 +1604,18 @@ function App(){
         if(obj.tiers && obj.tiers.length>0){
           const isMax = d >= (obj.target||obj.tiers[obj.tiers.length-1].at);
           if(isMax) return null;
+          const isLhh = obj.id==="lhh_contacts" || obj.id==="lhh_actions";
+          const unitSing = obj.unit;
+          const unitPlur = ({contact:"contacts",action:"actions"}[obj.unit]||obj.unit);
           return h("div",{style:"display:flex;gap:8px;margin-top:8px"},
             h("button",{
               onClick:e=>{inputs.current[obj.id]="1";validate(obj,e);},
               style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px;transition:all .2s"
-            },"+1 "+obj.unit)
+            },"+1 "+unitSing),
+            isLhh&&h("button",{
+              onClick:e=>{inputs.current[obj.id]="10";validate(obj,e);},
+              style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px;transition:all .2s"
+            },"+10 "+unitPlur)
           );
         }
         const QUICK_IDS=["push","abs","squats","calves","reading","flex","balance","grips","med","water","mob"];
@@ -2705,7 +2712,7 @@ function App(){
             h("div",{style:"margin-top:12px"}),
             displayObjs.map(o=>{
               const total=totals[o.id]||0;
-              const unitLbl=total>1?({rep:"reps",page:"pages",verre:"verres",km:"km",min:"min"}[o.unit]||o.unit):o.unit;
+              const unitLbl=total>1?({rep:"reps",page:"pages",verre:"verres",km:"km",min:"min",contact:"contacts",action:"actions"}[o.unit]||o.unit):o.unit;
               return h("div",{key:o.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"+(total===0?";opacity:.35":"")},
                 QuestIcon(o.id,o.icon,18),
                 h("div",{style:"flex:1"},
