@@ -773,7 +773,15 @@ function App(){
       const validated=v>=base;
       if(!validated){
         if(obj.penaltyAll){
-          // Quête rouge : vraie régression si non respectée
+          // Quête rouge :
+          // - absence de clic = succès par défaut (pas de pénalité, XP de succès accordée plus bas)
+          // - échec explicite = régression, sauf si déjà appliquée le jour même
+          if(dayLog[obj.id] === undefined){
+            return;
+          }
+          if((state.adultPenaltyDays||{})[yestStr]){
+            return;
+          }
           totalPenalty+=14000;
           STATS.forEach(st=>{sxDelta[st]=(sxDelta[st]||0)-2000;});
           penaltiesApplied.push(obj.id);
@@ -786,16 +794,37 @@ function App(){
         penaltiesApplied.push(obj.id);
       }
     });
-    if(totalPenalty>0){
+    const defaultSuccesses = penalizable.filter(obj=>
+      obj.penaltyAll &&
+      (!obj.startDate || yestStr>=obj.startDate) &&
+      dayLog[obj.id] === undefined
+    );
+
+    if(totalPenalty>0 || defaultSuccesses.length>0){
       setState(s=>{
         const newSx={...(s.statXp||{})};
         Object.keys(sxDelta).forEach(k=>{
           newSx[k]=Math.max(0,(newSx[k]||0)+sxDelta[k]);
         });
+        let xpGain=0;
+        const d2={...(s.dailyLog||{})};
+        const yLog={...(d2[yestStr]||{})};
+        defaultSuccesses.forEach(obj=>{
+          if(yLog[obj.id] === undefined){
+            yLog[obj.id]=1;
+            const gain=obj.binaryXp||0;
+            xpGain+=gain;
+            newSx[obj.stat]=(newSx[obj.stat]||0)+gain;
+          }
+        });
+        if(defaultSuccesses.length>0){
+          d2[yestStr]=yLog;
+        }
         const newStats={...(s.stats||{})};
         Object.keys(sxDelta).forEach(k=>{ newStats[k]=getLvl(newSx[k]||0); });
+        defaultSuccesses.forEach(obj=>{ newStats[obj.stat]=getLvl(newSx[obj.stat]||0); });
         const adultDays = penaltiesApplied.includes("adult") ? {...(s.adultPenaltyDays||{}),[yestStr]:true} : (s.adultPenaltyDays||{});
-        return {...s,totalXp:Math.max(0,s.totalXp-totalPenalty),statXp:newSx,stats:newStats,adultPenaltyDays:adultDays,lastPenaltyCheck:t,lastPenaltiesApplied:{date:yestStr,ids:penaltiesApplied,total:totalPenalty}};
+        return {...s,dailyLog:d2,totalXp:Math.max(0,s.totalXp-totalPenalty)+xpGain,statXp:newSx,stats:newStats,adultPenaltyDays:adultDays,lastPenaltyCheck:t,lastPenaltiesApplied:{date:yestStr,ids:penaltiesApplied,total:totalPenalty}};
       });
     } else {
       setState(s=>({...s,lastPenaltyCheck:t}));
@@ -1528,23 +1557,16 @@ function App(){
             obj.binaryXp+" XP · "+(STAT_LBL[obj.stat]||obj.stat)
           )
         ),
-        obj.penaltyAll
-          ? h("div",{style:"display:flex;gap:8px;margin-top:8px"},
-              h("button",{
-                onClick:e=>setBinary(1,e),
-                style:"flex:1;padding:10px;border-radius:8px;border:1px solid "+(validated&&done?"var(--rc)":"rgba(255,255,255,0.08)")+";background:"+(validated&&done?"rgba(255,255,255,0.06)":"rgba(255,255,255,0.02)")+";color:"+(validated&&done?"#4ade80":"rgba(255,255,255,0.7)")+";font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px;transition:all .2s;white-space:nowrap;overflow:hidden"
-              }, "Succès ✓")
-            )
-          : h("div",{style:"display:flex;gap:8px;margin-top:8px"},
-              h("button",{
-                onClick:e=>setBinary(0,e),
-                style:"flex:"+failFlex+";padding:"+(validated&&done?"6px 4px":"10px")+";border-radius:8px;border:1px solid "+(validated&&!done?"var(--rc)":"rgba(255,255,255,0.08)")+";background:rgba(255,255,255,0.02);color:"+(validated&&!done?"#ef4444":"rgba(255,255,255,0.25)")+";font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px;transition:all .2s;white-space:nowrap;overflow:hidden"
-              },"✘ Échec"),
-              h("button",{
-                onClick:e=>setBinary(1,e),
-                style:"flex:"+succFlex+";padding:"+(validated&&!done?"6px 4px":"10px")+";border-radius:8px;border:1px solid "+(validated&&done?"var(--rc)":"rgba(255,255,255,0.08)")+";background:"+(validated&&done?"rgba(255,255,255,0.06)":"rgba(255,255,255,0.02)")+";color:"+(validated&&done?"#4ade80":"rgba(255,255,255,0.25)")+";font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px;transition:all .2s;white-space:nowrap;overflow:hidden"
-              },"Succès ✓")
-            ),
+        h("div",{style:"display:flex;gap:8px;margin-top:8px"},
+          h("button",{
+            onClick:e=>setBinary(0,e),
+            style:"flex:"+failFlex+";padding:"+(validated&&done?"6px 4px":"10px")+";border-radius:8px;border:1px solid "+(validated&&!done?"var(--rc)":"rgba(255,255,255,0.08)")+";background:rgba(255,255,255,0.02);color:"+(validated&&!done?"#ef4444":"rgba(255,255,255,0.25)")+";font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px;transition:all .2s;white-space:nowrap;overflow:hidden"
+          },"✘ Échec"),
+          h("button",{
+            onClick:e=>setBinary(1,e),
+            style:"flex:"+succFlex+";padding:"+(validated&&!done?"6px 4px":"10px")+";border-radius:8px;border:1px solid "+(validated&&done?"var(--rc)":"rgba(255,255,255,0.08)")+";background:"+(validated&&done?"rgba(255,255,255,0.06)":"rgba(255,255,255,0.02)")+";color:"+(validated&&done?"#4ade80":"rgba(255,255,255,0.25)")+";font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px;transition:all .2s;white-space:nowrap;overflow:hidden"
+          },"Succès ✓")
+        ),
 
       );
     }
