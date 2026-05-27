@@ -46,7 +46,7 @@ function meetsStatRequirement(stats, reqKey){
 }
 
 const STATS      = ["Sante","Force","Esprit","Endurance","Agilite","Discipline"];
-const STAT_COLOR = {Sante:"#ef4444",Force:"#fb923c",Esprit:"#22d3ee",Endurance:"#f59e0b",Agilite:"#4ade80",Discipline:"#c084fc"};
+const STAT_COLOR = {Sante:"#ef4444",Force:"#fb923c",Esprit:"#ec4899",Endurance:"#22d3ee",Agilite:"#4ade80",Discipline:"#c084fc"};
 const STAT_LBL   = {Sante:"Sant\u00e9",Force:"Force",Esprit:"Esprit",Endurance:"Endurance",Agilite:"Agilit\u00e9",Discipline:"Discipline"};
 function QuestIcon(id, fallback, size=18, extraStyle=""){
   return h("span",{
