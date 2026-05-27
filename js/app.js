@@ -83,8 +83,6 @@ const DEFS = [
   {id:"med",    name:"M\u00e9ditation", unit:"min",   xpPer:15,  daily:true, weekly:false,optional:true, stat:"Concentration",  icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F", base:15, fixedBase:true, cap:2},
   // ─── ENDURANCE ────────────────────────────────────────────────────────
   {id:"run",    name:"Course",          iconKey:"run",          unit:"km",    xpPer:150, daily:false,weekly:true, optional:false,stat:"Endurance",      icon:"\uD83C\uDFC3\uD83C\uDFFB",   base:7,  stat2:"Agilite", xpPer2:30, cap:3},
-  {id:"lhh_contacts", name:"LHH - Contacts utiles", unit:"contact", xpPer:50, daily:false, weekly:true, optional:false, stat:"Discipline", icon:"💼", base:12, fixedBase:true, cap:3},
-  {id:"lhh_actions",  name:"LHH - Actions commerciales", unit:"action", xpPer:10, daily:false, weekly:true, optional:false, stat:"Discipline", icon:"💼", base:50, fixedBase:true, cap:3},
   {id:"walk",   name:"Marche",          unit:"km",    xpPer:75,  daily:false,weekly:false,optional:true, stat:"Endurance",      icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F", base:5, fixedBase:true},
   // ─── AGILITÉ ──────────────────────────────────────────────────────────
   {id:"flex",   name:"Souplesse",       unit:"min",   xpPer:50,  daily:true, weekly:false,optional:true, stat:"Agilite",        icon:"\uD83E\uDD38\uD83C\uDFFB",   base:15, fixedBase:true, stat2:"Endurance", xpPer2:10, cap:2},
@@ -496,7 +494,7 @@ function pickRandomSq(usedIds,restMode,statCycle,completedLog){
   return {tpl:{...chosen,stat}, pickedStat:stat, cycleReset};
 }
 
-const IMPORTED_VERSION = "2026-05-27-lhh-weekly-v1";
+const IMPORTED_VERSION = "2026-05-11-v4";
 const BACKUP_KEYS = ["sl_v3","sl_v3_backup1","sl_v3_backup2","sl_v3_backup3"];
 
 // Lecture : essaie la clé principale, sinon fallback automatique sur les backups
@@ -2145,8 +2143,7 @@ function App(){
         },"\u269B\uFE0F Mont\u00e9e en Ascension"),
         h("div",{style:"display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);align-items:center;justify-items:stretch;margin-top:12px;padding-top:16px;padding-bottom:0px;border-top:1px solid rgba(255,255,255,0.06)"},
           h("div",{style:"width:100%;display:flex;align-items:center;justify-content:center;gap:5px;padding:0"},
-            h("span",{style:"font-size:18px;line-height:1"},"🔥"),
-            h("div",{style:"display:flex;flex-direction:column;align-items:flex-start;justify-content:center"},
+            h("div",{style:"display:flex;flex-direction:column;align-items:center;justify-content:center"},
               h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:var(--rc);line-height:0.9"},
                 state.streak
               ),
@@ -2162,8 +2159,7 @@ function App(){
           h("div",{style:"width:1px;height:38px;background:rgba(255,255,255,0.06);justify-self:center"}),
 
           h("div",{style:"width:100%;display:flex;align-items:center;justify-content:center;gap:5px;padding:0"},
-            h("span",{style:"font-size:18px;line-height:1"},"📅"),
-            h("div",{style:"display:flex;flex-direction:column;align-items:flex-start;justify-content:center"},
+            h("div",{style:"display:flex;flex-direction:column;align-items:center;justify-content:center"},
               h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:var(--rc);line-height:0.9"},
                 todayXp.toFixed(0)
               ),
@@ -3145,23 +3141,18 @@ function App(){
       ),
       h("nav",{class:"nav"},
         h("button",{class:"nbtn "+(tab==="home"?"on":""),onClick:()=>switchTab("home")},
-          QuestIcon("nav_home","🏠",18,"vertical-align:middle"),
           h("span",null,"Accueil")
         ),
         h("button",{class:"nbtn "+(tab==="quests"?"on":""),onClick:()=>switchTab("quests")},
-          QuestIcon("nav_quests","📖",18,"vertical-align:middle"),
           h("span",null,"Quêtes")
         ),
         h("button",{class:"nbtn "+(tab==="stats"?"on":""),onClick:()=>switchTab("stats")},
-          QuestIcon("nav_stats","📊",18,"vertical-align:middle"),
           h("span",null,"Stats")
         ),
         h("button",{class:"nbtn "+(tab==="history"?"on":""),onClick:()=>switchTab("history")},
-          QuestIcon("nav_history","↩️",18,"vertical-align:middle"),
           h("span",null,"Historique")
         ),
         h("button",{class:"nbtn "+(tab==="codex"?"on":""),onClick:()=>switchTab("codex")},
-          QuestIcon("nav_codex","📜",18,"vertical-align:middle"),
           h("span",null,"Codex")
         )
       ),
