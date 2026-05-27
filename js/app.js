@@ -45,9 +45,9 @@ function meetsStatRequirement(stats, reqKey){
   return countStatsAtLevel(stats, req.level) >= req.count;
 }
 
-const STATS      = ["Sante","Force","Intelligence","Concentration","Endurance","Agilite","Discipline"];
-const STAT_COLOR = {Sante:"#ef4444",Force:"#fb923c",Intelligence:"#ec4899",Concentration:"#22d3ee",Endurance:"#f59e0b",Agilite:"#4ade80",Discipline:"#c084fc"};
-const STAT_LBL   = {Sante:"Sant\u00e9",Force:"Force",Intelligence:"Intelligence",Concentration:"Concentration",Endurance:"Endurance",Agilite:"Agilit\u00e9",Discipline:"Discipline"};
+const STATS      = ["Sante","Force","Esprit","Endurance","Agilite","Discipline"];
+const STAT_COLOR = {Sante:"#ef4444",Force:"#fb923c",Esprit:"#22d3ee",Endurance:"#f59e0b",Agilite:"#4ade80",Discipline:"#c084fc"};
+const STAT_LBL   = {Sante:"Sant\u00e9",Force:"Force",Esprit:"Esprit",Endurance:"Endurance",Agilite:"Agilit\u00e9",Discipline:"Discipline"};
 function CharacterStateIcon(id, fallback, size=26, extraStyle=""){
   return h("span",{
     style:"font-size:"+size+"px;line-height:1;display:inline-block;flex-shrink:0;"+extraStyle
@@ -75,12 +75,12 @@ const DEFS = [
   {id:"squats", name:"Squats",          unit:"rep",   xpPer:3,   daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDBF",               base:15, stat2:"Agilite", xpPer2:1, cap:3},
   {id:"calves", name:"Extensions mollets",unit:"rep", xpPer:1,   daily:true, weekly:false,optional:true, stat:"Force",         icon:"\uD83E\uDDBF",               base:30, stat2:"Agilite", xpPer2:1, cap:3},
   {id:"grips",  name:"Hand grips",      unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Force",         icon:"\u270A\uD83C\uDFFB",         base:10, fixedBase:true, cap:3},
-  // ─── INTELLIGENCE ─────────────────────────────────────────────────────
-  {id:"reading",name:"Lecture",unit:"min",xpPer:10,daily:true,weekly:false,optional:false,stat:"Intelligence",icon:"📚",base:20,stat2:"Concentration",xpPer2:0,startDate:"2026-05-21",concBlock:10,concBlockXp:50},
-  {id:"pod",    name:"\u00c9couter 1 podcast", unit:"jour", xpPer:0, daily:true, weekly:false,optional:true, stat:"Intelligence", icon:"\uD83C\uDF99\uFE0F",   base:1, binary:true, binaryXp:200},
-  // ─── CONCENTRATION ────────────────────────────────────────────────────
+  // ─── ESPRIT ───────────────────────────────────────────────────────────
+  {id:"reading",name:"Lecture",unit:"min",xpPer:20,daily:true,weekly:false,optional:false,stat:"Esprit",icon:"📚",base:20,startDate:"2026-05-21"},
+  {id:"pod",    name:"\u00c9couter 1 podcast", unit:"jour", xpPer:0, daily:true, weekly:false,optional:true, stat:"Esprit", icon:"\uD83C\uDF99\uFE0F",   base:1, binary:true, binaryXp:200},
+  // ─── ESPRIT ───────────────────────────────────────────────────────────
   
-  {id:"med",    name:"M\u00e9ditation", unit:"min",   xpPer:15,  daily:true, weekly:false,optional:true, stat:"Concentration",  icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F", base:15, fixedBase:true, cap:2},
+  {id:"med",    name:"M\u00e9ditation", unit:"min",   xpPer:15,  daily:true, weekly:false,optional:true, stat:"Esprit",  icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F", base:15, fixedBase:true, cap:2},
   // ─── ENDURANCE ────────────────────────────────────────────────────────
   {id:"run",    name:"Course",          iconKey:"run",          unit:"km",    xpPer:150, daily:false,weekly:true, optional:false,stat:"Endurance",      icon:"\uD83C\uDFC3\uD83C\uDFFB",   base:7,  stat2:"Agilite", xpPer2:30, cap:3},
   {id:"lhh_contacts", name:"LHH - Contacts utiles", unit:"contact", xpPer:0, daily:false, weekly:true, optional:false, stat:"Discipline", icon:"💼", base:12, target:12, fixedBase:true, tiers:[{at:12,xp:500,stat:"Discipline"}]},
@@ -111,13 +111,10 @@ const SP = {
     {id:"sp_deadhang",name:"10min de dead hang",  icon:"\u270A\uD83C\uDFFB",                                   unit:"min",  target:10,  xp:250, xp2:100, stat2:"Endurance", days:1, desc:"10 min de dead hang"},
     {id:"sp_wallsit", name:"10min de chaise",     icon:"\uD83E\uDE91",                                         unit:"min",  target:10,  xp:300, xp2:300, stat2:"Endurance", days:1, desc:"10 min de chaise"},
   ],
-  Intelligence:[
-    {id:"sp_learning", name:"1h d'apprentissage actif",  icon:"\uD83C\uDF93",                                  unit:"jour",     target:1,  xp:300, xp2:100, stat2:"Concentration", xp3:100, stat3:"Discipline", days:1, binary:true, desc:"1h d'apprentissage actif"},
-    {id:"sp_memo30",   name:"30min de m\u00e9morisation",icon:"\uD83E\uDDE0",                                  unit:"jour", target:1,  xp:300, xp2:100, stat2:"Concentration", xp3:100, stat3:"Discipline", days:1, binary:true, desc:"30 min de m\u00e9morisation active"},
-  ],
-  Concentration:[
-    {id:"sp_silence30",name:"30min de silence",          icon:"\uD83E\uDD2B",                                  unit:"jour", target:1,  xp:500, xp2:250, stat2:"Discipline", days:1, binary:true, desc:"30 min sans parler ni consommer"},
-    
+  Esprit:[
+    {id:"sp_learning", name:"1h d'apprentissage actif",  icon:"\uD83C\uDF93",                                  unit:"jour", target:1, xp:400, xp2:100, stat2:"Discipline", days:1, binary:true, desc:"1h d'apprentissage actif"},
+    {id:"sp_memo30",   name:"30min de m\u00e9morisation",icon:"\uD83E\uDDE0",                                  unit:"jour", target:1, xp:400, xp2:100, stat2:"Discipline", days:1, binary:true, desc:"30 min de m\u00e9morisation active"},
+    {id:"sp_silence30",name:"30min de silence",          icon:"\uD83E\uDD2B",                                  unit:"jour", target:1, xp:500, xp2:250, stat2:"Discipline", days:1, binary:true, desc:"30 min sans parler ni consommer"},
     {id:"sp_nophone3h", name:"T\u00e9l\u00e9phone hors de port\u00e9e 3h", icon:"\uD83D\uDCF5",                unit:"jour", target:1, xp:300, xp2:150, stat2:"Discipline", days:1, binary:true, desc:"T\u00e9l\u00e9phone hors de port\u00e9e 3h"},
   ],
   Endurance:[
@@ -131,7 +128,7 @@ const SP = {
     {id:"sp_flex30",  name:"30min de souplesse",  icon:"\uD83E\uDD38\uD83C\uDFFB",                             unit:"jour", target:1,  xp:1000, days:1, binary:true, desc:"30 min de souplesse"},
     {id:"sp_fluide",  name:"15min de flow martial", icon:"\uD83C\uDF0A",                              unit:"min",  target:15, xp:375, days:1, desc:"Capoeira flow / mouvement continu sans rupture"},
     {id:"sp_silent",  name:"10min de d\u00e9placements silencieux", icon:"\uD83D\uDC08",                          unit:"min",  target:10, xp:300, days:1, desc:"Marcher sans bruit (escaliers, pi\u00e8ces)"},
-    {id:"sp_balance_eyes", name:"10min d'\u00e9quilibre yeux ferm\u00e9s", icon:"\uD83E\uDDB6\uD83C\uDFFB",          unit:"min",  target:10, xp:300, xp2:150, stat2:"Concentration", days:1, desc:"\u00c9quilibre sur un pied yeux ferm\u00e9s"},
+    {id:"sp_balance_eyes", name:"10min d'\u00e9quilibre yeux ferm\u00e9s", icon:"\uD83E\uDDB6\uD83C\uDFFB",          unit:"min",  target:10, xp:300, xp2:150, stat2:"Esprit", days:1, desc:"\u00c9quilibre sur un pied yeux ferm\u00e9s"},
     {id:"sp_footwork", name:"10min de footwork rapide", icon:"\u26A1",                                            unit:"min",  target:10, xp:250, step:5, days:1, desc:"Footwork rapide (carrelage, devant/derri\u00e8re/c\u00f4t\u00e9s)"},
   ],
   Discipline:[
@@ -153,13 +150,13 @@ const EPREUVES = [
     desc:"Atteindre 150 tractions en 7 jours"},
   {id:"ep_wallsit60",name:"35min de chaise",                    iconId:"ep_wallsit", icon:"\uD83E\uDE91",                             stat:"Force",        xp:1500, xp2:500, stat2:"Endurance", days:7, unit:"min", target:35, dailyTrack:true, dailyTrackMin:5,
     desc:"35 minutes cumul\u00e9es de chaise sur la semaine"},
-  {id:"ep_book",     name:"Lire un livre complet (300+ pages)", iconId:"ep_reading", icon:"\uD83D\uDCDA",                             stat:"Intelligence", xp:2000, xp2:1000, stat2:"Concentration", days:7, binary:true,
+  {id:"ep_book",     name:"Lire un livre complet (300+ pages)", iconId:"ep_reading", icon:"\uD83D\uDCDA",                             stat:"Esprit", xp:3000, days:7, binary:true,
     desc:"Terminer un livre de 300 pages ou plus"},
-  {id:"ep_project",  name:"4h de travail sur un projet professionnel",iconId:"ep_4hwork", icon:"\uD83E\uDDE0",                           stat:"Intelligence", xp:1000,  xp2:1000, stat2:"Concentration", xp3:1000, stat3:"Discipline", days:7, unit:"min", target:240,
+  {id:"ep_project",  name:"4h de travail sur un projet professionnel",iconId:"ep_4hwork", icon:"\uD83E\uDDE0",                           stat:"Esprit", xp:2000, xp2:1000, stat2:"Discipline", days:7, unit:"min", target:240,
     desc:"4 heures de travail sur un projet professionnel"},
-  {id:"ep_medweek",  name:"M\u00e9ditation quotidienne",        iconId:"ep_med", icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F",stat:"Concentration",xp:2500, days:7, streak7:true, streakDays:7, unit:"jour", target:7,
+  {id:"ep_medweek",  name:"M\u00e9ditation quotidienne",        iconId:"ep_med", icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F",stat:"Esprit",xp:2500, days:7, streak7:true, streakDays:7, unit:"jour", target:7,
     desc:"M\u00e9diter chaque jour pendant 7 jours"},
-  {id:"ep_deepwork5",name:"Deep Work 60min",                    iconId:"ep_deepwork", icon:"\u26AB",                                   stat:"Concentration",xp:2000, xp2:1000, stat2:"Discipline", days:7, cumDays:true, streakDays:5, unit:"jour", target:5,
+  {id:"ep_deepwork5",name:"Deep Work 60min",                    iconId:"ep_deepwork", icon:"\u26AB",                                   stat:"Esprit",xp:2000, xp2:1000, stat2:"Discipline", days:7, cumDays:true, streakDays:5, unit:"jour", target:5,
     desc:"60 min de deep work 5 jours de suite"},
   {id:"ep_hike",     name:"Randonn\u00e9e longue (5h+)",        iconId:"ep_hike", icon:"\u26F0\uFE0F",                             stat:"Endurance",    xp:2000, days:7, binary:true,
     desc:"Randonn\u00e9e de 5 heures minimum"},
@@ -171,7 +168,7 @@ const EPREUVES = [
     desc:"Se lever \u00e0 la m\u00eame heure 7 jours de suite"},
   {id:"ep_coldweek", name:"Douche froide 10min quotidienne",    iconId:"ep_coldshower", icon:"\u2744\uFE0F",                             stat:"Discipline",   xp:2000, xp2:1000, stat2:"Sante", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
     desc:"10 min de douche froide chaque jour pendant 7 jours"},
-  {id:"ep_noscroll", name:"Pas de doomscrolling",               iconId:"ep_nophone", icon:"\uD83D\uDCF5",                             stat:"Intelligence", xp:2500, days:7, streak7:true, streakDays:7, unit:"jour", target:7,
+  {id:"ep_noscroll", name:"Pas de doomscrolling",               iconId:"ep_nophone", icon:"\uD83D\uDCF5",                             stat:"Esprit", xp:2500, days:7, streak7:true, streakDays:7, unit:"jour", target:7,
     desc:"Z\u00e9ro scroll passif pendant 7 jours"},
   {id:"ep_nojunkwk", name:"Pas de junk-food",                   iconId:"ep_nojunkfood", icon:"\uD83C\uDF55",                             stat:"Sante",        xp:2000, xp2:1000, stat2:"Discipline", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
     desc:"Z\u00e9ro junk-food pendant 7 jours"},
@@ -179,14 +176,14 @@ const EPREUVES = [
     desc:"Nettoyer compl\u00e8tement une pi\u00e8ce"},
   {id:"ep_mob",      name:"Mobilit\u00e9 matinale",             iconId:"ep_flex", icon:"\uD83E\uDD38\uD83C\uDFFB\u200D\u2642\uFE0F",stat:"Agilite",     xp:2500, days:7, cumDays:true, streakDays:5, unit:"jour", target:5,
     desc:"Faire 15 min de mobilit\u00e9 5 jours sur 7"},
-  {id:"ep_taichi",   name:"Tai Chi quotidien",                  iconId:"ep_martialflow", icon:"\u262F\uFE0F",                             stat:"Agilite",      xp:2000, xp2:1000, stat2:"Concentration", days:7, cumDays:true, streakDays:5, dailyMin:20, unit:"jour", target:5,
+  {id:"ep_taichi",   name:"Tai Chi quotidien",                  iconId:"ep_martialflow", icon:"\u262F\uFE0F",                             stat:"Agilite",      xp:2000, xp2:1000, stat2:"Esprit", days:7, cumDays:true, streakDays:5, dailyMin:20, unit:"jour", target:5,
     desc:"Faire 20 min de Tai Chi 5 jours sur 7"},
 ];
 
 // ─── DONJONS (slot hebdomadaire alternatif aux épreuves) ───────────────────
 // Un donjon = plusieurs objectifs légers sur 7 jours, avec XP uniquement à la complétion totale.
 const DONJONS = [
-  {id:"dj_moine", kind:"donjon", name:"Donjon du Moine", icon:"🕯️", stat:"Concentration", xp:1500, xp2:1000, stat2:"Discipline", xp3:500, stat3:"Sante", days:7,
+  {id:"dj_moine", kind:"donjon", name:"Donjon du Moine", icon:"🕯️", stat:"Esprit", xp:1500, xp2:1000, stat2:"Discipline", xp3:500, stat3:"Sante", days:7,
     desc:"Semaine orientée calme, attention et maîtrise de la stimulation",
     goals:[
       {id:"med3", label:"Méditation", target:3, unit:"sessions"},
@@ -194,7 +191,7 @@ const DONJONS = [
       {id:"nophone1", label:"Téléphone hors de portée 3h", target:1, unit:"fois"},
       {id:"cleaninput1", label:"Aucun contenu passif", target:1, unit:"jour"}
     ]},
-  {id:"dj_corps_silencieux", kind:"donjon", name:"Donjon du Corps silencieux", icon:"🐾", stat:"Agilite", xp:2000, xp2:500, stat2:"Concentration", xp3:500, stat3:"Discipline", days:7,
+  {id:"dj_corps_silencieux", kind:"donjon", name:"Donjon du Corps silencieux", icon:"🐾", stat:"Agilite", xp:2000, xp2:500, stat2:"Esprit", xp3:500, stat3:"Discipline", days:7,
     desc:"Semaine de contrôle, coordination, mobilité et précision",
     goals:[
       {id:"footwork2", label:"Footwork rapide", target:2, unit:"sessions"},
@@ -255,7 +252,7 @@ function pickRandomEpreuve(completedIds, cooldownUntil, statCycle){
   if(cooldownUntil && Date.now() < cooldownUntil) return null;
   const allAvail = EPREUVES.filter(e => !completedIds.includes(e.id));
   if(allAvail.length === 0) return null;
-  const stats=["Sante","Force","Intelligence","Concentration","Endurance","Agilite","Discipline"];
+  const stats=["Sante","Force","Esprit","Endurance","Agilite","Discipline"];
   const cycle = statCycle||[];
   const remaining = stats.filter(s=>!cycle.includes(s));
   const pool = remaining.length===0 ? stats : remaining;
@@ -426,7 +423,7 @@ function calcXp(obj,total,baseOverride){
   const hasCap = (obj.cap || obj.capValue) && t && !obj.binary;
   const capThreshold = obj.capValue ? obj.capValue : (hasCap ? t * obj.cap : Infinity);
   const effectiveTotal = Math.min(total, capThreshold);
-  // Cas spécial reading : Intelligence linéaire, Concentration gérée par validation de blocs
+  // Cas spécial reading : Esprit linéaire
   if(obj.id==="reading") return effectiveTotal*xpPer;
   // Cas spécial water : linéaire dès le 1er
   if(obj.id==="water") return effectiveTotal*xpPer;
@@ -452,7 +449,7 @@ function calcXp(obj,total,baseOverride){
 }
 
 function pickRandomSq(usedIds,restMode,statCycle,completedLog){
-  const stats=["Sante","Force","Intelligence","Concentration","Endurance","Agilite","Discipline"];
+  const stats=["Sante","Force","Esprit","Endurance","Agilite","Discipline"];
   const cycle = statCycle||[];
   const remaining = stats.filter(s=>!cycle.includes(s));
   const cycleReset = remaining.length===0;
@@ -505,6 +502,32 @@ function pickRandomSq(usedIds,restMode,statCycle,completedLog){
 const IMPORTED_VERSION = "2026-05-11-v4";
 const BACKUP_KEYS = ["sl_v3","sl_v3_backup1","sl_v3_backup2","sl_v3_backup3"];
 
+function migrateMergedEspritState(state){
+  if(!state || typeof state !== "object") return state;
+  const merge = obj => {
+    if(!obj || typeof obj !== "object") return obj;
+    const intelligence = Number(obj.Intelligence||0);
+    const concentration = Number(obj.Concentration||0);
+    if(intelligence || concentration || obj.Esprit==null){
+      obj.Esprit = Number(obj.Esprit||0) + intelligence + concentration;
+    }
+    delete obj.Intelligence;
+    delete obj.Concentration;
+    return obj;
+  };
+  state.statXp = merge({...state.statXp});
+  state.stats = {...(state.stats||{})};
+  if(state.statXp.Esprit!=null){
+    state.stats.Esprit = getLvl(state.statXp.Esprit);
+  }else{
+    state.stats = merge(state.stats);
+  }
+  delete state.stats.Intelligence;
+  delete state.stats.Concentration;
+  return state;
+}
+
+
 // Lecture : essaie la clé principale, sinon fallback automatique sur les backups
 const loadState  = () => {
   for(const key of BACKUP_KEYS){
@@ -517,7 +540,7 @@ const loadState  = () => {
         if(key !== "sl_v3"){
           try{ localStorage.setItem("sl_v3",r); }catch{}
         }
-        return parsed;
+        return migrateMergedEspritState(parsed);
       }
     }catch{}
   }
@@ -594,8 +617,8 @@ const IMPORTED = {
     "2026-05-11":{water:4,sleep:1,abs:127,push:56,squats:35,calves:45}
   },
   weeklyLog:{"2026-W15":{run:13},"2026-W16":{run:8.52},"2026-W17":{walk:6.5,run:0},"2026-W18":{run:12.56,walk:8},"2026-W19":{run:10.42,walk:3}},
-  stats:{Sante:getLvl(10100),Force:getLvl(13488),Intelligence:getLvl(9525),Concentration:getLvl(3175),Endurance:getLvl(2962),Agilite:getLvl(1652),Discipline:getLvl(3150)},
-  statXp:{Sante:10100,Force:13488,Intelligence:9525,Concentration:3175,Endurance:2962,Agilite:1652,Discipline:3150},
+  stats:{Sante:getLvl(10100),Force:getLvl(13488),Esprit:getLvl(12700),Endurance:getLvl(2962),Agilite:getLvl(1652),Discipline:getLvl(3150)},
+  statXp:{Sante:10100,Force:13488,Esprit:12700,Endurance:2962,Agilite:1652,Discipline:3150},
   specialQuests:[],
   epreuves:[],
   epreuveCooldownUntil:null,
@@ -1166,7 +1189,7 @@ function App(){
     setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id)),2300);
   }
 
-  const STAT_LBL2={"Force":"Force","Sante":"Sant\u00e9","Intelligence":"Intelligence","Concentration":"Concentration","Endurance":"Endurance","Agilite":"Agilit\u00e9","Discipline":"Discipline"};
+  const STAT_LBL2={"Force":"Force","Sante":"Sant\u00e9","Esprit":"Esprit","Endurance":"Endurance","Agilite":"Agilit\u00e9","Discipline":"Discipline"};
   function addXp(amount,stat,e,silent,showStat){
     setState(s=>{
       const nt=s.totalXp+amount;
@@ -1242,8 +1265,7 @@ function App(){
       return;
     }
     if(obj.id==="reading"){
-      const intXp=Math.max(0,effectiveVal)*obj.xpPer;
-      const concXp=Math.floor(Math.max(0,effectiveVal)/(obj.concBlock||10))*(obj.concBlockXp||50);
+      const espritXp=Math.max(0,effectiveVal)*obj.xpPer;
       setState(s=>{
         const d={...s.dailyLog};d[today]={...(d[today]||{}),[obj.id]:(d[today]?.[obj.id]||0)+val};
         let next2={...s,dailyLog:d,lastActiveDay:todayStr()};
@@ -1253,11 +1275,11 @@ function App(){
         }
         return next2;
       });
-      const ids=[];
-      if(intXp>0){ addXp(intXp,obj.stat,null,true); ids.push({txt:"+"+Math.round(intXp)+" XP "+(STAT_LBL2[obj.stat]||obj.stat)}); }
-      if(concXp>0){ addXp(concXp,obj.stat2,null,true); ids.push({txt:"+"+Math.round(concXp)+" XP "+(STAT_LBL2[obj.stat2]||obj.stat2)}); }
-      if(ids.length){
-        ids.forEach((it,i)=>{ const id=Date.now()+Math.random()+i*0.01; setFloats(f=>[...f,{id,y:(38+i*3)+"%",txt:it.txt}]); setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id)),2300); });
+      if(espritXp>0){
+        addXp(espritXp,obj.stat,null,true);
+        const id=Date.now()+Math.random();
+        setFloats(f=>[...f,{id,y:"38%",txt:"+"+Math.round(espritXp)+" XP "+(STAT_LBL2[obj.stat]||obj.stat)}]);
+        setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id)),2300);
       } else if(!capJustReached && !alreadyCapped) spawnFloat("0 XP",e);
       if(capJustReached){ addXp(200,"Discipline",null,true); setCapAnim({obj,xMult:"60min"}); }
       return;
@@ -2096,7 +2118,7 @@ function App(){
       });
       const total = Object.values(statWeek).reduce((a,b)=>a+b,0);
       const physical = (statWeek.Force||0)+(statWeek.Endurance||0)+(statWeek.Agilite||0);
-      const mental = (statWeek.Intelligence||0)+(statWeek.Concentration||0);
+      const mental = (statWeek.Esprit||0);
       const discipline = statWeek.Discipline||0;
       const sante = statWeek.Sante||0;
       const maxEntry = Object.entries(statWeek).sort((a,b)=>b[1]-a[1])[0]||["",0];
@@ -2108,7 +2130,7 @@ function App(){
       if(maxShare>.55) return {iconId:"desequilibre", icon:"⚖️", name:"Déséquilibré", desc:STAT_LBL[maxEntry[0]]+" domine nettement ta semaine. Surveille les angles morts.", color:"#f59e0b"};
       if(physical/total>.55) return {iconId:"berserker", icon:"🔥", name:"Berserker", desc:"Semaine très physique. Utile, mais attention à ne pas fuir le mental.", color:"#fb923c"};
       if(mental/total>.55) return {iconId:"mental", icon:"🧠", name:"Érudit", desc:"Semaine orientée esprit : lecture, attention et apprentissage dominent.", color:"#22d3ee"};
-      if(discipline/total>.28 && (statWeek.Concentration||0)>0) return {iconId:"discipline", icon:"🕯️", name:"Ascète actif", desc:"Discipline et concentration solides. Bonne maîtrise de l'impulsion.", color:"#c084fc"};
+      if(discipline/total>.28 && (statWeek.Esprit||0)>0) return {iconId:"discipline", icon:"🕯️", name:"Ascète actif", desc:"Discipline et esprit solides. Bonne maîtrise de l'impulsion.", color:"#c084fc"};
       if(sante/total>.30 && discipline>0) return {iconId:"sante", icon:"🌿", name:"Fondations solides", desc:"Santé et discipline soutiennent bien ta progression.", color:"#4ade80"};
       if(computedStreak>=7) return {iconId:"serenite", icon:"🛡️", name:"Stable", desc:"Rythme régulier sur la semaine. Continue sans chercher à surcharger.", color:"#4ade80"};
       return {iconId:"construction", icon:"🧬", name:"En construction", desc:"Progression réelle, mais le profil de semaine n'est pas encore net.", color:"var(--rc)"};
