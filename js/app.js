@@ -2054,12 +2054,13 @@ function App(){
   // ─── ONGLET ACCUEIL ───────────────────────────────────────────────────
 
   function Home(){
+    const dailyObjs = sortStat(objs.filter(o=>o.daily&&!o.optional));
     const weeklyObjs = restMode && walkObj
-      ? [...objs.filter(o=>o.weekly), walkObj]
-      : objs.filter(o=>o.weekly);
-    const obligObjs = [...sortStat(objs.filter(o=>o.daily&&!o.optional)), ...sortStat(weeklyObjs)];
+      ? [...sortStat(objs.filter(o=>o.weekly)), walkObj]
+      : sortStat(objs.filter(o=>o.weekly));
     const secs=[
-      {lb:"Qu\u00eates journalières",ob:obligObjs,iw:false,mixed:true},
+      {lb:"Qu\u00eates journalières",ob:dailyObjs,iw:false},
+      {lb:"Qu\u00eates hebdomadaires",ob:weeklyObjs,iw:true},
       {lb:"Qu\u00eates bonus", ob:sortStat(objs.filter(o=>(o.daily&&o.optional||o.id==="walk")&&!(restMode&&o.id==="walk")&&!o.bonusHidden)), iw:false},
     ];
 
