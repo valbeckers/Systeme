@@ -69,11 +69,11 @@ const DEFS = [
   {id:"calves", name:"Extensions mollets",unit:"rep", xpPer:1,   daily:true, weekly:false,optional:true, stat:"Force",         icon:"\uD83E\uDDBF",               base:30, stat2:"Agilite", xpPer2:1, cap:3},
   {id:"grips",  name:"Hand grips",      unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Force",         icon:"\u270A\uD83C\uDFFB",         base:10, fixedBase:true, cap:3},
   // ─── ESPRIT ───────────────────────────────────────────────────────────
-  {id:"reading",name:"Lecture",unit:"min",xpPer:20,daily:true,weekly:false,optional:false,stat:"Esprit",icon:"📚",base:20,startDate:"2026-05-21"},
-  {id:"pod",    name:"\u00c9couter 1 podcast", unit:"jour", xpPer:0, daily:true, weekly:false,optional:true, stat:"Esprit", icon:"\uD83C\uDF99\uFE0F",   base:1, binary:true, binaryXp:200},
+  {id:"reading",name:"Lecture",unit:"min",xpPer:15,daily:true,weekly:false,optional:false,stat:"Esprit",icon:"📚",base:20,startDate:"2026-05-21"},
+  {id:"pod",    name:"\u00c9couter 1 podcast", unit:"jour", xpPer:0, daily:true, weekly:false,optional:true, stat:"Esprit", icon:"\uD83C\uDF99\uFE0F",   base:1, binary:true, binaryXp:300},
   // ─── ESPRIT ───────────────────────────────────────────────────────────
   
-  {id:"med",    name:"M\u00e9ditation", unit:"min",   xpPer:15,  daily:true, weekly:false,optional:true, stat:"Esprit",  icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F", base:15, fixedBase:true, cap:2},
+  {id:"med",    name:"M\u00e9ditation", unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Esprit",  icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F", base:15, fixedBase:true, cap:2},
   // ─── ENDURANCE ────────────────────────────────────────────────────────
   {id:"run",    name:"Course",          iconKey:"run",          unit:"km",    xpPer:150, daily:false,weekly:true, optional:false,stat:"Endurance",      icon:"\uD83C\uDFC3\uD83C\uDFFB",   base:7,  stat2:"Agilite", xpPer2:30, cap:3},
   {id:"lhh_contacts", name:"LHH - Contacts utiles", unit:"contact", xpPer:0, daily:false, weekly:true, optional:false, stat:"Discipline", icon:"💼", base:12, target:12, fixedBase:true, tiers:[{at:12,xp:500,stat:"Discipline"}]},
