@@ -48,13 +48,6 @@ function meetsStatRequirement(stats, reqKey){
 const STATS      = ["Sante","Force","Esprit","Endurance","Agilite","Discipline"];
 const STAT_COLOR = {Sante:"#ef4444",Force:"#fb923c",Esprit:"#22d3ee",Endurance:"#f59e0b",Agilite:"#4ade80",Discipline:"#c084fc"};
 const STAT_LBL   = {Sante:"Sant\u00e9",Force:"Force",Esprit:"Esprit",Endurance:"Endurance",Agilite:"Agilit\u00e9",Discipline:"Discipline"};
-function CharacterStateIcon(id, fallback, size=26, extraStyle=""){
-  return h("span",{
-    style:"font-size:"+size+"px;line-height:1;display:inline-block;flex-shrink:0;"+extraStyle
-  },fallback);
-}
-
-
 function QuestIcon(id, fallback, size=18, extraStyle=""){
   return h("span",{
     style:"font-size:"+size+"px;line-height:1;display:inline-block;flex-shrink:0;"+extraStyle
@@ -2086,56 +2079,6 @@ function App(){
       {lb:"Qu\u00eates bonus", ob:sortStat(objs.filter(o=>(o.daily&&o.optional||o.id==="walk")&&!(restMode&&o.id==="walk")&&!o.bonusHidden)), iw:false},
     ];
 
-    const characterState = (()=>{
-      const statWeek = {};
-      STATS.forEach(s=>statWeek[s]=0);
-      const days = [];
-      for(let i=6;i>=0;i--){
-        const d=new Date(today);
-        d.setDate(d.getDate()-i);
-        days.push(d.toISOString().slice(0,10));
-      }
-      days.forEach(day=>{
-        const log = state.dailyLog[day]||{};
-        Object.entries(log).forEach(([id,a])=>{
-          const o=objs.find(x=>x.id===id);
-          if(!o || a<=0) return;
-          const base = o.base && !RANK_BASES[o.id] ? o.base : getRankBase(o.id,ri,prestige);
-          const xp = calcXp(o,a,base);
-          if(o.stat) statWeek[o.stat]=(statWeek[o.stat]||0)+xp;
-          if(o.stat2 && o.xpPer2){
-            statWeek[o.stat2]=(statWeek[o.stat2]||0)+(o.id==="reading"?Math.floor(a/(o.concBlock||10))*(o.concBlockXp||50):a*o.xpPer2);
-          }
-        });
-      });
-      (state.specialQuests||[]).forEach(q=>{
-        if(!q.completedAt) return;
-        const qDay = new Date(q.completedAt).toISOString().slice(0,10);
-        if(!days.includes(qDay)) return;
-        if(q.stat) statWeek[q.stat]=(statWeek[q.stat]||0)+(q.xp||0);
-        if(q.stat2) statWeek[q.stat2]=(statWeek[q.stat2]||0)+(q.xp2||0);
-        if(q.stat3) statWeek[q.stat3]=(statWeek[q.stat3]||0)+(q.xp3||0);
-      });
-      const total = Object.values(statWeek).reduce((a,b)=>a+b,0);
-      const physical = (statWeek.Force||0)+(statWeek.Endurance||0)+(statWeek.Agilite||0);
-      const mental = (statWeek.Esprit||0);
-      const discipline = statWeek.Discipline||0;
-      const sante = statWeek.Sante||0;
-      const maxEntry = Object.entries(statWeek).sort((a,b)=>b[1]-a[1])[0]||["",0];
-      const maxShare = total>0 ? maxEntry[1]/total : 0;
-
-      if(debtActive) return {iconId:"sanction", icon:"⚠️", name:"En dette", desc:"Dette active : priorité au remboursement avant d'ajouter du volume.", color:"#fb923c"};
-      if(state.lastPenaltiesApplied && state.lastPenaltiesApplied.ids && state.lastPenaltiesApplied.ids.length>0) return {iconId:"sanction", icon:"🔴", name:"Sous sanction", desc:"Une pénalité récente est enregistrée. Reviens à l'exécution simple.", color:"#ef4444"};
-      if(total<500) return {iconId:"latent", icon:"🌑", name:"Latent", desc:"Peu d'activité mesurée sur 7 jours. Le système manque de données.", color:"var(--td)"};
-      if(maxShare>.55) return {iconId:"desequilibre", icon:"⚖️", name:"Déséquilibré", desc:STAT_LBL[maxEntry[0]]+" domine nettement ta semaine. Surveille les angles morts.", color:"#f59e0b"};
-      if(physical/total>.55) return {iconId:"berserker", icon:"🔥", name:"Berserker", desc:"Semaine très physique. Utile, mais attention à ne pas fuir le mental.", color:"#fb923c"};
-      if(mental/total>.55) return {iconId:"mental", icon:"🧠", name:"Érudit", desc:"Semaine orientée esprit : lecture, attention et apprentissage dominent.", color:"#22d3ee"};
-      if(discipline/total>.28 && (statWeek.Esprit||0)>0) return {iconId:"discipline", icon:"🕯️", name:"Ascète actif", desc:"Discipline et esprit solides. Bonne maîtrise de l'impulsion.", color:"#c084fc"};
-      if(sante/total>.30 && discipline>0) return {iconId:"sante", icon:"🌿", name:"Fondations solides", desc:"Santé et discipline soutiennent bien ta progression.", color:"#4ade80"};
-      if(computedStreak>=7) return {iconId:"serenite", icon:"🛡️", name:"Stable", desc:"Rythme régulier sur la semaine. Continue sans chercher à surcharger.", color:"#4ade80"};
-      return {iconId:"construction", icon:"🧬", name:"En construction", desc:"Progression réelle, mais le profil de semaine n'est pas encore net.", color:"var(--rc)"};
-    })();
-
     return h("div",{class:"tab"},
       missedDays>=2&&h("div",{class:"warn"},"\u26A0\uFE0F P\u00e9nalit\u00e9 : -"+(missedDays*10)+" XP ("+missedDays+" jours manqu\u00e9s)"),
 
@@ -2212,19 +2155,6 @@ function App(){
           )
         )
       ),
-      h("div",{class:"card"},
-        h("div",{class:"ctitle",style:"color:#22d3ee"},"ÉTAT DU PERSONNAGE"),
-        h("div",{style:"display:flex;align-items:flex-start;gap:12px"},
-          h("div",{style:"min-width:28px;width:28px;display:flex;align-items:center;justify-content:center;transform:translateY(-1px)"},
-            CharacterStateIcon(characterState.iconId,characterState.icon,18)
-          ),
-          h("div",{style:"flex:1;min-width:0"},
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;font-weight:900;letter-spacing:1.2px;color:var(--tx);text-transform:uppercase"},characterState.name),
-            h("div",{style:"font-size:12px;color:var(--td);line-height:1.35;margin-top:4px"},characterState.desc)
-          )
-        )
-      ),
-
       h("div",{class:"card",style:"border-color:#f59e0b44"},
         h("div",{class:"ctitle",style:"color:"+(activeEp?{mineure:"#fbbf24",majeure:"#f59e0b",legendaire:"#f97316"}[activeEp.tier]||"#f59e0b":"#f59e0b")+";margin-bottom:8px"},"\u00c9preuve"),
         activeEp
@@ -3076,32 +3006,6 @@ function App(){
     const hiddenBonus = sortStat(objs.filter(o=>o.optional&&o.bonusHidden));
     const specialSections = STATS.map(stat=>({stat,list:(SP[stat]||[])})).filter(s=>s.list.length>0);
 
-    const characterStatesCodex = [
-      {id:"sanction",icon:"⚠️",name:"En dette",color:"#fb923c",desc:"Dette active : priorité au remboursement avant d'ajouter du volume."},
-      {id:"sanction_red",icon:"🔴",name:"Sous sanction",color:"#ef4444",desc:"Une pénalité récente est enregistrée. Reviens à l'exécution simple."},
-      {id:"latent",icon:"🌑",name:"Latent",color:"var(--td)",desc:"Peu d'activité mesurée sur 7 jours. Le système manque de données."},
-      {id:"desequilibre",icon:"⚖️",name:"Déséquilibré",color:"#f59e0b",desc:"Une stat domine nettement la semaine. Surveille les angles morts."},
-      {id:"berserker",icon:"🔥",name:"Berserker",color:"#fb923c",desc:"Semaine très physique. Utile, mais attention à ne pas fuir le mental."},
-      {id:"mental",icon:"🧠",name:"Érudit",color:"#22d3ee",desc:"Semaine orientée esprit : lecture, attention et apprentissage dominent."},
-      {id:"discipline",icon:"🕯️",name:"Ascète actif",color:"#c084fc",desc:"Discipline et concentration solides. Bonne maîtrise de l'impulsion."},
-      {id:"sante",icon:"🌿",name:"Fondations solides",color:"#4ade80",desc:"Santé et discipline soutiennent bien ta progression."},
-      {id:"serenite",icon:"🛡️",name:"Stable",color:"#4ade80",desc:"Rythme régulier sur la semaine. Continue sans chercher à surcharger."},
-      {id:"construction",icon:"🧬",name:"En construction",color:"var(--rc)",desc:"Progression réelle, mais le profil de semaine n'est pas encore net."}
-    ];
-
-    function renderCharacterStateCodex(s){
-      return h("div",{key:s.id,style:cardStyle},
-        h("div",{style:"display:flex;align-items:center;gap:8px"},
-          CharacterStateIcon(s.id,s.icon,18,"line-height:1.1;min-width:24px;text-align:center"),
-          h("div",{style:"flex:1;min-width:0"},
-            h("div",{style:"font-size:12px;color:var(--tx);font-weight:900;line-height:1.15;text-transform:uppercase;font-family:Orbitron,sans-serif;letter-spacing:1.2px"},s.name),
-            h("div",{style:"font-size:10px;color:var(--td);margin-top:5px;line-height:1.35"},s.desc)
-          )
-        )
-      );
-    }
-
-
     return h("div",{class:"tab"},
       h("div",{class:"card"},
         h("div",{class:"ctitle"},"Codex"),
@@ -3122,8 +3026,7 @@ function App(){
         ))
       ),
       h(Section,{id:"ep",title:"Épreuves",count:EPREUVES.length},EPREUVES.map(renderEpreuve)),
-      h(Section,{id:"dj",title:"Donjons",count:DONJONS.length},DONJONS.map(renderDonjon)),
-      h(Section,{id:"cs",title:"États du personnage",count:characterStatesCodex.length},characterStatesCodex.map(renderCharacterStateCodex))
+      h(Section,{id:"dj",title:"Donjons",count:DONJONS.length},DONJONS.map(renderDonjon))
     );
   }
 
