@@ -76,8 +76,8 @@ const DEFS = [
   {id:"med",    name:"M\u00e9ditation", unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Esprit",  icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F", base:15, fixedBase:true, cap:2},
   // ─── ENDURANCE ────────────────────────────────────────────────────────
   {id:"run",    name:"Course",          iconKey:"run",          unit:"km",    xpPer:150, daily:false,weekly:true, optional:false,stat:"Endurance",      icon:"\uD83C\uDFC3\uD83C\uDFFB",   base:7,  stat2:"Agilite", xpPer2:30, cap:3},
-  {id:"lhh_contacts", name:"LHH - Contacts utiles", unit:"contact", xpPer:0, daily:false, weekly:true, optional:false, stat:"Discipline", icon:"💼", base:12, target:12, fixedBase:true, tiers:[{at:12,xp:500,stat:"Discipline"}]},
-  {id:"lhh_actions",  name:"LHH - Actions commerciales", unit:"action", xpPer:0, daily:false, weekly:true, optional:false, stat:"Discipline", icon:"💼", base:50, target:50, fixedBase:true, tiers:[{at:50,xp:500,stat:"Discipline"}]},
+  {id:"lhh_contacts", name:"LHH - Contacts utiles", unit:"contact", xpPer:0, daily:false, weekly:true, optional:false, stat:"Discipline", icon:"💼", base:12, target:12, fixedBase:true, tiers:[{at:12,xp:500,stat:"Discipline"}], overGoalXpPer:10, overGoalStat:"Discipline"},
+  {id:"lhh_actions",  name:"LHH - Actions commerciales", unit:"action", xpPer:0, daily:false, weekly:true, optional:false, stat:"Discipline", icon:"💼", base:60, target:60, fixedBase:true, tiers:[{at:60,xp:500,stat:"Discipline"}], overGoalXpPer:10, overGoalStat:"Discipline"},
   {id:"walk",   name:"Marche",          unit:"km",    xpPer:75,  daily:false,weekly:false,optional:true, stat:"Endurance",      icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F", base:5, fixedBase:true},
   // ─── AGILITÉ ──────────────────────────────────────────────────────────
   {id:"flex",   name:"Souplesse",       unit:"min",   xpPer:25,  daily:true, weekly:false,optional:true, stat:"Agilite",        icon:"\uD83E\uDD38\uD83C\uDFFB",   base:15, fixedBase:true, stat2:"Endurance", xpPer2:10, cap:2},
@@ -406,10 +406,13 @@ function calcXp(obj,total,baseOverride){
   const t = baseOverride!=null ? baseOverride : obj.base;
   if(obj.binary){return total>=t?(obj.binaryXp||50):0;}
   if(obj.tiers && obj.tiers.length>0){
-    return obj.tiers.reduce((sum,tier)=>{
+    const tierXp = obj.tiers.reduce((sum,tier)=>{
       if(total < tier.at) return sum;
       return sum + (tier.xp||0) + (tier.xp2||0) + (tier.xp3||0);
     },0);
+    const overTarget = obj.target || obj.tiers[obj.tiers.length-1].at || obj.base || 0;
+    const overXp = obj.overGoalXpPer ? Math.max(0,total-overTarget) * obj.overGoalXpPer : 0;
+    return tierXp + overXp;
   }
   const xpPer=obj.xpPer;
   // Plafonner si cap défini
@@ -1266,8 +1269,8 @@ function App(){
       });
       // Calculer les tiers franchis
       const crossedTiers = obj.tiers.filter(t => prev < t.at && next >= t.at);
+      const xpByStat = {};
       if(crossedTiers.length>0){
-        const xpByStat = {};
         crossedTiers.forEach(t=>{
           addXp(t.xp, t.stat, null, true);
           xpByStat[t.stat] = (xpByStat[t.stat]||0) + t.xp;
@@ -1276,8 +1279,21 @@ function App(){
             xpByStat[t.stat2] = (xpByStat[t.stat2]||0) + t.xp2;
           }
         });
-        // Float global
-        const lines = Object.entries(xpByStat).map(([stat,xp])=>"+"+xp+" XP "+(STAT_LBL2[stat]||stat));
+      }
+      if(obj.overGoalXpPer){
+        const overTarget = obj.target || obj.tiers[obj.tiers.length-1].at || obj.base || 0;
+        const prevOver = Math.max(0, prev - overTarget);
+        const nextOver = Math.max(0, next - overTarget);
+        const overUnits = Math.max(0, nextOver - prevOver);
+        const overXp = overUnits * obj.overGoalXpPer;
+        if(overXp>0){
+          const overStat = obj.overGoalStat || obj.stat;
+          addXp(overXp, overStat, null, true);
+          xpByStat[overStat] = (xpByStat[overStat]||0) + overXp;
+        }
+      }
+      if(Object.keys(xpByStat).length>0){
+        const lines = Object.entries(xpByStat).map(([stat,xp])=>"+"+Math.round(xp)+" XP "+(STAT_LBL2[stat]||stat));
         lines.forEach((txt,i)=>{
           const id=Date.now()+Math.random()+i*0.01;
           setFloats(f=>[...f,{id, y:(38+i*3)+"%", txt}]);
@@ -1612,7 +1628,8 @@ function App(){
                   parts.push(tier.xp+" XP \u00b7 "+(STAT_LBL[tier.stat]||tier.stat));
                   if(tier.xp2 && tier.stat2) parts.push(tier.xp2+" XP \u00b7 "+(STAT_LBL[tier.stat2]||tier.stat2));
                   return h("div",{key:i,style:"opacity:"+(d>=tier.at?"1":"0.6")+";white-space:nowrap"},(d>=tier.at?"\u2713 ":"")+parts.join(" + "));
-                })
+                }),
+                obj.overGoalXpPer&&h("div",{style:"opacity:"+(d>(obj.target||obj.base||0)?"1":"0.6")+";white-space:nowrap"},"+"+obj.overGoalXpPer+" XP/"+obj.unit+" au-delà · "+(STAT_LBL[obj.overGoalStat||obj.stat]||obj.overGoalStat||obj.stat))
               )
             :obj.binary
               ?(obj.binaryXp+" XP \u00b7 "+(STAT_LBL[obj.stat]||obj.stat))
@@ -1639,7 +1656,7 @@ function App(){
         if(isCapped) return null;
         // Quête avec tiers (ex: protein x/2) : bouton unique +1 unité
         if(obj.tiers && obj.tiers.length>0){
-          const isMax = d >= (obj.target||obj.tiers[obj.tiers.length-1].at);
+          const isMax = !obj.overGoalXpPer && d >= (obj.target||obj.tiers[obj.tiers.length-1].at);
           if(isMax) return null;
           const isLhh = obj.id==="lhh_contacts" || obj.id==="lhh_actions";
           const unitSing = obj.unit;
@@ -2869,7 +2886,7 @@ function App(){
     const unitPlural = (unit, value) => {
       if(!unit) return "";
       if(value<=1) return unit;
-      return ({rep:"reps",page:"pages",verre:"verres",km:"km",min:"min",jour:"jours",nuit:"nuits",repas:"repas"}[unit] || unit);
+      return ({rep:"reps",page:"pages",verre:"verres",km:"km",min:"min",jour:"jours",nuit:"nuits",repas:"repas",contact:"contacts",action:"actions"}[unit] || unit);
     };
     const ChevronC = ({k}) => h("span",{
       onClick:e=>{e.stopPropagation();toggleC(k);},
