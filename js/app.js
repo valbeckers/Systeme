@@ -3033,7 +3033,7 @@ function App(){
         h("div",{class:"ctitle"},"Codex"),
         h("div",{style:"font-size:12px;color:var(--td);line-height:1.45"},"Catalogue complet des quêtes existantes. Les objectifs des quêtes quotidiennes et hebdomadaires sont calculés au rang actuel.")
       ),
-      h(Section,{id:"obl",title:"Quêtes journalières",count:required.length},required.map(renderQuest)),
+      h(Section,{id:"obl",title:"Quêtes obligatoires",count:required.length},required.map(renderQuest)),
       h(Section,{id:"bonus",title:"Quêtes bonus",count:bonus.length+hiddenBonus.length},
         h(Fragment,null,
           bonus.map(renderQuest),
