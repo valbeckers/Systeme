@@ -118,7 +118,6 @@ const SP = {
   ],
   Agilite:[
     {id:"sp_flow20",  name:"20min d'animal flow", icon:"\uD83D\uDC0A",                                         unit:"min",  target:20, xp:750, days:1, tiers:[{at:10,xp:250,stat:"Agilite"},{at:20,xp:500,stat:"Agilite"}], desc:"20 min d'animal flow (palier \u00e0 10min)"},
-    {id:"sp_flex30",  name:"30min de souplesse",  icon:"\uD83E\uDD38\uD83C\uDFFB",                             unit:"jour", target:1,  xp:1000, days:1, binary:true, desc:"30 min de souplesse"},
     {id:"sp_fluide",  name:"15min de flow martial", icon:"\uD83C\uDF0A",                              unit:"min",  target:15, xp:375, days:1, desc:"Capoeira flow / mouvement continu sans rupture"},
     {id:"sp_silent",  name:"10min de d\u00e9placements silencieux", icon:"\uD83D\uDC08",                          unit:"min",  target:10, xp:300, days:1, desc:"Marcher sans bruit (escaliers, pi\u00e8ces)"},
     {id:"sp_balance_eyes", name:"10min d'\u00e9quilibre yeux ferm\u00e9s", icon:"\uD83E\uDDB6\uD83C\uDFFB",          unit:"min",  target:10, xp:300, xp2:150, stat2:"Esprit", days:1, desc:"\u00c9quilibre sur un pied yeux ferm\u00e9s"},
@@ -141,17 +140,17 @@ const EPREUVES = [
   // 12 épreuves au total, sans notion de tier
   {id:"ep_150pull",  name:"150 tractions",                      iconId:"ep_pullups", icon:"\u270A\uD83C\uDFFB",                       stat:"Force",        xp:3000, days:7, unit:"rep", target:150,
     desc:"Atteindre 150 tractions en 7 jours"},
-  {id:"ep_wallsit60",name:"35min de chaise",                    iconId:"ep_wallsit", icon:"\uD83E\uDE91",                             stat:"Force",        xp:1500, xp2:500, stat2:"Endurance", days:7, unit:"min", target:35, dailyTrack:true, dailyTrackMin:5,
+  {id:"ep_wallsit60",name:"35min de chaise",                    iconId:"ep_wallsit", icon:"\uD83E\uDE91",                             stat:"Force",        xp:2000, xp2:1000, stat2:"Endurance", days:7, unit:"min", target:35, dailyTrack:true, dailyTrackMin:5,
     desc:"35 minutes cumul\u00e9es de chaise sur la semaine"},
   {id:"ep_book",     name:"Lire un livre complet (300+ pages)", iconId:"ep_reading", icon:"\uD83D\uDCDA",                             stat:"Esprit", xp:3000, days:7, binary:true,
     desc:"Terminer un livre de 300 pages ou plus"},
   {id:"ep_project",  name:"4h de travail sur un projet professionnel",iconId:"ep_4hwork", icon:"\uD83E\uDDE0",                           stat:"Esprit", xp:2000, xp2:1000, stat2:"Discipline", days:7, unit:"min", target:240,
     desc:"4 heures de travail sur un projet professionnel"},
-  {id:"ep_medweek",  name:"M\u00e9ditation quotidienne",        iconId:"ep_med", icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F",stat:"Esprit",xp:2500, days:7, streak7:true, streakDays:7, unit:"jour", target:7,
+  {id:"ep_medweek",  name:"M\u00e9ditation quotidienne",        iconId:"ep_med", icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F",stat:"Esprit",xp:3000, days:7, streak7:true, streakDays:7, unit:"jour", target:7,
     desc:"M\u00e9diter chaque jour pendant 7 jours"},
   {id:"ep_deepwork5",name:"Deep Work 60min",                    iconId:"ep_deepwork", icon:"\u26AB",                                   stat:"Esprit",xp:2000, xp2:1000, stat2:"Discipline", days:7, cumDays:true, streakDays:5, unit:"jour", target:5,
     desc:"60 min de deep work 5 jours de suite"},
-  {id:"ep_hike",     name:"Randonn\u00e9e longue (5h+)",        iconId:"ep_hike", icon:"\u26F0\uFE0F",                             stat:"Endurance",    xp:2000, days:7, binary:true,
+  {id:"ep_hike",     name:"Randonn\u00e9e longue (5h+)",        iconId:"ep_hike", icon:"\u26F0\uFE0F",                             stat:"Endurance",    xp:3000, days:7, binary:true,
     desc:"Randonn\u00e9e de 5 heures minimum"},
   {id:"ep_10km",     name:"Courir un 10km non-stop",            iconId:"ep_run", icon:"\uD83C\uDFC3\uD83C\uDFFB\u200D\u27A1\uFE0F",stat:"Endurance",   xp:2500, xp2:500, stat2:"Agilite", days:7, binary:true,
     desc:"Courir 10km non-stop"},
@@ -161,13 +160,13 @@ const EPREUVES = [
     desc:"Se lever \u00e0 la m\u00eame heure 7 jours de suite"},
   {id:"ep_coldweek", name:"Douche froide quotidienne",          iconId:"ep_coldshower", icon:"\u2744\uFE0F",                             stat:"Sante",        xp:1500, xp2:1500, stat2:"Discipline", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
     desc:"Douche froide chaque jour pendant 7 jours"},
-  {id:"ep_noscroll", name:"Pas de doomscrolling",               iconId:"ep_nophone", icon:"\uD83D\uDCF5",                             stat:"Esprit", xp:2500, days:7, streak7:true, streakDays:7, unit:"jour", target:7,
+  {id:"ep_noscroll", name:"Pas de doomscrolling",               iconId:"ep_nophone", icon:"\uD83D\uDCF5",                             stat:"Esprit", xp:3000, days:7, streak7:true, streakDays:7, unit:"jour", target:7,
     desc:"Z\u00e9ro scroll passif pendant 7 jours"},
   {id:"ep_nojunkwk", name:"Pas de junk-food",                   iconId:"ep_nojunkfood", icon:"\uD83C\uDF55",                             stat:"Sante",        xp:2000, xp2:1000, stat2:"Discipline", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
     desc:"Z\u00e9ro junk-food pendant 7 jours"},
-  {id:"ep_clean",    name:"Nettoyage total d'une pi\u00e8ce",   iconId:"ep_broom", icon:"\uD83E\uDDF9",                             stat:"Discipline",   xp:1500, days:7, binary:true,
-    desc:"Nettoyer compl\u00e8tement une pi\u00e8ce"},
-  {id:"ep_mob",      name:"Mobilit\u00e9 matinale",             iconId:"ep_flex", icon:"\uD83E\uDD38\uD83C\uDFFB\u200D\u2642\uFE0F",stat:"Agilite",     xp:2500, days:7, cumDays:true, streakDays:5, unit:"jour", target:5,
+  {id:"ep_clean",    name:"Rangement total de la maison",      iconId:"ep_broom", icon:"\uD83E\uDDF9",                             stat:"Discipline",   xp:3000, days:7, binary:true,
+    desc:"Ranger compl\u00e8tement la maison"},
+  {id:"ep_mob",      name:"Mobilit\u00e9 matinale",             iconId:"ep_flex", icon:"\uD83E\uDD38\uD83C\uDFFB\u200D\u2642\uFE0F",stat:"Agilite",     xp:3000, days:7, cumDays:true, streakDays:5, unit:"jour", target:5,
     desc:"Faire 15 min de mobilit\u00e9 5 jours sur 7"},
   {id:"ep_taichi",   name:"Tai Chi quotidien",                  iconId:"ep_martialflow", icon:"\u262F\uFE0F",                             stat:"Agilite",      xp:2000, xp2:1000, stat2:"Esprit", days:7, cumDays:true, streakDays:5, dailyMin:20, unit:"jour", target:5,
     desc:"Faire 20 min de Tai Chi 5 jours sur 7"},
@@ -530,19 +529,24 @@ function migrateRuntimeQuestDefinitions(state){
   const specialById = {};
   Object.values(SP).forEach(list => (list||[]).forEach(q => { specialById[q.id] = q; }));
   if(Array.isArray(state.specialQuests)){
-    state.specialQuests = state.specialQuests.map(q => {
-      const tpl = specialById[q.id];
-      if(!tpl) return q;
-      return {
-        ...q,
-        ...tpl,
-        sqid:q.sqid,
-        progress:q.progress,
-        startedAt:q.startedAt,
-        expiresAt:q.expiresAt,
-        completedAt:q.completedAt
-      };
-    });
+    state.specialQuests = state.specialQuests
+      .filter(q => q.id !== "sp_flex30")
+      .map(q => {
+        const tpl = specialById[q.id];
+        if(!tpl) return q;
+        return {
+          ...q,
+          ...tpl,
+          sqid:q.sqid,
+          progress:q.progress,
+          startedAt:q.startedAt,
+          expiresAt:q.expiresAt,
+          completedAt:q.completedAt
+        };
+      });
+  }
+  if(Array.isArray(state.completedSqLog)){
+    state.completedSqLog = state.completedSqLog.filter(q => (typeof q === "string" ? q : q?.id) !== "sp_flex30");
   }
 
   const epreuveById = {};
