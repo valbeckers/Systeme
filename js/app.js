@@ -175,37 +175,37 @@ const EPREUVES = [
 // ─── DONJONS (slot hebdomadaire alternatif aux épreuves) ───────────────────
 // Un donjon = plusieurs objectifs légers sur 7 jours, avec XP uniquement à la complétion totale.
 const DONJONS = [
-  {id:"dj_moine", kind:"donjon", name:"Donjon du Moine", icon:"🕯️", stat:"Esprit", xp:1500, xp2:1000, stat2:"Discipline", xp3:500, stat3:"Sante", days:7,
+  {id:"dj_moine", kind:"donjon", name:"Donjon du Moine", icon:"🕯️", stat:"Esprit", xp:4000, xp2:1000, stat2:"Discipline", days:7,
     desc:"Semaine orientée calme, attention et maîtrise de la stimulation",
     goals:[
-      {id:"med3", label:"Méditation", target:3, unit:"sessions"},
+      {id:"med5", label:"Méditation", target:5, unit:"sessions"},
       {id:"silence1", label:"Silence 30min", target:1, unit:"fois"},
-      {id:"nophone1", label:"Téléphone hors de portée 3h", target:1, unit:"fois"},
-      {id:"cleaninput1", label:"Aucun contenu passif", target:1, unit:"jour"}
+      {id:"nophone2", label:"Téléphone hors de portée 3h", target:2, unit:"fois"},
+      {id:"cleaninput7", label:"Aucun contenu passif", target:7, unit:"jours"}
     ]},
-  {id:"dj_corps_silencieux", kind:"donjon", name:"Donjon du Corps silencieux", icon:"🐾", stat:"Agilite", xp:2000, xp2:500, stat2:"Esprit", xp3:500, stat3:"Discipline", days:7,
+  {id:"dj_corps_silencieux", kind:"donjon", name:"Donjon du Corps silencieux", icon:"🐾", stat:"Agilite", xp:4000, xp2:1000, stat2:"Discipline", days:7,
     desc:"Semaine de contrôle, coordination, mobilité et précision",
     goals:[
       {id:"footwork2", label:"Footwork rapide", target:2, unit:"sessions"},
       {id:"silent2", label:"Déplacements silencieux", target:2, unit:"sessions"},
-      {id:"flow1", label:"Animal flow", target:1, unit:"session"},
-      {id:"flex1", label:"Souplesse longue", target:1, unit:"session"}
+      {id:"flow2", label:"Animal flow", target:2, unit:"sessions"},
+      {id:"flex2", label:"Souplesse longue (30min)", target:2, unit:"sessions"}
     ]},
-  {id:"dj_fondation", kind:"donjon", name:"Donjon des Fondations", icon:"🏛️", stat:"Sante", xp:2000, xp2:1000, stat2:"Discipline", days:7,
+  {id:"dj_fondation", kind:"donjon", name:"Donjon des Fondations", icon:"🏛️", stat:"Sante", xp:4000, xp2:1000, stat2:"Discipline", days:7,
     desc:"Semaine de base : hydratation, repas, récupération et hygiène mentale",
     goals:[
-      {id:"water5", label:"Hydratation complète", target:5, unit:"jours"},
-      {id:"protein6", label:"Repas équilibré", target:6, unit:"repas"},
-      {id:"mindmeal4", label:"Manger sans stimulation", target:4, unit:"repas"},
-      {id:"breath1", label:"Cohérence cardiaque", target:1, unit:"fois"}
+      {id:"water7", label:"Hydratation complète", target:7, unit:"jours"},
+      {id:"protein10", label:"Repas équilibré", target:10, unit:"repas"},
+      {id:"mindmeal10", label:"Manger sans stimulation", target:10, unit:"repas"},
+      {id:"breath2", label:"Cohérence cardiaque", target:2, unit:"fois"}
     ]},
-  {id:"dj_chasseur", kind:"donjon", name:"Donjon du Chasseur", icon:"🏹", stat:"Endurance", xp:2000, xp2:1000, stat2:"Agilite", days:7,
+  {id:"dj_chasseur", kind:"donjon", name:"Donjon du Chasseur", icon:"🏹", stat:"Endurance", xp:4000, xp2:1000, stat2:"Discipline", days:7,
     desc:"Semaine de mouvement : souffle, jambes, déplacement et résistance",
     goals:[
-      {id:"run1", label:"Sortie course", target:1, unit:"sortie"},
-      {id:"walk1", label:"Marche longue", target:1, unit:"sortie"},
-      {id:"stairs1", label:"Escaliers", target:1, unit:"session"},
-      {id:"cardio1", label:"Corde ou fractionné", target:1, unit:"session"}
+      {id:"run3", label:"Sortie course (5km)", target:3, unit:"sorties"},
+      {id:"walk1", label:"Sortie marche (5km)", target:1, unit:"sortie"},
+      {id:"stairs3", label:"Escaliers", target:3, unit:"sessions"},
+      {id:"cardio2", label:"Corde ou fractionné", target:2, unit:"sessions"}
     ]}
 ];
 
