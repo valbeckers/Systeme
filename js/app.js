@@ -2488,20 +2488,6 @@ function App(){
             h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;text-transform:uppercase;margin-bottom:4px"},"Stat en retard"),
             h("div",{style:"font-size:13px;font-weight:700;color:"+statBalance.weakest.color},statBalance.weakest.label+" niv. "+statBalance.weakest.level)
           )
-        ),
-        h("div",{style:"display:flex;flex-direction:column;gap:5px"},
-          statBalance.rows.map(r=>{
-            const pct = statBalance.avgXp>0 ? Math.max(4,Math.min(100,(r.xp/statBalance.avgXp)*70)) : 4;
-            const isWeak = r.id===statBalance.weakest.id;
-            const isStrong = r.id===statBalance.strongest.id;
-            return h("div",{key:r.id},
-              h("div",{style:"display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px"},
-                h("span",{style:"color:"+r.color},r.label+" · niv. "+r.level),
-                h("span",{style:"font-family:Orbitron,sans-serif;color:"+(isWeak?statBalance.statusColor:"var(--td)")},(r.xp||0).toLocaleString("fr-FR")+" XP"+(isStrong?" ▲":isWeak?" ▼":""))
-              ),
-              h("div",{class:"qbar"},h("div",{class:"qfill"+(isStrong?" over":isWeak?" partial":""),style:"width:"+pct+"%;background:"+r.color}))
-            );
-          })
         )
       ),
 
