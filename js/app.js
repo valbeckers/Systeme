@@ -125,7 +125,7 @@ const SP = {
     {id:"sp_footwork", name:"10min de footwork rapide", icon:"\u26A1",                                            unit:"min",  target:10, xp:250, step:5, days:1, desc:"Footwork rapide (carrelage, devant/derri\u00e8re/c\u00f4t\u00e9s)"},
   ],
   Discipline:[
-    {id:"sp_cold",      name:"10min douche froide",             icon:"\uD83D\uDEBF",                          unit:"jour", target:1, xp:250, days:1, binary:true, desc:"10 min d'eau froide"},
+    {id:"sp_cold",      name:"Douche froide 3min",              icon:"\uD83D\uDEBF",                          unit:"min",  target:3, xp:150, stat:"Sante", xp2:150, stat2:"Discipline", days:1, binary:true, compactUnit:true, desc:"Douche froide 3 min"},
     {id:"sp_task",      name:"Accomplir une t\u00e2che repouss\u00e9e", icon:"\uD83D\uDD57",                   unit:"jour", target:1, xp:250, days:1, binary:true, desc:"Accomplir une t\u00e2che repouss\u00e9e"},
     {id:"sp_declutter", name:"D\u00e9sencombrement",            icon:"\uD83D\uDCE6",                          unit:"objet",target:10,xp:250, days:1, desc:"Jeter/ranger 10 objets"},
   ],
@@ -159,8 +159,8 @@ const EPREUVES = [
     desc:"100 burpees cumul\u00e9s"},
   {id:"ep_wakeup",   name:"R\u00e9veil \u00e0 la m\u00eame heure",iconId:"ep_clock", icon:"\uD83C\uDF05",                           stat:"Discipline",   xp:2000, xp2:1000, stat2:"Sante", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
     desc:"Se lever \u00e0 la m\u00eame heure 7 jours de suite"},
-  {id:"ep_coldweek", name:"Douche froide 10min quotidienne",    iconId:"ep_coldshower", icon:"\u2744\uFE0F",                             stat:"Discipline",   xp:2000, xp2:1000, stat2:"Sante", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
-    desc:"10 min de douche froide chaque jour pendant 7 jours"},
+  {id:"ep_coldweek", name:"Douche froide quotidienne",          iconId:"ep_coldshower", icon:"\u2744\uFE0F",                             stat:"Sante",        xp:1500, xp2:1500, stat2:"Discipline", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
+    desc:"Douche froide chaque jour pendant 7 jours"},
   {id:"ep_noscroll", name:"Pas de doomscrolling",               iconId:"ep_nophone", icon:"\uD83D\uDCF5",                             stat:"Esprit", xp:2500, days:7, streak7:true, streakDays:7, unit:"jour", target:7,
     desc:"Z\u00e9ro scroll passif pendant 7 jours"},
   {id:"ep_nojunkwk", name:"Pas de junk-food",                   iconId:"ep_nojunkfood", icon:"\uD83C\uDF55",                             stat:"Sante",        xp:2000, xp2:1000, stat2:"Discipline", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
@@ -482,7 +482,7 @@ function pickRandomSq(usedIds,restMode,statCycle,completedLog){
         const a=availableForStat(s,respect);
         if(a.length>0){
           const chosen=a[Math.floor(Math.random()*a.length)];
-          return {tpl:{...chosen,stat:s}, pickedStat:s, cycleReset};
+          return {tpl:{stat:s,...chosen}, pickedStat:s, cycleReset};
         }
       }
     }
@@ -524,6 +524,52 @@ function migrateMergedEspritState(state){
 }
 
 
+function migrateRuntimeQuestDefinitions(state){
+  if(!state || typeof state !== "object") return state;
+
+  const specialById = {};
+  Object.values(SP).forEach(list => (list||[]).forEach(q => { specialById[q.id] = q; }));
+  if(Array.isArray(state.specialQuests)){
+    state.specialQuests = state.specialQuests.map(q => {
+      const tpl = specialById[q.id];
+      if(!tpl) return q;
+      return {
+        ...q,
+        ...tpl,
+        sqid:q.sqid,
+        progress:q.progress,
+        startedAt:q.startedAt,
+        expiresAt:q.expiresAt,
+        completedAt:q.completedAt
+      };
+    });
+  }
+
+  const epreuveById = {};
+  EPREUVES.forEach(e => { epreuveById[e.id] = e; });
+  if(Array.isArray(state.epreuves)){
+    state.epreuves = state.epreuves.map(e => {
+      const tpl = epreuveById[e.id];
+      if(!tpl) return e;
+      return {
+        ...e,
+        ...tpl,
+        epid:e.epid,
+        progress:e.progress,
+        dailyValidations:e.dailyValidations,
+        startedAt:e.startedAt,
+        startedAtDay:e.startedAtDay,
+        expiresAt:e.expiresAt,
+        completedAt:e.completedAt,
+        failedAt:e.failedAt
+      };
+    });
+  }
+
+  return state;
+}
+
+
 // Lecture : essaie la clé principale, sinon fallback automatique sur les backups
 const loadState  = () => {
   for(const key of BACKUP_KEYS){
@@ -536,7 +582,7 @@ const loadState  = () => {
         if(key !== "sl_v3"){
           try{ localStorage.setItem("sl_v3",r); }catch{}
         }
-        return migrateMergedEspritState(parsed);
+        return migrateRuntimeQuestDefinitions(migrateMergedEspritState(parsed));
       }
     }catch{}
   }
@@ -2062,7 +2108,7 @@ function App(){
         xpPairs.forEach(p=>addXp(p.xp,p.stat,null,true));
       }
       setState(s=>({...s,specialQuests:s.specialQuests.map(q=>q.sqid===sq.sqid
-        ?{...q,progress:val,completedAt:nowComplete?Date.now():q.completedAt}:q),
+        ?{...q,progress:nowComplete?(sq.target||1):val,completedAt:nowComplete?Date.now():q.completedAt}:q),
         sqCooldownUntil:nowComplete?next7AM():(s.sqCooldownUntil||null)}));
     }
 
@@ -2083,7 +2129,7 @@ function App(){
       ),
       h("div",{class:"sqbar"},h("div",{class:"sqbarfill",style:"width:"+pct+"%"})),
       h("div",{style:"display:flex;justify-content:space-between;font-size:10px;color:var(--td);margin-top:4px"},
-        h("span",null,sq.progress+"/"+sq.target+" "+sq.unit),
+        h("span",null,sq.progress+"/"+sq.target+(sq.compactUnit?"":" ")+sq.unit),
         !done&&h("span",{style:"color:"+(urgent?"#ef4444":"#ef4444bb")+";font-family:Orbitron,sans-serif"},"\u23F1 "+fmtCD(remaining)+" restants")
       ),
       showInput&&!done&&(
