@@ -3072,32 +3072,85 @@ function App(){
       );
     }
 
-    const required = sortStat(objs.filter(o=>o.daily&&!o.optional).concat(objs.filter(o=>o.weekly&&!o.optional)));
-    const bonus = sortStat(objs.filter(o=>o.optional&&!o.bonusHidden));
-    const hiddenBonus = sortStat(objs.filter(o=>o.optional&&o.bonusHidden));
-    const specialSections = STATS.map(stat=>({stat,list:(SP[stat]||[])})).filter(s=>s.list.length>0);
+    function xpTotalsByStat(item){
+      const totals={};
+      const add=(stat,xp)=>{
+        if(!stat || xp==null) return;
+        const n=parseFloat(String(xp).split("/")[0]);
+        if(!Number.isFinite(n)) return;
+        totals[stat]=(totals[stat]||0)+n;
+      };
+      if(item.tiers){
+        item.tiers.forEach(t=>{
+          add(t.stat,t.xp);
+          add(t.stat2,t.xp2);
+          add(t.stat3,t.xp3);
+        });
+      }else{
+        if(item.binary && item.binaryXp) add(item.stat,item.binaryXp);
+        else if(item.xp) add(item.stat,item.xp);
+        else if(item.xpPer) add(item.stat,item.xpPer);
+        if(item.xp2&&item.stat2) add(item.stat2,item.xp2);
+        if(item.xp3&&item.stat3) add(item.stat3,item.xp3);
+        if(item.xpPer2&&item.stat2) add(item.stat2,item.xpPer2);
+      }
+      if(item.overGoalXpPer&&item.overGoalStat) add(item.overGoalStat,item.overGoalXpPer);
+      return totals;
+    }
+
+    function dominantStat(item,fallback){
+      const tieOverride = {
+        calves:"Force",
+        sp_cold:"Sante",
+        ep_coldweek:"Sante",
+        dj_cold:"Sante",
+        dj_douche_froide:"Sante",
+        dj_froid:"Sante"
+      }[item.id];
+      if(tieOverride) return tieOverride;
+      const totals=xpTotalsByStat(item);
+      const entries=Object.entries(totals).filter(([stat,xp])=>STATS.includes(stat)&&xp>0);
+      if(entries.length===0) return fallback || item.stat || "Discipline";
+      entries.sort((a,b)=>b[1]-a[1]);
+      if(entries.length>1 && entries[0][1]===entries[1][1]) return fallback || item.stat || entries[0][0];
+      return entries[0][0];
+    }
+
+    function groupByDominantStat(list,render,fallbackStatGetter){
+      const groups=STATS.map(stat=>({stat,list:[]}));
+      list.forEach(item=>{
+        const fallback = fallbackStatGetter ? fallbackStatGetter(item) : item.stat;
+        const stat = dominantStat(item,fallback);
+        const group = groups.find(g=>g.stat===stat) || groups[groups.length-1];
+        group.list.push(item);
+      });
+      return groups.filter(g=>g.list.length>0).map(group=>h("div",{key:group.stat,style:"margin-bottom:13px"},
+        h("div",{style:"font-size:11px;color:"+(STAT_COLOR[group.stat]||"var(--rc)")+";font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin:2px 0 7px"},statLabel(group.stat)),
+        group.list.map(render)
+      ));
+    }
+
+    const required = objs.filter(o=>o.daily&&!o.optional).concat(objs.filter(o=>o.weekly&&!o.optional));
+    const bonus = objs.filter(o=>o.optional&&!o.bonusHidden);
+    const hiddenBonus = objs.filter(o=>o.optional&&o.bonusHidden);
+    const specialList = STATS.flatMap(stat=>(SP[stat]||[]).map(q=>({...q,stat:q.stat||stat})));
 
     return h("div",{class:"tab"},
       h("div",{class:"card"},
         h("div",{class:"ctitle"},"Codex"),
         h("div",{style:"font-size:12px;color:var(--td);line-height:1.45"},"Catalogue complet des quêtes existantes. Les objectifs des quêtes quotidiennes et hebdomadaires sont calculés au rang actuel.")
       ),
-      h(Section,{id:"obl",title:"Quêtes obligatoires",count:required.length},required.map(renderQuest)),
+      h(Section,{id:"obl",title:"Quêtes obligatoires",count:required.length},groupByDominantStat(required,renderQuest)),
       h(Section,{id:"bonus",title:"Quêtes bonus",count:bonus.length+hiddenBonus.length},
         h(Fragment,null,
-          bonus.map(renderQuest),
+          groupByDominantStat(bonus,renderQuest),
           hiddenBonus.length>0&&h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin:10px 0 8px"},"BONUS MASQUÉS / CONTEXTUELS"),
-          hiddenBonus.map(renderQuest)
+          hiddenBonus.length>0&&groupByDominantStat(hiddenBonus,renderQuest)
         )
       ),
-      h(Section,{id:"sq",title:"Quêtes urgentes",count:specialSections.reduce((n,s)=>n+s.list.length,0)},
-        specialSections.map(section=>h("div",{key:section.stat,style:"margin-bottom:13px"},
-          h("div",{style:"font-size:11px;color:"+(STAT_COLOR[section.stat]||"var(--rc)")+";font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin:2px 0 7px"},statLabel(section.stat)),
-          section.list.map(q=>renderSpecial({...q,stat:q.stat||section.stat}))
-        ))
-      ),
-      h(Section,{id:"ep",title:"Épreuves",count:EPREUVES.length},EPREUVES.map(renderEpreuve)),
-      h(Section,{id:"dj",title:"Donjons",count:DONJONS.length},DONJONS.map(renderDonjon))
+      h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial)),
+      h(Section,{id:"ep",title:"Épreuves",count:EPREUVES.length},groupByDominantStat(EPREUVES,renderEpreuve)),
+      h(Section,{id:"dj",title:"Donjons",count:DONJONS.length},groupByDominantStat(DONJONS,renderDonjon))
     );
   }
 
