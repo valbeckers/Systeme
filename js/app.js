@@ -61,7 +61,7 @@ const DEFS = [
   {id:"sleep",  name:"8h de sommeil",   unit:"nuit",  xpPer:0,   daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDECF\uFE0F",         base:1,  binary:true, binaryXp:200},
   {id:"adult",name:"",unit:"écart",xpPer:0,daily:true,weekly:false,optional:false,regression:true,regressionType:"adult",stat:"Discipline",icon:"🔴",base:1,target:1,penaltyAll:true,startDate:"2026-05-21"},
   {id:"cheatmeal",name:"Cheat meal",unit:"repas",xpPer:0,daily:false,weekly:true,optional:false,regression:true,regressionType:"cheatmeal",stat:"Sante",stat2:"Discipline",icon:"🍔",base:1,target:1,fixedBase:true,startDate:"2026-05-31"},
-  {id:"nosugar",name:"Pas de sucres transform\u00e9s", unit:"écart", xpPer:0, daily:true, weekly:false,optional:false, regression:true, regressionType:"sugar", stat:"Sante", stat2:"Discipline", icon:"\uD83C\uDF4E", base:1, target:1, startDate:"2026-05-31"},
+  {id:"nosugar",name:"Sucres transform\u00e9s", unit:"écart", xpPer:0, daily:true, weekly:false,optional:false, regression:true, regressionType:"sugar", stat:"Sante", stat2:"Discipline", icon:"\uD83C\uDF4E", base:1, target:1, startDate:"2026-05-31"},
   {id:"protein",name:"Repas \u00e9quilibr\u00e9",unit:"repas", xpPer:0,   daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83C\uDF4C",               base:1, target:2, validateAt:1, startDate:"2026-05-20", tiers:[{at:1,xp:200,stat:"Sante"},{at:2,xp:200,stat:"Sante",xp2:200,stat2:"Discipline"}]},
   // ─── FORCE ────────────────────────────────────────────────────────────
   {id:"push",   name:"Pompes",          unit:"rep",   xpPer:2,   daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDBE",               base:30, cap:3},
@@ -1071,7 +1071,7 @@ function App(){
 
   // 7b. Système de dette
   const yesterday = (()=>{ const d=new Date(today); d.setDate(d.getDate()-1); return d.toISOString().slice(0,10); })();
-  const reqWeeklyObjs = objs.filter(o=>!o.optional&&o.weekly&&!o.regression);
+  const reqWeeklyObjs = objs.filter(o=>!o.optional&&o.weekly);
 
   // Semaine précédente pour dette hebdo
   const prevWkDate = (()=>{ const d=new Date(today); d.setDate(d.getDate()-7); return d; })();
@@ -1728,9 +1728,10 @@ const CAP_BADGE_COLOR = "#ef4444";
 
     if(obj.regression){
       const count = d;
-      const pct = obj.regressionType==="cheatmeal" ? Math.min(100,(count/(obj.target||1))*100) : Math.min(100,(count/3)*100);
       const severity = regressionSeverity(obj,count);
       const deltaNow = regressionTotalPenalty(obj,count);
+      const hasPenalty = Object.keys(deltaNow||{}).length>0;
+      const pct = hasPenalty ? 100 : (obj.regressionType==="cheatmeal" ? Math.min(100,(count/(obj.target||1))*100) : 0);
       const color = severity==="Aucune" || severity==="Bonus potentiel" ? "#4ade80" : severity==="Neutre" ? "var(--td)" : severity==="Mineure" ? "#fbbf24" : severity==="Moyenne" ? "#f59e0b" : "#ef4444";
       const detail = obj.regressionType==="cheatmeal" && count===0 ? "+500 XP Santé · +500 XP Discipline si semaine parfaite" : penaltySummary(deltaNow);
       const isBad = Object.values(deltaNow).some(v=>v<0);
@@ -1743,7 +1744,7 @@ const CAP_BADGE_COLOR = "#ef4444";
           )
         ),
         h("div",{class:"qrow"},
-          h("div",{class:"qbar"},h("div",{class:"qfill"+(isBad?" over":count>0?" partial":""),style:"width:"+pct+"%;"+((obj.regressionType==="adult"||obj.regressionType==="sugar")?"background:#ef4444;box-shadow:0 0 10px #ef444466;":"")})),
+          h("div",{class:"qbar"},h("div",{class:"qfill"+(isBad?" over":count>0?" partial":""),style:"width:"+pct+"%;"+(isBad?"background:#ef4444;box-shadow:0 0 10px #ef444466;":"")})),
           h("div",{class:"qxp",style:"white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0;color:"+color},regressionCountText(obj,count))
         ),
         h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;text-align:center;margin-top:7px;letter-spacing:0.4px"},
@@ -2350,9 +2351,9 @@ const CAP_BADGE_COLOR = "#ef4444";
   function RegressionHomeRow({obj}){
     const isWeekly=obj.weekly||obj.id==="walk";
     const d=isWeekly?(wLog[obj.id]||0):(tLog[obj.id]||0);
-    const pct=obj.regressionType==="cheatmeal"?Math.min(100,(d/(obj.target||1))*100):Math.min(100,(d/3)*100);
     const delta=regressionTotalPenalty(obj,d);
     const isBad=Object.values(delta).some(v=>v<0);
+    const pct=isBad ? 100 : (obj.regressionType==="cheatmeal"?Math.min(100,(d/(obj.target||1))*100):0);
     const color=isBad?"#ef4444":(d>0?"#f59e0b":"var(--td)");
     return h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
       QuestIcon(obj.id,obj.icon,14,"line-height:1.25"),
@@ -2364,7 +2365,7 @@ const CAP_BADGE_COLOR = "#ef4444";
           ),
           h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";white-space:nowrap;flex-shrink:0"},regressionCountText(obj,d))
         ),
-        h("div",{class:"qbar"},h("div",{class:"qfill"+(isBad?" over":d>0?" partial":""),style:"width:"+pct+"%;"+((obj.regressionType==="adult"||obj.regressionType==="sugar")?"background:#ef4444;box-shadow:0 0 10px #ef444466;":"")}))
+        h("div",{class:"qbar"},h("div",{class:"qfill"+(isBad?" over":d>0?" partial":""),style:"width:"+pct+"%;"+(isBad?"background:#ef4444;box-shadow:0 0 10px #ef444466;":"")}))
       )
     );
   }
