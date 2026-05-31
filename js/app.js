@@ -1870,7 +1870,7 @@ const CAP_BADGE_COLOR = "#ef4444";
                   }
                   return h("div",{key:i,style:"opacity:"+(d>=tier.at?"1":"0.6")+";white-space:nowrap"},(d>=tier.at?"\u2713 ":"")+rewardText);
                 }),
-                obj.overGoalXpPer&&h("div",{style:"opacity:"+(d>(obj.target||obj.base||0)?"1":"0.6")+";white-space:nowrap"},"+"+obj.overGoalXpPer+" XP/"+obj.unit+" au-delà · "+(STAT_LBL[obj.overGoalStat||obj.stat]||obj.overGoalStat||obj.stat))
+                obj.overGoalXpPer&&h("div",{style:"opacity:"+(d>(obj.target||obj.base||0)?"1":"0.6")+";white-space:nowrap"},"+"+obj.overGoalXpPer+" XP/"+obj.unit+" au-delà")
               )
             :obj.binary
               ?(obj.binaryXp+" XP \u00b7 "+(STAT_LBL[obj.stat]||obj.stat))
