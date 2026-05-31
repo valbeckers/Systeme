@@ -1325,7 +1325,7 @@ function App(){
   const STAT_LBL2={"Force":"Force","Sante":"Sant\u00e9","Esprit":"Esprit","Endurance":"Endurance","Agilite":"Agilit\u00e9","Discipline":"Discipline"};
   const weeklyBadgeStyle="font-size:9px;color:#818cf8;font-family:Orbitron,sans-serif;border:1px solid #818cf855;border-radius:4px;padding:1px 4px;letter-spacing:0.5px;flex-shrink:0";
   function RegressionWeeklyBadge({obj}){
-    return obj&&obj.regression&&obj.weekly ? h("span",{style:weeklyBadgeStyle},"HEBDO") : null;
+    return obj&&(obj.weekly||obj.id==="walk") ? h("span",{style:weeklyBadgeStyle},"HEBDO") : null;
   }
   function addXp(amount,stat,e,silent,showStat){
     setState(s=>{
@@ -1670,9 +1670,10 @@ function App(){
         h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
           h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px;line-height:1.25"},
             QuestIcon(obj.id,obj.icon,18,"margin-top:-2px"),
-            h("span",{style:"line-height:1.25"},obj.name)
+            h("span",{style:"line-height:1.25"},obj.name),
+            h(RegressionWeeklyBadge,{obj})
           ),
-          h("div",{style:"display:flex;align-items:center;gap:5px"},h("span",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap"},"Régressions"),h(RegressionWeeklyBadge,{obj}))
+          h("div",{style:"display:flex;align-items:center;gap:5px"},h("span",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap"},"Régressions"))
         ),
         h("div",{class:"qrow"},
           h("div",{class:"qbar"},h("div",{class:"qfill"+(count>=3?" over":count>0?" partial":""),style:"width:"+pct+"%"})),
@@ -1701,9 +1702,10 @@ function App(){
         h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
           h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px;line-height:1.25"},
             QuestIcon(obj.id,obj.icon,18,"margin-top:-2px"),
-            h("span",{style:"line-height:1.25"},obj.name)
+            h("span",{style:"line-height:1.25"},obj.name),
+            h(RegressionWeeklyBadge,{obj})
           ),
-          h("div",{style:"display:flex;align-items:center;gap:5px"},h("span",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap"},"Régressions"),h(RegressionWeeklyBadge,{obj}))
+          h("div",{style:"display:flex;align-items:center;gap:5px"},h("span",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap"},"Régressions"))
         ),
         h("div",{class:"qrow"},
           h("div",{class:"qbar"},h("div",{class:"qfill"+(d>1?" over":d===1?" done":""),style:"width:"+pct+"%"})),
@@ -1749,11 +1751,11 @@ function App(){
         h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
           h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px;line-height:1.25"},
             QuestIcon(obj.id,obj.icon,18,"margin-top:-2px"),
-            h("span",{style:"line-height:1.25"},obj.name||"Régression majeure")
+            h("span",{style:"line-height:1.25"},obj.name||"Régression majeure"),
+            h(RegressionWeeklyBadge,{obj})
           ),
           h("div",{style:"display:flex;align-items:center;gap:5px"},
-            h("span",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap"},"Régressions"),
-            h(RegressionWeeklyBadge,{obj})
+            h("span",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap"},"Régressions")
           )
         ),
         h("div",{class:"qrow"},
@@ -1813,7 +1815,7 @@ function App(){
       const succFlex = validated && done ? 3 : 1;
       return h("div",{class:"qi "+(done?"done":"")},
         h("div",{class:"qhdr",style:"align-items:center",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:5px"},
-          h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:5px;line-height:1.25;white-space:normal;overflow:visible"},QuestIcon(obj.id,obj.icon,18,"margin-top:-2px"),h("span",{style:"line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip"},obj.name)),
+          h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:5px;line-height:1.25;white-space:normal;overflow:visible"},QuestIcon(obj.id,obj.icon,18,"margin-top:-2px"),h("span",{style:"line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip"},obj.name),h(RegressionWeeklyBadge,{obj})),
           h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.25;padding-top:1px"},
             (obj.regression?"0 XP · Régressions":obj.binaryXp+" XP · "+(STAT_LBL[obj.stat]||obj.stat))
           )
@@ -1862,6 +1864,7 @@ function App(){
         h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px;white-space:normal;overflow:visible;line-height:1.25"},
           QuestIcon(obj.id,obj.icon,18,isCapped?"filter:grayscale(60%);opacity:0.7;margin-top:-2px;line-height:1.25":"margin-top:-2px;line-height:1.25"),
           h("span",{style:"white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;word-break:normal"},obj.name),
+          h(RegressionWeeklyBadge,{obj}),
           hasCap&&!isCapped&&h("span",{style:"font-size:9px;font-family:Orbitron,sans-serif;letter-spacing:0.5px;padding:2px 6px;border-radius:4px;color:"+capColor+";border:1px solid "+capColor+"44;flex-shrink:0"},(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap))),
           isDebt&&!done&&h("span",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;border:1px solid #ef444455;border-radius:4px;padding:1px 5px;flex-shrink:0"},"\u26A0 DETTE "+debtLabel)
         ),
@@ -1958,7 +1961,7 @@ function App(){
         QuestIcon(obj.id,obj.icon,18),
         h("div",{style:"flex:1"},
           h("div",{style:"font-size:12px;color:var(--tx);display:flex;justify-content:space-between;align-items:center"},
-            h("span",null,obj.name),
+            h("span",{style:"display:flex;align-items:center;gap:6px"},obj.name,h(RegressionWeeklyBadge,{obj})),
             h("div",{style:"display:flex;align-items:center;gap:6px"},
               validated
                 ?h("span",{style:"font-family:Orbitron,sans-serif;font-size:11px;font-weight:700;color:"+(done?"#4ade80":"#ef4444")},done?"Succ\u00e8s":"\u00c9chec")
@@ -1989,6 +1992,7 @@ function App(){
         h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center"},
           h("div",{style:"display:flex;align-items:flex-start;gap:6px;min-width:0;flex:1;white-space:normal;line-height:1.25"},
             h("span",{style:"white-space:normal;line-height:1.25;word-break:normal"},obj.name),
+            h(RegressionWeeklyBadge,{obj}),
             hasCap&&h("span",{style:"font-size:8px;font-family:Orbitron,sans-serif;letter-spacing:0.5px;padding:1px 5px;border-radius:3px;"+(isCapped?"background:"+capColor+"22;color:"+capColor+";border:1px solid "+capColor:"color:"+capColor+";border:1px solid "+capColor+"44")},isCapped?"CAP":(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap)))
           ),
           h("div",{style:"display:flex;align-items:center;gap:6px"},
@@ -2355,56 +2359,53 @@ function App(){
   function RegressionReadOnly({obj}){
     const isWeekly = obj.weekly || obj.id==="walk";
     const d = isWeekly ? (wLog[obj.id]||0) : (tLog[obj.id]||0);
-    let status={txt:"Aucune régression enregistrée", color:"var(--td)"};
     let display="0 écart";
+    let status={txt:"Aucune", color:"var(--td)"};
     let pct=0;
     let fill="";
     if(obj.regressionType==="sugar"){
       const count=d;
       display=fmtNum(count)+" écart"+(count>1?"s":"");
       status = count===0
-        ? {txt:"Aucune régression enregistrée", color:"var(--td)"}
+        ? {txt:"Aucune", color:"var(--td)"}
         : count===1
-          ? {txt:"Régression mineure : -250 XP Santé", color:"#f59e0b"}
+          ? {txt:"Mineure", color:"#f59e0b"}
           : count===2
-            ? {txt:"Régression moyenne : -500 XP Santé / -250 XP Discipline", color:"#f97316"}
-            : {txt:"Régression majeure : -"+((count-2)*1000)+" XP Santé / -"+((count-2)*500)+" XP Discipline", color:"#ef4444"};
+            ? {txt:"Moyenne", color:"#f97316"}
+            : {txt:"Majeure", color:"#ef4444"};
       pct=Math.min(100,(count/3)*100);
       fill=count>=3?" over":count>0?" partial":"";
     }else if(obj.regressionType==="cheatmeal"){
       display=fmtNum(d)+"/1 repas";
       status = d===0
-        ? {txt:"Bonus potentiel : +500 XP Santé +500 XP Discipline", color:"#4ade80"}
+        ? {txt:"Bonus potentiel", color:"#4ade80"}
         : d===1
-          ? {txt:"Tolérance utilisée : neutre", color:"var(--td)"}
+          ? {txt:"Neutre", color:"var(--td)"}
           : d===2
-            ? {txt:"Régression moyenne : -500 XP Santé / -250 XP Discipline", color:"#f59e0b"}
-            : {txt:"Régression majeure : -"+((d-2)*1000)+" XP Santé / -"+((d-2)*500)+" XP Discipline", color:"#ef4444"};
+            ? {txt:"Moyenne", color:"#f59e0b"}
+            : {txt:"Majeure", color:"#ef4444"};
       pct=Math.min(100,(d/(obj.target||1))*100);
       fill=d>1?" over":d===1?" done":"";
     }else if(obj.penaltyAll){
       const failed=tLog[obj.id]===0;
       display=failed?"1 écart":"0 écart";
-      status=failed?{txt:"Régression majeure : -1000 XP sur chaque stat", color:"#ef4444"}:{txt:"Aucune régression enregistrée", color:"var(--td)"};
+      status=failed?{txt:"Majeure", color:"#ef4444"}:{txt:"Aucune", color:"var(--td)"};
       pct=failed?100:0;
       fill=failed?" over":"";
     }
-    return h("div",{class:"qi",style:(status.color==="#ef4444"?"border-color:#ef444466;background:rgba(239,68,68,0.04)":"")},
-      h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
-        h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px;line-height:1.25"},
-          QuestIcon(obj.id,obj.icon,18,"margin-top:-2px"),
-          h("span",{style:"line-height:1.25"},obj.name||"Régression majeure")
+    return h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
+      QuestIcon(obj.id,obj.icon,18),
+      h("div",{style:"flex:1;min-width:0"},
+        h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center;gap:8px"},
+          h("span",{style:"display:flex;align-items:center;gap:6px;min-width:0;white-space:normal;line-height:1.25"},
+            h("span",{style:"white-space:normal;line-height:1.25;word-break:normal"},obj.name||"Régression majeure"),
+            h(RegressionWeeklyBadge,{obj})
+          ),
+          h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+status.color+";white-space:nowrap;flex-shrink:0"},display)
         ),
-        h("div",{style:"display:flex;align-items:center;gap:5px"},
-          h("span",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap"},"Régressions"),
-          h(RegressionWeeklyBadge,{obj})
-        )
+        h("div",{class:"qbar"},h("div",{class:"qfill"+fill,style:"width:"+pct+"%"}))
       ),
-      h("div",{class:"qrow"},
-        h("div",{class:"qbar"},h("div",{class:"qfill"+fill,style:"width:"+pct+"%"})),
-        h("div",{class:"qxp",style:"white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0;color:"+status.color},display)
-      ),
-      h("div",{style:"font-size:10px;color:"+status.color+";font-family:Orbitron,sans-serif;text-align:center;margin-top:7px;letter-spacing:0.4px"},status.txt)
+      h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;font-weight:700;color:"+status.color+";width:58px;text-align:right;flex-shrink:0"},status.txt)
     );
   }
 
@@ -2839,7 +2840,7 @@ function App(){
     const we=new Date(ws); we.setDate(ws.getDate()+6);
     const fmt=d=>d.getDate().toString().padStart(2,"0")+"/"+(d.getMonth()+1).toString().padStart(2,"0");
     const lbl=wkOff===0?"Cette semaine":wkOff===1?"Semaine derni\u00e8re":fmt(ws)+" \u2013 "+fmt(we);
-    const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.regression)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.regression))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden&&!o.regression)),...objs.filter(o=>o.regression)];
+    const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.regression)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.regression))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden&&!o.regression))];
 
     // ── Labels jours de la semaine (lun → dim) ──
     const weekLbls=["L","M","M","J","V","S","D"];
