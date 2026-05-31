@@ -50,7 +50,7 @@ const STAT_COLOR = {Sante:"#ef4444",Force:"#fb923c",Esprit:"#ec4899",Endurance:"
 const STAT_LBL   = {Sante:"Sant\u00e9",Force:"Force",Esprit:"Esprit",Endurance:"Endurance",Agilite:"Agilit\u00e9",Discipline:"Discipline"};
 function QuestIcon(id, fallback, size=14, extraStyle=""){
   return h("span",{
-    style:"font-size:"+size+"px;line-height:1;display:inline-block;flex-shrink:0;"+extraStyle
+    style:"font-size:"+size+"px;line-height:1;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;flex-shrink:0;"+extraStyle
   },fallback);
 }
 
@@ -1736,9 +1736,9 @@ const CAP_BADGE_COLOR = "#ef4444";
       const isBad = Object.values(deltaNow).some(v=>v<0);
       return h("div",{class:"qi "+(!isBad?"done":""),style:isBad?"border-color:#ef444466;background:rgba(239,68,68,0.04)":""},
         h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
-          h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px;line-height:1.25"},
-            QuestIcon(obj.id,obj.icon,14,"margin-top:-2px"),
-            h("span",{style:"line-height:1.25"},obj.name),
+          h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:center;gap:8px;line-height:1.25;min-height:18px"},
+            QuestIcon(obj.id,obj.icon,14,"width:18px;height:18px;margin-top:0"),
+            h("span",{style:"line-height:1.25;display:inline-flex;align-items:center;min-height:18px"},obj.name),
             obj.weekly&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR})
           )
         ),
@@ -1801,8 +1801,8 @@ const CAP_BADGE_COLOR = "#ef4444";
       const succFlex = validated && done ? 3 : 1;
       return h("div",{class:"qi "+(done?"done":"")},
         h("div",{class:"qhdr",style:"align-items:center",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:5px"},
-          h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:5px;line-height:1.25;white-space:normal;overflow:visible"},QuestIcon(obj.id,obj.icon,14,"margin-top:-2px"),h("span",{style:"line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip"},obj.name)),
-          h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.25;padding-top:1px"},
+          h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:center;gap:7px;line-height:1.25;white-space:normal;overflow:visible;min-height:18px"},QuestIcon(obj.id,obj.icon,14,"width:18px;height:18px;margin-top:0"),h("span",{style:"line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip;display:inline-flex;align-items:center;min-height:18px"},obj.name)),
+          h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.25;padding-top:0"},
             (obj.regression?"0 XP · Régression":obj.binaryXp+" XP · "+(STAT_LBL[obj.stat]||obj.stat))
           )
         ),
@@ -1847,14 +1847,14 @@ const CAP_BADGE_COLOR = "#ef4444";
     const barInnerStyle = "width:"+(isCapped?100:Math.min(100,pct))+"%";
     return h("div",{class:"qi "+(d>=effectiveT&&effectiveT>0?"done":""),style:(isDebt&&!done?"border-color:#ef444466;background:rgba(239,68,68,0.04)":"")+(isCapped?";border-color:"+capColor+"66;background:linear-gradient(135deg,rgba(255,255,255,0.02),rgba(239,68,68,0.06))":"")},
       h("div",{class:"qhdr",style:"align-items:center",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
-        h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px;white-space:normal;overflow:visible;line-height:1.25"},
-          QuestIcon(obj.id,obj.icon,14,isCapped?"filter:grayscale(60%);opacity:0.7;margin-top:-2px;line-height:1.25":"margin-top:-2px;line-height:1.25"),
-          h("span",{style:"white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;word-break:normal"},obj.name),
+        h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:center;gap:8px;white-space:normal;overflow:visible;line-height:1.25;min-height:18px;flex-wrap:wrap"},
+          QuestIcon(obj.id,obj.icon,14,isCapped?"filter:grayscale(60%);opacity:0.7;width:18px;height:18px;margin-top:0;line-height:1":"width:18px;height:18px;margin-top:0;line-height:1"),
+          h("span",{style:"white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;word-break:normal;display:inline-flex;align-items:center;min-height:18px"},obj.name),
           isWeekly&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
           hasCap&&h(QuestBadge,{label:isCapped?"CAP ATTEINT":(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap)),color:capColor,filled:isCapped}),
           isDebt&&!done&&h("span",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;border:1px solid #ef444455;border-radius:4px;padding:1px 5px;flex-shrink:0"},"\u26A0 DETTE "+debtLabel)
         ),
-        h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.25;align-self:flex-start;padding-top:1px"},
+        h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.25;align-self:flex-start;padding-top:0"},
           obj.tiers
             ?h(Fragment,null,
                 ...obj.tiers.map((tier,i)=>{
