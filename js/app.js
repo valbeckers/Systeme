@@ -59,7 +59,8 @@ const DEFS = [
   // ─── SANTÉ ────────────────────────────────────────────────────────────
   {id:"water",  name:"Hydratation",     unit:"verre", xpPer:10,  daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDCA7",               base:10, baseHistory:[{until:"2026-04-29",base:8}]},
   {id:"sleep",  name:"8h de sommeil",   unit:"nuit",  xpPer:0,   daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDECF\uFE0F",         base:1,  binary:true, binaryXp:200},
-  {id:"adult",name:"",unit:"jour",xpPer:0,daily:true,weekly:false,optional:false,stat:"Discipline",icon:"🔴",base:1,binary:true,binaryXp:200,penaltyAll:true,startDate:"2026-05-21"},
+  {id:"adult",name:"",unit:"jour",xpPer:0,daily:true,weekly:false,optional:false,regression:true,stat:"Discipline",icon:"🔴",base:1,binary:true,binaryXp:0,penaltyAll:true,startDate:"2026-05-21"},
+  {id:"cheatmeal",name:"Cheat meal",unit:"repas",xpPer:0,daily:false,weekly:true,optional:false,regression:true,regressionType:"cheatmeal",stat:"Sante",stat2:"Discipline",icon:"🍔",base:1,target:1,fixedBase:true,startDate:"2026-05-31"},
   {id:"nosugar",name:"Pas de sucres transform\u00e9s", unit:"jour", xpPer:0, daily:true, weekly:false,optional:true, stat:"Sante", icon:"\uD83C\uDF4E",            base:1,  binary:true, binaryXp:200, penaltyXp:200},
   {id:"protein",name:"Repas \u00e9quilibr\u00e9",unit:"repas", xpPer:0,   daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83C\uDF4C",               base:1, target:2, validateAt:1, startDate:"2026-05-20", tiers:[{at:1,xp:200,stat:"Sante"},{at:2,xp:200,stat:"Sante",xp2:200,stat2:"Discipline"}]},
   // ─── FORCE ────────────────────────────────────────────────────────────
@@ -335,6 +336,7 @@ const wkStr      = (d=new Date()) => {
   const wk=Math.ceil(((dt-yearStart)/86400000+1)/7);
   return dt.getUTCFullYear()+"-W"+String(wk).padStart(2,"0");
 };
+const prevWkStr  = (d=new Date()) => { const x=new Date(d); x.setDate(x.getDate()-7); return wkStr(x); };
 const sortStat   = arr => [...arr].sort((a,b)=>STATS.indexOf(a.stat)-STATS.indexOf(b.stat));
 // XP pour passer du niveau N au niveau N+1 : 1000 * 1.1^N
 const xpForLvl   = l => Math.round(1000*Math.pow(1.1,l));
@@ -717,6 +719,7 @@ function buildState(){
     prestige:saved.prestige||IMPORTED.prestige||0,
     restMode:saved.restMode||false,
     walkTarget:saved.walkTarget||0,
+    regressionWeeklyProcessed:saved.regressionWeeklyProcessed||{},
   };
   // Recalcul defensif: rebuild stats levels from statXp (cohérence après changement de formule)
   const recomputed={};
@@ -764,7 +767,7 @@ function App(){
   const [rankUp,setRankUp] = useState(null);
   const [capAnim,setCapAnim] = useState(null);
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
-  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,ep:false,dj:false,cs:false});
+  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,reg:false,sq:false,ep:false,dj:false,cs:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
   const [showStatReqDetail,setShowStatReqDetail] = useState(false);
   const [showRankReqStats,setShowRankReqStats] = useState(false);
@@ -835,8 +838,8 @@ function App(){
           if((state.adultPenaltyDays||{})[yestStr]){
             return;
           }
-          totalPenalty+=14000;
-          STATS.forEach(st=>{sxDelta[st]=(sxDelta[st]||0)-2000;});
+          totalPenalty+=7000;
+          STATS.forEach(st=>{sxDelta[st]=(sxDelta[st]||0)-1000;});
           penaltiesApplied.push(obj.id);
           return;
         }
@@ -888,6 +891,45 @@ function App(){
 
 
   // ─── CALCULS DERIVES (dans l'ordre, sans circularite) ──────────────────
+
+
+  // Régressions hebdomadaires : clôture de la semaine précédente
+  useEffect(()=>{
+    const currentWeek = wkStr();
+    const previousWeek = prevWkStr();
+    if((state.regressionWeeklyProcessed||{})[previousWeek]) return;
+    const defs = state.objectives || DEFS;
+    const cheatDef = defs.find(o=>o.id==="cheatmeal"&&o.regression);
+    if(!cheatDef) return;
+    const startWeek = cheatDef.startDate ? wkStr(new Date(cheatDef.startDate)) : null;
+    if(startWeek && previousWeek < startWeek) return;
+    const count = (state.weeklyLog?.[previousWeek]?.cheatmeal)||0;
+    let totalDelta = 0;
+    let statDelta = {};
+    if(count===0){
+      statDelta = {Sante:500, Discipline:500};
+      totalDelta = 1000;
+    }else if(count===2){
+      statDelta = {Sante:-250, Discipline:-250};
+    }else if(count===3){
+      statDelta = {Sante:-500, Discipline:-500};
+    }else if(count>=4){
+      statDelta = {Sante:-1000, Discipline:-1000};
+    }
+    setState(s=>{
+      const sx={...(s.statXp||{})};
+      Object.entries(statDelta).forEach(([stat,delta])=>{ sx[stat]=Math.max(0,(sx[stat]||0)+delta); });
+      const st={...(s.stats||{})};
+      Object.keys(statDelta).forEach(stat=>{ st[stat]=getLvl(sx[stat]||0); });
+      return {
+        ...s,
+        totalXp: Math.max(0,(s.totalXp||0)+totalDelta),
+        statXp:sx,
+        stats:st,
+        regressionWeeklyProcessed:{...(s.regressionWeeklyProcessed||{}),[previousWeek]:{cheatmeal:count,statDelta,totalDelta,checkedAt:Date.now()}}
+      };
+    });
+  },[]);
 
   const today = todayStr();
   const wk    = wkStr();
@@ -1306,6 +1348,16 @@ function App(){
     }
     // Tout objectif avec un base, non-binary, hors cas spéciaux (water/run) entre dans le système palier
     const isPalier = obj.base && !obj.binary && obj.id!=="water" && obj.id!=="run";
+    if(obj.regressionType==="cheatmeal"){
+      setState(s=>{
+        const w={...s.weeklyLog};
+        w[wk]={...(w[wk]||{}),[obj.id]:(w[wk]?.[obj.id]||0)+val};
+        return {...s,weeklyLog:w,lastActiveDay:todayStr()};
+      });
+      spawnFloat("Régression suivie",e);
+      return;
+    }
+
     // Cas spécial : quête avec tiers (repas équilibré x/2, etc.)
     if(obj.tiers && obj.tiers.length>0){
       // Sauvegarder le log d'abord
@@ -1575,6 +1627,39 @@ function App(){
     const isDebt = isDebtX15 || isDebtWater || isDebtWeekly || isDebtMed;
     const done=obj.binary?(d>=1):(d>=effectiveT);
 
+    if(obj.regressionType==="cheatmeal"){
+      const status = d===0
+        ? {txt:"Bonus potentiel : +500 XP Santé +500 XP Discipline", color:"#4ade80"}
+        : d===1
+          ? {txt:"Tolérance utilisée : neutre", color:"var(--td)"}
+          : d===2
+            ? {txt:"Régression à clôture : -250 XP Santé / Discipline", color:"#f59e0b"}
+            : d===3
+              ? {txt:"Régression à clôture : -500 XP Santé / Discipline", color:"#ef4444"}
+              : {txt:"Régression à clôture : -1000 XP Santé / Discipline", color:"#ef4444"};
+      const pct=Math.min(100,(d/(obj.target||1))*100);
+      return h("div",{class:"qi "+(d<=1?"done":""),style:d>1?"border-color:#ef444466;background:rgba(239,68,68,0.04)":""},
+        h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
+          h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px;line-height:1.25"},
+            QuestIcon(obj.id,obj.icon,18,"margin-top:-2px"),
+            h("span",{style:"line-height:1.25"},obj.name)
+          ),
+          h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap"},"Régression")
+        ),
+        h("div",{class:"qrow"},
+          h("div",{class:"qbar"},h("div",{class:"qfill"+(d>1?" over":d===1?" done":""),style:"width:"+pct+"%"})),
+          h("div",{class:"qxp",style:"white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0;color:"+status.color},fmtNum(d)+"/1 repas")
+        ),
+        h("div",{style:"font-size:10px;color:"+status.color+";font-family:Orbitron,sans-serif;text-align:center;margin-top:7px;letter-spacing:0.4px"},status.txt),
+        h("div",{style:"display:flex;gap:8px;margin-top:8px"},
+          h("button",{
+            onClick:e=>{inputs.current[obj.id]="1";validate(obj,e);},
+            style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px"
+          },"+1 cheat meal")
+        )
+      );
+    }
+
     // Quêtes binaires : boutons Échec / Succès
     if(obj.binary){
       function setBinary(val,e){
@@ -1583,7 +1668,7 @@ function App(){
         const wasD=cur>=1;
         const xp=(!wasD&&val>=1)?obj.binaryXp:0;
         const cx=e?e.clientX:200, cy=e?e.clientY:300;
-        const shouldPenaltyAll = obj.penaltyAll && val===0 && curRaw!==0;
+        const shouldPenaltyAll = obj.penaltyAll && val===0 && !(state.adultPenaltyDays||{})[today];
         setState(s=>{
           const d2={...s.dailyLog};
           d2[today]={...(d2[today]||{}),[obj.id]:val};
@@ -1620,7 +1705,7 @@ function App(){
         h("div",{class:"qhdr",style:"align-items:center",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:5px"},
           h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:5px;line-height:1.25;white-space:normal;overflow:visible"},QuestIcon(obj.id,obj.icon,18,"margin-top:-2px"),h("span",{style:"line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip"},obj.name)),
           h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.25;padding-top:1px"},
-            obj.binaryXp+" XP · "+(STAT_LBL[obj.stat]||obj.stat)
+            (obj.regression?"0 XP · Régression":obj.binaryXp+" XP · "+(STAT_LBL[obj.stat]||obj.stat))
           )
         ),
         h("div",{style:"display:flex;gap:8px;margin-top:8px"},
@@ -2158,10 +2243,11 @@ function App(){
   // ─── ONGLET ACCUEIL ───────────────────────────────────────────────────
 
   function Home(){
-    const dailyObjs = sortStat(objs.filter(o=>o.daily&&!o.optional));
+    const dailyObjs = sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression));
     const weeklyObjs = restMode && walkObj
-      ? [...sortStat(objs.filter(o=>o.weekly)), walkObj]
-      : sortStat(objs.filter(o=>o.weekly));
+      ? [...sortStat(objs.filter(o=>o.weekly&&!o.regression)), walkObj]
+      : sortStat(objs.filter(o=>o.weekly&&!o.regression));
+    const regressionObjs = objs.filter(o=>o.regression);
     const secs=[
       {lb:"Qu\u00eates journalières",ob:dailyObjs,iw:false},
       {lb:"Qu\u00eates hebdomadaires",ob:weeklyObjs,iw:true},
@@ -2269,11 +2355,12 @@ function App(){
   // ─── ONGLET QUETES ────────────────────────────────────────────────────
 
   function Quests(){
-    const reqBase=sortStat(objs.filter(o=>o.daily&&!o.optional));
-    const bonBase=sortStat(objs.filter(o=>(o.daily&&o.optional||o.id==="walk")&&!(restMode&&o.id==="walk")&&!o.bonusHidden));
+    const reqBase=sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression));
+    const bonBase=sortStat(objs.filter(o=>(o.daily&&o.optional||o.id==="walk")&&!(restMode&&o.id==="walk")&&!o.bonusHidden&&!o.regression));
     const wkBase=restMode&&walkObj
-      ? [...sortStat(objs.filter(o=>o.weekly)), walkObj]
-      : sortStat(objs.filter(o=>o.weekly));
+      ? [...sortStat(objs.filter(o=>o.weekly&&!o.regression)), walkObj]
+      : sortStat(objs.filter(o=>o.weekly&&!o.regression));
+    const regressionBase=objs.filter(o=>o.regression);
 
     const isQuestDone=(obj)=>{
       const isWeekly = obj.weekly || obj.id==="walk";
@@ -2291,6 +2378,7 @@ function App(){
     const req=moveCompletedLast(reqBase);
     const bon=moveCompletedLast(bonBase);
     const wkq=moveCompletedLast(wkBase);
+    const regression=regressionBase;
 
     const reqDone=reqBase.filter(isQuestDone).length + (sleepDebtMed>0 && (tLog["med"]||0)>=sleepDebtMed ? 1 : 0);
     const reqTotal=reqBase.length + (sleepDebtMed>0 ? 1 : 0);
@@ -2298,6 +2386,8 @@ function App(){
     const bonTotal=bonBase.length;
     const wkDone=wkBase.filter(isQuestDone).length;
     const wkTotal=wkBase.length;
+    const regrDone=regressionBase.filter(o=>o.binary ? ((o.daily? tLog[o.id] : wLog[o.id]) !== undefined) : true).length;
+    const regrTotal=regressionBase.length;
 
     const SectionHeader = ({title,done,total}) => h("div",{class:"shdr",style:"margin-bottom:10px"},
       h("div",{class:"ctitle",style:"margin:0"},title),
@@ -2398,6 +2488,10 @@ function App(){
       wkq.length>0&&h("div",{class:"card"},
         h(SectionHeader,{title:"Quêtes hebdomadaires",done:wkDone,total:wkTotal}),
         wkq.map(o=>h(QI,{key:o.id,obj:o}))
+      ),
+      regression.length>0&&h("div",{class:"card",style:"border-color:#ef444444"},
+        h(SectionHeader,{title:"Régression",done:regrDone,total:regrTotal}),
+        regression.map(o=>h(QI,{key:o.id,obj:o}))
       ),
       bon.length>0&&h("div",{class:"card"},
         h(SectionHeader,{title:"Quêtes bonus",done:bonDone,total:bonTotal}),
@@ -2578,7 +2672,7 @@ function App(){
     const we=new Date(ws); we.setDate(ws.getDate()+6);
     const fmt=d=>d.getDate().toString().padStart(2,"0")+"/"+(d.getMonth()+1).toString().padStart(2,"0");
     const lbl=wkOff===0?"Cette semaine":wkOff===1?"Semaine derni\u00e8re":fmt(ws)+" \u2013 "+fmt(we);
-    const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly)),walkObj]:sortStat(objs.filter(o=>o.weekly))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden))];
+    const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.regression)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.regression))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden&&!o.regression))];
 
     // ── Labels jours de la semaine (lun → dim) ──
     const weekLbls=["L","M","M","J","V","S","D"];
@@ -2684,7 +2778,7 @@ function App(){
         ),
         open.records&&h(Fragment,null,
           h("div",{style:"margin-top:12px"}),
-          [...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.binary)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.binary))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden))].map(o=>{
+          [...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary&&!o.regression)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.binary&&!o.regression)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.binary&&!o.regression))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden&&!o.regression))].map(o=>{
           const rec=records[o.id];
           if(!rec)return h("div",{key:o.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px;opacity:.35"},
             QuestIcon(o.id,o.icon,18),
@@ -2730,7 +2824,7 @@ function App(){
         Object.values(state.weeklyLog).forEach(log=>{
           Object.entries(log).forEach(([id,val])=>{totals[id]=(totals[id]||0)+val;});
         });
-        const displayObjs=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.binary)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.binary))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden))];
+        const displayObjs=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary&&!o.regression)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.binary&&!o.regression)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.binary&&!o.regression))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden&&!o.regression))];
         return h("div",{class:"card"},
           h("div",{style:"display:flex;align-items:center;justify-content:space-between;cursor:pointer",onClick:()=>toggle("totals")},
             h("div",{class:"ctitle",style:"margin:0"},"Totaux depuis le d\u00e9but"+(firstDay?" \u2014 "+fmtFirst(firstDay):"")),
@@ -2765,7 +2859,7 @@ function App(){
 
   function Settings(){
     if(!showSet)return null;
-    const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly)),walkObj]:sortStat(objs.filter(o=>o.weekly))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden))];
+    const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.regression)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.regression))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden&&!o.regression))];
     function applyEdit(){
       setState(s=>{
         let xpD=0;
@@ -2917,7 +3011,7 @@ function App(){
   // ─── ONGLET CODEX ─────────────────────────────────────────────────────
 
   function Codex(){
-    const toggleC = k => setCodexOpen(o=>({obl:false,bonus:false,sq:false,ep:false,dj:false,cs:false,[k]:!o[k]}));
+    const toggleC = k => setCodexOpen(o=>({obl:false,bonus:false,reg:false,sq:false,ep:false,dj:false,cs:false,[k]:!o[k]}));
     const statLabel = stat => STAT_LBL2[stat] || STAT_LBL[stat] || stat || "";
     const unitPlural = (unit, value) => {
       if(!unit) return "";
@@ -3134,9 +3228,10 @@ function App(){
       ));
     }
 
-    const required = objs.filter(o=>o.daily&&!o.optional).concat(objs.filter(o=>o.weekly&&!o.optional));
-    const bonus = objs.filter(o=>o.optional&&!o.bonusHidden);
-    const hiddenBonus = objs.filter(o=>o.optional&&o.bonusHidden);
+    const required = objs.filter(o=>o.daily&&!o.optional&&!o.regression).concat(objs.filter(o=>o.weekly&&!o.optional&&!o.regression));
+    const bonus = objs.filter(o=>o.optional&&!o.bonusHidden&&!o.regression);
+    const hiddenBonus = objs.filter(o=>o.optional&&o.bonusHidden&&!o.regression);
+    const regressions = objs.filter(o=>o.regression);
     const specialList = STATS.flatMap(stat=>(SP[stat]||[]).map(q=>({...q,stat:q.stat||stat})));
 
     return h("div",{class:"tab"},
@@ -3152,6 +3247,7 @@ function App(){
           hiddenBonus.length>0&&groupByDominantStat(hiddenBonus,renderQuest)
         )
       ),
+      h(Section,{id:"reg",title:"Régression",count:regressions.length},groupByDominantStat(regressions,renderQuest)),
       h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial)),
       h(Section,{id:"ep",title:"Épreuves",count:EPREUVES.length},groupByDominantStat(EPREUVES,renderEpreuve)),
       h(Section,{id:"dj",title:"Donjons",count:DONJONS.length},groupByDominantStat(DONJONS,renderDonjon))
