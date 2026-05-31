@@ -1050,7 +1050,7 @@ function App(){
   },0) + (state.specialQuests||[]).filter(q=>q.completedAt&&new Date(q.completedAt).toDateString()===new Date().toDateString()).reduce((s,q)=>s+q.xp,0);
 
   // 7. Quetes journalieres obligatoires toutes faites ?
-  const reqDailyObjs  = objs.filter(o=>!o.optional&&o.daily);
+  const reqDailyObjs  = objs.filter(o=>!o.optional&&o.daily&&!o.regression);
   // Quêtes actives pour un jour donné (exclut les quêtes ajoutées après ce jour)
   const activeOn = (day) => reqDailyObjs.filter(o=>!o.startDate||o.startDate<=day);
   // Base applicable pour un jour donné (gère baseHistory pour les changements rétroactifs)
@@ -1071,7 +1071,7 @@ function App(){
 
   // 7b. Système de dette
   const yesterday = (()=>{ const d=new Date(today); d.setDate(d.getDate()-1); return d.toISOString().slice(0,10); })();
-  const reqWeeklyObjs = objs.filter(o=>!o.optional&&o.weekly);
+  const reqWeeklyObjs = objs.filter(o=>!o.optional&&o.weekly&&!o.regression);
 
   // Semaine précédente pour dette hebdo
   const prevWkDate = (()=>{ const d=new Date(today); d.setDate(d.getDate()-7); return d; })();
@@ -1728,10 +1728,9 @@ const CAP_BADGE_COLOR = "#ef4444";
 
     if(obj.regression){
       const count = d;
+      const pct = obj.regressionType==="cheatmeal" ? Math.min(100,(count/(obj.target||1))*100) : Math.min(100,(count/3)*100);
       const severity = regressionSeverity(obj,count);
       const deltaNow = regressionTotalPenalty(obj,count);
-      const hasPenalty = Object.keys(deltaNow||{}).length>0;
-      const pct = hasPenalty ? 100 : (obj.regressionType==="cheatmeal" ? Math.min(100,(count/(obj.target||1))*100) : 0);
       const color = severity==="Aucune" || severity==="Bonus potentiel" ? "#4ade80" : severity==="Neutre" ? "var(--td)" : severity==="Mineure" ? "#fbbf24" : severity==="Moyenne" ? "#f59e0b" : "#ef4444";
       const detail = obj.regressionType==="cheatmeal" && count===0 ? "+500 XP Santé · +500 XP Discipline si semaine parfaite" : penaltySummary(deltaNow);
       const isBad = Object.values(deltaNow).some(v=>v<0);
@@ -1744,7 +1743,7 @@ const CAP_BADGE_COLOR = "#ef4444";
           )
         ),
         h("div",{class:"qrow"},
-          h("div",{class:"qbar"},h("div",{class:"qfill"+(isBad?" over":count>0?" partial":""),style:"width:"+pct+"%;"+(isBad?"background:#ef4444;box-shadow:0 0 10px #ef444466;":"")})),
+          h("div",{class:"qbar"},h("div",{class:"qfill"+(isBad?" over":count>0?" partial":""),style:"width:"+pct+"%;"+((obj.regressionType==="adult"||obj.regressionType==="sugar")?"background:#ef4444;box-shadow:0 0 10px #ef444466;":"")})),
           h("div",{class:"qxp",style:"white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0;color:"+color},regressionCountText(obj,count))
         ),
         h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;text-align:center;margin-top:7px;letter-spacing:0.4px"},
@@ -2351,9 +2350,9 @@ const CAP_BADGE_COLOR = "#ef4444";
   function RegressionHomeRow({obj}){
     const isWeekly=obj.weekly||obj.id==="walk";
     const d=isWeekly?(wLog[obj.id]||0):(tLog[obj.id]||0);
+    const pct=obj.regressionType==="cheatmeal"?Math.min(100,(d/(obj.target||1))*100):Math.min(100,(d/3)*100);
     const delta=regressionTotalPenalty(obj,d);
     const isBad=Object.values(delta).some(v=>v<0);
-    const pct=isBad ? 100 : (obj.regressionType==="cheatmeal"?Math.min(100,(d/(obj.target||1))*100):0);
     const color=isBad?"#ef4444":(d>0?"#f59e0b":"var(--td)");
     return h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
       QuestIcon(obj.id,obj.icon,14,"line-height:1.25"),
@@ -2365,7 +2364,7 @@ const CAP_BADGE_COLOR = "#ef4444";
           ),
           h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";white-space:nowrap;flex-shrink:0"},regressionCountText(obj,d))
         ),
-        h("div",{class:"qbar"},h("div",{class:"qfill"+(isBad?" over":d>0?" partial":""),style:"width:"+pct+"%;"+(isBad?"background:#ef4444;box-shadow:0 0 10px #ef444466;":"")}))
+        h("div",{class:"qbar"},h("div",{class:"qfill"+(isBad?" over":d>0?" partial":""),style:"width:"+pct+"%;"+((obj.regressionType==="adult"||obj.regressionType==="sugar")?"background:#ef4444;box-shadow:0 0 10px #ef444466;":"")}))
       )
     );
   }
