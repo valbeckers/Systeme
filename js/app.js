@@ -2803,7 +2803,13 @@ const CAP_BADGE_COLOR = "#ef4444";
     const we=new Date(ws); we.setDate(ws.getDate()+6);
     const fmt=d=>d.getDate().toString().padStart(2,"0")+"/"+(d.getMonth()+1).toString().padStart(2,"0");
     const lbl=wkOff===0?"Cette semaine":wkOff===1?"Semaine derni\u00e8re":fmt(ws)+" \u2013 "+fmt(we);
-    const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.regression)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.regression))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden&&!o.regression))];
+    const historyWalkObj = walkObj || walkDef;
+    const ordered=[
+      ...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression)),
+      ...sortStat(objs.filter(o=>o.weekly&&!o.regression)),
+      ...(historyWalkObj?[historyWalkObj]:[]),
+      ...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden&&!o.regression))
+    ];
 
     // ── Labels jours de la semaine (lun → dim) ──
     const weekLbls=["L","M","M","J","V","S","D"];
@@ -2910,7 +2916,12 @@ const CAP_BADGE_COLOR = "#ef4444";
         ),
         open.records&&h(Fragment,null,
           h("div",{style:"margin-top:12px"}),
-          [...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary&&!o.regression)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.binary&&!o.regression)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.binary&&!o.regression))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden&&!o.regression))].map(o=>{
+          [
+            ...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary&&!o.regression)),
+            ...sortStat(objs.filter(o=>o.weekly&&!o.binary&&!o.regression)),
+            ...(historyWalkObj?[historyWalkObj]:[]),
+            ...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden&&!o.regression))
+          ].map(o=>{
           const rec=records[o.id];
           if(!rec)return h("div",{key:o.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px;opacity:.35"},
             QuestIcon(o.id,o.icon,14),
@@ -2956,7 +2967,12 @@ const CAP_BADGE_COLOR = "#ef4444";
         Object.values(state.weeklyLog).forEach(log=>{
           Object.entries(log).forEach(([id,val])=>{totals[id]=(totals[id]||0)+val;});
         });
-        const displayObjs=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary&&!o.regression)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.binary&&!o.regression)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.binary&&!o.regression))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden&&!o.regression))];
+        const displayObjs=[
+          ...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary&&!o.regression)),
+          ...sortStat(objs.filter(o=>o.weekly&&!o.binary&&!o.regression)),
+          ...(historyWalkObj?[historyWalkObj]:[]),
+          ...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden&&!o.regression))
+        ];
         return h("div",{class:"card"},
           h("div",{style:"display:flex;align-items:center;justify-content:space-between;cursor:pointer",onClick:()=>toggle("totals")},
             h("div",{class:"ctitle",style:"margin:0"},"Totaux depuis le d\u00e9but"+(firstDay?" \u2014 "+fmtFirst(firstDay):"")),
