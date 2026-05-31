@@ -1695,6 +1695,17 @@ function App(){
     if(d>0)return d+"j "+hh+"h"; if(hh>0)return hh+"h "+mm+"min"; return mm+"min";
   }
 
+
+function questBadgeStyle(color, filled=false, extra=""){
+  return "display:inline-flex;align-items:center;justify-content:center;height:18px;min-width:54px;padding:0 7px;border-radius:4px;font-family:Orbitron,sans-serif;font-size:9px;font-weight:700;letter-spacing:0.8px;line-height:1;border:1px solid "+color+"55;color:"+color+";background:"+(filled?color+"22":"transparent")+";flex-shrink:0;white-space:nowrap;"+extra;
+}
+function QuestBadge({label,color,filled=false,extra=""}){
+  return h("span",{style:questBadgeStyle(color,filled,extra)},label);
+}
+const WEEKLY_BADGE_COLOR = "#818cf8";
+const BONUS_BADGE_COLOR = "#fbbf24";
+const CAP_BADGE_COLOR = "#ef4444";
+
   // ─── SOUS-COMPOSANTS ──────────────────────────────────────────────────
 
   function QI({obj}){
@@ -1728,15 +1739,16 @@ function App(){
           h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px;line-height:1.25"},
             QuestIcon(obj.id,obj.icon,18,"margin-top:-2px"),
             h("span",{style:"line-height:1.25"},obj.name),
-            obj.weekly&&h("span",{style:"font-size:9px;font-family:Orbitron,sans-serif;letter-spacing:0.5px;padding:2px 6px;border-radius:4px;color:#818cf8;border:1px solid #818cf855;flex-shrink:0"},"HEBDO")
-          ),
-          h("div",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap"},"Régressions")
+            obj.weekly&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR})
+          )
         ),
         h("div",{class:"qrow"},
           h("div",{class:"qbar"},h("div",{class:"qfill"+(isBad?" over":count>0?" partial":""),style:"width:"+pct+"%"})),
           h("div",{class:"qxp",style:"white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0;color:"+color},regressionCountText(obj,count))
         ),
-        h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;text-align:center;margin-top:7px;letter-spacing:0.4px"},severity+" · "+detail),
+        h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;text-align:center;margin-top:7px;letter-spacing:0.4px"},
+          isBad ? ("Pénalité "+severity.toLowerCase()+" · "+detail) : "Aucune pénalité"
+        ),
         h("div",{style:"display:flex;gap:8px;margin-top:8px"},
           h("button",{
             onClick:e=>{inputs.current[obj.id]="1";validate(obj,e);},
@@ -1838,8 +1850,8 @@ function App(){
         h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px;white-space:normal;overflow:visible;line-height:1.25"},
           QuestIcon(obj.id,obj.icon,18,isCapped?"filter:grayscale(60%);opacity:0.7;margin-top:-2px;line-height:1.25":"margin-top:-2px;line-height:1.25"),
           h("span",{style:"white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;word-break:normal"},obj.name),
-          isWeekly&&h("span",{style:"font-size:9px;color:#818cf8;font-family:Orbitron,sans-serif;border:1px solid #818cf855;border-radius:4px;padding:1px 4px;flex-shrink:0"},"HEBDO"),
-          hasCap&&h("span",{style:"font-size:9px;font-family:Orbitron,sans-serif;letter-spacing:0.5px;padding:2px 6px;border-radius:4px;color:"+capColor+";border:1px solid "+capColor+"44;flex-shrink:0"},isCapped?"CAP ATTEINT":(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap))),
+          isWeekly&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
+          hasCap&&h(QuestBadge,{label:isCapped?"CAP ATTEINT":(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap)),color:capColor,filled:isCapped}),
           isDebt&&!done&&h("span",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;border:1px solid #ef444455;border-radius:4px;padding:1px 5px;flex-shrink:0"},"\u26A0 DETTE "+debtLabel)
         ),
         h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.25;align-self:flex-start;padding-top:1px"},
@@ -1872,7 +1884,7 @@ function App(){
       isNearCap&&h("div",{style:"font-size:9px;color:"+capColor+";font-family:Orbitron,sans-serif;text-align:center;margin-top:6px;letter-spacing:0.5px;opacity:0.85"},"\u26A0 Cap dans "+fmtNum(remainingToCap)+" "+obj.unit+(remainingToCap>1?"s":"")+" \u00b7 r\u00e9cup\u00e9ration forc\u00e9e"),
       isCapped&&h("div",{style:"font-size:9px;color:"+capColor+";font-family:Orbitron,sans-serif;text-align:center;margin-top:6px;letter-spacing:0.5px;font-style:italic"},"\uD83D\uDCA4 R\u00e9cup\u00e9ration forc\u00e9e jusqu'\u00e0 "+(obj.weekly?"la semaine prochaine":"demain")),
       isCapped&&h("div",{style:"display:flex;justify-content:center;margin-top:6px"},
-        h("span",{style:"font-size:9px;font-family:Orbitron,sans-serif;letter-spacing:1px;padding:3px 10px;border-radius:4px;background:"+capColor+"22;color:"+capColor+";border:1px solid "+capColor},(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap))+" ATTEINT")
+        h(QuestBadge,{label:(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap))+" ATTEINT",color:capColor,filled:true})
       ),
       (()=>{
         if(isCapped) return null;
@@ -1966,8 +1978,8 @@ function App(){
         h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center"},
           h("div",{style:"display:flex;align-items:flex-start;gap:6px;min-width:0;flex:1;white-space:normal;line-height:1.25"},
             h("span",{style:"white-space:normal;line-height:1.25;word-break:normal"},obj.name),
-            (obj.weekly||obj.id==="walk")&&h("span",{style:"font-size:9px;color:#818cf8;font-family:Orbitron,sans-serif;border:1px solid #818cf855;border-radius:4px;padding:1px 4px;flex-shrink:0"},"HEBDO"),
-            hasCap&&h("span",{style:"font-size:8px;font-family:Orbitron,sans-serif;letter-spacing:0.5px;padding:1px 5px;border-radius:3px;"+(isCapped?"background:"+capColor+"22;color:"+capColor+";border:1px solid "+capColor:"color:"+capColor+";border:1px solid "+capColor+"44")},isCapped?"CAP ATTEINT":(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap)))
+            (obj.weekly||obj.id==="walk")&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
+            hasCap&&h(QuestBadge,{label:isCapped?"CAP ATTEINT":(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap)),color:capColor,filled:isCapped})
           ),
           h("div",{style:"display:flex;align-items:center;gap:6px"},
             h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+(isCapped?capColor:d>=displayTarget?"var(--rc)":d>0?"var(--tx)":"var(--td)")},fmtNum(d)+"/"+fmtNum(displayTarget)+" "+((d>1||displayTarget>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[obj.unit]||obj.unit)),
@@ -2343,7 +2355,7 @@ function App(){
         h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center;gap:8px"},
           h("div",{style:"display:flex;align-items:center;gap:6px;min-width:0;flex:1;white-space:nowrap;overflow:hidden"},
             h("span",{style:"overflow:hidden;text-overflow:ellipsis;white-space:nowrap"},obj.name),
-            isWeekly&&h("span",{style:"font-size:9px;color:#818cf8;font-family:Orbitron,sans-serif;border:1px solid #818cf855;border-radius:4px;padding:1px 4px;flex-shrink:0"},"HEBDO")
+            isWeekly&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR})
           ),
           h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";white-space:nowrap;flex-shrink:0"},regressionCountText(obj,d))
         ),
@@ -2850,8 +2862,8 @@ function App(){
                 h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between"},
                   h("span",{style:"display:flex;align-items:center;gap:6px"},
                     obj.name,
-                    (obj.weekly||obj.id==="walk")&&h("span",{style:"font-size:9px;color:#818cf8;font-family:Orbitron,sans-serif;border:1px solid #818cf855;border-radius:4px;padding:1px 4px"},"HEBDO"),
-                    obj.optional&&h("span",{style:"font-size:9px;color:#fbbf24;font-family:Orbitron,sans-serif;border:1px solid #fbbf2455;border-radius:4px;padding:1px 4px"},"BONUS")
+                    (obj.weekly||obj.id==="walk")&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
+                    obj.optional&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR})
                   ),
                   h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px"},successes+"/7 "+(obj.id==="sleep"?"nuits":"jours"))
                 ),
@@ -2868,10 +2880,10 @@ function App(){
               h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between"},
                 h("span",{style:"display:flex;align-items:center;gap:6px"},
                   obj.name,
-                  obj.weekly&&!obj.optional&&h("span",{style:"font-size:9px;color:#818cf8;font-family:Orbitron,sans-serif;border:1px solid #818cf855;border-radius:4px;padding:1px 4px"},"HEBDO"),
-                  obj.optional&&obj.id!=="walk"&&h("span",{style:"font-size:9px;color:#fbbf24;font-family:Orbitron,sans-serif;border:1px solid #fbbf2455;border-radius:4px;padding:1px 4px"},"BONUS"),
-                  obj.id==="walk"&&h("span",{style:"font-size:9px;color:#fbbf24;font-family:Orbitron,sans-serif;border:1px solid #fbbf2455;border-radius:4px;padding:1px 4px"},"BONUS"),
-                  obj.id==="walk"&&h("span",{style:"font-size:9px;color:#818cf8;font-family:Orbitron,sans-serif;border:1px solid #818cf855;border-radius:4px;padding:1px 4px;margin-left:2px"},"HEBDO"),
+                  obj.weekly&&!obj.optional&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
+                  obj.optional&&obj.id!=="walk"&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR}),
+                  obj.id==="walk"&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR}),
+                  obj.id==="walk"&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR,extra:"margin-left:2px"}),
 
                 ),
                 h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px"},
@@ -2900,8 +2912,8 @@ function App(){
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:12px;color:var(--td);display:flex;align-items:center;gap:5px"},
                 o.name,
-                (o.weekly||o.id==="walk")&&h("span",{style:"font-size:9px;color:#818cf8;font-family:Orbitron,sans-serif;border:1px solid #818cf855;border-radius:4px;padding:1px 4px"},"HEBDO"),
-                o.optional&&o.id!=="walk"&&h("span",{style:"font-size:9px;color:#fbbf24;font-family:Orbitron,sans-serif;border:1px solid #fbbf2455;border-radius:4px;padding:1px 4px"},"BONUS")
+                (o.weekly||o.id==="walk")&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
+                o.optional&&o.id!=="walk"&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR})
               )
             ),
             h("span",{style:"font-size:11px;color:var(--td)"},"—")
@@ -2912,9 +2924,9 @@ function App(){
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:12px;color:var(--tx);display:flex;align-items:center;gap:5px"},
                 o.name,
-                (o.weekly||o.id==="walk")&&h("span",{style:"font-size:9px;color:#818cf8;font-family:Orbitron,sans-serif;border:1px solid #818cf855;border-radius:4px;padding:1px 4px"},"HEBDO"),
-                o.optional&&o.id!=="walk"&&h("span",{style:"font-size:9px;color:#fbbf24;font-family:Orbitron,sans-serif;border:1px solid #fbbf2455;border-radius:4px;padding:1px 4px"},"BONUS"),
-                o.id==="walk"&&h("span",{style:"font-size:9px;color:#fbbf24;font-family:Orbitron,sans-serif;border:1px solid #fbbf2455;border-radius:4px;padding:1px 4px;margin-left:2px"},"BONUS")
+                (o.weekly||o.id==="walk")&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
+                o.optional&&o.id!=="walk"&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR}),
+                o.id==="walk"&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR,extra:"margin-left:2px"})
               ),
               h("div",{style:"font-size:10px;color:var(--td);margin-top:1px"},fmt2(rec.date))
             ),
@@ -2955,9 +2967,9 @@ function App(){
                 h("div",{style:"flex:1"},
                   h("div",{style:"font-size:12px;color:var(--tx);display:flex;align-items:center;gap:5px"},
                     o.name,
-                    (o.weekly||o.id==="walk")&&h("span",{style:"font-size:9px;color:#818cf8;font-family:Orbitron,sans-serif;border:1px solid #818cf855;border-radius:4px;padding:1px 4px"},"HEBDO"),
-                    o.optional&&o.id!=="walk"&&h("span",{style:"font-size:9px;color:#fbbf24;font-family:Orbitron,sans-serif;border:1px solid #fbbf2455;border-radius:4px;padding:1px 4px"},"BONUS"),
-                    o.id==="walk"&&h("span",{style:"font-size:9px;color:#fbbf24;font-family:Orbitron,sans-serif;border:1px solid #fbbf2455;border-radius:4px;padding:1px 4px;margin-left:2px"},"BONUS")
+                    (o.weekly||o.id==="walk")&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
+                    o.optional&&o.id!=="walk"&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR}),
+                    o.id==="walk"&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR,extra:"margin-left:2px"})
                   )
                 ),
                 h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--tx)"},
@@ -3194,7 +3206,7 @@ function App(){
             h("div",{style:"flex:1;min-width:0"},
               h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15;display:flex;align-items:center;gap:6px;flex-wrap:wrap"},
                 obj.name,
-                obj.weekly&&h("span",{style:"font-size:8px;font-family:Orbitron,sans-serif;letter-spacing:0.5px;padding:1px 5px;border-radius:3px;color:#818cf8;border:1px solid #818cf855;flex-shrink:0"},"HEBDO")
+                obj.weekly&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR})
               ),
               subtitle&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},subtitle),
               h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:7px"},
@@ -3211,7 +3223,7 @@ function App(){
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15;display:flex;align-items:center;gap:6px;flex-wrap:wrap"},
               obj.name,
-              (obj.weekly||obj.id==="walk")&&h("span",{style:"font-size:9px;color:#818cf8;font-family:Orbitron,sans-serif;border:1px solid #818cf855;border-radius:4px;padding:1px 4px;flex-shrink:0"},"HEBDO")
+              (obj.weekly||obj.id==="walk")&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR})
             ),
             subtitle&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},subtitle),
             h("div",{style:"margin-top:7px"},renderXpPills(obj)),
