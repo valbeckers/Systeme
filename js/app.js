@@ -1697,7 +1697,7 @@ function App(){
 
 
 function questBadgeStyle(color, filled=false, extra=""){
-  return "display:inline-flex;align-items:center;justify-content:center;height:16px;min-width:42px;padding:0 6px;border-radius:4px;font-family:Orbitron,sans-serif;font-size:9px;font-weight:700;letter-spacing:0.8px;line-height:1;border:1px solid "+color+"55;color:"+color+";background:"+(filled?color+"22":"transparent")+";flex-shrink:0;white-space:nowrap;"+extra;
+  return "display:inline-flex;align-items:center;justify-content:center;height:13px;min-width:34px;padding:0 4px;border-radius:3px;font-family:Orbitron,sans-serif;font-size:7.5px;font-weight:700;letter-spacing:0.65px;line-height:1;border:1px solid "+color+"55;color:"+color+";background:"+(filled?color+"22":"transparent")+";flex-shrink:0;white-space:nowrap;"+extra;
 }
 function QuestBadge({label,color,filled=false,extra=""}){
   return h("span",{style:questBadgeStyle(color,filled,extra)},label);
@@ -1883,9 +1883,6 @@ const CAP_BADGE_COLOR = "#ef4444";
       ),
       isNearCap&&h("div",{style:"font-size:9px;color:"+capColor+";font-family:Orbitron,sans-serif;text-align:center;margin-top:6px;letter-spacing:0.5px;opacity:0.85"},"\u26A0 Cap dans "+fmtNum(remainingToCap)+" "+obj.unit+(remainingToCap>1?"s":"")+" \u00b7 r\u00e9cup\u00e9ration forc\u00e9e"),
       isCapped&&h("div",{style:"font-size:9px;color:"+capColor+";font-family:Orbitron,sans-serif;text-align:center;margin-top:6px;letter-spacing:0.5px;font-style:italic"},"\uD83D\uDCA4 R\u00e9cup\u00e9ration forc\u00e9e jusqu'\u00e0 "+(obj.weekly?"la semaine prochaine":"demain")),
-      isCapped&&h("div",{style:"display:flex;justify-content:center;margin-top:6px"},
-        h(QuestBadge,{label:(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap))+" ATTEINT",color:capColor,filled:true})
-      ),
       (()=>{
         if(isCapped) return null;
         // Quête avec tiers (ex: protein x/2) : bouton unique +1 unité
@@ -2517,7 +2514,7 @@ const CAP_BADGE_COLOR = "#ef4444";
     const regrTotal=regressionBase.length;
 
     const SectionHeader = ({title,done,total}) => h("div",{class:"shdr",style:"margin-bottom:10px"},
-      h("div",{class:"ctitle",style:"margin:0"},title),
+      h("div",{class:"ctitle",style:"margin:0"+(title==="Régressions"?";color:#ef4444":"")},title),
       h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;color:"+(done===total&&total>0?"#4ade80":"var(--td)")},done+"/"+total)
     );
 
@@ -3315,7 +3312,7 @@ const CAP_BADGE_COLOR = "#ef4444";
       return h("div",{class:"card"},
         h("div",{onClick:()=>toggleC(id),style:"cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 "+(open?"12px":"0")+" 0"},
           h("div",null,
-            h("div",{class:"ctitle",style:"margin:0"},title),
+            h("div",{class:"ctitle",style:"margin:0"+(id==="reg"?";color:#ef4444":"")},title),
             h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;margin-top:3px"},count+" entrées")
           ),
           h(ChevronC,{k:id})
