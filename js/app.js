@@ -48,7 +48,7 @@ function meetsStatRequirement(stats, reqKey){
 const STATS      = ["Sante","Force","Esprit","Endurance","Agilite","Discipline"];
 const STAT_COLOR = {Sante:"#ef4444",Force:"#fb923c",Esprit:"#ec4899",Endurance:"#22d3ee",Agilite:"#4ade80",Discipline:"#c084fc"};
 const STAT_LBL   = {Sante:"Sant\u00e9",Force:"Force",Esprit:"Esprit",Endurance:"Endurance",Agilite:"Agilit\u00e9",Discipline:"Discipline"};
-function QuestIcon(id, fallback, size=16, extraStyle=""){
+function QuestIcon(id, fallback, size=14, extraStyle=""){
   return h("span",{
     style:"font-size:"+size+"px;line-height:1;display:inline-block;flex-shrink:0;"+extraStyle
   },fallback);
@@ -1737,7 +1737,7 @@ const CAP_BADGE_COLOR = "#ef4444";
       return h("div",{class:"qi "+(!isBad?"done":""),style:isBad?"border-color:#ef444466;background:rgba(239,68,68,0.04)":""},
         h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
           h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px;line-height:1.25"},
-            QuestIcon(obj.id,obj.icon,16,"margin-top:-2px"),
+            QuestIcon(obj.id,obj.icon,14,"margin-top:-2px"),
             h("span",{style:"line-height:1.25"},obj.name),
             obj.weekly&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR})
           )
@@ -1801,7 +1801,7 @@ const CAP_BADGE_COLOR = "#ef4444";
       const succFlex = validated && done ? 3 : 1;
       return h("div",{class:"qi "+(done?"done":"")},
         h("div",{class:"qhdr",style:"align-items:center",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:5px"},
-          h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:5px;line-height:1.25;white-space:normal;overflow:visible"},QuestIcon(obj.id,obj.icon,16,"margin-top:-2px"),h("span",{style:"line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip"},obj.name)),
+          h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:5px;line-height:1.25;white-space:normal;overflow:visible"},QuestIcon(obj.id,obj.icon,14,"margin-top:-2px"),h("span",{style:"line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip"},obj.name)),
           h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.25;padding-top:1px"},
             (obj.regression?"0 XP · Régression":obj.binaryXp+" XP · "+(STAT_LBL[obj.stat]||obj.stat))
           )
@@ -1848,7 +1848,7 @@ const CAP_BADGE_COLOR = "#ef4444";
     return h("div",{class:"qi "+(d>=effectiveT&&effectiveT>0?"done":""),style:(isDebt&&!done?"border-color:#ef444466;background:rgba(239,68,68,0.04)":"")+(isCapped?";border-color:"+capColor+"66;background:linear-gradient(135deg,rgba(255,255,255,0.02),rgba(239,68,68,0.06))":"")},
       h("div",{class:"qhdr",style:"align-items:center",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
         h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px;white-space:normal;overflow:visible;line-height:1.25"},
-          QuestIcon(obj.id,obj.icon,16,isCapped?"filter:grayscale(60%);opacity:0.7;margin-top:-2px;line-height:1.25":"margin-top:-2px;line-height:1.25"),
+          QuestIcon(obj.id,obj.icon,14,isCapped?"filter:grayscale(60%);opacity:0.7;margin-top:-2px;line-height:1.25":"margin-top:-2px;line-height:1.25"),
           h("span",{style:"white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;word-break:normal"},obj.name),
           isWeekly&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
           hasCap&&h(QuestBadge,{label:isCapped?"CAP ATTEINT":(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap)),color:capColor,filled:isCapped}),
@@ -1942,7 +1942,7 @@ const CAP_BADGE_COLOR = "#ef4444";
     const validated=isWeeklyRow?(wLog[obj.id]!==undefined):(tLog[obj.id]!==undefined);
     if(obj.binary){
       return h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
-        QuestIcon(obj.id,obj.icon,16),
+        QuestIcon(obj.id,obj.icon,14),
         h("div",{style:"flex:1"},
           h("div",{style:"font-size:12px;color:var(--tx);display:flex;justify-content:space-between;align-items:center"},
             h("span",null,obj.name),
@@ -1971,7 +1971,7 @@ const CAP_BADGE_COLOR = "#ef4444";
       : (done ? " done" : (pct>0 ? " partial" : ""));
     const barInnerStyle = "width:"+(isCapped?100:Math.min(100,pct))+"%";
     return h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
-      QuestIcon(obj.id,obj.icon,16,isCapped?"filter:grayscale(60%);opacity:0.7":""),
+      QuestIcon(obj.id,obj.icon,14,isCapped?"filter:grayscale(60%);opacity:0.7":""),
       h("div",{style:"flex:1"},
         h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center"},
           h("div",{style:"display:flex;align-items:flex-start;gap:6px;min-width:0;flex:1;white-space:normal;line-height:1.25"},
@@ -2032,7 +2032,7 @@ const CAP_BADGE_COLOR = "#ef4444";
       return h("div",{class:"sqcard"+(donjonActive?" ep-pulse":""),style:"border-color:"+donjonColor+"55;background:"+donjonColor+"0A;--epc1:"+donjonColor+"44;--epc2:"+donjonColor+"00"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px"},
           h("div",{style:"display:flex;align-items:center;gap:8px;min-width:0"},
-            QuestIcon(ep.id,ep.icon||"🏰",16),
+            QuestIcon(ep.id,ep.icon||"🏰",14),
             h("div",{style:"min-width:0"},
               h("div",{style:"font-size:13px;font-weight:800;color:var(--tx);letter-spacing:.3px"},ep.name),
               ep.desc&&h("div",{style:"font-size:10px;color:var(--td);margin-top:2px;line-height:1.25"},ep.desc)
@@ -2139,7 +2139,7 @@ const CAP_BADGE_COLOR = "#ef4444";
     return h("div",{class:"sqcard"+(isActive?" ep-pulse":""),style:"border-color:"+tierColor+"44;background:"+tierColor+"08;--epc1:"+tierColor+"44;--epc2:"+tierColor+"00"},
       h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"},
         h("div",{style:"display:flex;align-items:center;gap:8px"},
-          QuestIcon(ep.iconId,ep.icon||"⚔️",16,"line-height:1.1;min-width:24px;text-align:center"),
+          QuestIcon(ep.iconId,ep.icon||"⚔️",14,"line-height:1.1;min-width:24px;text-align:center"),
           h("div",null,
             h("div",{style:"font-size:13px;font-weight:700;color:var(--tx)"},ep.name)
           )
@@ -2305,7 +2305,7 @@ const CAP_BADGE_COLOR = "#ef4444";
     return h("div",{class:"sqcard"+(urgent?" sq-urgent":"")},
       h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"},
         h("div",{style:"display:flex;align-items:center;gap:8px"},
-          QuestIcon(sq.id,sq.icon,16,"line-height:1.1;min-width:24px;text-align:center"),
+          QuestIcon(sq.id,sq.icon,14,"line-height:1.1;min-width:24px;text-align:center"),
           h("div",null,
             h("div",{style:"font-size:13px;font-weight:700;color:var(--tx)"},sq.name)
           )
@@ -2348,7 +2348,7 @@ const CAP_BADGE_COLOR = "#ef4444";
     const isBad=Object.values(delta).some(v=>v<0);
     const color=isBad?"#ef4444":(d>0?"#f59e0b":"var(--td)");
     return h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
-      QuestIcon(obj.id,obj.icon,16,"line-height:1.25"),
+      QuestIcon(obj.id,obj.icon,14,"line-height:1.25"),
       h("div",{style:"flex:1;min-width:0"},
         h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center;gap:8px"},
           h("div",{style:"display:flex;align-items:center;gap:6px;min-width:0;flex:1;white-space:nowrap;overflow:hidden"},
@@ -2555,7 +2555,7 @@ const CAP_BADGE_COLOR = "#ef4444";
           ? h(SqCard,{sq:activeSq,showInput:true})
           : completedSq && h("div",{class:"sqcard"},
           h("div",{style:"display:flex;align-items:center;gap:8px"},
-            QuestIcon(completedSq.id,completedSq.icon,16,"line-height:1.1;min-width:24px;text-align:center"),
+            QuestIcon(completedSq.id,completedSq.icon,14,"line-height:1.1;min-width:24px;text-align:center"),
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:13px;font-weight:700;color:#4ade80"},completedSq.name+" — COMPLÉTÉ ✓"),
               h("div",{style:"font-size:11px;color:var(--td);margin-top:2px"},"+"+completedSq.xp+" XP · "+(STAT_LBL[completedSq.stat]||completedSq.stat))
@@ -2855,7 +2855,7 @@ const CAP_BADGE_COLOR = "#ef4444";
             const successes=pastDays.filter(d=>(state.dailyLog[d]?.[obj.id]||0)>=1).length;
             const pct=Math.min(100,(successes/7)*100), complete=successes>=7;
             return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:10px"},
-              QuestIcon(obj.id,obj.icon,16),
+              QuestIcon(obj.id,obj.icon,14),
               h("div",{style:"flex:1"},
                 h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between"},
                   h("span",{style:"display:flex;align-items:center;gap:6px"},
@@ -2873,7 +2873,7 @@ const CAP_BADGE_COLOR = "#ef4444";
           const val=tots[obj.id]||0, wt=obj.weekly?(obj.id==="walk"&&restMode&&walkObj?walkObj.base:getRankBase(obj.id,ri)):obj.id==="walk"?obj.base:(obj.target&&!obj.binary?obj.target:getRankBase(obj.id,ri,prestige))*7;
           const pct=Math.min(100,(val/wt)*100), complete=val>=wt, over=val>wt;
           return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:10px"},
-            QuestIcon(obj.id,obj.icon,16),
+            QuestIcon(obj.id,obj.icon,14),
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between"},
                 h("span",{style:"display:flex;align-items:center;gap:6px"},
@@ -2906,7 +2906,7 @@ const CAP_BADGE_COLOR = "#ef4444";
           [...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary&&!o.regression)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.binary&&!o.regression)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.binary&&!o.regression))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden&&!o.regression))].map(o=>{
           const rec=records[o.id];
           if(!rec)return h("div",{key:o.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px;opacity:.35"},
-            QuestIcon(o.id,o.icon,16),
+            QuestIcon(o.id,o.icon,14),
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:12px;color:var(--td);display:flex;align-items:center;gap:5px"},
                 o.name,
@@ -2918,7 +2918,7 @@ const CAP_BADGE_COLOR = "#ef4444";
           );
           const fmt2=d=>{if(d.includes("-W"))return d.replace("-W","-S");const p=d.split("-");return p[2]+"/"+p[1];};
           return h("div",{key:o.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
-            QuestIcon(o.id,o.icon,16),
+            QuestIcon(o.id,o.icon,14),
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:12px;color:var(--tx);display:flex;align-items:center;gap:5px"},
                 o.name,
@@ -2961,7 +2961,7 @@ const CAP_BADGE_COLOR = "#ef4444";
               const total=totals[o.id]||0;
               const unitLbl=total>1?({rep:"reps",page:"pages",verre:"verres",km:"km",min:"min",contact:"contacts",action:"actions"}[o.unit]||o.unit):o.unit;
               return h("div",{key:o.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"+(total===0?";opacity:.35":"")},
-                QuestIcon(o.id,o.icon,16),
+                QuestIcon(o.id,o.icon,14),
                 h("div",{style:"flex:1"},
                   h("div",{style:"font-size:12px;color:var(--tx);display:flex;align-items:center;gap:5px"},
                     o.name,
@@ -3044,7 +3044,7 @@ const CAP_BADGE_COLOR = "#ef4444";
           ordered.map(obj=>{
             const cur=(obj.weekly||obj.id==="walk")?(wLog[obj.id]||0):(tLog[obj.id]||0);
             return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
-              QuestIcon(obj.id,obj.icon,16,"min-width:24px"),
+              QuestIcon(obj.id,obj.icon,14,"min-width:24px"),
               h("span",{style:"flex:1;font-size:13px"},obj.name),
               h("input",{id:"cd_"+obj.id,class:"min",type:"text",inputMode:"decimal",defaultValue:String(cur),style:"width:80px;margin:0;text-align:center"}),
               h("span",{style:"font-size:11px;color:var(--td);min-width:28px"},obj.unit)
@@ -3200,7 +3200,7 @@ const CAP_BADGE_COLOR = "#ef4444";
         const subtitle = obj.desc || obj.subtitle || "";
         return h("div",{key:obj.id,style:cardStyle},
           h("div",{style:"display:flex;align-items:center;gap:8px"},
-            QuestIcon(obj.id,obj.icon||"•",16,"line-height:1.1;min-width:24px;text-align:center"),
+            QuestIcon(obj.id,obj.icon||"•",14,"line-height:1.1;min-width:24px;text-align:center"),
             h("div",{style:"flex:1;min-width:0"},
               h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15;display:flex;align-items:center;gap:6px;flex-wrap:wrap"},
                 obj.name,
@@ -3217,7 +3217,7 @@ const CAP_BADGE_COLOR = "#ef4444";
       const subtitle = obj.desc || obj.subtitle || "";
       return h("div",{key:obj.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:center;gap:8px"},
-          QuestIcon(obj.id,obj.icon||"•",16,"line-height:1.1;min-width:24px;text-align:center"),
+          QuestIcon(obj.id,obj.icon||"•",14,"line-height:1.1;min-width:24px;text-align:center"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15;display:flex;align-items:center;gap:6px;flex-wrap:wrap"},
               obj.name,
@@ -3243,7 +3243,7 @@ const CAP_BADGE_COLOR = "#ef4444";
     function renderSpecial(q){
       return h("div",{key:q.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:center;gap:8px"},
-          QuestIcon(q.id,q.icon||"🚨",16,"line-height:1.1;min-width:24px;text-align:center"),
+          QuestIcon(q.id,q.icon||"🚨",14,"line-height:1.1;min-width:24px;text-align:center"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},q.name),
             q.desc&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},q.desc),
@@ -3268,7 +3268,7 @@ const CAP_BADGE_COLOR = "#ef4444";
     function renderEpreuve(ep){
       return h("div",{key:ep.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:center;gap:8px"},
-          QuestIcon(ep.iconId,ep.icon||"⚔️",16,"line-height:1.1;min-width:24px;text-align:center"),
+          QuestIcon(ep.iconId,ep.icon||"⚔️",14,"line-height:1.1;min-width:24px;text-align:center"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},ep.name),
             ep.desc&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},ep.desc),
@@ -3286,7 +3286,7 @@ const CAP_BADGE_COLOR = "#ef4444";
     function renderDonjon(dj){
       return h("div",{key:dj.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:center;gap:8px"},
-          QuestIcon(dj.id,dj.icon||"🏰",16,"line-height:1.1;min-width:22px;text-align:center"),
+          QuestIcon(dj.id,dj.icon||"🏰",14,"line-height:1.1;min-width:22px;text-align:center"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},dj.name),
             dj.desc&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},dj.desc),
