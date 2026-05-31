@@ -61,7 +61,7 @@ const DEFS = [
   {id:"sleep",  name:"8h de sommeil",   unit:"nuit",  xpPer:0,   daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDECF\uFE0F",         base:1,  binary:true, binaryXp:200},
   {id:"adult",name:"",unit:"jour",xpPer:0,daily:true,weekly:false,optional:false,regression:true,stat:"Discipline",icon:"🔴",base:1,binary:true,binaryXp:0,penaltyAll:true,startDate:"2026-05-21"},
   {id:"cheatmeal",name:"Cheat meal",unit:"repas",xpPer:0,daily:false,weekly:true,optional:false,regression:true,regressionType:"cheatmeal",stat:"Sante",stat2:"Discipline",icon:"🍔",base:1,target:1,fixedBase:true,startDate:"2026-05-31"},
-  {id:"nosugar",name:"Pas de sucres transform\u00e9s", unit:"jour", xpPer:0, daily:true, weekly:false,optional:true, stat:"Sante", icon:"\uD83C\uDF4E",            base:1,  binary:true, binaryXp:200, penaltyXp:200},
+  {id:"nosugar",name:"Sucres transform\u00e9s", unit:"\u00e9cart", xpPer:0, daily:true, weekly:false,optional:false,regression:true,regressionType:"sugar", stat:"Sante", stat2:"Discipline", icon:"\uD83C\uDF4E", base:0, target:0, fixedBase:true, startDate:"2026-05-31"},
   {id:"protein",name:"Repas \u00e9quilibr\u00e9",unit:"repas", xpPer:0,   daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83C\uDF4C",               base:1, target:2, validateAt:1, startDate:"2026-05-20", tiers:[{at:1,xp:200,stat:"Sante"},{at:2,xp:200,stat:"Sante",xp2:200,stat2:"Discipline"}]},
   // ─── FORCE ────────────────────────────────────────────────────────────
   {id:"push",   name:"Pompes",          unit:"rep",   xpPer:2,   daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDBE",               base:30, cap:3},
@@ -807,7 +807,7 @@ function App(){
     const lastChk=state.lastPenaltyCheck||null;
     if(lastChk===t) return; // d\u00e9j\u00e0 v\u00e9rifi\u00e9 aujourd'hui
     const defs=state.objectives||DEFS;
-    const penalizable=defs.filter(o=>(o.penaltyXp||o.penaltyAll)&&o.daily&&o.binary);
+    const penalizable=defs.filter(o=>((o.penaltyXp||o.penaltyAll)&&o.daily&&o.binary)||(o.regressionType==="sugar"&&o.daily));
     if(penalizable.length===0){
       setState(s=>({...s,lastPenaltyCheck:t}));
       return;
@@ -827,6 +827,21 @@ function App(){
       const v=dayLog[obj.id]||0;
       const base=getRankBase(obj.id,ri,state.prestige||0);
       const validated=v>=base;
+      if(obj.regressionType==="sugar"){
+        const count = Number(dayLog[obj.id]||0);
+        let statPenalty = {};
+        if(count===1){
+          statPenalty = {Sante:-250};
+        }else if(count===2){
+          statPenalty = {Sante:-500, Discipline:-250};
+        }else if(count>=3){
+          const mult = count - 2;
+          statPenalty = {Sante:-1000*mult, Discipline:-500*mult};
+        }
+        Object.entries(statPenalty).forEach(([stat,delta])=>{sxDelta[stat]=(sxDelta[stat]||0)+delta;});
+        if(Object.keys(statPenalty).length>0) penaltiesApplied.push(obj.id);
+        return;
+      }
       if(!validated){
         if(obj.penaltyAll){
           // Quête rouge :
@@ -856,7 +871,7 @@ function App(){
       dayLog[obj.id] === undefined
     );
 
-    if(totalPenalty>0 || defaultSuccesses.length>0){
+    if(totalPenalty>0 || Object.keys(sxDelta).length>0 || defaultSuccesses.length>0){
       setState(s=>{
         const newSx={...(s.statXp||{})};
         Object.keys(sxDelta).forEach(k=>{
@@ -909,12 +924,13 @@ function App(){
     if(count===0){
       statDelta = {Sante:500, Discipline:500};
       totalDelta = 1000;
+    }else if(count===1){
+      statDelta = {};
     }else if(count===2){
-      statDelta = {Sante:-250, Discipline:-250};
-    }else if(count===3){
-      statDelta = {Sante:-500, Discipline:-500};
-    }else if(count>=4){
-      statDelta = {Sante:-1000, Discipline:-1000};
+      statDelta = {Sante:-500, Discipline:-250};
+    }else if(count>=3){
+      const mult = count - 2;
+      statDelta = {Sante:-1000*mult, Discipline:-500*mult};
     }
     setState(s=>{
       const sx={...(s.statXp||{})};
@@ -1348,6 +1364,15 @@ function App(){
     }
     // Tout objectif avec un base, non-binary, hors cas spéciaux (water/run) entre dans le système palier
     const isPalier = obj.base && !obj.binary && obj.id!=="water" && obj.id!=="run";
+    if(obj.regressionType==="sugar"){
+      setState(s=>{
+        const d={...s.dailyLog};
+        d[today]={...(d[today]||{}),[obj.id]:(d[today]?.[obj.id]||0)+val};
+        return {...s,dailyLog:d,lastActiveDay:todayStr()};
+      });
+      spawnFloat("Régression suivie",e);
+      return;
+    }
     if(obj.regressionType==="cheatmeal"){
       setState(s=>{
         const w={...s.weeklyLog};
@@ -1627,16 +1652,46 @@ function App(){
     const isDebt = isDebtX15 || isDebtWater || isDebtWeekly || isDebtMed;
     const done=obj.binary?(d>=1):(d>=effectiveT);
 
+    if(obj.regressionType==="sugar"){
+      const count = d;
+      const status = count===0
+        ? {txt:"Aucune régression enregistrée", color:"var(--td)"}
+        : count===1
+          ? {txt:"Régression mineure : -250 XP Santé", color:"#f59e0b"}
+          : count===2
+            ? {txt:"Régression moyenne : -500 XP Santé / -250 XP Discipline", color:"#f97316"}
+            : {txt:"Régression majeure : -"+((count-2)*1000)+" XP Santé / -"+((count-2)*500)+" XP Discipline", color:"#ef4444"};
+      const pct=Math.min(100,(count/3)*100);
+      return h("div",{class:"qi "+(count===0?"done":""),style:count>0?"border-color:#ef444466;background:rgba(239,68,68,0.04)":""},
+        h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
+          h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px;line-height:1.25"},
+            QuestIcon(obj.id,obj.icon,18,"margin-top:-2px"),
+            h("span",{style:"line-height:1.25"},obj.name)
+          ),
+          h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap"},"Régressions")
+        ),
+        h("div",{class:"qrow"},
+          h("div",{class:"qbar"},h("div",{class:"qfill"+(count>=3?" over":count>0?" partial":""),style:"width:"+pct+"%"})),
+          h("div",{class:"qxp",style:"white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0;color:"+status.color},fmtNum(count)+" écart"+(count>1?"s":""))
+        ),
+        h("div",{style:"font-size:10px;color:"+status.color+";font-family:Orbitron,sans-serif;text-align:center;margin-top:7px;letter-spacing:0.4px"},status.txt),
+        h("div",{style:"display:flex;gap:8px;margin-top:8px"},
+          h("button",{
+            onClick:e=>{inputs.current[obj.id]="1";validate(obj,e);},
+            style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px"
+          },"+1 écart")
+        )
+      );
+    }
+
     if(obj.regressionType==="cheatmeal"){
       const status = d===0
         ? {txt:"Bonus potentiel : +500 XP Santé +500 XP Discipline", color:"#4ade80"}
         : d===1
           ? {txt:"Tolérance utilisée : neutre", color:"var(--td)"}
           : d===2
-            ? {txt:"Régression à clôture : -250 XP Santé / Discipline", color:"#f59e0b"}
-            : d===3
-              ? {txt:"Régression à clôture : -500 XP Santé / Discipline", color:"#ef4444"}
-              : {txt:"Régression à clôture : -1000 XP Santé / Discipline", color:"#ef4444"};
+            ? {txt:"Régression moyenne : -500 XP Santé / -250 XP Discipline", color:"#f59e0b"}
+            : {txt:"Régression majeure : -"+((d-2)*1000)+" XP Santé / -"+((d-2)*500)+" XP Discipline", color:"#ef4444"};
       const pct=Math.min(100,(d/(obj.target||1))*100);
       return h("div",{class:"qi "+(d<=1?"done":""),style:d>1?"border-color:#ef444466;background:rgba(239,68,68,0.04)":""},
         h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
@@ -1644,7 +1699,7 @@ function App(){
             QuestIcon(obj.id,obj.icon,18,"margin-top:-2px"),
             h("span",{style:"line-height:1.25"},obj.name)
           ),
-          h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap"},"Régression")
+          h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap"},"Régressions")
         ),
         h("div",{class:"qrow"},
           h("div",{class:"qbar"},h("div",{class:"qfill"+(d>1?" over":d===1?" done":""),style:"width:"+pct+"%"})),
@@ -1705,7 +1760,7 @@ function App(){
         h("div",{class:"qhdr",style:"align-items:center",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:5px"},
           h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:5px;line-height:1.25;white-space:normal;overflow:visible"},QuestIcon(obj.id,obj.icon,18,"margin-top:-2px"),h("span",{style:"line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip"},obj.name)),
           h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.25;padding-top:1px"},
-            (obj.regression?"0 XP · Régression":obj.binaryXp+" XP · "+(STAT_LBL[obj.stat]||obj.stat))
+            (obj.regression?"0 XP · Régressions":obj.binaryXp+" XP · "+(STAT_LBL[obj.stat]||obj.stat))
           )
         ),
         h("div",{style:"display:flex;gap:8px;margin-top:8px"},
@@ -2251,7 +2306,8 @@ function App(){
     const secs=[
       {lb:"Qu\u00eates journalières",ob:dailyObjs,iw:false},
       {lb:"Qu\u00eates hebdomadaires",ob:weeklyObjs,iw:true},
-      {lb:"Qu\u00eates bonus", ob:sortStat(objs.filter(o=>(o.daily&&o.optional||o.id==="walk")&&!(restMode&&o.id==="walk")&&!o.bonusHidden)), iw:false},
+      {lb:"Qu\u00eates bonus", ob:sortStat(objs.filter(o=>(o.daily&&o.optional||o.id==="walk")&&!(restMode&&o.id==="walk")&&!o.bonusHidden&&!o.regression)), iw:false},
+      {lb:"Régressions", ob:regressionObjs, iw:false, regression:true},
     ];
 
     return h("div",{class:"tab"},
@@ -2346,8 +2402,8 @@ function App(){
         h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Qu\u00eate urgente"),
         h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:4px 0;font-family:Orbitron,sans-serif"},"\u23F3 Prochaine qu\u00eate dans "+fmtCD(sqCooldownUntil-now))
       ),
-      secs.map(({lb,ob,iw,mixed})=>ob.length===0?null:
-        h("div",{key:lb,class:"card"},h("div",{class:"ctitle"},lb),ob.map(o=>h(RR,{key:o.id,obj:o,isW:mixed?(o.weekly||o.id==="walk"):iw})))
+      secs.map(({lb,ob,iw,mixed,regression})=>ob.length===0?null:
+        h("div",{key:lb,class:"card",style:regression?"border-color:#ef444444":""},h("div",{class:"ctitle",style:regression?"color:#ef4444":""},lb),ob.map(o=>regression?h(QI,{key:o.id,obj:o}):h(RR,{key:o.id,obj:o,isW:mixed?(o.weekly||o.id==="walk"):iw})))
       )
     );
   }
@@ -2489,13 +2545,13 @@ function App(){
         h(SectionHeader,{title:"Quêtes hebdomadaires",done:wkDone,total:wkTotal}),
         wkq.map(o=>h(QI,{key:o.id,obj:o}))
       ),
-      regression.length>0&&h("div",{class:"card",style:"border-color:#ef444444"},
-        h(SectionHeader,{title:"Régression",done:regrDone,total:regrTotal}),
-        regression.map(o=>h(QI,{key:o.id,obj:o}))
-      ),
       bon.length>0&&h("div",{class:"card"},
         h(SectionHeader,{title:"Quêtes bonus",done:bonDone,total:bonTotal}),
         bon.map(o=>h(QI,{key:o.id,obj:o}))
+      ),
+      regression.length>0&&h("div",{class:"card",style:"border-color:#ef444444"},
+        h(SectionHeader,{title:"Régressions",done:regrDone,total:regrTotal}),
+        regression.map(o=>h(QI,{key:o.id,obj:o}))
       )
     );
   }
@@ -3065,6 +3121,32 @@ function App(){
       return obj.cap ? "×"+obj.cap : "Aucun";
     }
 
+    function renderRegressionDetails(obj){
+      if(!obj.regression) return null;
+      let lines=[];
+      if(obj.regressionType==="sugar"){
+        lines=[
+          "Mineure · 1x/jour : -250 XP Santé",
+          "Moyenne · 2x/jour : -500 XP Santé / -250 XP Discipline",
+          "Majeure · 3x+ /jour : -1000 XP Santé / -500 XP Discipline par écart au-delà de 2"
+        ];
+      }else if(obj.regressionType==="cheatmeal"){
+        lines=[
+          "0/semaine : +500 XP Santé / +500 XP Discipline",
+          "1/semaine : neutre",
+          "Moyenne · 2/semaine : -500 XP Santé / -250 XP Discipline",
+          "Majeure · 3+ /semaine : -1000 XP Santé / -500 XP Discipline par cheat meal au-delà de 2"
+        ];
+      }else if(obj.penaltyAll){
+        lines=["Majeure · dès le 1er échec : -1000 XP sur chaque stat"];
+      }
+      if(!lines.length) return null;
+      return h("div",{style:"margin-top:8px;border-top:1px solid rgba(239,68,68,0.18);padding-top:7px"},
+        h("div",{style:"font-size:10px;color:#ef4444;font-family:Orbitron,sans-serif;letter-spacing:1px;margin-bottom:5px"},"PÉNALITÉS"),
+        lines.map((line,i)=>h("div",{key:i,style:"font-size:10px;color:var(--td);line-height:1.45"},"▸ "+line))
+      );
+    }
+
     function renderQuest(obj){
       const subtitle = obj.desc || obj.subtitle || "";
       return h("div",{key:obj.id,style:cardStyle},
@@ -3077,7 +3159,8 @@ function App(){
             h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:6px"},
               h("div",{style:detailStyle},"▸ Objectif : "+targetForQuest(obj)),
               h("div",{style:detailStyle},"▸ Cap : "+capForQuest(obj))
-            )
+            ),
+            renderRegressionDetails(obj)
           )
         )
       );
@@ -3247,10 +3330,10 @@ function App(){
           hiddenBonus.length>0&&groupByDominantStat(hiddenBonus,renderQuest)
         )
       ),
-      h(Section,{id:"reg",title:"Régression",count:regressions.length},groupByDominantStat(regressions,renderQuest)),
       h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial)),
       h(Section,{id:"ep",title:"Épreuves",count:EPREUVES.length},groupByDominantStat(EPREUVES,renderEpreuve)),
-      h(Section,{id:"dj",title:"Donjons",count:DONJONS.length},groupByDominantStat(DONJONS,renderDonjon))
+      h(Section,{id:"dj",title:"Donjons",count:DONJONS.length},groupByDominantStat(DONJONS,renderDonjon)),
+      h(Section,{id:"reg",title:"Régressions",count:regressions.length},groupByDominantStat(regressions,renderQuest))
     );
   }
 
