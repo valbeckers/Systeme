@@ -1728,7 +1728,7 @@ function App(){
           h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px;line-height:1.25"},
             QuestIcon(obj.id,obj.icon,18,"margin-top:-2px"),
             h("span",{style:"line-height:1.25"},obj.name),
-            obj.weekly&&h("span",{style:"font-size:9px;font-family:Orbitron,sans-serif;letter-spacing:0.5px;padding:2px 6px;border-radius:4px;color:#f59e0b;border:1px solid #f59e0b66;flex-shrink:0"},"HEBDO")
+            obj.weekly&&h("span",{style:"font-size:9px;font-family:Orbitron,sans-serif;letter-spacing:0.5px;padding:2px 6px;border-radius:4px;color:#818cf8;border:1px solid #818cf855;flex-shrink:0"},"HEBDO")
           ),
           h("div",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap"},"Régressions")
         ),
@@ -1838,6 +1838,7 @@ function App(){
         h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px;white-space:normal;overflow:visible;line-height:1.25"},
           QuestIcon(obj.id,obj.icon,18,isCapped?"filter:grayscale(60%);opacity:0.7;margin-top:-2px;line-height:1.25":"margin-top:-2px;line-height:1.25"),
           h("span",{style:"white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;word-break:normal"},obj.name),
+          isWeekly&&h("span",{style:"font-size:9px;color:#818cf8;font-family:Orbitron,sans-serif;border:1px solid #818cf855;border-radius:4px;padding:1px 4px;flex-shrink:0"},"HEBDO"),
           hasCap&&h("span",{style:"font-size:9px;font-family:Orbitron,sans-serif;letter-spacing:0.5px;padding:2px 6px;border-radius:4px;color:"+capColor+";border:1px solid "+capColor+"44;flex-shrink:0"},isCapped?"CAP ATTEINT":(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap))),
           isDebt&&!done&&h("span",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;border:1px solid #ef444455;border-radius:4px;padding:1px 5px;flex-shrink:0"},"\u26A0 DETTE "+debtLabel)
         ),
@@ -1965,6 +1966,7 @@ function App(){
         h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center"},
           h("div",{style:"display:flex;align-items:flex-start;gap:6px;min-width:0;flex:1;white-space:normal;line-height:1.25"},
             h("span",{style:"white-space:normal;line-height:1.25;word-break:normal"},obj.name),
+            (obj.weekly||obj.id==="walk")&&h("span",{style:"font-size:9px;color:#818cf8;font-family:Orbitron,sans-serif;border:1px solid #818cf855;border-radius:4px;padding:1px 4px;flex-shrink:0"},"HEBDO"),
             hasCap&&h("span",{style:"font-size:8px;font-family:Orbitron,sans-serif;letter-spacing:0.5px;padding:1px 5px;border-radius:3px;"+(isCapped?"background:"+capColor+"22;color:"+capColor+";border:1px solid "+capColor:"color:"+capColor+";border:1px solid "+capColor+"44")},isCapped?"CAP ATTEINT":(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap)))
           ),
           h("div",{style:"display:flex;align-items:center;gap:6px"},
@@ -2334,16 +2336,18 @@ function App(){
     const pct=obj.regressionType==="cheatmeal"?Math.min(100,(d/(obj.target||1))*100):Math.min(100,(d/3)*100);
     const delta=regressionTotalPenalty(obj,d);
     const isBad=Object.values(delta).some(v=>v<0);
-    const color=isBad?"#ef4444":(d>0?"#f59e0b":"#4ade80");
-    return h("div",{class:"qi "+(!isBad?"done":""),style:"padding:10px 12px"+(isBad?";border-color:#ef444466;background:rgba(239,68,68,0.04)":"")},
-      h("div",{class:"qrow",style:"gap:8px"},
-        h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:center;gap:8px;font-size:13px;white-space:nowrap;overflow:hidden"},
-          QuestIcon(obj.id,obj.icon,18),
-          h("span",{style:"overflow:hidden;text-overflow:ellipsis;white-space:nowrap"},obj.name),
-          obj.weekly&&h("span",{style:"font-size:8px;font-family:Orbitron,sans-serif;letter-spacing:0.5px;padding:1px 5px;border-radius:3px;color:#f59e0b;border:1px solid #f59e0b66;flex-shrink:0"},"HEBDO")
+    const color=isBad?"#ef4444":(d>0?"#f59e0b":"var(--td)");
+    return h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
+      QuestIcon(obj.id,obj.icon,18,"line-height:1.25"),
+      h("div",{style:"flex:1;min-width:0"},
+        h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center;gap:8px"},
+          h("div",{style:"display:flex;align-items:center;gap:6px;min-width:0;flex:1;white-space:nowrap;overflow:hidden"},
+            h("span",{style:"overflow:hidden;text-overflow:ellipsis;white-space:nowrap"},obj.name),
+            isWeekly&&h("span",{style:"font-size:9px;color:#818cf8;font-family:Orbitron,sans-serif;border:1px solid #818cf855;border-radius:4px;padding:1px 4px;flex-shrink:0"},"HEBDO")
+          ),
+          h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";white-space:nowrap;flex-shrink:0"},regressionCountText(obj,d))
         ),
-        h("div",{class:"qbar",style:"max-width:90px;flex:0 0 90px"},h("div",{class:"qfill"+(isBad?" over":d>0?" partial":""),style:"width:"+pct+"%"})),
-        h("div",{class:"qxp",style:"white-space:nowrap;min-width:70px;text-align:right;flex-shrink:0;color:"+color},regressionCountText(obj,d))
+        h("div",{class:"qbar"},h("div",{class:"qfill"+(isBad?" over":d>0?" partial":""),style:"width:"+pct+"%"}))
       )
     );
   }
@@ -2846,6 +2850,7 @@ function App(){
                 h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between"},
                   h("span",{style:"display:flex;align-items:center;gap:6px"},
                     obj.name,
+                    (obj.weekly||obj.id==="walk")&&h("span",{style:"font-size:9px;color:#818cf8;font-family:Orbitron,sans-serif;border:1px solid #818cf855;border-radius:4px;padding:1px 4px"},"HEBDO"),
                     obj.optional&&h("span",{style:"font-size:9px;color:#fbbf24;font-family:Orbitron,sans-serif;border:1px solid #fbbf2455;border-radius:4px;padding:1px 4px"},"BONUS")
                   ),
                   h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px"},successes+"/7 "+(obj.id==="sleep"?"nuits":"jours"))
@@ -3189,7 +3194,7 @@ function App(){
             h("div",{style:"flex:1;min-width:0"},
               h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15;display:flex;align-items:center;gap:6px;flex-wrap:wrap"},
                 obj.name,
-                obj.weekly&&h("span",{style:"font-size:8px;font-family:Orbitron,sans-serif;letter-spacing:0.5px;padding:1px 5px;border-radius:3px;color:#f59e0b;border:1px solid #f59e0b66;flex-shrink:0"},"HEBDO")
+                obj.weekly&&h("span",{style:"font-size:8px;font-family:Orbitron,sans-serif;letter-spacing:0.5px;padding:1px 5px;border-radius:3px;color:#818cf8;border:1px solid #818cf855;flex-shrink:0"},"HEBDO")
               ),
               subtitle&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},subtitle),
               h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:7px"},
@@ -3204,7 +3209,10 @@ function App(){
         h("div",{style:"display:flex;align-items:center;gap:8px"},
           QuestIcon(obj.id,obj.icon||"•",18,"line-height:1.1;min-width:24px;text-align:center"),
           h("div",{style:"flex:1;min-width:0"},
-            h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},obj.name),
+            h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15;display:flex;align-items:center;gap:6px;flex-wrap:wrap"},
+              obj.name,
+              (obj.weekly||obj.id==="walk")&&h("span",{style:"font-size:9px;color:#818cf8;font-family:Orbitron,sans-serif;border:1px solid #818cf855;border-radius:4px;padding:1px 4px;flex-shrink:0"},"HEBDO")
+            ),
             subtitle&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},subtitle),
             h("div",{style:"margin-top:7px"},renderXpPills(obj)),
             h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:6px"},
