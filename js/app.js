@@ -1743,7 +1743,7 @@ const CAP_BADGE_COLOR = "#ef4444";
           )
         ),
         h("div",{class:"qrow"},
-          h("div",{class:"qbar"},h("div",{class:"qfill"+(isBad?" over":count>0?" partial":""),style:"width:"+pct+"%"})),
+          h("div",{class:"qbar"},h("div",{class:"qfill"+(isBad?" over":count>0?" partial":""),style:"width:"+pct+"%;"+((obj.regressionType==="adult"||obj.regressionType==="sugar")?"background:#ef4444;box-shadow:0 0 10px #ef444466;":"")})),
           h("div",{class:"qxp",style:"white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0;color:"+color},regressionCountText(obj,count))
         ),
         h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;text-align:center;margin-top:7px;letter-spacing:0.4px"},
@@ -2364,7 +2364,7 @@ const CAP_BADGE_COLOR = "#ef4444";
           ),
           h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";white-space:nowrap;flex-shrink:0"},regressionCountText(obj,d))
         ),
-        h("div",{class:"qbar"},h("div",{class:"qfill"+(isBad?" over":d>0?" partial":""),style:"width:"+pct+"%"}))
+        h("div",{class:"qbar"},h("div",{class:"qfill"+(isBad?" over":d>0?" partial":""),style:"width:"+pct+"%;"+((obj.regressionType==="adult"||obj.regressionType==="sugar")?"background:#ef4444;box-shadow:0 0 10px #ef444466;":"")}))
       )
     );
   }
@@ -2803,7 +2803,7 @@ const CAP_BADGE_COLOR = "#ef4444";
     const we=new Date(ws); we.setDate(ws.getDate()+6);
     const fmt=d=>d.getDate().toString().padStart(2,"0")+"/"+(d.getMonth()+1).toString().padStart(2,"0");
     const lbl=wkOff===0?"Cette semaine":wkOff===1?"Semaine derni\u00e8re":fmt(ws)+" \u2013 "+fmt(we);
-    const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.regression)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.regression))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden&&!o.regression)),...objs.filter(o=>o.regression)];
+    const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.regression)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.regression))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden&&!o.regression))];
 
     // ── Labels jours de la semaine (lun → dim) ──
     const weekLbls=["L","M","M","J","V","S","D"];
