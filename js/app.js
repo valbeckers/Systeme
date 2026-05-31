@@ -49,8 +49,10 @@ const STATS      = ["Sante","Force","Esprit","Endurance","Agilite","Discipline"]
 const STAT_COLOR = {Sante:"#ef4444",Force:"#fb923c",Esprit:"#ec4899",Endurance:"#22d3ee",Agilite:"#4ade80",Discipline:"#c084fc"};
 const STAT_LBL   = {Sante:"Sant\u00e9",Force:"Force",Esprit:"Esprit",Endurance:"Endurance",Agilite:"Agilit\u00e9",Discipline:"Discipline"};
 function QuestIcon(id, fallback, size=18, extraStyle=""){
+  const normalizedSize = Math.min(Number(size)||18,18);
   return h("span",{
-    style:"font-size:"+size+"px;line-height:1;display:inline-block;flex-shrink:0;"+extraStyle
+    class:"quest-emoji",
+    style:"font-size:"+normalizedSize+"px;line-height:1;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;flex-shrink:0;"+extraStyle
   },fallback);
 }
 
@@ -1697,7 +1699,7 @@ function App(){
 
 
 function questBadgeStyle(color, filled=false, extra=""){
-  return "display:inline-flex;align-items:center;justify-content:center;height:13px;min-width:34px;padding:0 4px;border-radius:3px;font-family:Orbitron,sans-serif;font-size:7.5px;font-weight:700;letter-spacing:0.65px;line-height:1;border:1px solid "+color+"55;color:"+color+";background:"+(filled?color+"22":"transparent")+";flex-shrink:0;white-space:nowrap;"+extra;
+  return "display:inline-flex;align-items:center;justify-content:center;height:16px;min-width:42px;padding:0 6px;border-radius:4px;font-family:Orbitron,sans-serif;font-size:9px;font-weight:700;letter-spacing:0.8px;line-height:1;border:1px solid "+color+"55;color:"+color+";background:"+(filled?color+"22":"transparent")+";flex-shrink:0;white-space:nowrap;"+extra;
 }
 function QuestBadge({label,color,filled=false,extra=""}){
   return h("span",{style:questBadgeStyle(color,filled,extra)},label);
@@ -1883,6 +1885,9 @@ const CAP_BADGE_COLOR = "#ef4444";
       ),
       isNearCap&&h("div",{style:"font-size:9px;color:"+capColor+";font-family:Orbitron,sans-serif;text-align:center;margin-top:6px;letter-spacing:0.5px;opacity:0.85"},"\u26A0 Cap dans "+fmtNum(remainingToCap)+" "+obj.unit+(remainingToCap>1?"s":"")+" \u00b7 r\u00e9cup\u00e9ration forc\u00e9e"),
       isCapped&&h("div",{style:"font-size:9px;color:"+capColor+";font-family:Orbitron,sans-serif;text-align:center;margin-top:6px;letter-spacing:0.5px;font-style:italic"},"\uD83D\uDCA4 R\u00e9cup\u00e9ration forc\u00e9e jusqu'\u00e0 "+(obj.weekly?"la semaine prochaine":"demain")),
+      isCapped&&h("div",{style:"display:flex;justify-content:center;margin-top:6px"},
+        h(QuestBadge,{label:(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap))+" ATTEINT",color:capColor,filled:true})
+      ),
       (()=>{
         if(isCapped) return null;
         // Quête avec tiers (ex: protein x/2) : bouton unique +1 unité
@@ -2032,7 +2037,7 @@ const CAP_BADGE_COLOR = "#ef4444";
       return h("div",{class:"sqcard"+(donjonActive?" ep-pulse":""),style:"border-color:"+donjonColor+"55;background:"+donjonColor+"0A;--epc1:"+donjonColor+"44;--epc2:"+donjonColor+"00"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px"},
           h("div",{style:"display:flex;align-items:center;gap:8px;min-width:0"},
-            QuestIcon(ep.id,ep.icon||"🏰",21),
+            QuestIcon(ep.id,ep.icon||"🏰",18),
             h("div",{style:"min-width:0"},
               h("div",{style:"font-size:13px;font-weight:800;color:var(--tx);letter-spacing:.3px"},ep.name),
               ep.desc&&h("div",{style:"font-size:10px;color:var(--td);margin-top:2px;line-height:1.25"},ep.desc)
@@ -2139,7 +2144,7 @@ const CAP_BADGE_COLOR = "#ef4444";
     return h("div",{class:"sqcard"+(isActive?" ep-pulse":""),style:"border-color:"+tierColor+"44;background:"+tierColor+"08;--epc1:"+tierColor+"44;--epc2:"+tierColor+"00"},
       h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"},
         h("div",{style:"display:flex;align-items:center;gap:8px"},
-          QuestIcon(ep.iconId,ep.icon||"⚔️",18,"line-height:1.1;min-width:24px;text-align:center"),
+          QuestIcon(ep.iconId,ep.icon||"⚔️",18,"line-height:1.1;text-align:center"),
           h("div",null,
             h("div",{style:"font-size:13px;font-weight:700;color:var(--tx)"},ep.name)
           )
@@ -2305,7 +2310,7 @@ const CAP_BADGE_COLOR = "#ef4444";
     return h("div",{class:"sqcard"+(urgent?" sq-urgent":"")},
       h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"},
         h("div",{style:"display:flex;align-items:center;gap:8px"},
-          QuestIcon(sq.id,sq.icon,18,"line-height:1.1;min-width:24px;text-align:center"),
+          QuestIcon(sq.id,sq.icon,18,"line-height:1.1;text-align:center"),
           h("div",null,
             h("div",{style:"font-size:13px;font-weight:700;color:var(--tx)"},sq.name)
           )
@@ -2514,7 +2519,7 @@ const CAP_BADGE_COLOR = "#ef4444";
     const regrTotal=regressionBase.length;
 
     const SectionHeader = ({title,done,total}) => h("div",{class:"shdr",style:"margin-bottom:10px"},
-      h("div",{class:"ctitle",style:"margin:0"+(title==="Régressions"?";color:#ef4444":"")},title),
+      h("div",{class:"ctitle",style:"margin:0"},title),
       h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;color:"+(done===total&&total>0?"#4ade80":"var(--td)")},done+"/"+total)
     );
 
@@ -2555,7 +2560,7 @@ const CAP_BADGE_COLOR = "#ef4444";
           ? h(SqCard,{sq:activeSq,showInput:true})
           : completedSq && h("div",{class:"sqcard"},
           h("div",{style:"display:flex;align-items:center;gap:8px"},
-            QuestIcon(completedSq.id,completedSq.icon,18,"line-height:1.1;min-width:24px;text-align:center"),
+            QuestIcon(completedSq.id,completedSq.icon,18,"line-height:1.1;text-align:center"),
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:13px;font-weight:700;color:#4ade80"},completedSq.name+" — COMPLÉTÉ ✓"),
               h("div",{style:"font-size:11px;color:var(--td);margin-top:2px"},"+"+completedSq.xp+" XP · "+(STAT_LBL[completedSq.stat]||completedSq.stat))
@@ -3044,7 +3049,7 @@ const CAP_BADGE_COLOR = "#ef4444";
           ordered.map(obj=>{
             const cur=(obj.weekly||obj.id==="walk")?(wLog[obj.id]||0):(tLog[obj.id]||0);
             return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
-              QuestIcon(obj.id,obj.icon,18,"min-width:24px"),
+              QuestIcon(obj.id,obj.icon,18,""),
               h("span",{style:"flex:1;font-size:13px"},obj.name),
               h("input",{id:"cd_"+obj.id,class:"min",type:"text",inputMode:"decimal",defaultValue:String(cur),style:"width:80px;margin:0;text-align:center"}),
               h("span",{style:"font-size:11px;color:var(--td);min-width:28px"},obj.unit)
@@ -3200,7 +3205,7 @@ const CAP_BADGE_COLOR = "#ef4444";
         const subtitle = obj.desc || obj.subtitle || "";
         return h("div",{key:obj.id,style:cardStyle},
           h("div",{style:"display:flex;align-items:center;gap:8px"},
-            QuestIcon(obj.id,obj.icon||"•",18,"line-height:1.1;min-width:24px;text-align:center"),
+            QuestIcon(obj.id,obj.icon||"•",18,"line-height:1.1;text-align:center"),
             h("div",{style:"flex:1;min-width:0"},
               h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15;display:flex;align-items:center;gap:6px;flex-wrap:wrap"},
                 obj.name,
@@ -3217,7 +3222,7 @@ const CAP_BADGE_COLOR = "#ef4444";
       const subtitle = obj.desc || obj.subtitle || "";
       return h("div",{key:obj.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:center;gap:8px"},
-          QuestIcon(obj.id,obj.icon||"•",18,"line-height:1.1;min-width:24px;text-align:center"),
+          QuestIcon(obj.id,obj.icon||"•",18,"line-height:1.1;text-align:center"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15;display:flex;align-items:center;gap:6px;flex-wrap:wrap"},
               obj.name,
@@ -3243,7 +3248,7 @@ const CAP_BADGE_COLOR = "#ef4444";
     function renderSpecial(q){
       return h("div",{key:q.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:center;gap:8px"},
-          QuestIcon(q.id,q.icon||"🚨",18,"line-height:1.1;min-width:24px;text-align:center"),
+          QuestIcon(q.id,q.icon||"🚨",18,"line-height:1.1;text-align:center"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},q.name),
             q.desc&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},q.desc),
@@ -3268,7 +3273,7 @@ const CAP_BADGE_COLOR = "#ef4444";
     function renderEpreuve(ep){
       return h("div",{key:ep.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:center;gap:8px"},
-          QuestIcon(ep.iconId,ep.icon||"⚔️",18,"line-height:1.1;min-width:24px;text-align:center"),
+          QuestIcon(ep.iconId,ep.icon||"⚔️",18,"line-height:1.1;text-align:center"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},ep.name),
             ep.desc&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},ep.desc),
@@ -3286,7 +3291,7 @@ const CAP_BADGE_COLOR = "#ef4444";
     function renderDonjon(dj){
       return h("div",{key:dj.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:center;gap:8px"},
-          QuestIcon(dj.id,dj.icon||"🏰",18,"line-height:1.1;min-width:22px;text-align:center"),
+          QuestIcon(dj.id,dj.icon||"🏰",18,"line-height:1.1;text-align:center"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},dj.name),
             dj.desc&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},dj.desc),
@@ -3312,7 +3317,7 @@ const CAP_BADGE_COLOR = "#ef4444";
       return h("div",{class:"card"},
         h("div",{onClick:()=>toggleC(id),style:"cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 "+(open?"12px":"0")+" 0"},
           h("div",null,
-            h("div",{class:"ctitle",style:"margin:0"+(id==="reg"?";color:#ef4444":"")},title),
+            h("div",{class:"ctitle",style:"margin:0"},title),
             h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;margin-top:3px"},count+" entrées")
           ),
           h(ChevronC,{k:id})
