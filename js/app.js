@@ -1858,10 +1858,17 @@ const CAP_BADGE_COLOR = "#ef4444";
           obj.tiers
             ?h(Fragment,null,
                 ...obj.tiers.map((tier,i)=>{
-                  const parts = [];
-                  parts.push(tier.xp+" XP \u00b7 "+(STAT_LBL[tier.stat]||tier.stat));
-                  if(tier.xp2 && tier.stat2) parts.push(tier.xp2+" XP \u00b7 "+(STAT_LBL[tier.stat2]||tier.stat2));
-                  return h("div",{key:i,style:"opacity:"+(d>=tier.at?"1":"0.6")+";white-space:nowrap"},(d>=tier.at?"\u2713 ":"")+parts.join(" + "));
+                  const primaryStat = STAT_LBL[tier.stat]||tier.stat;
+                  const secondaryStat = tier.stat2 ? (STAT_LBL[tier.stat2]||tier.stat2) : null;
+                  const thirdStat = tier.stat3 ? (STAT_LBL[tier.stat3]||tier.stat3) : null;
+                  let rewardText = tier.xp+" XP "+primaryStat;
+                  if(tier.xp2 && tier.stat2){
+                    rewardText += tier.xp2===tier.xp ? " + "+secondaryStat : " + "+tier.xp2+" XP "+secondaryStat;
+                  }
+                  if(tier.xp3 && tier.stat3){
+                    rewardText += tier.xp3===tier.xp ? " + "+thirdStat : " + "+tier.xp3+" XP "+thirdStat;
+                  }
+                  return h("div",{key:i,style:"opacity:"+(d>=tier.at?"1":"0.6")+";white-space:nowrap"},(d>=tier.at?"\u2713 ":"")+rewardText);
                 }),
                 obj.overGoalXpPer&&h("div",{style:"opacity:"+(d>(obj.target||obj.base||0)?"1":"0.6")+";white-space:nowrap"},"+"+obj.overGoalXpPer+" XP/"+obj.unit+" au-delà · "+(STAT_LBL[obj.overGoalStat||obj.stat]||obj.overGoalStat||obj.stat))
               )
