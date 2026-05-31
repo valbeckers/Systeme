@@ -1728,9 +1728,10 @@ const CAP_BADGE_COLOR = "#ef4444";
 
     if(obj.regression){
       const count = d;
-      const pct = obj.regressionType==="cheatmeal" ? Math.min(100,(count/(obj.target||1))*100) : Math.min(100,(count/3)*100);
       const severity = regressionSeverity(obj,count);
       const deltaNow = regressionTotalPenalty(obj,count);
+      const hasPenalty = Object.keys(deltaNow||{}).length>0;
+      const pct = hasPenalty ? 100 : (obj.regressionType==="cheatmeal" ? Math.min(100,(count/(obj.target||1))*100) : 0);
       const color = severity==="Aucune" || severity==="Bonus potentiel" ? "#4ade80" : severity==="Neutre" ? "var(--td)" : severity==="Mineure" ? "#fbbf24" : severity==="Moyenne" ? "#f59e0b" : "#ef4444";
       const detail = obj.regressionType==="cheatmeal" && count===0 ? "+500 XP Santé · +500 XP Discipline si semaine parfaite" : penaltySummary(deltaNow);
       const isBad = Object.values(deltaNow).some(v=>v<0);
@@ -2350,9 +2351,9 @@ const CAP_BADGE_COLOR = "#ef4444";
   function RegressionHomeRow({obj}){
     const isWeekly=obj.weekly||obj.id==="walk";
     const d=isWeekly?(wLog[obj.id]||0):(tLog[obj.id]||0);
-    const pct=obj.regressionType==="cheatmeal"?Math.min(100,(d/(obj.target||1))*100):Math.min(100,(d/3)*100);
     const delta=regressionTotalPenalty(obj,d);
     const isBad=Object.values(delta).some(v=>v<0);
+    const pct=isBad ? 100 : (obj.regressionType==="cheatmeal"?Math.min(100,(d/(obj.target||1))*100):0);
     const color=isBad?"#ef4444":(d>0?"#f59e0b":"var(--td)");
     return h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
       QuestIcon(obj.id,obj.icon,14,"line-height:1.25"),
