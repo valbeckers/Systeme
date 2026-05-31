@@ -77,8 +77,8 @@ const DEFS = [
   {id:"med",    name:"M\u00e9ditation", unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Esprit",  icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F", base:15, fixedBase:true, cap:2},
   // ─── ENDURANCE ────────────────────────────────────────────────────────
   {id:"run",    name:"Course",          iconKey:"run",          unit:"km",    xpPer:150, daily:false,weekly:true, optional:false,stat:"Endurance",      icon:"\uD83C\uDFC3\uD83C\uDFFB",   base:7,  stat2:"Agilite", xpPer2:30, cap:3},
-  {id:"lhh_contacts", name:"LHH - Contacts utiles", unit:"contact", xpPer:0, daily:false, weekly:true, optional:false, stat:"Discipline", icon:"💼", base:12, target:12, fixedBase:true, tiers:[{at:12,xp:500,stat:"Discipline"}], overGoalXpPer:10, overGoalStat:"Discipline"},
-  {id:"lhh_actions",  name:"LHH - Actions commerciales", unit:"action", xpPer:0, daily:false, weekly:true, optional:false, stat:"Discipline", icon:"💼", base:60, target:60, fixedBase:true, tiers:[{at:60,xp:500,stat:"Discipline"}], overGoalXpPer:10, overGoalStat:"Discipline"},
+  {id:"lhh_contacts", name:"LHH - Contacts utiles", unit:"contact", xpPer:0, daily:false, weekly:true, optional:true, stat:"Discipline", icon:"💼", base:12, target:12, fixedBase:true, tiers:[{at:12,xp:500,stat:"Discipline"}], overGoalXpPer:10, overGoalStat:"Discipline"},
+  {id:"lhh_actions",  name:"LHH - Actions commerciales", unit:"action", xpPer:0, daily:false, weekly:true, optional:true, stat:"Discipline", icon:"💼", base:60, target:60, fixedBase:true, tiers:[{at:60,xp:500,stat:"Discipline"}], overGoalXpPer:10, overGoalStat:"Discipline"},
   {id:"walk",   name:"Marche",          unit:"km",    xpPer:75,  daily:false,weekly:false,optional:true, stat:"Endurance",      icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F", base:5, fixedBase:true},
   // ─── AGILITÉ ──────────────────────────────────────────────────────────
   {id:"flex",   name:"Souplesse",       unit:"min",   xpPer:25,  daily:true, weekly:false,optional:true, stat:"Agilite",        icon:"\uD83E\uDD38\uD83C\uDFFB",   base:15, fixedBase:true, stat2:"Endurance", xpPer2:10, cap:2},
@@ -1697,7 +1697,7 @@ function App(){
 
 
 function questBadgeStyle(color, filled=false, extra=""){
-  return "display:inline-flex;align-items:center;justify-content:center;height:18px;min-width:54px;padding:0 7px;border-radius:4px;font-family:Orbitron,sans-serif;font-size:9px;font-weight:700;letter-spacing:0.8px;line-height:1;border:1px solid "+color+"55;color:"+color+";background:"+(filled?color+"22":"transparent")+";flex-shrink:0;white-space:nowrap;"+extra;
+  return "display:inline-flex;align-items:center;justify-content:center;height:16px;min-width:42px;padding:0 6px;border-radius:4px;font-family:Orbitron,sans-serif;font-size:9px;font-weight:700;letter-spacing:0.8px;line-height:1;border:1px solid "+color+"55;color:"+color+";background:"+(filled?color+"22":"transparent")+";flex-shrink:0;white-space:nowrap;"+extra;
 }
 function QuestBadge({label,color,filled=false,extra=""}){
   return h("span",{style:questBadgeStyle(color,filled,extra)},label);
@@ -1938,10 +1938,11 @@ const CAP_BADGE_COLOR = "#ef4444";
   }
 
   function RR({obj,isW}){
-    const t=obj.base&&!RANK_BASES[obj.id]?obj.base:getRankBase(obj.id,ri,prestige), d=(isW||obj.id==="walk")?(wLog[obj.id]||0):(tLog[obj.id]||0);
+    const isWeeklyRow = isW || obj.weekly || obj.id==="walk";
+    const t=obj.base&&!RANK_BASES[obj.id]?obj.base:getRankBase(obj.id,ri,prestige), d=isWeeklyRow?(wLog[obj.id]||0):(tLog[obj.id]||0);
     const displayTarget = (obj.target && !obj.binary) ? obj.target : t;
     const pct=Math.min(100,(d/displayTarget)*100), done=d>=displayTarget, over=d>displayTarget;
-    const validated=isW?(wLog[obj.id]!==undefined):(tLog[obj.id]!==undefined);
+    const validated=isWeeklyRow?(wLog[obj.id]!==undefined):(tLog[obj.id]!==undefined);
     if(obj.binary){
       return h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
         QuestIcon(obj.id,obj.icon,18),
@@ -2367,13 +2368,13 @@ const CAP_BADGE_COLOR = "#ef4444";
   function Home(){
     const dailyObjs = sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression));
     const weeklyObjs = restMode && walkObj
-      ? [...sortStat(objs.filter(o=>o.weekly&&!o.regression)), walkObj]
-      : sortStat(objs.filter(o=>o.weekly&&!o.regression));
-    const regressionObjs = objs.filter(o=>o.regression);
+      ? [...sortStat(objs.filter(o=>o.weekly&&!o.optional&&!o.regression)), walkObj]
+      : sortStat(objs.filter(o=>o.weekly&&!o.optional&&!o.regression));
+    const regressionObjs = sortStat(objs.filter(o=>o.regression));
     const secs=[
       {lb:"Qu\u00eates journalières",ob:dailyObjs,iw:false},
       {lb:"Qu\u00eates hebdomadaires",ob:weeklyObjs,iw:true},
-      {lb:"Qu\u00eates bonus", ob:sortStat(objs.filter(o=>(o.daily&&o.optional||o.id==="walk")&&!(restMode&&o.id==="walk")&&!o.bonusHidden)), iw:false},
+      {lb:"Qu\u00eates bonus", ob:sortStat(objs.filter(o=>((o.daily||o.weekly)&&o.optional||o.id==="walk")&&!(restMode&&o.id==="walk")&&!o.bonusHidden&&!o.regression)), iw:false},
     ];
 
     return h("div",{class:"tab"},
@@ -2482,11 +2483,11 @@ const CAP_BADGE_COLOR = "#ef4444";
 
   function Quests(){
     const reqBase=sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression));
-    const bonBase=sortStat(objs.filter(o=>(o.daily&&o.optional||o.id==="walk")&&!(restMode&&o.id==="walk")&&!o.bonusHidden&&!o.regression));
+    const bonBase=sortStat(objs.filter(o=>((o.daily||o.weekly)&&o.optional||o.id==="walk")&&!(restMode&&o.id==="walk")&&!o.bonusHidden&&!o.regression));
     const wkBase=restMode&&walkObj
-      ? [...sortStat(objs.filter(o=>o.weekly&&!o.regression)), walkObj]
-      : sortStat(objs.filter(o=>o.weekly&&!o.regression));
-    const regressionBase=objs.filter(o=>o.regression);
+      ? [...sortStat(objs.filter(o=>o.weekly&&!o.optional&&!o.regression)), walkObj]
+      : sortStat(objs.filter(o=>o.weekly&&!o.optional&&!o.regression));
+    const regressionBase=sortStat(objs.filter(o=>o.regression));
 
     const isQuestDone=(obj)=>{
       const isWeekly = obj.weekly || obj.id==="walk";
