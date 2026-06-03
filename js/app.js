@@ -1055,12 +1055,18 @@ function App(){
   const activeOn = (day) => reqDailyObjs.filter(o=>!o.startDate||o.startDate<=day);
   // Base applicable pour un jour donné (gère baseHistory pour les changements rétroactifs)
   const getBaseForDay = (obj,day) => {
-    if(!obj.baseHistory||!day) return obj.base;
-    // On cherche le premier "until" >= day (l'historique est trié par date croissante)
-    for(const h of obj.baseHistory){
-      if(day<=h.until) return h.base;
+    if(!obj) return 0;
+    // On conserve l'historique explicite quand il existe (ex : ancien objectif Eau).
+    if(obj.baseHistory&&day){
+      // On cherche le premier "until" >= day (l'historique est trié par date croissante)
+      for(const h of obj.baseHistory){
+        if(day<=h.until) return h.base;
+      }
     }
-    return obj.base;
+    // Important : pour le streak, utiliser l'objectif calculé au rang actuel
+    // et non obj.base brut. Sinon Lecture restait à 20 min dans le recalcul
+    // historique alors que RANK_BASES peut définir 5/10/15/etc.
+    return getRankBase(obj.id, ri, prestige);
   };
   // Seuil pour considérer une quête comme "faite" (streak/historique)
   // Si validateAt est défini, on l'utilise ; sinon getBaseForDay (= la base)
