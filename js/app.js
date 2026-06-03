@@ -1339,14 +1339,20 @@ function App(){
     const vals = activeEp.dailyValidations||[];
     const startDay = activeEp.startedAtDay;
     if(startDay === today) return; // lancée aujourd'hui, pas encore de vérif
-    if(vals.length === 0 || vals[vals.length-1] !== yDay){
+    if(yDay < startDay) return; // sécurité : ne jamais vérifier avant le début effectif
+
+    // Une épreuve streak7 ne doit échouer que si la veille n'est pas présente
+    // dans les validations. Ne pas se baser sur le dernier élément du tableau :
+    // selon les restaurations/imports, l'ordre peut varier et déclencher un faux échec.
+    const yesterdayValidated = vals.includes(yDay);
+    if(!yesterdayValidated){
       // Hier non validé → échec : cooldown jusqu'au prochain lundi 7h
       setState(s=>({...s,
         epreuves:s.epreuves.map(e=>e.epid===activeEp.epid?{...e,failedAt:Date.now()}:e),
         epreuveCooldownUntil:nextMondayAt7()
       }));
     }
-  },[today]);
+  },[today, activeEp?.epid, activeEp?.dailyValidations?.length]);
 
   // Auto-launch épreuve si epReady (= pas d'épreuve active + cooldown passé)
   useEffect(()=>{
