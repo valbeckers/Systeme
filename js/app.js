@@ -59,9 +59,6 @@ const DEFS = [
   // ─── SANTÉ ────────────────────────────────────────────────────────────
   {id:"water",  name:"Hydratation",     unit:"verre", xpPer:10,  daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDCA7",               base:10, baseHistory:[{until:"2026-04-29",base:8}]},
   {id:"sleep",  name:"8h de sommeil",   unit:"nuit",  xpPer:0,   daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDECF\uFE0F",         base:1,  binary:true, binaryXp:200},
-  {id:"adult",name:"",unit:"écart",xpPer:0,daily:true,weekly:false,optional:false,regression:true,regressionType:"adult",stat:"Discipline",icon:"🔴",base:1,target:1,penaltyAll:true,startDate:"2026-05-21"},
-  {id:"cheatmeal",name:"Cheat meal",unit:"repas",xpPer:0,daily:false,weekly:true,optional:false,regression:true,regressionType:"cheatmeal",stat:"Sante",stat2:"Discipline",icon:"🍔",base:1,target:1,fixedBase:true,startDate:"2026-05-31"},
-  {id:"nosugar",name:"Sucres transform\u00e9s", unit:"écart", xpPer:0, daily:true, weekly:false,optional:false, regression:true, regressionType:"sugar", stat:"Sante", stat2:"Discipline", icon:"\uD83C\uDF4E", base:1, target:1, startDate:"2026-05-31"},
   {id:"protein",name:"Repas \u00e9quilibr\u00e9",unit:"repas", xpPer:0,   daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83C\uDF4C",               base:1, target:2, validateAt:1, startDate:"2026-05-20", tiers:[{at:1,xp:200,stat:"Sante"},{at:2,xp:200,stat:"Sante",xp2:200,stat2:"Discipline"}]},
   // ─── FORCE ────────────────────────────────────────────────────────────
   {id:"push",   name:"Pompes",          unit:"rep",   xpPer:2,   daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDBE",               base:30, cap:3},
@@ -135,86 +132,13 @@ const SP = {
 const SQ_TIER_COLOR = {mineure:"#fbbf24", majeure:"#f59e0b", legendaire:"#f97316"};
 const SQ_TIER_LABEL = {mineure:"Mineure", majeure:"Majeure", legendaire:"L\u00e9gendaire"};
 
-// ─── ÉPREUVES (challenges 7 jours) ────────────────────────────────────────
-const EPREUVE_COOLDOWN = {mineure:2*86400000, majeure:5*86400000, legendaire:7*86400000};
-const EPREUVES = [
-  // 12 épreuves au total, sans notion de tier
-  {id:"ep_150pull",  name:"150 tractions",                      iconId:"ep_pullups", icon:"\u270A\uD83C\uDFFB",                       stat:"Force",        xp:3000, days:7, unit:"rep", target:150,
-    desc:"Atteindre 150 tractions en 7 jours"},
-  {id:"ep_wallsit60",name:"35min de chaise",                    iconId:"ep_wallsit", icon:"\uD83E\uDE91",                             stat:"Force",        xp:2000, xp2:1000, stat2:"Endurance", days:7, unit:"min", target:35, dailyTrack:true, dailyTrackMin:5,
-    desc:"35 minutes cumul\u00e9es de chaise sur la semaine"},
-  {id:"ep_book",     name:"Lire un livre complet (300+ pages)", iconId:"ep_reading", icon:"\uD83D\uDCDA",                             stat:"Esprit", xp:3000, days:7, binary:true,
-    desc:"Terminer un livre de 300 pages ou plus"},
-  {id:"ep_project",  name:"4h de travail sur un projet professionnel",iconId:"ep_4hwork", icon:"\uD83E\uDDE0",                           stat:"Esprit", xp:2000, xp2:1000, stat2:"Discipline", days:7, unit:"min", target:240,
-    desc:"4 heures de travail sur un projet professionnel"},
-  {id:"ep_medweek",  name:"M\u00e9ditation quotidienne",        iconId:"ep_med", icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F",stat:"Esprit",xp:3000, days:7, streak7:true, streakDays:7, unit:"jour", target:7,
-    desc:"M\u00e9diter chaque jour pendant 7 jours"},
-  {id:"ep_deepwork5",name:"Deep Work 60min",                    iconId:"ep_deepwork", icon:"\u26AB",                                   stat:"Esprit",xp:2000, xp2:1000, stat2:"Discipline", days:7, cumDays:true, streakDays:5, unit:"jour", target:5,
-    desc:"60 min de deep work 5 jours de suite"},
-  {id:"ep_hike",     name:"Randonn\u00e9e longue (5h+)",        iconId:"ep_hike", icon:"\u26F0\uFE0F",                             stat:"Endurance",    xp:3000, days:7, binary:true,
-    desc:"Randonn\u00e9e de 5 heures minimum"},
-  {id:"ep_10km",     name:"Courir un 10km non-stop",            iconId:"ep_run", icon:"\uD83C\uDFC3\uD83C\uDFFB\u200D\u27A1\uFE0F",stat:"Endurance",   xp:2500, xp2:500, stat2:"Agilite", days:7, binary:true,
-    desc:"Courir 10km non-stop"},
-  {id:"ep_burpees",  name:"100 burpees",                        iconId:"ep_burpees", icon:"\uD83D\uDD25",                             stat:"Endurance",    xp:2000, xp2:1000, stat2:"Agilite", days:7, unit:"rep", target:100,
-    desc:"100 burpees cumul\u00e9s"},
-  {id:"ep_wakeup",   name:"R\u00e9veil \u00e0 la m\u00eame heure",iconId:"ep_clock", icon:"\uD83C\uDF05",                           stat:"Discipline",   xp:2000, xp2:1000, stat2:"Sante", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
-    desc:"Se lever \u00e0 la m\u00eame heure 7 jours de suite"},
-  {id:"ep_coldweek", name:"Douche froide quotidienne",          iconId:"ep_coldshower", icon:"\u2744\uFE0F",                             stat:"Sante",        xp:1500, xp2:1500, stat2:"Discipline", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
-    desc:"Douche froide chaque jour pendant 7 jours"},
-  {id:"ep_noscroll", name:"Pas de doomscrolling",               iconId:"ep_nophone", icon:"\uD83D\uDCF5",                             stat:"Esprit", xp:3000, days:7, streak7:true, streakDays:7, unit:"jour", target:7,
-    desc:"Z\u00e9ro scroll passif pendant 7 jours"},
-  {id:"ep_nojunkwk", name:"Pas de junk-food",                   iconId:"ep_nojunkfood", icon:"\uD83C\uDF55",                             stat:"Sante",        xp:2000, xp2:1000, stat2:"Discipline", days:7, streak7:true, streakDays:7, unit:"jour", target:7,
-    desc:"Z\u00e9ro junk-food pendant 7 jours"},
-  {id:"ep_clean",    name:"Rangement total de la maison",      iconId:"ep_broom", icon:"\uD83E\uDDF9",                             stat:"Discipline",   xp:3000, days:7, binary:true,
-    desc:"Ranger compl\u00e8tement la maison"},
-  {id:"ep_mob",      name:"Mobilit\u00e9 matinale",             iconId:"ep_flex", icon:"\uD83E\uDD38\uD83C\uDFFB\u200D\u2642\uFE0F",stat:"Agilite",     xp:3000, days:7, cumDays:true, streakDays:5, unit:"jour", target:5,
-    desc:"Faire 15 min de mobilit\u00e9 5 jours sur 7"},
-  {id:"ep_taichi",   name:"Tai Chi quotidien",                  iconId:"ep_martialflow", icon:"\u262F\uFE0F",                             stat:"Agilite",      xp:2000, xp2:1000, stat2:"Esprit", days:7, cumDays:true, streakDays:5, dailyMin:20, unit:"jour", target:5,
-    desc:"Faire 20 min de Tai Chi 5 jours sur 7"},
-];
-
-// ─── DONJONS (slot hebdomadaire alternatif aux épreuves) ───────────────────
-// Un donjon = plusieurs objectifs légers sur 7 jours, avec XP uniquement à la complétion totale.
-const DONJONS = [
-  {id:"dj_moine", kind:"donjon", name:"Donjon du Moine", icon:"🕯️", stat:"Esprit", xp:4000, xp2:1000, stat2:"Discipline", days:7,
-    desc:"Semaine orientée calme, attention et maîtrise de la stimulation",
-    goals:[
-      {id:"med5", label:"Méditation", target:5, unit:"sessions"},
-      {id:"silence1", label:"Silence 30min", target:1, unit:"fois"},
-      {id:"nophone2", label:"Téléphone hors de portée 3h", target:2, unit:"fois"},
-      {id:"cleaninput7", label:"Aucun contenu passif", target:7, unit:"jours"}
-    ]},
-  {id:"dj_corps_silencieux", kind:"donjon", name:"Donjon du Corps silencieux", icon:"🐾", stat:"Agilite", xp:4000, xp2:1000, stat2:"Discipline", days:7,
-    desc:"Semaine de contrôle, coordination, mobilité et précision",
-    goals:[
-      {id:"footwork2", label:"Footwork rapide", target:2, unit:"sessions"},
-      {id:"silent2", label:"Déplacements silencieux", target:2, unit:"sessions"},
-      {id:"flow2", label:"Animal flow", target:2, unit:"sessions"},
-      {id:"flex2", label:"Souplesse longue (30min)", target:2, unit:"sessions"}
-    ]},
-  {id:"dj_fondation", kind:"donjon", name:"Donjon des Fondations", icon:"🏛️", stat:"Sante", xp:4000, xp2:1000, stat2:"Discipline", days:7,
-    desc:"Semaine de base : hydratation, repas, récupération et hygiène mentale",
-    goals:[
-      {id:"water7", label:"Hydratation complète", target:7, unit:"jours"},
-      {id:"protein10", label:"Repas équilibré", target:10, unit:"repas"},
-      {id:"mindmeal10", label:"Manger sans stimulation", target:10, unit:"repas"},
-      {id:"breath2", label:"Cohérence cardiaque", target:2, unit:"fois"}
-    ]},
-  {id:"dj_chasseur", kind:"donjon", name:"Donjon du Chasseur", icon:"🏹", stat:"Endurance", xp:4000, xp2:1000, stat2:"Discipline", days:7,
-    desc:"Semaine de mouvement : souffle, jambes, déplacement et résistance",
-    goals:[
-      {id:"run3", label:"Sortie course (5km)", target:3, unit:"sorties"},
-      {id:"walk1", label:"Sortie marche (5km)", target:1, unit:"sortie"},
-      {id:"stairs3", label:"Escaliers", target:3, unit:"sessions"},
-      {id:"cardio2", label:"Corde ou fractionné", target:2, unit:"sessions"}
-    ]}
-];
-
-function pickRandomDonjon(completedIds){
-  const avail = DONJONS.filter(d=>!completedIds.includes(d.id));
-  if(avail.length===0) return null;
-  return {tpl:avail[Math.floor(Math.random()*avail.length)]};
-}
+// ─── ÉPREUVES / DONJONS ────────────────────────────────────────────────────
+// Fonctionnalités désactivées : supprimées de l'app pour stabiliser le reset hebdomadaire.
+const EPREUVE_COOLDOWN = {};
+const EPREUVES = [];
+const DONJONS = [];
+function pickRandomDonjon(){ return null; }
+function pickRandomEpreuve(){ return null; }
 
 // Spawn programmé : prochain lundi à 7h00 local (à partir de "from", défaut now)
 // Si on est lundi avant 7h, retourne aujourd'hui 7h.
@@ -401,81 +325,6 @@ const fmtNum = (v, max=2) => {
   return n.toFixed(max).replace(/\.0+$/,"").replace(/(\.\d*?)0+$/,"$1");
 };
 
-function regressionTotalPenalty(obj,count){
-  const n=Math.max(0,Number(count)||0);
-  if(obj?.regressionType==="adult"){
-    if(n<=0) return {};
-    const out={}; STATS.forEach(st=>{out[st]=-1000*n;}); return out;
-  }
-  if(obj?.regressionType==="sugar"){
-    if(n<=0) return {};
-    if(n===1) return {Sante:-250};
-    if(n===2) return {Sante:-500,Discipline:-250};
-    return {Sante:-1000*(n-2),Discipline:-500*(n-2)};
-  }
-  if(obj?.regressionType==="cheatmeal"){
-    if(n<=1) return {};
-    if(n===2) return {Sante:-500,Discipline:-250};
-    return {Sante:-1000*(n-2),Discipline:-500*(n-2)};
-  }
-  return {};
-}
-function penaltySummary(delta){
-  const entries=Object.entries(delta||{}).filter(([,v])=>v!==0);
-  if(entries.length===0) return "Aucune pénalité";
-  return entries.map(([st,v])=>v+" XP "+(STAT_LBL[st]||st)).join(" · ");
-}
-function regressionPenaltyDelta(obj,prev,next){
-  const before=regressionTotalPenalty(obj,prev);
-  const after=regressionTotalPenalty(obj,next);
-  const out={};
-  STATS.forEach(st=>{
-    const d=(after[st]||0)-(before[st]||0);
-    if(d) out[st]=d;
-  });
-  return out;
-}
-function regressionSeverity(obj,count){
-  const n=Math.max(0,Number(count)||0);
-  if(obj?.regressionType==="adult") return n>0 ? "Majeure" : "Aucune";
-  if(obj?.regressionType==="sugar"){
-    if(n<=0) return "Aucune";
-    if(n===1) return "Mineure";
-    if(n===2) return "Moyenne";
-    return "Majeure";
-  }
-  if(obj?.regressionType==="cheatmeal"){
-    if(n===0) return "Bonus potentiel";
-    if(n===1) return "Neutre";
-    if(n===2) return "Moyenne";
-    return "Majeure";
-  }
-  return "Aucune";
-}
-function regressionCountText(obj,count){
-  const n=fmtNum(count||0);
-  if(obj?.regressionType==="cheatmeal") return n+"/1 repas";
-  return n+" écart"+((Number(count)||0)>1?"s":"");
-}
-function regressionCodexLines(obj){
-  if(obj?.regressionType==="adult") return [
-    "Majeure : dès le 1er écart : -1000 XP sur chaque stat"
-  ];
-  if(obj?.regressionType==="sugar") return [
-    "Mineure : 1 écart/jour : -250 XP Santé",
-    "Moyenne : 2 écarts/jour : -500 XP Santé · -250 XP Discipline",
-    "Majeure : 3+ écarts/jour : -1000 XP Santé · -500 XP Discipline par répétition majeure"
-  ];
-  if(obj?.regressionType==="cheatmeal") return [
-    "0 cheat meal/semaine : +500 XP Santé · +500 XP Discipline",
-    "1 cheat meal/semaine : neutre",
-    "Moyenne : 2 cheat meals/semaine : -500 XP Santé · -250 XP Discipline",
-    "Majeure : 3+ cheat meals/semaine : -1000 XP Santé · -500 XP Discipline par répétition majeure"
-  ];
-  return ["Pénalité : selon règle dédiée"];
-}
-
-
 function calcXp(obj,total,baseOverride){
   if(!obj||total<=0)return 0;
   const t = baseOverride!=null ? baseOverride : obj.base;
@@ -625,26 +474,8 @@ function migrateRuntimeQuestDefinitions(state){
     state.completedSqLog = state.completedSqLog.filter(q => (typeof q === "string" ? q : q?.id) !== "sp_flex30");
   }
 
-  const epreuveById = {};
-  EPREUVES.forEach(e => { epreuveById[e.id] = e; });
-  if(Array.isArray(state.epreuves)){
-    state.epreuves = state.epreuves.map(e => {
-      const tpl = epreuveById[e.id];
-      if(!tpl) return e;
-      return {
-        ...e,
-        ...tpl,
-        epid:e.epid,
-        progress:e.progress,
-        dailyValidations:e.dailyValidations,
-        startedAt:e.startedAt,
-        startedAtDay:e.startedAtDay,
-        expiresAt:e.expiresAt,
-        completedAt:e.completedAt,
-        failedAt:e.failedAt
-      };
-    });
-  }
+  // Épreuves et donjons supprimés : aucune migration nécessaire.
+  state.epreuves = [];
 
   return state;
 }
@@ -777,13 +608,13 @@ function buildState(){
     ...saved,
     objectives:DEFS,
     specialQuests:saved.specialQuests||[],
-    epreuves:saved.epreuves||[],
-    epreuveCooldownUntil:saved.epreuveCooldownUntil||null,
+    epreuves:[],
+    epreuveCooldownUntil:null,
     sqCooldownUntil:saved.sqCooldownUntil||null,
-    completedEpreuveIds:saved.completedEpreuveIds||[],
+    completedEpreuveIds:[],
     completedSqLog:saved.completedSqLog||[],
     sqStatCycle:saved.sqStatCycle||[],
-    epStatCycle:saved.epStatCycle||[],
+    epStatCycle:[],
     capReached:saved.capReached||{},
     stats:saved.stats||IMPORTED.stats,
     statXp:saved.statXp||IMPORTED.statXp,
@@ -793,7 +624,6 @@ function buildState(){
     prestige:saved.prestige||IMPORTED.prestige||0,
     restMode:saved.restMode||false,
     walkTarget:saved.walkTarget||0,
-    regressionWeeklyProcessed:saved.regressionWeeklyProcessed||{},
   };
   // Recalcul defensif: rebuild stats levels from statXp (cohérence après changement de formule)
   const recomputed={};
@@ -806,10 +636,7 @@ function buildState(){
     // Pour une quête active, expiresAt = prochain 7h après startedAt
     return {...q, expiresAt: next7AM(q.startedAt||Date.now())};
   });
-  out.epreuves = (out.epreuves||[]).map(e=>{
-    if(e.completedAt||e.failedAt) return e;
-    return {...e, expiresAt: nextMondayAt7(e.startedAt||Date.now())};
-  });
+  out.epreuves = [];
   return out;
 }
 
@@ -875,135 +702,13 @@ function App(){
     }
   },[]);
 
-  // Penalites quotidiennes : obj avec penaltyXp non valid\u00e9s la veille (\u00e9chec)
-  useEffect(()=>{
-    const t=todayStr();
-    const lastChk=state.lastPenaltyCheck||null;
-    if(lastChk===t) return; // d\u00e9j\u00e0 v\u00e9rifi\u00e9 aujourd'hui
-    const defs=state.objectives||DEFS;
-    const penalizable=defs.filter(o=>(o.penaltyXp||o.penaltyAll)&&o.daily&&o.binary);
-    if(penalizable.length===0){
-      setState(s=>({...s,lastPenaltyCheck:t}));
-      return;
-    }
-    // Calculer la veille
-    const yest=new Date(new Date(t)-86400000);
-    const yestStr=yest.toISOString().slice(0,10);
-    const dayLog=(state.dailyLog||{})[yestStr]||{};
-    const curRank=getRankWithStats(state.totalXp||0,state.stats||{});
-    const ri=RANKS.findIndex(r=>r.id===curRank.id);
-    let totalPenalty=0;
-    let sxDelta={};
-    let penaltiesApplied=[];
-    penalizable.forEach(obj=>{
-      const startDate=obj.startDate;
-      if(startDate && yestStr<startDate) return;
-      const v=dayLog[obj.id]||0;
-      const base=getRankBase(obj.id,ri,state.prestige||0);
-      const validated=v>=base;
-      if(!validated){
-        if(obj.penaltyAll){
-          // Quête rouge :
-          // - absence de clic = succès par défaut (pas de pénalité, XP de succès accordée plus bas)
-          // - échec explicite = régression, sauf si déjà appliquée le jour même
-          if(dayLog[obj.id] === undefined){
-            return;
-          }
-          if((state.adultPenaltyDays||{})[yestStr]){
-            return;
-          }
-          totalPenalty+=7000;
-          STATS.forEach(st=>{sxDelta[st]=(sxDelta[st]||0)-1000;});
-          penaltiesApplied.push(obj.id);
-          return;
-        }
-        const p=obj.penaltyXp||0;
-        const baseStat=obj.stat;
-        totalPenalty+=p;
-        sxDelta[baseStat]=(sxDelta[baseStat]||0)-p;
-        penaltiesApplied.push(obj.id);
-      }
-    });
-    const defaultSuccesses = penalizable.filter(obj=>
-      obj.penaltyAll &&
-      (!obj.startDate || yestStr>=obj.startDate) &&
-      dayLog[obj.id] === undefined
-    );
 
-    if(totalPenalty>0 || defaultSuccesses.length>0){
-      setState(s=>{
-        const newSx={...(s.statXp||{})};
-        Object.keys(sxDelta).forEach(k=>{
-          newSx[k]=Math.max(0,(newSx[k]||0)+sxDelta[k]);
-        });
-        let xpGain=0;
-        const d2={...(s.dailyLog||{})};
-        const yLog={...(d2[yestStr]||{})};
-        defaultSuccesses.forEach(obj=>{
-          if(yLog[obj.id] === undefined){
-            yLog[obj.id]=1;
-            const gain=obj.binaryXp||0;
-            xpGain+=gain;
-            newSx[obj.stat]=(newSx[obj.stat]||0)+gain;
-          }
-        });
-        if(defaultSuccesses.length>0){
-          d2[yestStr]=yLog;
-        }
-        const newStats={...(s.stats||{})};
-        Object.keys(sxDelta).forEach(k=>{ newStats[k]=getLvl(newSx[k]||0); });
-        defaultSuccesses.forEach(obj=>{ newStats[obj.stat]=getLvl(newSx[obj.stat]||0); });
-        const adultDays = penaltiesApplied.includes("adult") ? {...(s.adultPenaltyDays||{}),[yestStr]:true} : (s.adultPenaltyDays||{});
-        return {...s,dailyLog:d2,totalXp:Math.max(0,s.totalXp-totalPenalty)+xpGain,statXp:newSx,stats:newStats,adultPenaltyDays:adultDays,lastPenaltyCheck:t,lastPenaltiesApplied:{date:yestStr,ids:penaltiesApplied,total:totalPenalty}};
-      });
-    } else {
-      setState(s=>({...s,lastPenaltyCheck:t}));
-    }
-  },[]);
 
 
 
 
   // ─── CALCULS DERIVES (dans l'ordre, sans circularite) ──────────────────
 
-
-  // Régressions hebdomadaires : clôture de la semaine précédente
-  useEffect(()=>{
-    const currentWeek = wkStr();
-    const previousWeek = prevWkStr();
-    if((state.regressionWeeklyProcessed||{})[previousWeek]) return;
-    const defs = state.objectives || DEFS;
-    const cheatDef = defs.find(o=>o.id==="cheatmeal"&&o.regression);
-    if(!cheatDef) return;
-    const startWeek = cheatDef.startDate ? wkStr(new Date(cheatDef.startDate)) : null;
-    if(startWeek && previousWeek < startWeek) return;
-    const count = (state.weeklyLog?.[previousWeek]?.cheatmeal)||0;
-    let totalDelta = 0;
-    let statDelta = {};
-    if(count===0){
-      statDelta = {Sante:500, Discipline:500};
-      totalDelta = 1000;
-    }else if(count===1){
-      statDelta = {};
-    }else if(count===2){
-      statDelta = {Sante:-500, Discipline:-250};
-    }else if(count>=3){
-      statDelta = {Sante:-1000*(count-2), Discipline:-500*(count-2)};
-    }
-    setState(s=>{
-      const sx={...(s.statXp||{})};
-      Object.entries(statDelta).forEach(([stat,delta])=>{ sx[stat]=Math.max(0,(sx[stat]||0)+delta); });
-      const st={...(s.stats||{})};
-      Object.keys(statDelta).forEach(stat=>{ st[stat]=getLvl(sx[stat]||0); });
-      return {
-        ...s,
-        totalXp: Math.max(0,(s.totalXp||0)+totalDelta),
-        statXp:sx,
-        stats:st,
-        regressionWeeklyProcessed:{...(s.regressionWeeklyProcessed||{}),[previousWeek]:{cheatmeal:count,statDelta,totalDelta,checkedAt:Date.now()}}
-      };
-    });
-  },[]);
 
   const today = todayStr();
   const wk    = wkStr();
@@ -1075,84 +780,22 @@ function App(){
     return getBaseForDay(obj, day);
   };
 
-  // 7b. Système de dette
+  // 7b. Système de dette supprimé
   const yesterday = (()=>{ const d=new Date(today); d.setDate(d.getDate()-1); return d.toISOString().slice(0,10); })();
   const reqWeeklyObjs = objs.filter(o=>!o.optional&&o.weekly);
+  const debt = {};
+  const debtActive = false;
 
-  // Semaine précédente pour dette hebdo
-  const prevWkDate = (()=>{ const d=new Date(today); d.setDate(d.getDate()-7); return d; })();
-  const prevWk = wkStr(prevWkDate);
-
-  const debt = (()=>{
-    if(!state.lastActiveDay || state.lastActiveDay !== yesterday || state.streak <= 0) return {};
-    const yLog  = state.dailyLog[yesterday]||{};
-    const yWk   = wkStr(new Date(yesterday));
-    const yWLog = state.weeklyLog[yWk]||{};
-    const d = {};
-
-    // 1. Sommeil : binaire → dette = 30min méditation le lendemain
-    if((yLog["sleep"]||0) < 1) d["sleep_med"] = true;
-
-    // 2. Eau : verres manquants s'ajoutent à l'objectif du lendemain
-    const waterBase = getRankBase("water", ri, prestige);
-    const waterDone = yLog["water"]||0;
-    if(waterDone < waterBase) d["water_extra"] = waterBase - waterDone;
-
-    // 3. Pompes, abdos, squats, lecture → ×1.5
-    ["push","abs","squats","reading"].forEach(id=>{
-      const o = activeOn(yesterday).find(x=>x.id===id);
-      if(!o) return;
-      const done = yLog[id]||0;
-      const target = getRankBase(id, ri, prestige);
-      if(done < target) d[id] = true;
-    });
-
-    // 4. Course et Marche (mode blessure) → dette semaine suivante ×1.5
-    // Vérifier si la semaine précédente est bien terminée (hier = dernier jour de la semaine passée)
-    const todayWk = wkStr();
-    if(yWk !== todayWk){
-      // On vient de changer de semaine — vérifier les hebdos de la semaine passée
-      reqWeeklyObjs.forEach(o=>{
-        const done = yWLog[o.id]||0;
-        const target = getRankBase(o.id, ri, prestige);
-        if(done < target) d["weekly_"+o.id] = true;
-      });
-      if(restMode && walkObj){
-        const wDone = yWLog["walk"]||0;
-        const wTarget = walkObj.base;
-        if(wDone < wTarget) d["weekly_walk"] = true;
-      }
-    }
-    return d;
-  })();
-
-  const debtActive = Object.keys(debt).length > 0;
-
-  // Objectif effectif selon type de dette
   function getEffectiveTarget(objId, isWeekly=false){
     const obj = objs.find(o=>o.id===objId);
-    // Si validateAt défini sur cet objectif, c'est le seuil de validation streak
     if(obj && obj.validateAt != null) return obj.validateAt;
-    const base = getRankBase(objId, ri, prestige);
-    if(!debtActive) return base;
-    // Pompes/abdos/squats/lecture : ×1.5
-    if(["push","abs","squats","reading"].includes(objId) && debt[objId]) return Math.ceil(base * 1.5);
-    // Eau : base + verres manquants hier
-    if(objId === "water" && debt["water_extra"]) return base + debt["water_extra"];
-    // Course / Marche (dette semaine suivante)
-    if(isWeekly && debt["weekly_"+objId]) return Math.ceil(base * 1.5);
-    return base;
+    return getRankBase(objId, ri, prestige);
   }
 
-  // La dette méditation (sommeil) s'ajoute comme objectif du jour
-  const sleepDebtMed = debt["sleep_med"] ? 30 : 0; // 30min de méditation obligatoires
+  const sleepDebtMed = 0;
 
   const allDailyDone = (()=>{
-    const dailyOk = reqDailyObjs.every(o=>(tLog[o.id]||0)>=getEffectiveTarget(o.id));
-    if(!dailyOk) return false;
-    // Vérifier dette sommeil → méditation 30min obligatoire
-    if(sleepDebtMed > 0 && (tLog["med"]||0) < sleepDebtMed) return false;
-    return true;
+    return reqDailyObjs.every(o=>(tLog[o.id]||0)>=getEffectiveTarget(o.id));
   })();
 
   // 8. Streak : on remonte à partir d'hier (aujourd'hui peut être incomplet sans casser le streak)
@@ -1217,25 +860,14 @@ function App(){
   const sqCooldownActive = sqCooldownUntil && now < sqCooldownUntil;
   const sqReady = !activeSq && !sqCooldownActive;
 
-  // 11. Épreuves
-  const epreuves = state.epreuves||[];
-  const activeEp = epreuves.find(e=>!e.completedAt&&!e.failedAt&&now<e.expiresAt)||null;
-  // Épreuve récemment complétée (visible tant que le cooldown court)
-  const completedEp = epreuves.find(e=>e.completedAt&&(now-e.completedAt)<(7*86400000))||null;
-  const cooldownUntil = state.epreuveCooldownUntil||null;
-  const cooldownActive = cooldownUntil && now < cooldownUntil;
-  const epReady = !activeEp && !cooldownActive;
-  // Vérifier échec épreuve streak7 (si hier non validé)
-  const failedEp = (()=>{
-    if(!activeEp||!activeEp.streak7) return null;
-    const yDay = yesterday;
-    const yValidations = activeEp.dailyValidations||[];
-    if(yValidations.length>0){
-      const lastVal = yValidations[yValidations.length-1];
-      if(lastVal !== yDay && activeEp.startedAtDay !== yDay) return activeEp;
-    }
-    return null;
-  })();
+  // 11. Épreuves / Donjons supprimés
+  const epreuves = [];
+  const activeEp = null;
+  const completedEp = null;
+  const cooldownUntil = null;
+  const cooldownActive = false;
+  const epReady = false;
+  const failedEp = null;
 
   // Flags bonus
   const bonusGiven       = state.streakBonusDay===today;
@@ -1332,59 +964,11 @@ function App(){
     });
   },[completedSq?.sqid]);
 
-  // Détection échec épreuve streak7
-  useEffect(()=>{
-    if(!activeEp||!activeEp.streak7) return;
-    const yDay = yesterday;
-    const vals = activeEp.dailyValidations||[];
-    const startDay = activeEp.startedAtDay;
-    if(startDay === today) return; // lancée aujourd'hui, pas encore de vérif
-    if(yDay < startDay) return; // sécurité : ne jamais vérifier avant le début effectif
+  // Épreuves supprimées : pas de détection d'échec.
 
-    // Une épreuve streak7 ne doit échouer que si la veille n'est pas présente
-    // dans les validations. Ne pas se baser sur le dernier élément du tableau :
-    // selon les restaurations/imports, l'ordre peut varier et déclencher un faux échec.
-    const yesterdayValidated = vals.includes(yDay);
-    if(!yesterdayValidated){
-      // Hier non validé → échec : cooldown jusqu'au prochain lundi 7h
-      setState(s=>({...s,
-        epreuves:s.epreuves.map(e=>e.epid===activeEp.epid?{...e,failedAt:Date.now()}:e),
-        epreuveCooldownUntil:nextMondayAt7()
-      }));
-    }
-  },[today, activeEp?.epid, activeEp?.dailyValidations?.length]);
 
-  // Auto-launch épreuve si epReady (= pas d'épreuve active + cooldown passé)
-  useEffect(()=>{
-    if(!epReady) return;
-    setState(s=>{
-      // Re-check dans le setter
-      const eps = s.epreuves||[];
-      const hasActive = eps.find(e=>!e.completedAt&&!e.failedAt&&Date.now()<e.expiresAt);
-      const cd = s.epreuveCooldownUntil||0;
-      if(hasActive || Date.now()<cd) return s;
-      const completedIds = s.completedEpreuveIds||[];
-      const rollDonjon = Math.random() < 0.20;
-      let result = rollDonjon ? pickRandomDonjon(completedIds) : pickRandomEpreuve(completedIds, cd, s.epStatCycle);
-      let pickedStat = null, cycleReset = false;
+  // Épreuves / donjons supprimés : pas d'auto-lancement hebdomadaire.
 
-      // Fallback : si le type tiré n'a plus de contenu disponible, on prend l'autre.
-      if(!result && rollDonjon) result = pickRandomEpreuve(completedIds, cd, s.epStatCycle);
-      if(!result && !rollDonjon) result = pickRandomDonjon(completedIds);
-      if(!result) return s;
-
-      if(!result.tpl.kind || result.tpl.kind!=="donjon"){
-        pickedStat = result.pickedStat;
-        cycleReset = result.cycleReset;
-      }
-
-      const {tpl}=result;
-      const t = Date.now();
-      const ep={...tpl,epid:"ep_"+t,progress:0,goalProgress:{},startedAt:t,startedAtDay:today,expiresAt:nextMondayAt7(t),completedAt:null,failedAt:null,dailyValidations:[]};
-      const newCycle = tpl.kind==="donjon" ? (s.epStatCycle||[]) : (cycleReset ? [pickedStat] : [...(s.epStatCycle||[]),pickedStat]);
-      return {...s,epreuves:[...(s.epreuves||[]).filter(e=>e.completedAt||e.failedAt),ep],epStatCycle:newCycle,epreuveCooldownUntil:nextMondayAt7(t)};
-    });
-  },[epReady]);
 
   function spawnFloat(txt,e){
     const id=Date.now()+Math.random();
@@ -1434,29 +1018,6 @@ function App(){
     }
     // Tout objectif avec un base, non-binary, hors cas spéciaux (water/run) entre dans le système palier
     const isPalier = obj.base && !obj.binary && obj.id!=="water" && obj.id!=="run";
-    if(obj.regression){
-      const prevCount = (obj.weekly||obj.id==="walk") ? (wLog[obj.id]||0) : (tLog[obj.id]||0);
-      const nextCount = prevCount + val;
-      const delta = regressionPenaltyDelta(obj,prevCount,nextCount);
-      setState(s=>{
-        const sx={...(s.statXp||{})};
-        let totalDelta=0;
-        Object.entries(delta).forEach(([stat,dv])=>{ sx[stat]=Math.max(0,(sx[stat]||0)+dv); totalDelta+=dv; });
-        const st={...(s.stats||{})};
-        Object.keys(delta).forEach(stat=>{ st[stat]=getLvl(sx[stat]||0); });
-        if(obj.weekly||obj.id==="walk"){
-          const w={...s.weeklyLog};
-          w[wk]={...(w[wk]||{}),[obj.id]:(w[wk]?.[obj.id]||0)+val};
-          return {...s,weeklyLog:w,totalXp:Math.max(0,(s.totalXp||0)+totalDelta),statXp:sx,stats:st,lastActiveDay:todayStr()};
-        }
-        const d={...s.dailyLog};
-        d[today]={...(d[today]||{}),[obj.id]:(d[today]?.[obj.id]||0)+val};
-        return {...s,dailyLog:d,totalXp:Math.max(0,(s.totalXp||0)+totalDelta),statXp:sx,stats:st,lastActiveDay:todayStr()};
-      });
-      const summary=penaltySummary(delta);
-      spawnFloat(summary==="Aucune pénalité"?"Régression suivie":summary,e);
-      return;
-    }
 
     // Cas spécial : quête avec tiers (repas équilibré x/2, etc.)
     if(obj.tiers && obj.tiers.length>0){
@@ -1738,38 +1299,6 @@ const CAP_BADGE_COLOR = "#ef4444";
     const isDebt = isDebtX15 || isDebtWater || isDebtWeekly || isDebtMed;
     const done=obj.binary?(d>=1):(d>=effectiveT);
 
-    if(obj.regression){
-      const count = d;
-      const severity = regressionSeverity(obj,count);
-      const deltaNow = regressionTotalPenalty(obj,count);
-      const hasPenalty = Object.keys(deltaNow||{}).length>0;
-      const pct = hasPenalty ? 100 : (obj.regressionType==="cheatmeal" ? Math.min(100,(count/(obj.target||1))*100) : 0);
-      const color = severity==="Aucune" || severity==="Bonus potentiel" ? "#4ade80" : severity==="Neutre" ? "var(--td)" : severity==="Mineure" ? "#fbbf24" : severity==="Moyenne" ? "#f59e0b" : "#ef4444";
-      const detail = obj.regressionType==="cheatmeal" && count===0 ? "+500 XP Santé · +500 XP Discipline si semaine parfaite" : penaltySummary(deltaNow);
-      const isBad = Object.values(deltaNow).some(v=>v<0);
-      return h("div",{class:"qi "+(!isBad?"done":""),style:isBad?"border-color:#ef444466;background:rgba(239,68,68,0.04)":""},
-        h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
-          h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:center;gap:8px;line-height:1.25;min-height:18px"},
-            QuestIcon(obj.id,obj.icon,14,"width:18px;height:18px;margin-top:0"),
-            h("span",{style:"line-height:1.25;display:inline-flex;align-items:center;min-height:18px"},obj.name),
-            obj.weekly&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR})
-          )
-        ),
-        h("div",{class:"qrow"},
-          h("div",{class:"qbar"},h("div",{class:"qfill"+(isBad?" over":count>0?" partial":""),style:"width:"+pct+"%;"+(isBad?"background:#ef4444;box-shadow:0 0 10px #ef444466;":"")})),
-          h("div",{class:"qxp",style:"white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0;color:"+color},regressionCountText(obj,count))
-        ),
-        h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;text-align:center;margin-top:7px;letter-spacing:0.4px"},
-          isBad ? ("Pénalité "+severity.toLowerCase()+" · "+detail) : "Aucune pénalité"
-        ),
-        h("div",{style:"display:flex;gap:8px;margin-top:8px"},
-          h("button",{
-            onClick:e=>{inputs.current[obj.id]="1";validate(obj,e);},
-            style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px"
-          },obj.regressionType==="cheatmeal"?"+1 cheat meal":"+1 écart")
-        )
-      );
-    }
 
     // Quêtes binaires : boutons Échec / Succès
     if(obj.binary){
@@ -1779,25 +1308,14 @@ const CAP_BADGE_COLOR = "#ef4444";
         const wasD=cur>=1;
         const xp=(!wasD&&val>=1)?obj.binaryXp:0;
         const cx=e?e.clientX:200, cy=e?e.clientY:300;
-        const shouldPenaltyAll = obj.penaltyAll && val===0 && !(state.adultPenaltyDays||{})[today];
         setState(s=>{
           const d2={...s.dailyLog};
           d2[today]={...(d2[today]||{}),[obj.id]:val};
           let next={...s,dailyLog:d2,lastActiveDay:todayStr()};
-          if(shouldPenaltyAll && !(s.adultPenaltyDays||{})[today]){
-            const sx={...(s.statXp||{})};
-            STATS.forEach(st=>{sx[st]=Math.max(0,(sx[st]||0)-1000);});
-            const st={...(s.stats||{})};
-            STATS.forEach(k=>{st[k]=getLvl(sx[k]||0);});
-            next={...next,totalXp:Math.max(0,(s.totalXp||0)-7000),statXp:sx,stats:st,adultPenaltyDays:{...(s.adultPenaltyDays||{}),[today]:true}};
-          }
+
           return next;
         });
-        if(shouldPenaltyAll){
-          const id=Date.now()+Math.random();
-          setFloats(f=>[...f,{id,x:cx,y:cy,txt:"-7000 XP GLOBAL\n-1000 XP toutes stats"}]);
-          setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id)),1800);
-        }
+
         if(xp>0){
           const id=Date.now()+Math.random();
           setFloats(f=>[...f,{id,x:cx,y:cy,txt:"+"+xp+" XP "+(STAT_LBL[obj.stat]||obj.stat)}]);
@@ -1816,7 +1334,7 @@ const CAP_BADGE_COLOR = "#ef4444";
         h("div",{class:"qhdr",style:"align-items:center",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:5px"},
           h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:center;gap:7px;line-height:1.25;white-space:normal;overflow:visible;min-height:18px"},QuestIcon(obj.id,obj.icon,14,"width:18px;height:18px;margin-top:0"),h("span",{style:"line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip;display:inline-flex;align-items:center;min-height:18px"},obj.name)),
           h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.25;padding-top:0"},
-            (obj.regression?"0 XP · Régression":obj.binaryXp+" XP · "+(STAT_LBL[obj.stat]||obj.stat))
+            (obj.binaryXp+" XP · "+(STAT_LBL[obj.stat]||obj.stat))
           )
         ),
         h("div",{style:"display:flex;gap:8px;margin-top:8px"},
@@ -2360,34 +1878,12 @@ const CAP_BADGE_COLOR = "#ef4444";
 
   // ─── ONGLET ACCUEIL ───────────────────────────────────────────────────
 
-  function RegressionHomeRow({obj}){
-    const isWeekly=obj.weekly||obj.id==="walk";
-    const d=isWeekly?(wLog[obj.id]||0):(tLog[obj.id]||0);
-    const delta=regressionTotalPenalty(obj,d);
-    const isBad=Object.values(delta).some(v=>v<0);
-    const pct=isBad ? 100 : (obj.regressionType==="cheatmeal"?Math.min(100,(d/(obj.target||1))*100):0);
-    const color=isBad?"#ef4444":(d>0?"#f59e0b":"var(--td)");
-    return h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
-      QuestIcon(obj.id,obj.icon,14,"line-height:1.25"),
-      h("div",{style:"flex:1;min-width:0"},
-        h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center;gap:8px"},
-          h("div",{style:"display:flex;align-items:center;gap:6px;min-width:0;flex:1;white-space:nowrap;overflow:hidden"},
-            h("span",{style:"overflow:hidden;text-overflow:ellipsis;white-space:nowrap"},obj.name),
-            isWeekly&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR})
-          ),
-          h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";white-space:nowrap;flex-shrink:0"},regressionCountText(obj,d))
-        ),
-        h("div",{class:"qbar"},h("div",{class:"qfill"+(isBad?" over":d>0?" partial":""),style:"width:"+pct+"%;"+(isBad?"background:#ef4444;box-shadow:0 0 10px #ef444466;":"")}))
-      )
-    );
-  }
 
   function Home(){
     const dailyObjs = sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression));
     const weeklyObjs = restMode && walkObj
       ? [...sortStat(objs.filter(o=>o.weekly&&!o.optional&&!o.regression)), walkObj]
       : sortStat(objs.filter(o=>o.weekly&&!o.optional&&!o.regression));
-    const regressionObjs = sortStat(objs.filter(o=>o.regression));
     const secs=[
       {lb:"Qu\u00eates journalières",ob:dailyObjs,iw:false},
       {lb:"Qu\u00eates hebdomadaires",ob:weeklyObjs,iw:true},
@@ -2470,14 +1966,7 @@ const CAP_BADGE_COLOR = "#ef4444";
           )
         )
       ),
-      h("div",{class:"card",style:"border-color:#f59e0b44"},
-        h("div",{class:"ctitle",style:"color:"+(activeEp?{mineure:"#fbbf24",majeure:"#f59e0b",legendaire:"#f97316"}[activeEp.tier]||"#f59e0b":"#f59e0b")+";margin-bottom:8px"},"\u00c9preuve"),
-        activeEp
-          ? h(EpCard,{ep:activeEp,showInput:false})
-          : cooldownActive
-            ? h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:4px 0;font-family:Orbitron,sans-serif"},"\u23F3 Prochain d\u00e9fi dans "+fmtCD(cooldownUntil-now))
-            : h("div",{style:"font-size:12px;color:#f59e0b;text-align:center;padding:4px 0"},"\uD83D\uDD0D Nouvelle \u00e9preuve en cours de d\u00e9tection...")
-      ),
+
       activeSq&&h("div",{class:"card",style:"border-color:#ef444444"},
         h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Qu\u00eate urgente"+(activeSq.tier?" \u00b7 "+(SQ_TIER_LABEL[activeSq.tier]||""):"")),
         h(SqCard,{sq:activeSq,showInput:false})
@@ -2488,10 +1977,6 @@ const CAP_BADGE_COLOR = "#ef4444";
       ),
       secs.map(({lb,ob,iw,mixed})=>ob.length===0?null:
         h("div",{key:lb,class:"card"},h("div",{class:"ctitle"},lb),ob.map(o=>h(RR,{key:o.id,obj:o,isW:mixed?(o.weekly||o.id==="walk"):iw})))
-      ),
-      regressionObjs.length>0&&h("div",{class:"card",style:"border-color:#ef444444"},
-        h("div",{class:"ctitle",style:"color:#ef4444"},"Régressions"),
-        regressionObjs.map(o=>h(RegressionHomeRow,{key:o.id,obj:o}))
       )
     );
   }
@@ -2504,7 +1989,6 @@ const CAP_BADGE_COLOR = "#ef4444";
     const wkBase=restMode&&walkObj
       ? [...sortStat(objs.filter(o=>o.weekly&&!o.optional&&!o.regression)), walkObj]
       : sortStat(objs.filter(o=>o.weekly&&!o.optional&&!o.regression));
-    const regressionBase=sortStat(objs.filter(o=>o.regression));
 
     const isQuestDone=(obj)=>{
       const isWeekly = obj.weekly || obj.id==="walk";
@@ -2522,7 +2006,6 @@ const CAP_BADGE_COLOR = "#ef4444";
     const req=moveCompletedLast(reqBase);
     const bon=moveCompletedLast(bonBase);
     const wkq=moveCompletedLast(wkBase);
-    const regression=regressionBase;
 
     const reqDone=reqBase.filter(isQuestDone).length + (sleepDebtMed>0 && (tLog["med"]||0)>=sleepDebtMed ? 1 : 0);
     const reqTotal=reqBase.length + (sleepDebtMed>0 ? 1 : 0);
@@ -2530,8 +2013,6 @@ const CAP_BADGE_COLOR = "#ef4444";
     const bonTotal=bonBase.length;
     const wkDone=wkBase.filter(isQuestDone).length;
     const wkTotal=wkBase.length;
-    const regrDone=regressionBase.filter(o=>o.binary ? ((o.daily? tLog[o.id] : wLog[o.id]) !== undefined) : true).length;
-    const regrTotal=regressionBase.length;
 
     const SectionHeader = ({title,done,total}) => h("div",{class:"shdr",style:"margin-bottom:10px"},
       h("div",{class:"ctitle",style:"margin:0"+(title==="Régressions"?";color:#ef4444":"")},title),
@@ -2539,32 +2020,6 @@ const CAP_BADGE_COLOR = "#ef4444";
     );
 
     return h("div",{class:"tab"},
-      // ── ÉPREUVE ────────────────────────────────────────────────────────
-      h("div",{class:"card",style:"border-color:#f59e0b44"},
-        h("div",{class:"ctitle",style:"color:#f59e0b;margin-bottom:8px"},"Épreuve"),
-        activeEp
-          ? h(EpCard,{ep:activeEp})
-          : completedEp
-            ? h("div",{class:"sqcard"},
-                h("div",{style:"display:flex;align-items:center;gap:8px"},
-                  h("span",{style:"font-size:20px"},completedEp.icon),
-                  h("div",{style:"flex:1"},
-                    h("div",{style:"font-size:13px;font-weight:700;color:#4ade80"},completedEp.name+" — COMPLÉTÉ ✓"),
-                    h("div",{style:"font-size:11px;color:var(--td);margin-top:2px"},
-                      ("+"+completedEp.xp+" XP · "+(STAT_LBL[completedEp.stat]||completedEp.stat))
-                      +(completedEp.xp2&&completedEp.stat2?(" · +"+completedEp.xp2+" XP "+(STAT_LBL[completedEp.stat2]||completedEp.stat2)):"")
-                      +(completedEp.xp3&&completedEp.stat3?(" · +"+completedEp.xp3+" XP "+(STAT_LBL[completedEp.stat3]||completedEp.stat3)):"")
-                    )
-                  )
-                ),
-                cooldownActive&&h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:8px 0 4px;font-family:Orbitron,sans-serif"},"⏳ Prochain défi dans "+fmtCD(cooldownUntil-now))
-              )
-            : cooldownActive
-              ? h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:8px 0;font-family:Orbitron,sans-serif"},
-                  "⏳ Prochain défi dans "+fmtCD(cooldownUntil-now))
-              : h("div",{style:"font-size:12px;color:#f59e0b;text-align:center;padding:8px 0"},
-                  "🔍 Le système détecte une nouvelle épreuve...")
-      ),
       h("div",{class:"card",style:"border-color:#ef444444"},
         h("div",{class:"shdr"},
           h("div",null,
@@ -2636,10 +2091,6 @@ const CAP_BADGE_COLOR = "#ef4444";
       bon.length>0&&h("div",{class:"card"},
         h(SectionHeader,{title:"Quêtes bonus",done:bonDone,total:bonTotal}),
         bon.map(o=>h(QI,{key:o.id,obj:o}))
-      ),
-      regression.length>0&&h("div",{class:"card",style:"border-color:#ef444444"},
-        h(SectionHeader,{title:"Régressions",done:regrDone,total:regrTotal}),
-        regression.map(o=>h(QI,{key:o.id,obj:o}))
       )
     );
   }
@@ -3004,7 +2455,7 @@ const CAP_BADGE_COLOR = "#ef4444";
 
   function Settings(){
     if(!showSet)return null;
-    const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.regression)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.regression))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden&&!o.regression)),...objs.filter(o=>o.regression)];
+    const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.regression)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.regression))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden&&!o.regression))];
     function applyEdit(){
       setState(s=>{
         let xpD=0;
@@ -3013,13 +2464,8 @@ const CAP_BADGE_COLOR = "#ef4444";
           const el=document.getElementById("cd_"+obj.id); if(!el)return;
           const nv=parseFloat(el.value.replace(",",".")); if(isNaN(nv)||nv<0)return;
           const ov=obj.weekly?(s.weeklyLog[wk]?.[obj.id]||0):(s.dailyLog[today]?.[obj.id]||0);
-          if(obj.regression){
-            const delta=regressionPenaltyDelta(obj,ov,nv);
-            Object.entries(delta).forEach(([stat,dv])=>{ xpD+=dv; nsx[stat]=Math.max(0,(nsx[stat]||0)+dv); });
-          }else{
-            const oxp=calcXp(obj,ov), nxp=calcXp(obj,nv);
-            xpD+=nxp-oxp; nsx[obj.stat]=Math.max(0,(nsx[obj.stat]||0)+(nxp-oxp));
-          }
+          const oxp=calcXp(obj,ov), nxp=calcXp(obj,nv);
+          xpD+=nxp-oxp; nsx[obj.stat]=Math.max(0,(nsx[obj.stat]||0)+(nxp-oxp));
           if(obj.weekly)nwl[wk]={...(nwl[wk]||{}),[obj.id]:nv};
           else ndl[today]={...(ndl[today]||{}),[obj.id]:nv};
         });
@@ -3216,24 +2662,7 @@ const CAP_BADGE_COLOR = "#ef4444";
     }
 
     function renderQuest(obj){
-      if(obj.regression){
-        const subtitle = obj.desc || obj.subtitle || "";
-        return h("div",{key:obj.id,style:cardStyle},
-          h("div",{style:"display:flex;align-items:center;gap:8px"},
-            QuestIcon(obj.id,obj.icon||"•",14,"line-height:1.1;min-width:24px;text-align:center"),
-            h("div",{style:"flex:1;min-width:0"},
-              h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15;display:flex;align-items:center;gap:6px;flex-wrap:wrap"},
-                obj.name,
-                obj.weekly&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR})
-              ),
-              subtitle&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},subtitle),
-              h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:7px"},
-                regressionCodexLines(obj).map((line,i)=>h("div",{key:i,style:detailStyle},"▸ "+line))
-              )
-            )
-          )
-        );
-      }
+
       const subtitle = obj.desc || obj.subtitle || "";
       return h("div",{key:obj.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:center;gap:8px"},
@@ -3402,7 +2831,6 @@ const CAP_BADGE_COLOR = "#ef4444";
     const required = objs.filter(o=>o.daily&&!o.optional&&!o.regression).concat(objs.filter(o=>o.weekly&&!o.optional&&!o.regression));
     const bonus = objs.filter(o=>o.optional&&!o.bonusHidden&&!o.regression);
     const hiddenBonus = objs.filter(o=>o.optional&&o.bonusHidden&&!o.regression);
-    const regressions = objs.filter(o=>o.regression);
     const specialList = STATS.flatMap(stat=>(SP[stat]||[]).map(q=>({...q,stat:q.stat||stat})));
 
     return h("div",{class:"tab"},
@@ -3418,10 +2846,7 @@ const CAP_BADGE_COLOR = "#ef4444";
           hiddenBonus.length>0&&groupByDominantStat(hiddenBonus,renderQuest)
         )
       ),
-      h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial)),
-      h(Section,{id:"ep",title:"Épreuves",count:EPREUVES.length},groupByDominantStat(EPREUVES,renderEpreuve)),
-      h(Section,{id:"dj",title:"Donjons",count:DONJONS.length},groupByDominantStat(DONJONS,renderDonjon)),
-      h(Section,{id:"reg",title:"Régressions",count:regressions.length},groupByDominantStat(regressions,renderQuest))
+      h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial))
     );
   }
 
