@@ -1882,12 +1882,12 @@ const CAP_BADGE_COLOR = "#ef4444";
   function Home(){
     const dailyObjs = sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression));
     const weeklyObjs = restMode && walkObj
-      ? [...sortStat(objs.filter(o=>o.weekly&&!o.optional&&!o.regression)), walkObj]
-      : sortStat(objs.filter(o=>o.weekly&&!o.optional&&!o.regression));
+      ? [...sortStat(objs.filter(o=>o.weekly&&!o.regression)), walkObj]
+      : sortStat(objs.filter(o=>o.weekly&&!o.regression));
     const secs=[
       {lb:"Qu\u00eates journalières",ob:dailyObjs,iw:false},
       {lb:"Qu\u00eates hebdomadaires",ob:weeklyObjs,iw:true},
-      {lb:"Qu\u00eates bonus", ob:sortStat(objs.filter(o=>((o.daily||o.weekly)&&o.optional||o.id==="walk")&&!(restMode&&o.id==="walk")&&!o.bonusHidden&&!o.regression)), iw:false},
+      {lb:"Qu\u00eates bonus", ob:sortStat(objs.filter(o=>((o.daily&&o.optional)||o.id==="walk")&&!(restMode&&o.id==="walk")&&!o.bonusHidden&&!o.regression)), iw:false},
     ];
 
     return h("div",{class:"tab"},
@@ -1985,10 +1985,10 @@ const CAP_BADGE_COLOR = "#ef4444";
 
   function Quests(){
     const reqBase=sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression));
-    const bonBase=sortStat(objs.filter(o=>((o.daily||o.weekly)&&o.optional||o.id==="walk")&&!(restMode&&o.id==="walk")&&!o.bonusHidden&&!o.regression));
+    const bonBase=sortStat(objs.filter(o=>((o.daily&&o.optional)||o.id==="walk")&&!(restMode&&o.id==="walk")&&!o.bonusHidden&&!o.regression));
     const wkBase=restMode&&walkObj
-      ? [...sortStat(objs.filter(o=>o.weekly&&!o.optional&&!o.regression)), walkObj]
-      : sortStat(objs.filter(o=>o.weekly&&!o.optional&&!o.regression));
+      ? [...sortStat(objs.filter(o=>o.weekly&&!o.regression)), walkObj]
+      : sortStat(objs.filter(o=>o.weekly&&!o.regression));
 
     const isQuestDone=(obj)=>{
       const isWeekly = obj.weekly || obj.id==="walk";
@@ -2828,9 +2828,10 @@ const CAP_BADGE_COLOR = "#ef4444";
       ));
     }
 
-    const required = objs.filter(o=>o.daily&&!o.optional&&!o.regression).concat(objs.filter(o=>o.weekly&&!o.optional&&!o.regression));
-    const bonus = objs.filter(o=>o.optional&&!o.bonusHidden&&!o.regression);
-    const hiddenBonus = objs.filter(o=>o.optional&&o.bonusHidden&&!o.regression);
+    const required = objs.filter(o=>o.daily&&!o.optional&&!o.regression);
+    const weeklyCodex = objs.filter(o=>o.weekly&&!o.regression);
+    const bonus = objs.filter(o=>o.optional&&!o.weekly&&!o.bonusHidden&&!o.regression);
+    const hiddenBonus = objs.filter(o=>o.optional&&!o.weekly&&o.bonusHidden&&!o.regression);
     const specialList = STATS.flatMap(stat=>(SP[stat]||[]).map(q=>({...q,stat:q.stat||stat})));
 
     return h("div",{class:"tab"},
@@ -2839,6 +2840,7 @@ const CAP_BADGE_COLOR = "#ef4444";
         h("div",{style:"font-size:12px;color:var(--td);line-height:1.45"},"Catalogue complet des quêtes existantes. Les objectifs des quêtes quotidiennes et hebdomadaires sont calculés au rang actuel.")
       ),
       h(Section,{id:"obl",title:"Quêtes obligatoires",count:required.length},groupByDominantStat(required,renderQuest)),
+      h(Section,{id:"wk",title:"Quêtes hebdomadaires",count:weeklyCodex.length},groupByDominantStat(weeklyCodex,renderQuest)),
       h(Section,{id:"bonus",title:"Quêtes bonus",count:bonus.length+hiddenBonus.length},
         h(Fragment,null,
           groupByDominantStat(bonus,renderQuest),
