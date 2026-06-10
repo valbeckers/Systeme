@@ -1806,6 +1806,40 @@ const CAP_BADGE_COLOR = "#ef4444";
     );
   }
 
+
+  function rewardLineText(item){
+    const primaryStat = STAT_LBL[item.stat] || item.stat;
+    const secondaryStat = item.stat2 ? (STAT_LBL[item.stat2] || item.stat2) : null;
+    const thirdStat = item.stat3 ? (STAT_LBL[item.stat3] || item.stat3) : null;
+    let rewardText = (item.xp||0)+" XP "+primaryStat;
+    if(item.xp2 && item.stat2){
+      rewardText += item.xp2===(item.xp||0) ? " + "+secondaryStat : " + "+item.xp2+" XP "+secondaryStat;
+    }
+    if(item.xp3 && item.stat3){
+      rewardText += item.xp3===(item.xp||0) ? " + "+thirdStat : " + "+item.xp3+" XP "+thirdStat;
+    }
+    return rewardText;
+  }
+
+  function sqRewardLines(sq){
+    if(sq?.tiers && sq.tiers.length>0){
+      return sq.tiers.map((tier,i)=>({
+        key:"tier_"+i,
+        at:tier.at,
+        text:rewardLineText(tier)
+      }));
+    }
+    return [
+      sq?.xp ? {key:"xp1", text:rewardLineText({xp:sq.xp, stat:sq.stat})} : null,
+      sq?.xp2&&sq?.stat2 ? {key:"xp2", text:rewardLineText({xp:sq.xp2, stat:sq.stat2})} : null,
+      sq?.xp3&&sq?.stat3 ? {key:"xp3", text:rewardLineText({xp:sq.xp3, stat:sq.stat3})} : null,
+    ].filter(Boolean);
+  }
+
+  function sqRewardSummary(sq){
+    return sqRewardLines(sq).map(l=>l.text).join(" · ");
+  }
+
   function SqCard({sq,showInput}){
     const remaining=sq.expiresAt-now;
     const urgent=remaining<86400000&&!sq.completedAt;
@@ -1848,8 +1882,11 @@ const CAP_BADGE_COLOR = "#ef4444";
             h("div",{style:"font-size:13px;font-weight:700;color:var(--tx)"},sq.name)
           )
         ),
-        showInput&&h("div",{style:"text-align:right"},
-          xpPairs.map((p,i)=>h("div",{key:i,style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif"},p.xp+" XP \u00b7 "+(STAT_LBL[p.stat]||p.stat)))
+        h("div",{style:"text-align:right"},
+          sqRewardLines(sq).map(line=>h("div",{
+            key:line.key,
+            style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.25;white-space:nowrap;opacity:"+((line.at&&sq.progress>=line.at)?"1":"0.65")
+          },(line.at&&sq.progress>=line.at?"\u2713 ":"")+line.text))
         )
       ),
       h("div",{class:"sqbar"},h("div",{class:"sqbarfill",style:"width:"+pct+"%"})),
@@ -2033,7 +2070,7 @@ const CAP_BADGE_COLOR = "#ef4444";
             QuestIcon(completedSq.id,completedSq.icon,14,"line-height:1.1;min-width:24px;text-align:center"),
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:13px;font-weight:700;color:#4ade80"},completedSq.name+" — COMPLÉTÉ ✓"),
-              h("div",{style:"font-size:11px;color:var(--td);margin-top:2px"},"+"+completedSq.xp+" XP · "+(STAT_LBL[completedSq.stat]||completedSq.stat))
+              h("div",{style:"font-size:11px;color:var(--td);margin-top:2px;white-space:normal;line-height:1.25"},sqRewardSummary(completedSq))
             )
           ),
           sqCooldownActive&&h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:8px 0 4px;font-family:Orbitron,sans-serif"},"⏳ Prochaine quête dans "+fmtCD(sqCooldownUntil-now))
