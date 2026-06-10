@@ -76,7 +76,7 @@ const DEFS = [
   {id:"run",    name:"Course",          iconKey:"run",          unit:"km",    xpPer:150, daily:false,weekly:true, optional:false,stat:"Endurance",      icon:"\uD83C\uDFC3\uD83C\uDFFB",   base:7,  stat2:"Agilite", xpPer2:30, cap:3},
   {id:"lhh_contacts", name:"LHH - Contacts utiles", unit:"contact", xpPer:0, daily:false, weekly:true, optional:true, stat:"Discipline", icon:"💼", base:12, target:12, fixedBase:true, tiers:[{at:12,xp:500,stat:"Discipline"}], overGoalXpPer:10, overGoalStat:"Discipline"},
   {id:"lhh_actions",  name:"LHH - Actions commerciales", unit:"action", xpPer:0, daily:false, weekly:true, optional:true, stat:"Discipline", icon:"💼", base:60, target:60, fixedBase:true, tiers:[{at:60,xp:500,stat:"Discipline"}], overGoalXpPer:10, overGoalStat:"Discipline"},
-  {id:"walk",   name:"Marche",          unit:"km",    xpPer:75,  daily:false,weekly:false,optional:true, stat:"Endurance",      icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F", base:5, fixedBase:true},
+  {id:"walk",   name:"Marche",          unit:"km",    xpPer:75,  daily:false,weekly:true, optional:true, stat:"Endurance",      icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F", base:5, fixedBase:true},
   // ─── AGILITÉ ──────────────────────────────────────────────────────────
   {id:"flex",   name:"Souplesse",       unit:"min",   xpPer:25,  daily:true, weekly:false,optional:true, stat:"Agilite",        icon:"\uD83E\uDD38\uD83C\uDFFB",   base:15, fixedBase:true, stat2:"Endurance", xpPer2:10, cap:2},
   {id:"balance",name:"\u00c9quilibre sur un pied",unit:"min",xpPer:10,daily:true,weekly:false,optional:false,stat:"Agilite",    icon:"\uD83E\uDDB6\uD83C\uDFFB",   base:5, startDate:"2026-05-15", cap:3},
@@ -109,9 +109,9 @@ const SP = {
     {id:"sp_nophone3h", name:"Téléphone hors de portée 3h", icon:"\uD83D\uDCF5",                unit:"jour", target:1, xp:500, xp2:250, stat2:"Discipline", days:1, binary:true, desc:"Téléphone hors de portée 3h"},
   ],
   Endurance:[
-    {id:"sp_sprint",  name:"Running fractionné 10x100m",icon:"\u26A1",                                 unit:"sér.",target:10, xp:1000, days:1, desc:"10 x 100m sprint/récup", noRestMode:true},
+    {id:"sp_sprint",  name:"Running fractionné 10x100m",icon:"\u26A1",                                 unit:"sér.",target:10, xp:1000, days:1, desc:"10 x 100m sprint/récup"},
     {id:"sp_stairs",  name:"Montées d'escaliers", icon:"\uD83E\uDE9C",                                 unit:"A/R",  target:30, xp:500, xp2:250, stat2:"Agilite", days:1, desc:"30 montées/descentes"},
-    {id:"sp_jump",    name:"Corde à sauter",icon:"\uD83D\uDCA6",                                 unit:"min",  target:20, xp:500, xp2:250, stat2:"Agilite", days:1, desc:"20 min de corde à sauter", noRestMode:true},
+    {id:"sp_jump",    name:"Corde à sauter",icon:"\uD83D\uDCA6",                                 unit:"min",  target:20, xp:500, xp2:250, stat2:"Agilite", days:1, desc:"20 min de corde à sauter"},
     {id:"sp_walk30",  name:"Sortie marche",     icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F",           unit:"min",  target:30, xp:500, days:1, desc:"30 min de marche"},
   ],
   Agilite:[
@@ -385,7 +385,6 @@ function pickRandomSq(usedIds,restMode,statCycle,completedLog){
 
   const availableForStat = (s, respectCooldown=true) => (SP[s]||[]).filter(t =>
     !usedIds.includes(t.id) &&
-    !(t.noRestMode&&restMode) &&
     (!respectCooldown || !recentIds.includes(t.id))
   );
 
@@ -530,7 +529,7 @@ const IMPORTED = {
   totalXp:45775, streak:6, lastActiveDay:"2026-05-11",
   streakBonusDay:"2026-05-10", weeklyBonusWk:"2026-W15", lastStreakDay:"2026-05-10",
   streakMilestones:[7,14], penaltyDay:"2026-05-01",
-  prestige:0, restMode:false, walkTarget:0,
+  prestige:0,
   dailyLog:{
     "2026-04-06":{water:8,push:36,abs:72,sleep:1},
     "2026-04-07":{water:8,push:36,abs:72,squats:15,reading:11,flex:5,sleep:1,med:6},
@@ -622,8 +621,6 @@ function buildState(){
     weeklyLog:saved.weeklyLog||IMPORTED.weeklyLog,
     totalXp:Math.max(saved.totalXp||0, IMPORTED.totalXp),
     prestige:saved.prestige||IMPORTED.prestige||0,
-    restMode:saved.restMode||false,
-    walkTarget:saved.walkTarget||0,
   };
   // Recalcul defensif: rebuild stats levels from statXp (cohérence après changement de formule)
   const recomputed={};
@@ -652,7 +649,7 @@ function App(){
     const sqCdUntil=base.sqCooldownUntil||0;
     const cooldownOk = now>=sqCdUntil;
     if(!hasActive&&cooldownOk){
-      const result=pickRandomSq(sqs.map(q=>q.id),base.restMode,base.sqStatCycle,base.completedSqLog);
+      const result=pickRandomSq(sqs.map(q=>q.id),false,base.sqStatCycle,base.completedSqLog);
       if(result){
         const {tpl,pickedStat,cycleReset}=result;
         const sq={...tpl,sqid:"sq_"+now,progress:0,startedAt:now,expiresAt:next7AM(now),completedAt:null};
@@ -678,9 +675,6 @@ function App(){
   const [confirmReset,setConfirmReset] = useState(false);
   const [wkOff,setWkOff]  = useState(0);
   const inputs = useRef({});
-  const walkTargetRef = useRef(state.walkTarget||0);
-  // Sync ref from state on mount (after reload)
-  useEffect(()=>{ walkTargetRef.current=state.walkTarget||0; },[]);
 
   // Migration grips sec→min sur le state en mémoire (au cas où localStorage non migré)
   useEffect(()=>{
@@ -817,16 +811,6 @@ function App(){
   })();
 
   // 9. Bonus hebdo
-  const restMode = state.restMode||false;
-  const walkDef = objs.find(o=>o.id==="walk");
-  // En mode blessure : walk passe de bonus daily → hebdo avec objectif adapté
-  const walkObj = restMode && walkDef ? (()=>{
-    const walkTarget = walkTargetRef.current||state.walkTarget||0;
-    return walkTarget>0
-      ? {...walkDef, daily:false, weekly:true, optional:false, base:walkTarget}
-      : null;
-  })() : null;
-
   // Semaine validée si : quêtes journalières OK sur les jours passés + course atteinte
   const weeklyDone = (()=>{
     const ws=new Date(); ws.setDate(ws.getDate()-((ws.getDay()+6)%7)); ws.setHours(0,0,0,0);
@@ -838,12 +822,6 @@ function App(){
     const runBase=getEffectiveTarget("run", true);
     const runDone=wLog["run"]||0;
     if(runDone>=runBase)return true;
-    if(restMode&&walkObj){
-      const walkDone=wLog["walk"]||0;
-      const walkBase=getEffectiveTarget("walk", true);
-      const runCredit=walkDone*2;
-      return (runDone+runCredit)>=runBase || walkDone>=walkBase;
-    }
     return false;
   })();
 
@@ -944,7 +922,7 @@ function App(){
       const hasActive = sqsNow.find(q=>!q.completedAt&&Date.now()<q.expiresAt);
       const cd = s.sqCooldownUntil||0;
       if(hasActive || Date.now()<cd) return s;
-      const result=pickRandomSq(sqsNow.map(q=>q.id),s.restMode,s.sqStatCycle);
+      const result=pickRandomSq(sqsNow.map(q=>q.id),false,s.sqStatCycle);
       if(!result)return s;
       const {tpl,pickedStat,cycleReset}=result;
       const t = Date.now();
@@ -1000,7 +978,7 @@ function App(){
     const val=parseFloat(raw); if(!val||val<=0)return;
     inputs.current[obj.id]="";
     if(el){el.value="";setTimeout(()=>{try{el.focus();}catch(_){}},50);}
-    const cur=(obj.weekly||obj.id==="walk")?(wLog[obj.id]||0):(tLog[obj.id]||0);
+    const cur=(obj.weekly)?(wLog[obj.id]||0):(tLog[obj.id]||0);
     let xp=0;
     let capJustReached=false; // true si on franchit le cap dans cette session
     // Calcul du cap (si défini)
@@ -1024,7 +1002,7 @@ function App(){
       // Sauvegarder le log d'abord
       setState(s=>{
         const d={...s.dailyLog};d[today]={...(d[today]||{}),[obj.id]:(d[today]?.[obj.id]||0)+val};
-        if(obj.weekly||obj.id==="walk"){
+        if(obj.weekly){
           const w={...s.weeklyLog};w[wk]={...(w[wk]||{}),[obj.id]:(w[wk]?.[obj.id]||0)+val};
           return{...s,weeklyLog:w,dailyLog:d,lastActiveDay:todayStr()};
         }
@@ -1122,17 +1100,10 @@ function App(){
       const totalAfter=effectiveNext;
       if(totalAfter>=b*2) xp+=Math.round(effectiveVal*obj.xpPer*0.5);
     }
-    else if(obj.id==="walk"&&restMode){
-      // Marche en mode blessure : linéaire 50xp/km + 50% bonus si total >= 2x objectif
-      const bw=walkObj?walkObj.base:getRankBase("run",ri);
-      xp=val*obj.xpPer;
-      const totalAfter=cur+val;
-      if(totalAfter>=bw*2) xp+=Math.round(val*obj.xpPer*0.5);
-    }
     else{const nt=cur+val; if(cur>=b)xp=val*obj.xpPer; else if(nt<=b)xp=val*obj.xpPer; else xp=val*obj.xpPer;}
     setState(s=>{
       let next2 = s;
-      if(obj.weekly||obj.id==="walk"){
+      if(obj.weekly){
         const w={...s.weeklyLog};w[wk]={...(w[wk]||{}),[obj.id]:(w[wk]?.[obj.id]||0)+val};
         // Stocker aussi dans dailyLog pour l'XP du jour
         const d2={...s.dailyLog};d2[today]={...(d2[today]||{}),[obj.id]:(d2[today]?.[obj.id]||0)+val};
@@ -1254,7 +1225,7 @@ function App(){
 
   function launchNewSq(){
     setState(s=>{
-      const result=pickRandomSq(s.specialQuests.map(q=>q.id),s.restMode,s.sqStatCycle);
+      const result=pickRandomSq(s.specialQuests.map(q=>q.id),false,s.sqStatCycle);
       if(!result)return s;
       const {tpl,pickedStat,cycleReset}=result;
       const sq={...tpl,sqid:"sq_"+Date.now(),progress:0,startedAt:Date.now(),expiresAt:next7AM(Date.now()),completedAt:null};
@@ -1282,7 +1253,7 @@ const CAP_BADGE_COLOR = "#ef4444";
   // ─── SOUS-COMPOSANTS ──────────────────────────────────────────────────
 
   function QI({obj}){
-    const isWeekly = obj.weekly || obj.id==="walk";
+    const isWeekly = obj.weekly;
     const t = getEffectiveTarget(obj.id, isWeekly);
     // Si obj.target est défini sans binary, on l'utilise pour l'affichage (ex: protein 1/2 → 2/2)
     const displayTarget = (obj.target && !obj.binary) ? obj.target : t;
@@ -1303,7 +1274,7 @@ const CAP_BADGE_COLOR = "#ef4444";
     // Quêtes binaires : boutons Échec / Succès
     if(obj.binary){
       function setBinary(val,e){
-        const curRaw=(obj.weekly||obj.id==="walk")?wLog[obj.id]:tLog[obj.id];
+        const curRaw=(obj.weekly)?wLog[obj.id]:tLog[obj.id];
         const cur=curRaw||0;
         const wasD=cur>=1;
         const xp=(!wasD&&val>=1)?obj.binaryXp:0;
@@ -1473,7 +1444,7 @@ const CAP_BADGE_COLOR = "#ef4444";
   }
 
   function RR({obj,isW}){
-    const isWeeklyRow = isW || obj.weekly || obj.id==="walk";
+    const isWeeklyRow = isW || obj.weekly;
     const t=obj.base&&!RANK_BASES[obj.id]?obj.base:getRankBase(obj.id,ri,prestige), d=isWeeklyRow?(wLog[obj.id]||0):(tLog[obj.id]||0);
     const displayTarget = (obj.target && !obj.binary) ? obj.target : t;
     const pct=Math.min(100,(d/displayTarget)*100), done=d>=displayTarget, over=d>displayTarget;
@@ -1514,7 +1485,7 @@ const CAP_BADGE_COLOR = "#ef4444";
         h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center"},
           h("div",{style:"display:flex;align-items:flex-start;gap:6px;min-width:0;flex:1;white-space:normal;line-height:1.25"},
             h("span",{style:"white-space:normal;line-height:1.25;word-break:normal"},obj.name),
-            (obj.weekly||obj.id==="walk")&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
+            (obj.weekly)&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
             hasCap&&h(QuestBadge,{label:isCapped?"CAP ATTEINT":(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap)),color:capColor,filled:isCapped})
           ),
           h("div",{style:"display:flex;align-items:center;gap:6px"},
@@ -1931,13 +1902,11 @@ const CAP_BADGE_COLOR = "#ef4444";
 
   function Home(){
     const dailyObjs = sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression));
-    const weeklyObjs = restMode && walkObj
-      ? [...sortStat(objs.filter(o=>o.weekly&&!o.regression)), walkObj]
-      : sortStat(objs.filter(o=>o.weekly&&!o.regression));
+    const weeklyObjs = sortStat(objs.filter(o=>o.weekly&&!o.regression));
     const secs=[
       {lb:"Qu\u00eates journalières",ob:dailyObjs,iw:false},
       {lb:"Qu\u00eates hebdomadaires",ob:weeklyObjs,iw:true},
-      {lb:"Qu\u00eates bonus", ob:sortStat(objs.filter(o=>((o.daily&&o.optional)||o.id==="walk")&&!(restMode&&o.id==="walk")&&!o.bonusHidden&&!o.regression)), iw:false},
+      {lb:"Qu\u00eates bonus", ob:sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden&&!o.regression)), iw:false},
     ];
 
     return h("div",{class:"tab"},
@@ -2026,7 +1995,7 @@ const CAP_BADGE_COLOR = "#ef4444";
         h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:4px 0;font-family:Orbitron,sans-serif"},"\u23F3 Prochaine qu\u00eate dans "+fmtCD(sqCooldownUntil-now))
       ),
       secs.map(({lb,ob,iw,mixed})=>ob.length===0?null:
-        h("div",{key:lb,class:"card"},h("div",{class:"ctitle"},lb),ob.map(o=>h(RR,{key:o.id,obj:o,isW:mixed?(o.weekly||o.id==="walk"):iw})))
+        h("div",{key:lb,class:"card"},h("div",{class:"ctitle"},lb),ob.map(o=>h(RR,{key:o.id,obj:o,isW:mixed?(o.weekly):iw})))
       )
     );
   }
@@ -2035,13 +2004,11 @@ const CAP_BADGE_COLOR = "#ef4444";
 
   function Quests(){
     const reqBase=sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression));
-    const bonBase=sortStat(objs.filter(o=>((o.daily&&o.optional)||o.id==="walk")&&!(restMode&&o.id==="walk")&&!o.bonusHidden&&!o.regression));
-    const wkBase=restMode&&walkObj
-      ? [...sortStat(objs.filter(o=>o.weekly&&!o.regression)), walkObj]
-      : sortStat(objs.filter(o=>o.weekly&&!o.regression));
+    const bonBase=sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden&&!o.regression));
+    const wkBase=sortStat(objs.filter(o=>o.weekly&&!o.regression));
 
     const isQuestDone=(obj)=>{
-      const isWeekly = obj.weekly || obj.id==="walk";
+      const isWeekly = obj.weekly;
       const t = getEffectiveTarget(obj.id, isWeekly);
       const effectiveT = (sleepDebtMed > 0 && obj.id==="med") ? Math.max(t, sleepDebtMed) : t;
       const target = (obj.target && !obj.binary) ? obj.target : effectiveT;
@@ -2317,7 +2284,7 @@ const CAP_BADGE_COLOR = "#ef4444";
     const we=new Date(ws); we.setDate(ws.getDate()+6);
     const fmt=d=>d.getDate().toString().padStart(2,"0")+"/"+(d.getMonth()+1).toString().padStart(2,"0");
     const lbl=wkOff===0?"Cette semaine":wkOff===1?"Semaine derni\u00e8re":fmt(ws)+" \u2013 "+fmt(we);
-    const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.regression)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.regression))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden&&!o.regression))];
+    const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression)),...sortStat(objs.filter(o=>o.weekly&&!o.regression)),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden&&!o.regression))];
 
     // ── Labels jours de la semaine (lun → dim) ──
     const weekLbls=["L","M","M","J","V","S","D"];
@@ -2381,8 +2348,8 @@ const CAP_BADGE_COLOR = "#ef4444";
                 h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between"},
                   h("span",{style:"display:flex;align-items:center;gap:6px"},
                     obj.name,
-                    (obj.weekly||obj.id==="walk")&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
-                    obj.optional&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR})
+                    (obj.weekly)&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
+                    obj.optional&&!obj.weekly&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR})
                   ),
                   h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px"},successes+"/7 "+(obj.id==="sleep"?"nuits":"jours"))
                 ),
@@ -2391,7 +2358,7 @@ const CAP_BADGE_COLOR = "#ef4444";
               complete&&h("span",{style:"font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:#4ade80"},"\u2713")
             );
           }
-          const val=tots[obj.id]||0, wt=obj.weekly?(obj.id==="walk"&&restMode&&walkObj?walkObj.base:getRankBase(obj.id,ri)):obj.id==="walk"?obj.base:(obj.target&&!obj.binary?obj.target:getRankBase(obj.id,ri,prestige))*7;
+          const val=tots[obj.id]||0, wt=obj.weekly?getRankBase(obj.id,ri,prestige):(obj.target&&!obj.binary?obj.target:getRankBase(obj.id,ri,prestige))*7;
           const pct=Math.min(100,(val/wt)*100), complete=val>=wt, over=val>wt;
           return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:10px"},
             QuestIcon(obj.id,obj.icon,14),
@@ -2399,10 +2366,8 @@ const CAP_BADGE_COLOR = "#ef4444";
               h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between"},
                 h("span",{style:"display:flex;align-items:center;gap:6px"},
                   obj.name,
-                  obj.weekly&&!obj.optional&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
-                  obj.optional&&obj.id!=="walk"&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR}),
-                  obj.id==="walk"&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR}),
-                  obj.id==="walk"&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR,extra:"margin-left:2px"}),
+                  obj.weekly&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
+                  obj.optional&&!obj.weekly&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR}),
 
                 ),
                 h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px"},
@@ -2424,15 +2389,15 @@ const CAP_BADGE_COLOR = "#ef4444";
         ),
         open.records&&h(Fragment,null,
           h("div",{style:"margin-top:12px"}),
-          [...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary&&!o.regression)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.binary&&!o.regression)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.binary&&!o.regression))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden&&!o.regression))].map(o=>{
+          [...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary&&!o.regression)),...sortStat(objs.filter(o=>o.weekly&&!o.binary&&!o.regression)),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden&&!o.regression))].map(o=>{
           const rec=records[o.id];
           if(!rec)return h("div",{key:o.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px;opacity:.35"},
             QuestIcon(o.id,o.icon,14),
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:12px;color:var(--td);display:flex;align-items:center;gap:5px"},
                 o.name,
-                (o.weekly||o.id==="walk")&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
-                o.optional&&o.id!=="walk"&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR})
+                (o.weekly)&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
+                o.optional&&!o.weekly&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR})
               )
             ),
             h("span",{style:"font-size:11px;color:var(--td)"},"—")
@@ -2443,9 +2408,8 @@ const CAP_BADGE_COLOR = "#ef4444";
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:12px;color:var(--tx);display:flex;align-items:center;gap:5px"},
                 o.name,
-                (o.weekly||o.id==="walk")&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
-                o.optional&&o.id!=="walk"&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR}),
-                o.id==="walk"&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR,extra:"margin-left:2px"})
+                (o.weekly)&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
+                o.optional&&!o.weekly&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR}),
               ),
               h("div",{style:"font-size:10px;color:var(--td);margin-top:1px"},fmt2(rec.date))
             ),
@@ -2470,7 +2434,7 @@ const CAP_BADGE_COLOR = "#ef4444";
         Object.values(state.weeklyLog).forEach(log=>{
           Object.entries(log).forEach(([id,val])=>{totals[id]=(totals[id]||0)+val;});
         });
-        const displayObjs=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary&&!o.regression)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.binary&&!o.regression)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.binary&&!o.regression))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden&&!o.regression))];
+        const displayObjs=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary&&!o.regression)),...sortStat(objs.filter(o=>o.weekly&&!o.binary&&!o.regression)),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden&&!o.regression))];
         return h("div",{class:"card"},
           h("div",{style:"display:flex;align-items:center;justify-content:space-between;cursor:pointer",onClick:()=>toggle("totals")},
             h("div",{class:"ctitle",style:"margin:0"},"Totaux depuis le d\u00e9but"+(firstDay?" \u2014 "+fmtFirst(firstDay):"")),
@@ -2486,10 +2450,9 @@ const CAP_BADGE_COLOR = "#ef4444";
                 h("div",{style:"flex:1"},
                   h("div",{style:"font-size:12px;color:var(--tx);display:flex;align-items:center;gap:5px"},
                     o.name,
-                    (o.weekly||o.id==="walk")&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
-                    o.optional&&o.id!=="walk"&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR}),
-                    o.id==="walk"&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR,extra:"margin-left:2px"})
-                  )
+                    (o.weekly)&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
+                    o.optional&&!o.weekly&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR}),
+                      )
                 ),
                 h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--tx)"},
                   total===0?"—":(total%1===0?total.toLocaleString("fr-FR"):total.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2}))+(total>0?" "+unitLbl:""))
@@ -2505,7 +2468,7 @@ const CAP_BADGE_COLOR = "#ef4444";
 
   function Settings(){
     if(!showSet)return null;
-    const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.regression)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.regression))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden&&!o.regression))];
+    const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression)),...sortStat(objs.filter(o=>o.weekly&&!o.regression)),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden&&!o.regression))];
     function applyEdit(){
       setState(s=>{
         let xpD=0;
@@ -2531,34 +2494,9 @@ const CAP_BADGE_COLOR = "#ef4444";
           h("button",{style:"background:none;border:none;color:var(--td);font-size:44px;line-height:1;cursor:pointer",onClick:()=>{setShowSet(false);setConfirmReset(false);}},"\u2715")
         ),
         h("div",{class:"msec"},
-          h("div",{class:"mlbl"},"Mode blessure — Course"),
-          h("div",{style:"font-size:11px;color:var(--td);margin-bottom:10px;line-height:1.5"},
-            restMode
-              ? "Mode blessure actif \u2014 la marche remplace la course cette semaine."
-              : "Active ce mode si tu es bless\u00e9. La marche remplace la course avec un objectif adapt\u00e9."
-          ),
-          !restMode
-            ? h("button",{class:"mbtn",style:"width:100%;background:#ef444411;border:1px solid #ef444466;color:#ef4444",onClick:()=>{
-                const currentWk=wkStr();
-                const runDone=(state.weeklyLog[currentWk]||{})["run"]||0;
-                const runBase=getRankBase("run",ri,prestige);
-                const remaining=Math.max(0,runBase-runDone);
-                const walkTarget=Math.max(1,Math.ceil(remaining*0.5));
-                walkTargetRef.current=walkTarget;
-                setState(s=>({...s,restMode:true,walkTarget}));
-                setShowSet(false);
-              }},"Blessure — activer la marche")
-            : h("button",{class:"mbtn",style:"width:100%;background:#4ade8011;border:1px solid #4ade8066;color:#4ade80",onClick:()=>{
-                walkTargetRef.current=0;
-                setState(s=>({...s,restMode:false,walkTarget:0}));
-                setShowSet(false);
-              }},"Rétablissement — reprendre la course")
-        ),
-        h("div",{class:"divider"}),
-        h("div",{class:"msec"},
           h("div",{class:"mlbl"},"Corriger les données du jour"),
           ordered.map(obj=>{
-            const cur=(obj.weekly||obj.id==="walk")?(wLog[obj.id]||0):(tLog[obj.id]||0);
+            const cur=(obj.weekly)?(wLog[obj.id]||0):(tLog[obj.id]||0);
             return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
               QuestIcon(obj.id,obj.icon,14,"min-width:24px"),
               h("span",{style:"flex:1;font-size:13px"},obj.name),
@@ -2698,7 +2636,7 @@ const CAP_BADGE_COLOR = "#ef4444";
     }
 
     function targetForQuest(obj){
-      const isWeekly = obj.weekly || obj.id==="walk";
+      const isWeekly = obj.weekly;
       const period = isWeekly ? " / semaine" : " / jour";
       if(obj.binary) return "Validation simple";
       if(obj.tiers) return (obj.target||obj.base||1)+" "+unitPlural(obj.unit,obj.target||obj.base||1)+period;
@@ -2720,7 +2658,7 @@ const CAP_BADGE_COLOR = "#ef4444";
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15;display:flex;align-items:center;gap:6px;flex-wrap:wrap"},
               obj.name,
-              (obj.weekly||obj.id==="walk")&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR})
+              (obj.weekly)&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR})
             ),
             subtitle&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},subtitle),
             h("div",{style:"margin-top:7px"},renderXpPills(obj)),
