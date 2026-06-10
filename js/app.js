@@ -1641,7 +1641,7 @@ const CAP_BADGE_COLOR = "#ef4444";
     const isQuestDone=(obj)=>{
       const isWeekly = obj.weekly;
       const t = getEffectiveTarget(obj.id, isWeekly);
-      const effectiveT = (sleepDebtMed > 0 && obj.id==="med") ? Math.max(t, sleepDebtMed) : t;
+      const effectiveT = t;
       const target = (obj.target && !obj.binary) ? obj.target : effectiveT;
       const d = isWeekly ? (wLog[obj.id]||0) : (tLog[obj.id]||0);
       return obj.binary ? d>=1 : d>=target;
@@ -1655,8 +1655,8 @@ const CAP_BADGE_COLOR = "#ef4444";
     const bon=moveCompletedLast(bonBase);
     const wkq=moveCompletedLast(wkBase);
 
-    const reqDone=reqBase.filter(isQuestDone).length + (sleepDebtMed>0 && (tLog["med"]||0)>=sleepDebtMed ? 1 : 0);
-    const reqTotal=reqBase.length + (sleepDebtMed>0 ? 1 : 0);
+    const reqDone=reqBase.filter(isQuestDone).length;
+    const reqTotal=reqBase.length;
     const bonDone=bonBase.filter(isQuestDone).length;
     const bonTotal=bonBase.length;
     const wkDone=wkBase.filter(isQuestDone).length;
@@ -1697,40 +1697,6 @@ const CAP_BADGE_COLOR = "#ef4444";
       h("div",{class:"card"},
         h(SectionHeader,{title:"Quêtes journalières",done:reqDone,total:reqTotal}),
         req.map(o=>h(QI,{key:o.id,obj:o})),
-        sleepDebtMed>0&&(()=>{
-          const medDone = tLog["med"]||0;
-          const done = medDone >= sleepDebtMed;
-          const pct = Math.min(100,(medDone/sleepDebtMed)*100);
-          return h("div",{class:"qi"+(done?" done":""),style:done?"":"border-color:#ef444466;background:rgba(239,68,68,0.04)"},
-            h("div",{class:"qhdr",style:"align-items:center",style:"display:flex;justify-content:space-between;align-items:center"},
-              h("div",{class:"qname",style:"align-items:center;gap:8px"},
-                h("span",null,"🧘🏻‍♂️")," Méditation",
-                !done&&h("span",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;border:1px solid #ef444455;border-radius:4px;padding:1px 5px;margin-left:6px"},"⚠ DETTE 🛏️")
-              ),
-              h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px"},"0 XP obligatoire")
-            ),
-            h("div",{class:"qrow"},
-              h("div",{class:"qbar"},h("div",{class:"qfill"+(done?" done":pct>0?" partial":""),style:"width:"+pct+"%"})),
-              h("div",{class:"qxp",style:done?"":"color:#ef4444"},medDone+"/"+sleepDebtMed+" min")
-            ),
-            h("div",{style:"display:flex;gap:8px;margin-top:8px"},
-              h("button",{
-                onClick:e=>{
-                  const cur=tLog["med"]||0;
-                  setState(s=>{const dl={...s.dailyLog};dl[today]={...(dl[today]||{}),med:cur+1};return{...s,dailyLog:dl,lastActiveDay:today};});
-                },
-                style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px"
-              },"+1 min"),
-              h("button",{
-                onClick:e=>{
-                  const cur=tLog["med"]||0;
-                  setState(s=>{const dl={...s.dailyLog};dl[today]={...(dl[today]||{}),med:cur+10};return{...s,dailyLog:dl,lastActiveDay:today};});
-                },
-                style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px"
-              },"+10 min")
-            )
-          );
-        })()
       ),
       wkq.length>0&&h("div",{class:"card"},
         h(SectionHeader,{title:"Quêtes hebdomadaires",done:wkDone,total:wkTotal}),
