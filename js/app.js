@@ -1889,11 +1889,11 @@ const CAP_BADGE_COLOR = "#ef4444";
           },(line.at&&sq.progress>=line.at?"\u2713 ":"")+line.text))
         )
       ),
-      h("div",{class:"sqbar"},h("div",{class:"sqbarfill",style:"width:"+pct+"%"})),
-      h("div",{style:"display:flex;justify-content:space-between;font-size:10px;color:var(--td);margin-top:4px"},
-        h("span",null,sq.progress+"/"+sq.target+(sq.compactUnit?"":" ")+sq.unit),
-        !done&&h("span",{style:"color:"+(urgent?"#ef4444":"#ef4444bb")+";font-family:Orbitron,sans-serif"},"\u23F1 "+fmtCD(remaining)+" restants")
+      h("div",{class:"qrow",style:"align-items:center;margin-top:6px"},
+        h("div",{class:"sqbar",style:"flex:1"},h("div",{class:"sqbarfill",style:"width:"+pct+"%"})),
+        h("div",{class:"qxp",style:"color:"+(done?"#4ade80":"var(--td)")},sq.progress+"/"+sq.target+(sq.compactUnit?"":" ")+sq.unit)
       ),
+      !done&&h("div",{style:"font-size:10px;color:"+(urgent?"#ef4444":"#ef4444bb")+";font-family:Orbitron,sans-serif;margin-top:4px;text-align:left"},"\u23F1 "+fmtCD(remaining)+" restants"),
       showInput&&!done&&(
         sq.binary
           ?h("div",{style:"display:flex;gap:8px;margin-top:8px"},
