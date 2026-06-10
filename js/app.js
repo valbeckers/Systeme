@@ -1334,7 +1334,7 @@ const CAP_BADGE_COLOR = "#ef4444";
         h("div",{class:"qhdr",style:"align-items:center",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:5px"},
           h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:center;gap:7px;line-height:1.25;white-space:normal;overflow:visible;min-height:18px"},QuestIcon(obj.id,obj.icon,14,"width:18px;height:18px;margin-top:0"),h("span",{style:"line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip;display:inline-flex;align-items:center;min-height:18px"},obj.name)),
           h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.25;padding-top:0"},
-            (obj.binaryXp+" XP · "+(STAT_LBL[obj.stat]||obj.stat))
+            (obj.binaryXp+" XP "+(STAT_LBL[obj.stat]||obj.stat))
           )
         ),
         h("div",{style:"display:flex;gap:8px;margin-top:8px"},
@@ -1404,13 +1404,13 @@ const CAP_BADGE_COLOR = "#ef4444";
                 obj.overGoalXpPer&&h("div",{style:"opacity:"+(d>(obj.target||obj.base||0)?"1":"0.6")+";white-space:nowrap"},"+"+obj.overGoalXpPer+" XP/"+obj.unit+" au-delà")
               )
             :obj.binary
-              ?(obj.binaryXp+" XP \u00b7 "+(STAT_LBL[obj.stat]||obj.stat))
+              ?(obj.binaryXp+" XP "+(STAT_LBL[obj.stat]||obj.stat))
               :obj.stat2
                 ?h(Fragment,null,
-                    h("div",null,obj.xpPer+" XP/"+obj.unit+" \u00b7 "+(STAT_LBL[obj.stat]||obj.stat)),
-                    h("div",null,(obj.xpPer2||obj.xpPer)+" XP/"+obj.unit+" \u00b7 "+(STAT_LBL[obj.stat2]||obj.stat2))
+                    h("div",null,obj.xpPer+" XP/"+obj.unit+" "+(STAT_LBL[obj.stat]||obj.stat)),
+                    h("div",null,(obj.xpPer2||obj.xpPer)+" XP/"+obj.unit+" "+(STAT_LBL[obj.stat2]||obj.stat2))
                   )
-                :(obj.xpPer+" XP/"+obj.unit+" \u00b7 "+(STAT_LBL[obj.stat]||obj.stat))
+                :(obj.xpPer+" XP/"+obj.unit+" "+(STAT_LBL[obj.stat]||obj.stat))
         )
       ),
       h("div",{class:"qrow"},
@@ -1688,11 +1688,11 @@ const CAP_BADGE_COLOR = "#ef4444";
           :h(Fragment,null,
             ep.xp2
               ? h(Fragment,null,
-                  h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif"},ep.xp+" XP \u00b7 "+(STAT_LBL[ep.stat]||ep.stat)),
-                  h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif"},ep.xp2+" XP \u00b7 "+(STAT_LBL[ep.stat2]||ep.stat2)),
-                  ep.xp3&&h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif"},ep.xp3+" XP \u00b7 "+(STAT_LBL[ep.stat3]||ep.stat3))
+                  h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif"},ep.xp+" XP "+(STAT_LBL[ep.stat]||ep.stat)),
+                  h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif"},ep.xp2+" XP "+(STAT_LBL[ep.stat2]||ep.stat2)),
+                  ep.xp3&&h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif"},ep.xp3+" XP "+(STAT_LBL[ep.stat3]||ep.stat3))
                 )
-              : h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif"},ep.xp+" XP \u00b7 "+(STAT_LBL[ep.stat]||ep.stat))
+              : h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif"},ep.xp+" XP "+(STAT_LBL[ep.stat]||ep.stat))
           )
         )
       ),
@@ -1837,7 +1837,7 @@ const CAP_BADGE_COLOR = "#ef4444";
   }
 
   function sqRewardSummary(sq){
-    return sqRewardLines(sq).map(l=>l.text).join(" · ");
+    return sqRewardLines(sq).map(l=>l.text).join(" ");
   }
 
   function SqCard({sq,showInput}){
@@ -1882,7 +1882,7 @@ const CAP_BADGE_COLOR = "#ef4444";
             h("div",{style:"font-size:13px;font-weight:700;color:var(--tx)"},sq.name)
           )
         ),
-        h("div",{style:"text-align:right"},
+        showInput&&h("div",{style:"text-align:right"},
           sqRewardLines(sq).map(line=>h("div",{
             key:line.key,
             style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.25;white-space:nowrap;opacity:"+((line.at&&sq.progress>=line.at)?"1":"0.65")
@@ -2096,7 +2096,7 @@ const CAP_BADGE_COLOR = "#ef4444";
                 h("span",null,"🧘🏻‍♂️")," Méditation",
                 !done&&h("span",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;border:1px solid #ef444455;border-radius:4px;padding:1px 5px;margin-left:6px"},"⚠ DETTE 🛏️")
               ),
-              h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px"},"0 XP · obligatoire")
+              h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px"},"0 XP obligatoire")
             ),
             h("div",{class:"qrow"},
               h("div",{class:"qbar"},h("div",{class:"qfill"+(done?" done":pct>0?" partial":""),style:"width:"+pct+"%"})),
