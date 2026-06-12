@@ -60,24 +60,24 @@ const DEFS = [
   {id:"water",  name:"Hydratation",     unit:"verre", xpPer:10,  daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDCA7",               base:10, baseHistory:[{until:"2026-04-29",base:8}]},
   {id:"sleep",  name:"8h de sommeil",   unit:"nuit",  xpPer:0,   daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDECF\uFE0F",         base:1,  binary:true, binaryXp:200},
     // ─── FORCE ────────────────────────────────────────────────────────────
-  {id:"push",   name:"Pompes",          unit:"rep",   xpPer:2,   daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDBE",               base:30, cap:3},
-  {id:"abs",    name:"Abdominaux",      unit:"rep",   xpPer:1,   daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDCE\uD83C\uDFFB\u200D\u2642\uFE0F", base:60, cap:3},
-  {id:"squats", name:"Squats",          unit:"rep",   xpPer:3,   daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDBF",               base:15, stat2:"Agilite", xpPer2:1, cap:3},
-  {id:"calves", name:"Extensions mollets",unit:"rep", xpPer:1,   daily:true, weekly:false,optional:true, stat:"Force",         icon:"\uD83E\uDDBF",               base:30, stat2:"Agilite", xpPer2:1, cap:3},
-  {id:"grips",  name:"Hand grips",      unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Force",         icon:"\u270A\uD83C\uDFFB",         base:10, fixedBase:true, cap:3},
+  {id:"push",   name:"Pompes",          unit:"rep",   xpPer:2,   daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDBE",               base:30},
+  {id:"abs",    name:"Abdominaux",      unit:"rep",   xpPer:1,   daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDCE\uD83C\uDFFB\u200D\u2642\uFE0F", base:60},
+  {id:"squats", name:"Squats",          unit:"rep",   xpPer:3,   daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDBF",               base:15, stat2:"Agilite", xpPer2:1},
+  {id:"calves", name:"Extensions mollets",unit:"rep", xpPer:1,   daily:true, weekly:false,optional:true, stat:"Force",         icon:"\uD83E\uDDBF",               base:30, stat2:"Agilite", xpPer2:1},
+  {id:"grips",  name:"Hand grips",      unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Force",         icon:"\u270A\uD83C\uDFFB",         base:10, fixedBase:true},
   // ─── ESPRIT ───────────────────────────────────────────────────────────
   {id:"reading",name:"Lecture",unit:"min",xpPer:15,daily:true,weekly:false,optional:false,stat:"Esprit",icon:"📚",base:20,startDate:"2026-05-21"},
   {id:"pod",    name:"\u00c9couter 1 podcast", unit:"jour", xpPer:0, daily:true, weekly:false,optional:true, stat:"Esprit", icon:"\uD83C\uDF99\uFE0F",   base:1, binary:true, binaryXp:300},
   // ─── ESPRIT ───────────────────────────────────────────────────────────
   
-  {id:"med",    name:"M\u00e9ditation", unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Esprit",  icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F", base:15, fixedBase:true, cap:2},
+  {id:"med",    name:"M\u00e9ditation", unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Esprit",  icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F", base:15, fixedBase:true},
   // ─── ENDURANCE ────────────────────────────────────────────────────────
-  {id:"run",    name:"Course",          iconKey:"run",          unit:"km",    xpPer:150, daily:false,weekly:true, optional:false,stat:"Endurance",      icon:"\uD83C\uDFC3\uD83C\uDFFB",   base:7,  stat2:"Agilite", xpPer2:30, cap:3},
+  {id:"run",    name:"Course",          iconKey:"run",          unit:"km",    xpPer:150, daily:false,weekly:true, optional:false,stat:"Endurance",      icon:"\uD83C\uDFC3\uD83C\uDFFB",   base:7,  stat2:"Agilite", xpPer2:30},
   {id:"lhh_contacts", name:"LHH - Contacts utiles", unit:"contact", xpPer:0, daily:false, weekly:true, optional:true, stat:"Discipline", icon:"💼", base:12, target:12, fixedBase:true, tiers:[{at:12,xp:500,stat:"Discipline"}], overGoalXpPer:10, overGoalStat:"Discipline"},
   {id:"lhh_actions",  name:"LHH - Actions commerciales", unit:"action", xpPer:0, daily:false, weekly:true, optional:true, stat:"Discipline", icon:"💼", base:60, target:60, fixedBase:true, tiers:[{at:60,xp:500,stat:"Discipline"}], overGoalXpPer:10, overGoalStat:"Discipline"},
   {id:"walk",   name:"Marche",          unit:"km",    xpPer:75,  daily:false,weekly:true, optional:true, stat:"Endurance",      icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F", base:5, fixedBase:true},
   // ─── AGILITÉ ──────────────────────────────────────────────────────────
-    {id:"balance",name:"Équilibre les yeux fermés",unit:"min",xpPer:25,daily:true,weekly:false,optional:true,stat:"Agilite", icon:"\uD83E\uDDB6\uD83C\uDFFB", base:10, startDate:"2026-05-15", cap:3, stat2:"Esprit", xpPer2:25},
+    {id:"balance",name:"Équilibre les yeux fermés",unit:"min",xpPer:25,daily:true,weekly:false,optional:true,stat:"Agilite", icon:"\uD83E\uDDB6\uD83C\uDFFB", base:10, startDate:"2026-05-15", stat2:"Esprit", xpPer2:25},
   // ─── DISCIPLINE ───────────────────────────────────────────────────────
 ];
 
@@ -297,10 +297,7 @@ function calcXp(obj,total,baseOverride){
     return tierXp + overXp;
   }
   const xpPer=obj.xpPer;
-  // Plafonner si cap défini
-  const hasCap = (obj.cap || obj.capValue) && t && !obj.binary;
-  const capThreshold = obj.capValue ? obj.capValue : (hasCap ? t * obj.cap : Infinity);
-  const effectiveTotal = Math.min(total, capThreshold);
+  const effectiveTotal = total;
   // Cas spécial reading : Esprit linéaire
   if(obj.id==="reading") return effectiveTotal*xpPer;
   // Cas spécial water : linéaire dès le 1er
@@ -526,7 +523,6 @@ const IMPORTED = {
   sqCooldownUntil:null,
   completedSqLog:[],
   sqStatCycle:[],
-  capReached:{},
   objectives:DEFS,
 };
 
@@ -557,7 +553,6 @@ function buildState(){
     sqCooldownUntil:saved.sqCooldownUntil||null,
     completedSqLog:saved.completedSqLog||[],
     sqStatCycle:saved.sqStatCycle||[],
-    capReached:saved.capReached||{},
     stats:saved.stats||IMPORTED.stats,
     statXp:saved.statXp||IMPORTED.statXp,
     dailyLog:migratedLog,
@@ -605,7 +600,6 @@ function App(){
   const scrollRef = useRef(null);
   function switchTab(id){ setTab(id); if(scrollRef.current) scrollRef.current.scrollTop=0; }
   const [rankUp,setRankUp] = useState(null);
-  const [capAnim,setCapAnim] = useState(null);
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
   const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,cs:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
@@ -903,20 +897,12 @@ function App(){
     if(el){el.value="";setTimeout(()=>{try{el.focus();}catch(_){}},50);}
     const cur=(obj.weekly)?(wLog[obj.id]||0):(tLog[obj.id]||0);
     let xp=0;
-    let capJustReached=false; // true si on franchit le cap dans cette session
-    // Calcul du cap (si défini)
+    let capJustReached_DISABLED=false;
     const b=getRankBase(obj.id,ri,prestige);
-    const hasCap = (obj.cap || obj.capValue) && obj.base && !obj.binary;
-    const capThreshold = obj.capValue ? obj.capValue : (hasCap ? b * obj.cap : Infinity);
     const prev=cur, next=cur+val;
-    // Si déjà au-delà du cap : pas d'XP pour cette session
-    const alreadyCapped = hasCap && prev >= capThreshold;
-    // Si on franchit le cap pendant cette session, on plafonne le "next effectif" à capThreshold
-    const effectiveNext = hasCap ? Math.min(next, capThreshold) : next;
-    const effectiveVal = effectiveNext - prev; // partie qui compte pour l'XP
-    if(hasCap && prev < capThreshold && next >= capThreshold){
-      capJustReached = true;
-    }
+    const alreadyCapped_DISABLED = false;
+    const effectiveNext = next;
+    const effectiveVal = val;
     // Tout objectif avec un base, non-binary, hors cas spéciaux (water/run) entre dans le système palier
     const isPalier = obj.base && !obj.binary && obj.id!=="water" && obj.id!=="run";
 
@@ -971,10 +957,6 @@ function App(){
       setState(s=>{
         const d={...s.dailyLog};d[today]={...(d[today]||{}),[obj.id]:(d[today]?.[obj.id]||0)+val};
         let next2={...s,dailyLog:d,lastActiveDay:todayStr()};
-        if(capJustReached){
-          const periodKey = obj.weekly ? wk : today;
-          next2={...next2, capReached:{...(next2.capReached||{}),[obj.id]:periodKey}};
-        }
         return next2;
       });
       if(espritXp>0){
@@ -982,17 +964,16 @@ function App(){
         const id=Date.now()+Math.random();
         setFloats(f=>[...f,{id,y:"38%",txt:"+"+Math.round(espritXp)+" XP "+(STAT_LBL2[obj.stat]||obj.stat)}]);
         setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id)),2300);
-      } else if(!capJustReached && !alreadyCapped) spawnFloat("0 XP",e);
-      if(capJustReached){ addXp(200,"Discipline",null,true); setCapAnim({obj,xMult:"60min"}); }
+      } else if(!capJustReached_DISABLED && !alreadyCapped_DISABLED) spawnFloat("0 XP",e);
       return;
     }
     if(obj.binary){const was=cur>=getRankBase(obj.id,ri,prestige),now2=(cur+val)>=getRankBase(obj.id,ri,prestige); xp=(!was&&now2)?(obj.binaryXp||50):0;}
-    else if(alreadyCapped){
-      // Déjà cappé : 0 XP, mais on log la valeur quand même
+    else if(alreadyCapped_DISABLED){
+      // Aucun cap : on log toujours la valeur
       xp=0;
     }
     else if(isPalier){
-      // Utilise effectiveVal (plafonné au cap si on dépasse)
+      // Utilise effectiveVal
       if(obj.optional){
         // Quêtes bonus : XP linéaire dès le début + 1 bonus par palier franchi à partir du palier 2
         xp=effectiveVal*obj.xpPer;
@@ -1018,7 +999,7 @@ function App(){
     }
     else if(obj.id==="run"){
       // Course : linéaire 100xp/km + 50% bonus si total >= 2x objectif
-      // Avec cap éventuel
+      
       xp=effectiveVal*obj.xpPer;
       const totalAfter=effectiveNext;
       if(totalAfter>=b*2) xp+=Math.round(effectiveVal*obj.xpPer*0.5);
@@ -1035,11 +1016,7 @@ function App(){
         const d={...s.dailyLog};d[today]={...(d[today]||{}),[obj.id]:(d[today]?.[obj.id]||0)+val};
         next2={...s,dailyLog:d,lastActiveDay:todayStr()};
       }
-      // Marquer cap atteint
-      if(capJustReached){
-        const periodKey = obj.weekly ? wk : today;
-        next2={...next2, capReached:{...(next2.capReached||{}),[obj.id]:periodKey}};
-      }
+      
       return next2;
     });
     if(xp>0){
@@ -1067,12 +1044,7 @@ function App(){
       } else {
         addXp(xp,obj.stat,e,false,obj.stat);
       }
-    } else if(!capJustReached && !alreadyCapped) spawnFloat("0 XP",e);
-    // Cap atteint : déclencher animation + bonus 200 XP Discipline
-    if(capJustReached){
-      addXp(200,"Discipline",null,true);
-      setCapAnim({obj,xMult:obj.cap});
-    }
+    } else if(!capJustReached_DISABLED && !alreadyCapped_DISABLED) spawnFloat("0 XP",e);
   }
 
   function progressSq(sq,e,directVal){
@@ -1171,7 +1143,6 @@ function QuestBadge({label,color,filled=false,extra=""}){
 }
 const WEEKLY_BADGE_COLOR = "#818cf8";
 const BONUS_BADGE_COLOR = "#fbbf24";
-const CAP_BADGE_COLOR = "#ef4444";
 
   // ─── SOUS-COMPOSANTS ──────────────────────────────────────────────────
 
@@ -1238,36 +1209,23 @@ const CAP_BADGE_COLOR = "#ef4444";
     }
 
     const pct=(d/displayTarget)*100, over=d>displayTarget;
-    // ── Système de cap ──
-    const hasCap = (obj.cap || obj.capValue) && obj.base && !obj.binary;
-    const capThreshold = obj.capValue ? obj.capValue : (hasCap ? (obj.base&&!RANK_BASES[obj.id]?obj.base:getRankBase(obj.id,ri,prestige))*obj.cap : Infinity);
-    const isCapped = hasCap && d >= capThreshold;
-    const capProgress = hasCap ? Math.min(1, d/capThreshold) : 0;
-    const isNearCap = hasCap && !isCapped && capProgress >= 0.75;
-    const remainingToCap = hasCap ? Math.max(0, capThreshold - d) : 0;
-    // Couleur de la barre : du rang vers orange à l'approche du cap
     const rankColor = rank.color || "#9ca3af";
-    const capColor = "#ef4444";
+    const isCapped = false;
     let barColor = rankColor;
-    if(isCapped){ barColor = capColor; }
-    else if(isNearCap){
-      barColor = "linear-gradient(90deg,"+rankColor+","+capColor+")";
-    }
     // Barre alignée sur Historique :
-    // en cours = hachurée, complétée = pleine, dépassée/cap = pleine + glow
+    // en cours = hachurée, complétée = pleine, dépassée = pleine + glow
     const fillStateClass = isCapped || over
       ? " over"
       : (d>=effectiveT&&effectiveT>0)
         ? " done"
         : (pct>0 ? " partial" : "");
     const barInnerStyle = "width:"+(isCapped?100:Math.min(100,pct))+"%";
-    return h("div",{class:"qi "+(d>=effectiveT&&effectiveT>0?"done":""),style:(isCapped?"border-color:"+capColor+"66;background:linear-gradient(135deg,rgba(255,255,255,0.02),rgba(239,68,68,0.06))":"")},
+    return h("div",{class:"qi "+(d>=effectiveT&&effectiveT>0?"done":""),style:""},
       h("div",{class:"qhdr",style:"align-items:center",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
         h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:center;gap:8px;white-space:normal;overflow:visible;line-height:1.25;min-height:18px;flex-wrap:wrap"},
-          QuestIcon(obj.id,obj.icon,14,isCapped?"filter:grayscale(60%);opacity:0.7;width:18px;height:18px;margin-top:0;line-height:1":"width:18px;height:18px;margin-top:0;line-height:1"),
+          QuestIcon(obj.id,obj.icon,14,"width:18px;height:18px;margin-top:0;line-height:1"),
           h("span",{style:"white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;word-break:normal;display:inline-flex;align-items:center;min-height:18px"},obj.name),
           isWeekly&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
-          hasCap&&h(QuestBadge,{label:isCapped?"CAP ATTEINT":(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap)),color:capColor,filled:isCapped}),
         ),
         h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.25;align-self:flex-start;padding-top:0"},
           obj.tiers
@@ -1300,13 +1258,10 @@ const CAP_BADGE_COLOR = "#ef4444";
       h("div",{class:"qrow"},
         h(Fragment,null,
             h("div",{class:"qbar"},h("div",{class:"qfill"+fillStateClass,style:barInnerStyle})),
-            h("div",{class:"qxp",style:(isCapped?"color:"+capColor:false?"color:#ef4444":"")+";white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},fmtNum(d)+"/"+fmtNum(displayTarget)+" "+((d>1||displayTarget>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[obj.unit]||obj.unit))
+            h("div",{class:"qxp",style:"white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},fmtNum(d)+"/"+fmtNum(displayTarget)+" "+((d>1||displayTarget>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[obj.unit]||obj.unit))
           )
       ),
-      isNearCap&&h("div",{style:"font-size:9px;color:"+capColor+";font-family:Orbitron,sans-serif;text-align:center;margin-top:6px;letter-spacing:0.5px;opacity:0.85"},"\u26A0 Cap dans "+fmtNum(remainingToCap)+" "+obj.unit+(remainingToCap>1?"s":"")+" \u00b7 r\u00e9cup\u00e9ration forc\u00e9e"),
-      isCapped&&h("div",{style:"font-size:9px;color:"+capColor+";font-family:Orbitron,sans-serif;text-align:center;margin-top:6px;letter-spacing:0.5px;font-style:italic"},"\uD83D\uDCA4 R\u00e9cup\u00e9ration forc\u00e9e jusqu'\u00e0 "+(obj.weekly?"la semaine prochaine":"demain")),
       (()=>{
-        if(isCapped) return null;
         // Quête avec tiers (ex: protein x/2) : bouton unique +1 unité
         if(obj.tiers && obj.tiers.length>0){
           const isMax = !obj.overGoalXpPer && d >= (obj.target||obj.tiers[obj.tiers.length-1].at);
@@ -1378,31 +1333,24 @@ const CAP_BADGE_COLOR = "#ef4444";
         )
       );
     }
-    // Système de cap dans RR
-    const hasCap = obj.cap && obj.base && !obj.binary;
-    const capThreshold = hasCap ? t * obj.cap : Infinity;
-    const isCapped = hasCap && d >= capThreshold;
-    const capProgress = hasCap ? Math.min(1, d/capThreshold) : 0;
-    const isNearCap = hasCap && !isCapped && capProgress >= 0.75;
-    const capColor = "#ef4444";
+    const isCapped = false;
     const rankColor = rank.color || "#9ca3af";
     // Barre alignée sur Historique :
-    // en cours = hachurée, complétée = pleine, dépassée/cap = pleine + glow
+    // en cours = hachurée, complétée = pleine, dépassée = pleine + glow
     const fillStateClass = isCapped || over
       ? " over"
       : (done ? " done" : (pct>0 ? " partial" : ""));
     const barInnerStyle = "width:"+(isCapped?100:Math.min(100,pct))+"%";
     return h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
-      QuestIcon(obj.id,obj.icon,14,isCapped?"filter:grayscale(60%);opacity:0.7":""),
+      QuestIcon(obj.id,obj.icon,14),
       h("div",{style:"flex:1"},
         h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center"},
           h("div",{style:"display:flex;align-items:flex-start;gap:6px;min-width:0;flex:1;white-space:normal;line-height:1.25"},
             h("span",{style:"white-space:normal;line-height:1.25;word-break:normal"},obj.name),
             (obj.weekly)&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
-            hasCap&&h(QuestBadge,{label:isCapped?"CAP ATTEINT":(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap)),color:capColor,filled:isCapped})
           ),
           h("div",{style:"display:flex;align-items:center;gap:6px"},
-            h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+(isCapped?capColor:d>=displayTarget?"var(--rc)":d>0?"var(--tx)":"var(--td)")},fmtNum(d)+"/"+fmtNum(displayTarget)+" "+((d>1||displayTarget>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[obj.unit]||obj.unit)),
+            h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+(d>=displayTarget?"var(--rc)":d>0?"var(--tx)":"var(--td)")},fmtNum(d)+"/"+fmtNum(displayTarget)+" "+((d>1||displayTarget>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[obj.unit]||obj.unit)),
             h("span",{style:"font-family:Orbitron,sans-serif;font-size:11px;font-weight:700;color:#4ade80;width:10px;text-align:center"},done?"\u2713":"")
           )
         ),
@@ -2243,11 +2191,6 @@ const CAP_BADGE_COLOR = "#ef4444";
       return base+" "+unitPlural(obj.unit,base)+period;
     }
 
-    function capForQuest(obj){
-      if(obj.binary || obj.tiers) return "—";
-      return obj.cap ? "×"+obj.cap : "Aucun";
-    }
-
     function renderQuest(obj){
 
       const subtitle = obj.desc || obj.subtitle || "";
@@ -2262,8 +2205,7 @@ const CAP_BADGE_COLOR = "#ef4444";
             subtitle&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},subtitle),
             h("div",{style:"margin-top:7px"},renderXpPills(obj)),
             h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:6px"},
-              h("div",{style:detailStyle},"▸ Objectif : "+targetForQuest(obj)),
-              h("div",{style:detailStyle},"▸ Cap : "+capForQuest(obj))
+              h("div",{style:detailStyle},"▸ Objectif : "+targetForQuest(obj))
             )
           )
         )
@@ -2286,8 +2228,7 @@ const CAP_BADGE_COLOR = "#ef4444";
             h("div",{style:"margin-top:7px"},renderXpPills(q)),
             h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:6px"},
               h("div",{style:detailStyle},"▸ Objectif : "+targetForSpecial(q)),
-              h("div",{style:detailStyle},"▸ Délai : "+(q.days||1)+" jour"+((q.days||1)>1?"s":"")),
-              h("div",{style:detailStyle},"▸ Cap : —")
+              h("div",{style:detailStyle},"▸ Délai : "+(q.days||1)+" jour"+((q.days||1)>1?"s":""))
             )
           )
         )
@@ -2389,37 +2330,6 @@ const CAP_BADGE_COLOR = "#ef4444";
       h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial))
     );
   }
-
-  // ─── ANIMATION CAP ATTEINT (RÉCUPÉRATION FORCÉE) ─────────────────────
-
-  function CapOverlay(){
-    if(!capAnim)return null;
-    const {obj,xMult}=capAnim;
-    const capColor="#ef4444";
-    const capGlow="#ef444466";
-    const particles=Array.from({length:40},(_,i)=>({
-      id:i,
-      left:Math.random()*100,
-      delay:Math.random()*3,
-      dur:1.2+Math.random()*2,
-      size:2+Math.random()*4,
-      violet:Math.random()>0.7
-    }));
-    return h("div",{class:"ruov",style:"--rc:"+capColor+";--rg:"+capGlow},
-      h("div",{class:"ruparts"},particles.map(p=>
-        h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.violet?"rgba(192,132,252,0.6)":capColor)+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
-      )),
-      h("div",{class:"rucont"},
-        h("div",{class:"ruevol"},"R\u00e9cup\u00e9ration forc\u00e9e"),
-        h("div",{style:"font-size:64px;margin-bottom:8px;filter:drop-shadow(0 0 20px "+capColor+")"},"\u26A1"),
-        h("div",{style:"font-family:Orbitron,sans-serif;color:"+capColor+";font-size:18px;font-weight:700;letter-spacing:3px;margin-bottom:6px;text-shadow:0 0 14px "+capColor},obj.name.toUpperCase()),
-        h("div",{style:"font-family:Orbitron,sans-serif;color:"+capColor+";font-size:12px;letter-spacing:2px;opacity:0.7"},"CAP \u00d7"+xMult+" ATTEINT"),
-        h("div",{style:"font-family:Orbitron,sans-serif;color:#c084fc;font-size:16px;font-weight:700;letter-spacing:2px;margin-top:24px;text-shadow:0 0 12px #c084fc"},"+ 200 XP DISCIPLINE"),
-        h("button",{class:"rudis",onClick:()=>setCapAnim(null)},"Continuer")
-      )
-    );
-  }
-
   // ─── RENDU PRINCIPAL ──────────────────────────────────────────────────
 
   const parts=Array.from({length:15},(_,i)=>({id:i,s:Math.random()*3+1,l:Math.random()*100,dur:Math.random()*10+8,del:Math.random()*10}));
@@ -2464,7 +2374,6 @@ const CAP_BADGE_COLOR = "#ef4444";
       h(Settings,null),
       h(RankUp,null),
       h(PrestigeUp,null),
-      h(CapOverlay,null),
     )
   );
 }
