@@ -77,7 +77,7 @@ const DEFS = [
   {id:"lhh_actions",  name:"LHH - Actions commerciales", unit:"action", xpPer:0, daily:false, weekly:true, optional:true, stat:"Discipline", icon:"💼", base:60, target:60, fixedBase:true, tiers:[{at:60,xp:500,stat:"Discipline"}], overGoalXpPer:10, overGoalStat:"Discipline"},
   {id:"walk",   name:"Marche",          unit:"km",    xpPer:75,  daily:false,weekly:true, optional:true, stat:"Endurance",      icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F", base:5, fixedBase:true},
   // ─── AGILITÉ ──────────────────────────────────────────────────────────
-    {id:"balance",name:"\u00c9quilibre sur un pied",unit:"min",xpPer:10,daily:true,weekly:false,optional:true,stat:"Agilite",    icon:"\uD83E\uDDB6\uD83C\uDFFB",   base:5, startDate:"2026-05-15", cap:3},
+    {id:"balance",name:"Équilibre les yeux fermés",unit:"min",xpPer:25,daily:true,weekly:false,optional:true,stat:"Agilite", icon:"\uD83E\uDDB6\uD83C\uDFFB", base:10, startDate:"2026-05-15", cap:3, stat2:"Esprit", xpPer2:25},
   // ─── DISCIPLINE ───────────────────────────────────────────────────────
 ];
 
@@ -119,8 +119,7 @@ const SP = {
     {id:"sp_fluide",  name:"Flow martial", icon:"\uD83C\uDF0A",                              unit:"min",  target:30, xp:1500, days:1, tiers:[{at:15,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"},{at:30,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"}], desc:"30 min de flow martial / mouvement continu sans rupture"},
 
     {id:"sp_flex30",  name:"Souplesse longue", icon:"\uD83E\uDD38\uD83C\uDFFB",                              unit:"min",  target:30, xp:1500, days:1, tiers:[{at:15,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"},{at:30,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"}], desc:"30 min de souplesse (palier à 15 min)"},    {id:"sp_silent",  name:"Déplacements silencieux", icon:"\uD83D\uDC08",                          unit:"min",  target:10, xp:500, days:1, desc:"Marcher sans bruit (escaliers, pièces)"},
-    {id:"sp_balance_eyes", name:"Équilibre yeux fermés", icon:"\uD83E\uDDB6\uD83C\uDFFB",          unit:"min",  target:10, xp:500, xp2:250, stat2:"Esprit", days:1, desc:"Équilibre sur un pied yeux fermés"},
-    {id:"sp_footwork", name:"Footwork rapide", icon:"\u26A1",                                            unit:"min",  target:10, xp:500, step:5, days:1, desc:"Footwork rapide (carrelage, devant/derrière/côtés)"},
+        {id:"sp_footwork", name:"Footwork rapide", icon:"\u26A1",                                            unit:"min",  target:10, xp:500, step:5, days:1, desc:"Footwork rapide (carrelage, devant/derrière/côtés)"},
   ],
   Discipline:[
     {id:"sp_no_passive", name:"Aucun contenu passif", icon:"\uD83D\uDEAB", unit:"jour", target:1, xp:500, days:1, binary:true, desc:"Aucun contenu passif"},
