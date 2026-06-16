@@ -2305,7 +2305,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{style:"font-size:12px;color:var(--td);line-height:1.45"},"Catalogue complet des quêtes existantes. Les objectifs des quêtes quotidiennes et hebdomadaires sont calculés au rang actuel.")
       ),
       h(Section,{id:"obl",title:"Quêtes obligatoires",count:required.length},groupByDominantStat(required,renderQuest)),
-      h(Section,{id:"wk",title:"Quêtes hebdomadaires",count:weeklyCodex.length},groupByDominantStat(weeklyCodex,renderQuest)),
       h(Section,{id:"bonus",title:"Quêtes bonus",count:bonus.length+hiddenBonus.length},
         h(Fragment,null,
           groupByDominantStat(bonus,renderQuest),
