@@ -1829,12 +1829,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         if(!records[id]||val>records[id].val)records[id]={val,date};
       });
     });
-    // weekly records
-    Object.entries(state.weeklyLog).forEach(([wk,log])=>{
-      Object.entries(log).forEach(([id,val])=>{
-        if(!records[id]||val>records[id].val)records[id]={val,date:wk};
-      });
-    });
+    // Running et Marche sont désormais quotidiens : ne plus utiliser weeklyLog pour les records
+
 
     return h("div",{class:"tab"},
       // Navigation semaine
