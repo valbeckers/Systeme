@@ -223,6 +223,28 @@ const xpForLvl   = l => Math.round(1000*Math.pow(1.1,l));
 const totForLvl  = l => { let t=0; for(let i=0;i<l;i++)t+=xpForLvl(i); return t; };
 const getLvl     = xp => { let l=0; while(xp>=totForLvl(l+1))l++; return l; };
 
+// Niveau global du personnage : progression courte/moyenne, indépendante des rangs.
+// Niveau 1 -> 2 = 3 000 XP, puis +250 XP requis à chaque niveau.
+const GLOBAL_MAX_LEVEL = 100;
+const globalXpForNextLevel = lvl => 3000 + (Math.max(1,lvl)-1)*250;
+const globalTotForLevel = lvl => {
+  let t=0;
+  for(let i=1;i<Math.max(1,lvl);i++)t+=globalXpForNextLevel(i);
+  return t;
+};
+function getGlobalLevelInfo(xp){
+  const total = Math.max(0,Number(xp)||0);
+  let level = 1;
+  while(level < GLOBAL_MAX_LEVEL && total >= globalTotForLevel(level+1)) level++;
+  const nextLevel = Math.min(GLOBAL_MAX_LEVEL, level+1);
+  const start = globalTotForLevel(level);
+  const next = level >= GLOBAL_MAX_LEVEL ? start : globalTotForLevel(nextLevel);
+  const need = Math.max(1,next-start);
+  const inLevel = Math.max(0,total-start);
+  const pct = level >= GLOBAL_MAX_LEVEL ? 100 : Math.max(0,Math.min(100,(inLevel/need)*100));
+  return {level,nextLevel,start,next,need,inLevel,pct,maxed:level>=GLOBAL_MAX_LEVEL};
+}
+
 
 function hexToRgb(hex){
   if(!hex) return null;
@@ -662,6 +684,7 @@ function App(){
   const xpInRank = effectiveXp - rank.xpRequired;
   const xpToNext = nextRank ? nextRank.xpRequired - rank.xpRequired : 1;
   const rankPct  = nextRank ? Math.min(100,(xpInRank/xpToNext)*100) : 100;
+  const globalLevel = getGlobalLevelInfo(effectiveXp);
 
   // 5b. Prestige disponible : rang S atteint + XP max du rang S
   const S_RANK = RANKS[RANKS.length-1];
@@ -1515,6 +1538,13 @@ const BONUS_BADGE_COLOR = "#fbbf24";
                 ? h("span",{style:"color:#fb923c"},"Stats requises non atteintes")
                 : h("span",{style:"color:var(--rc)"},Math.round(ASCENSION_XP_NEEDED-effectiveXp).toLocaleString("fr-FR")+" XP avant Ascension "+(ROMAN[prestige]||"I"))
         ),
+        h("div",{style:"margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06)"},
+          h("div",{style:"display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--td);margin-bottom:5px;font-family:Orbitron,sans-serif"},
+            h("span",{style:"text-transform:uppercase;letter-spacing:1px;color:var(--rc)"},globalLevel.maxed?"Niveau 100":"Niveau "+globalLevel.level+" → "+globalLevel.nextLevel),
+            h("span",null,globalLevel.maxed?"MAX":Math.round(globalLevel.inLevel).toLocaleString("fr-FR")+" / "+Math.round(globalLevel.need).toLocaleString("fr-FR")+" XP")
+          ),
+          h("div",{class:"xpbar",style:"height:6px"},h("div",{class:"xpfill",style:"width:"+globalLevel.pct+"%"}))
+        ),
         prestigeAvailable&&h("button",{
           onClick:()=>{
             const newPrestige=(state.prestige||0)+1;
@@ -1755,6 +1785,19 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             )
           );
         })()
+      ),
+      h("div",{class:"card"},
+        h("div",{class:"ctitle"},"Niveau global"),
+        h("div",{style:"display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:6px"},
+          h("div",null,
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:20px;font-weight:900;color:var(--rc);line-height:1"},"Niveau "+globalLevel.level),
+            h("div",{style:"font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:4px"},globalLevel.maxed?"Progression maximale":"Vers niveau "+globalLevel.nextLevel)
+          ),
+          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;text-align:right"},
+            globalLevel.maxed?"MAX":Math.round(globalLevel.inLevel).toLocaleString("fr-FR")+" / "+Math.round(globalLevel.need).toLocaleString("fr-FR")+" XP"
+          )
+        ),
+        h("div",{class:"xpbar",style:"height:7px"},h("div",{class:"xpfill",style:"width:"+globalLevel.pct+"%"}))
       ),
       h("div",{class:"card"},
         h("div",{class:"ctitle"},"Équilibre des stats"),
