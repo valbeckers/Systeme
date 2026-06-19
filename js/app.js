@@ -1795,7 +1795,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{class:"ctitle"},"Niveau global"),
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:6px"},
           h("div",null,
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:20px;font-weight:900;color:var(--rc);line-height:1"},"Niveau "+globalLevel.level),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:var(--rc);line-height:1"},"Niveau "+globalLevel.level),
             h("div",{style:"font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:4px"},globalLevel.maxed?"Progression maximale":"Vers niveau "+globalLevel.nextLevel)
           ),
           h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;text-align:right"},
