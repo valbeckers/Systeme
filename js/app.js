@@ -1539,11 +1539,16 @@ const BONUS_BADGE_COLOR = "#fbbf24";
                 : h("span",{style:"color:var(--rc)"},Math.round(ASCENSION_XP_NEEDED-effectiveXp).toLocaleString("fr-FR")+" XP avant Ascension "+(ROMAN[prestige]||"I"))
         ),
         h("div",{style:"margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06)"},
-          h("div",{style:"display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--td);margin-bottom:5px;font-family:Orbitron,sans-serif"},
-            h("span",{style:"text-transform:uppercase;letter-spacing:1px;color:var(--rc)"},globalLevel.maxed?"Niveau 100":"Niveau "+globalLevel.level+" → "+globalLevel.nextLevel),
-            h("span",null,globalLevel.maxed?"MAX":Math.round(globalLevel.inLevel).toLocaleString("fr-FR")+" / "+Math.round(globalLevel.need).toLocaleString("fr-FR")+" XP")
+          h("div",{style:"display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--td);margin-bottom:5px;font-family:Orbitron,sans-serif;text-transform:uppercase;letter-spacing:1px"},
+            h("span",null,"Niveau "+globalLevel.level),
+            h("span",{style:"color:var(--td);opacity:.75"},"→"),
+            h("span",null,globalLevel.maxed?"Niveau max":"Niveau "+globalLevel.nextLevel)
           ),
-          h("div",{class:"xpbar",style:"height:6px"},h("div",{class:"xpfill",style:"width:"+globalLevel.pct+"%"}))
+          h("div",{class:"xpbar",style:"height:4px"},h("div",{class:"xpfill",style:"width:"+globalLevel.pct+"%"})),
+          h("div",{style:"display:flex;justify-content:space-between;font-size:10px;color:var(--td);margin-top:5px;font-family:Orbitron,sans-serif"},
+            h("span",null,Math.round(globalLevel.inLevel).toLocaleString("fr-FR")+" XP"),
+            h("span",{style:"color:var(--rc)"},globalLevel.maxed?"MAX":Math.max(0,Math.round(globalLevel.need-globalLevel.inLevel)).toLocaleString("fr-FR")+" XP manquants")
+          )
         ),
         prestigeAvailable&&h("button",{
           onClick:()=>{
