@@ -58,12 +58,12 @@ function QuestIcon(id, fallback, size=14, extraStyle=""){
 const DEFS = [
   // ─── SANTÉ ────────────────────────────────────────────────────────────
   {id:"water",  name:"Hydratation",     unit:"verre", xpPer:10,  daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDCA7",               base:10, baseHistory:[{until:"2026-04-29",base:8}]},
-  {id:"sleep",  name:"8h de sommeil",   unit:"nuit",  xpPer:0,   daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDECF\uFE0F",         base:1,  binary:true, binaryXp:150},
+  {id:"sleep",  name:"Dormir 8h",   unit:"nuit",  xpPer:0,   daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDECF\uFE0F",         base:1,  binary:true, binaryXp:150},
     // ─── FORCE ────────────────────────────────────────────────────────────
   {id:"push",   name:"Pompes",          unit:"rep",   xpPer:3,   daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDBE",               base:30},
-  {id:"abs",    name:"Abdominaux",      unit:"rep",   xpPer:1.5, daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDCE\uD83C\uDFFB\u200D\u2642\uFE0F", base:60},
+  {id:"abs",    name:"Abdos",      unit:"rep",   xpPer:1.5, daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDCE\uD83C\uDFFB\u200D\u2642\uFE0F", base:60},
   {id:"squats", name:"Squats",          unit:"rep",   xpPer:3,   daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDBF",               base:15, stat2:"Agilite", xpPer2:3},
-  {id:"calves", name:"Extensions mollets",unit:"rep", xpPer:1.5, daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDBF",               base:30, stat2:"Agilite", xpPer2:1},
+  {id:"calves", name:"Mollets",unit:"rep", xpPer:1.5, daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDBF",               base:30, stat2:"Agilite", xpPer2:1},
   {id:"grips",  name:"Hand grips",      unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Force",         icon:"\u270A\uD83C\uDFFB",         base:10, fixedBase:true},
   // ─── ESPRIT ───────────────────────────────────────────────────────────
   {id:"reading",name:"Lecture",unit:"min",xpPer:20,daily:true,weekly:false,optional:false,stat:"Esprit",icon:"📚",base:20,startDate:"2026-05-21"},
@@ -74,7 +74,7 @@ const DEFS = [
   {id:"run",    name:"Running",         iconKey:"run",          unit:"km",    xpPer:200, daily:true, weekly:false,optional:true, stat:"Endurance",      icon:"\uD83C\uDFC3\uD83C\uDFFB",   base:5,  stat2:"Agilite", xpPer2:50},
   {id:"walk",   name:"Marche",          unit:"km",    xpPer:75,  daily:true, weekly:false,optional:true, stat:"Endurance",      icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F", base:5},
   // ─── AGILITÉ ──────────────────────────────────────────────────────────
-    {id:"balance",name:"Équilibre les yeux fermés",unit:"min",xpPer:10,daily:true,weekly:false,optional:true,stat:"Agilite", icon:"\uD83E\uDDB6\uD83C\uDFFB", base:10, startDate:"2026-05-15", stat2:"Esprit", xpPer2:10},
+    {id:"balance",name:"Équilibre",unit:"min",xpPer:10,daily:true,weekly:false,optional:true,stat:"Agilite", icon:"\uD83E\uDDB6\uD83C\uDFFB", base:10, startDate:"2026-05-15", stat2:"Esprit", xpPer2:10},
   // ─── DISCIPLINE ───────────────────────────────────────────────────────
 ];
 
