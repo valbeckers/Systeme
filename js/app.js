@@ -170,7 +170,7 @@ const RANK_BASES = {
   squats:  [15, 22, 29,  36,  43,  50],
   calves:  [30, 44, 58,  72,  86,  100],
   reading: [5, 10, 15, 20, 25, 30],
-  run:     [5,  6,  7,   8,   9,   10],
+  run:     [4,  5,  6,   7,   8,   10],
   med:     [15, 18, 21,  24,  27,  30],
   flex:    [15, 18, 21,  24,  27,  30],
   walk:    [5,  6,  7,   8,   9,   10],
@@ -199,7 +199,7 @@ function getRankBase(objId, rankIdx, prestige){
   const base = RANK_BASES[objId]?.[rankIdx] ?? (def?.base ?? 0);
   if(!prestige||prestige===0)return base;
   const sBase = RANK_BASES[objId]?.[5] ?? base;
-  if(objId==="reading") return sBase;
+  if(objId==="reading" || objId==="run") return sBase;
   return Math.round(sBase * Math.pow(1.2, prestige));
 }
 
