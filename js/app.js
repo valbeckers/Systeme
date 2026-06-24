@@ -58,80 +58,104 @@ function QuestIcon(id, fallback, size=14, extraStyle=""){
 const DEFS = [
   // ─── SANTÉ ────────────────────────────────────────────────────────────
   {id:"water",  name:"Hydratation",     unit:"verre", xpPer:10,  daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDCA7",               base:10, baseHistory:[{until:"2026-04-29",base:8}]},
-  {id:"sleep",  name:"Dormir 8h",   unit:"nuit",  xpPer:0,   daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDECF\uFE0F",         base:1,  binary:true, binaryXp:150},
-    // ─── FORCE ────────────────────────────────────────────────────────────
-  {id:"push",   name:"Pompes",          unit:"rep",   xpPer:3,   daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDBE",               base:30},
-  {id:"abs",    name:"Abdos",      unit:"rep",   xpPer:1.5, daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDCE\uD83C\uDFFB\u200D\u2642\uFE0F", base:60},
-  {id:"squats", name:"Squats",          unit:"rep",   xpPer:3,   daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDBF",               base:15, stat2:"Agilite", xpPer2:3},
-  {id:"calves", name:"Mollets",unit:"rep", xpPer:1.5, daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDBF",               base:30, stat2:"Agilite", xpPer2:1},
-  {id:"grips",  name:"Hand grips",      unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Force",         icon:"\u270A\uD83C\uDFFB",         base:10, fixedBase:true},
+  {id:"sleep",  name:"8h de sommeil",   unit:"nuit",  xpPer:0,   daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDECF\uFE0F",         base:1,  binary:true, binaryXp:200},
+  {id:"protein",name:"Repas \u00e9quilibr\u00e9",unit:"repas", xpPer:0,   daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83C\uDF4C",               base:1, target:2, validateAt:1, startDate:"2026-05-20", tiers:[{at:1,xp:200,stat:"Sante"},{at:2,xp:200,stat:"Sante",xp2:200,stat2:"Discipline"}]},
+  // ─── FORCE ────────────────────────────────────────────────────────────
+  {id:"push",   name:"Pompes",          unit:"rep",   xpPer:2,   daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDBE",               base:30, cap:3},
+  {id:"abs",    name:"Abdominaux",      unit:"rep",   xpPer:1,   daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDCE\uD83C\uDFFB\u200D\u2642\uFE0F", base:60, cap:3},
+  {id:"squats", name:"Squats",          unit:"rep",   xpPer:3,   daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDBF",               base:15, stat2:"Agilite", xpPer2:1, cap:3},
+  {id:"calves", name:"Extensions mollets",unit:"rep", xpPer:1,   daily:true, weekly:false,optional:true, stat:"Force",         icon:"\uD83E\uDDBF",               base:30, stat2:"Agilite", xpPer2:1, cap:3},
+  {id:"grips",  name:"Hand grips",      unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Force",         icon:"\u270A\uD83C\uDFFB",         base:10, fixedBase:true, cap:3},
   // ─── ESPRIT ───────────────────────────────────────────────────────────
-  {id:"reading",name:"Lecture",unit:"min",xpPer:20,daily:true,weekly:false,optional:false,stat:"Esprit",icon:"📚",base:20,startDate:"2026-05-21"},
+  {id:"reading",name:"Lecture",unit:"min",xpPer:15,daily:true,weekly:false,optional:false,stat:"Esprit",icon:"📚",base:20,startDate:"2026-05-21"},
+  {id:"pod",    name:"\u00c9couter 1 podcast", unit:"jour", xpPer:0, daily:true, weekly:false,optional:true, stat:"Esprit", icon:"\uD83C\uDF99\uFE0F",   base:1, binary:true, binaryXp:300},
   // ─── ESPRIT ───────────────────────────────────────────────────────────
   
-  {id:"med",    name:"M\u00e9ditation", unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Esprit",  icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F", base:15, fixedBase:true},
+  {id:"med",    name:"M\u00e9ditation", unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Esprit",  icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F", base:15, fixedBase:true, cap:2},
   // ─── ENDURANCE ────────────────────────────────────────────────────────
-  {id:"run",    name:"Running",         iconKey:"run",          unit:"km",    xpPer:200, daily:true, weekly:false,optional:true, stat:"Endurance",      icon:"\uD83C\uDFC3\uD83C\uDFFB",   base:5,  stat2:"Agilite", xpPer2:50},
-  {id:"walk",   name:"Marche",          unit:"km",    xpPer:75,  daily:true, weekly:false,optional:true, stat:"Endurance",      icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F", base:5},
+  {id:"run",    name:"Course",          iconKey:"run",          unit:"km",    xpPer:150, daily:false,weekly:true, optional:false,stat:"Endurance",      icon:"\uD83C\uDFC3\uD83C\uDFFB",   base:7,  stat2:"Agilite", xpPer2:30, cap:3},
+  {id:"lhh_contacts", name:"LHH - Contacts utiles", unit:"contact", xpPer:0, daily:false, weekly:true, optional:true, stat:"Discipline", icon:"💼", base:12, target:12, fixedBase:true, tiers:[{at:12,xp:500,stat:"Discipline"}], overGoalXpPer:10, overGoalStat:"Discipline"},
+  {id:"lhh_actions",  name:"LHH - Actions commerciales", unit:"action", xpPer:0, daily:false, weekly:true, optional:true, stat:"Discipline", icon:"💼", base:60, target:60, fixedBase:true, tiers:[{at:60,xp:500,stat:"Discipline"}], overGoalXpPer:10, overGoalStat:"Discipline"},
+  {id:"walk",   name:"Marche",          unit:"km",    xpPer:75,  daily:false,weekly:false,optional:true, stat:"Endurance",      icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F", base:5, fixedBase:true},
   // ─── AGILITÉ ──────────────────────────────────────────────────────────
-    {id:"balance",name:"Équilibre",unit:"min",xpPer:10,daily:true,weekly:false,optional:true,stat:"Agilite", icon:"\uD83E\uDDB6\uD83C\uDFFB", base:10, startDate:"2026-05-15", stat2:"Esprit", xpPer2:10},
+  {id:"flex",   name:"Souplesse",       unit:"min",   xpPer:25,  daily:true, weekly:false,optional:true, stat:"Agilite",        icon:"\uD83E\uDD38\uD83C\uDFFB",   base:15, fixedBase:true, stat2:"Endurance", xpPer2:10, cap:2},
+  {id:"balance",name:"\u00c9quilibre sur un pied",unit:"min",xpPer:10,daily:true,weekly:false,optional:false,stat:"Agilite",    icon:"\uD83E\uDDB6\uD83C\uDFFB",   base:5, startDate:"2026-05-15", cap:3},
   // ─── DISCIPLINE ───────────────────────────────────────────────────────
+  
+  {id:"mindmeal",name:"Manger sans stimulation",unit:"repas",xpPer:0,daily:true,weekly:false,optional:true,stat:"Sante",icon:"🧠",base:1,target:2,validateAt:1,startDate:"2026-05-21",tiers:[{at:1,xp:200,stat:"Sante"},{at:2,xp:200,stat:"Sante",xp2:200,stat2:"Discipline"}]},
 ];
 
 // Quetes speciales — par stat (25 au total)
 const SP = {
   Sante:[
-    {id:"sp_sun",     name:"Séance de lumière naturelle", icon:"\u2600\uFE0F",                              unit:"min",  target:10,  xp:500, xp2:250, stat2:"Esprit", days:1, binary:true, desc:"10 min de lumière naturelle"},
-    {id:"sp_fruits",  name:"Manger 5 fruits & légumes",  icon:"\uD83C\uDF4F",                              unit:"portion", target:5, xp:500, days:1, binary:true, desc:"Manger 5 fruits et légumes"},
-    {id:"sp_breath",  name:"Séance de cohérence cardiaque",icon:"\uD83D\uDC93",                             unit:"min", target:10, xp:500, days:1, binary:true, desc:"10 min de cohérence cardiaque"},
-    {id:"sp_nojunk",  name:"Pas de junk-food",                icon:"\uD83C\uDF55",                              unit:"jour", target:1, xp:500, days:1, binary:true, desc:"Zéro junk-food"},
-    {id:"sp_fasting", name:"Jeûne 24h",                  icon:"\u23F3",                                    unit:"jour", target:1, xp:1000, xp2:500, stat2:"Discipline", days:1, binary:true, desc:"Jeûne 24h complet"},
-
-    {id:"sp_balanced_meals", name:"Repas équilibrés", icon:"\uD83C\uDF4C", unit:"repas", target:2, xp:750, days:1, tiers:[{at:1,xp:250,stat:"Sante"},{at:2,xp:500,stat:"Sante"}], desc:"2 repas équilibrés (palier à 1 repas)"},
-    {id:"sp_no_sugar", name:"Aucun sucre transformé", icon:"\uD83C\uDF6C", unit:"jour", target:1, xp:500, days:1, binary:true, desc:"Aucun sucre transformé"},
-    {id:"sp_mealnostim", name:"Repas sans stimulation", icon:"🧠", unit:"repas", target:2, xp:1000, days:1, tiers:[{at:1,xp:250,stat:"Sante"},{at:2,xp:500,stat:"Sante",xp2:250,stat2:"Discipline"}], desc:"2 repas sans stimulation (palier à 1 repas)"},  ],
+    {id:"sp_sun",     name:"10min de lumi\u00e8re naturelle", icon:"\u2600\uFE0F",                              unit:"min",  target:10,  xp:250, days:1, binary:true, desc:"10 min de lumi\u00e8re naturelle"},
+    {id:"sp_fruits",  name:"Manger 5 fruits & l\u00e9gumes",  icon:"\uD83C\uDF4F",                              unit:"f/l",  target:5,   xp:250, days:1, binary:true, desc:"Manger 5 fruits et l\u00e9gumes"},
+    {id:"sp_breath",  name:"10min de coh\u00e9rence cardiaque",icon:"\uD83D\uDC93",                             unit:"jour", target:1,   xp:250, days:1, binary:true, desc:"10 min de respiration contr\u00f4l\u00e9e"},
+    {id:"sp_nojunk",  name:"Pas de junk-food",                icon:"\uD83C\uDF55",                              unit:"jour", target:1,   xp:250, days:1, binary:true, desc:"Z\u00e9ro junk-food"},
+    {id:"sp_fasting", name:"Je\u00fbne 24h",                  icon:"\u23F3",                                    unit:"jour", target:1,   xp:1000, days:1, binary:true, desc:"Je\u00fbne 24h complet"},
+  ],
   Force:[
-    {id:"sp_pull",    name:"Tractions",        icon:"\u270A\uD83C\uDFFB",                                   unit:"rep",  target:30,  xp:500, days:1, desc:"30 tractions"},
-    {id:"sp_dips",    name:"Dips",            icon:"\uD83D\uDC4A\uD83C\uDFFB",                             unit:"rep",  target:100, xp:500, days:1, desc:"100 dips"},
-    {id:"sp_lunge",   name:"Fentes",          icon:"\uD83E\uDDBF",                                         unit:"rep",  target:100, xp:500, xp2:250, stat2:"Endurance", days:1, desc:"100 fentes marchées"},
-    {id:"sp_plank",   name:"Gainage",    icon:"\uD83E\uDDCE\uD83C\uDFFB\u200D\u2642\uFE0F",           unit:"min",  target:10,  xp:500, xp2:250, stat2:"Endurance", days:1, desc:"10 min de gainage"},
-    {id:"sp_deadhang",name:"Dead hang",  icon:"\u270A\uD83C\uDFFB",                                   unit:"min",  target:10,  xp:500, xp2:250, stat2:"Endurance", days:1, desc:"10 min de dead hang"},
-    {id:"sp_wallsit", name:"Wall sit",     icon:"\uD83E\uDE91",                                         unit:"min",  target:10,  xp:1000, xp2:500, stat2:"Endurance", days:1, desc:"10 min de wall sit"},
+    {id:"sp_pull",    name:"30 tractions",        icon:"\u270A\uD83C\uDFFB",                                   unit:"rep",  target:30,  xp:300, days:1, desc:"30 tractions"},
+    {id:"sp_dips",    name:"100 dips",            icon:"\uD83D\uDC4A\uD83C\uDFFB",                             unit:"rep",  target:100, xp:300, days:1, desc:"100 dips"},
+    {id:"sp_lunge",   name:"100 fentes",          icon:"\uD83E\uDDBF",                                         unit:"rep",  target:100, xp:300, xp2:100, stat2:"Endurance", days:1, desc:"100 fentes march\u00e9es"},
+    {id:"sp_plank",   name:"10min de gainage",    icon:"\uD83E\uDDCE\uD83C\uDFFB\u200D\u2642\uFE0F",           unit:"min",  target:10,  xp:300, xp2:100, stat2:"Endurance", days:1, desc:"10 min de gainage"},
+    {id:"sp_deadhang",name:"10min de dead hang",  icon:"\u270A\uD83C\uDFFB",                                   unit:"min",  target:10,  xp:250, xp2:100, stat2:"Endurance", days:1, desc:"10 min de dead hang"},
+    {id:"sp_wallsit", name:"10min de chaise",     icon:"\uD83E\uDE91",                                         unit:"min",  target:10,  xp:300, xp2:300, stat2:"Endurance", days:1, desc:"10 min de chaise"},
   ],
   Esprit:[
-    {id:"sp_learning", name:"Apprentissage actif",  icon:"\uD83C\uDF93",                                  unit:"jour", target:1, xp:1000, xp2:500, stat2:"Discipline", days:1, binary:true, desc:"1h d'apprentissage actif"},
-    {id:"sp_memo30",   name:"Mémorisation",icon:"\uD83E\uDDE0",                                  unit:"jour", target:1, xp:1000, days:1, binary:true, desc:"30 min de mémorisation active"},
-    {id:"sp_silence30",name:"Silence",          icon:"\uD83E\uDD2B",                                  unit:"jour", target:1, xp:500, days:1, binary:true, desc:"30 min sans parler ni consommer"},
-    {id:"sp_nophone3h", name:"Téléphone hors de portée 3h", icon:"\uD83D\uDCF5",                unit:"jour", target:1, xp:500, xp2:250, stat2:"Discipline", days:1, binary:true, desc:"Téléphone hors de portée 3h"},
+    {id:"sp_learning", name:"1h d'apprentissage actif",  icon:"\uD83C\uDF93",                                  unit:"jour", target:1, xp:400, xp2:100, stat2:"Discipline", days:1, binary:true, desc:"1h d'apprentissage actif"},
+    {id:"sp_memo30",   name:"30min de m\u00e9morisation",icon:"\uD83E\uDDE0",                                  unit:"jour", target:1, xp:400, xp2:100, stat2:"Discipline", days:1, binary:true, desc:"30 min de m\u00e9morisation active"},
+    {id:"sp_silence30",name:"30min de silence",          icon:"\uD83E\uDD2B",                                  unit:"jour", target:1, xp:500, xp2:250, stat2:"Discipline", days:1, binary:true, desc:"30 min sans parler ni consommer"},
+    {id:"sp_nophone3h", name:"T\u00e9l\u00e9phone hors de port\u00e9e 3h", icon:"\uD83D\uDCF5",                unit:"jour", target:1, xp:300, xp2:150, stat2:"Discipline", days:1, binary:true, desc:"T\u00e9l\u00e9phone hors de port\u00e9e 3h"},
   ],
   Endurance:[
-    {id:"sp_run10k", name:"Sortie course 10km", icon:"\uD83C\uDFC3\uD83C\uDFFB", unit:"km", target:10, xp:2500, days:1, desc:"Sortie course 10 km"},
-    {id:"sp_sprint",  name:"Running fractionné 10x100m",icon:"\u26A1",                                 unit:"sér.",target:10, xp:1000, days:1, desc:"10 x 100m sprint/récup"},
-    {id:"sp_stairs",  name:"Montées d'escaliers", icon:"\uD83E\uDE9C",                                 unit:"A/R",  target:30, xp:500, xp2:250, stat2:"Agilite", days:1, desc:"30 montées/descentes"},
-    {id:"sp_jump",    name:"Corde à sauter",icon:"\uD83D\uDCA6",                                 unit:"min",  target:20, xp:500, xp2:250, stat2:"Agilite", days:1, desc:"20 min de corde à sauter"},
-    {id:"sp_walk30",  name:"Sortie marche",     icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F",           unit:"min",  target:30, xp:500, days:1, desc:"30 min de marche"},
+    {id:"sp_sprint",  name:"10 s\u00e9ries fractionn\u00e9 100m",icon:"\u26A1",                                 unit:"s\u00e9r.",target:10, xp:500, days:1, desc:"10 x 100m sprint/r\u00e9cup", noRestMode:true},
+    {id:"sp_stairs",  name:"30 mont\u00e9es d'escaliers", icon:"\uD83E\uDE9C",                                 unit:"A/R",  target:30, xp:250, xp2:100, stat2:"Agilite", days:1, desc:"30 mont\u00e9es/descentes"},
+    {id:"sp_jump",    name:"20min de corde \u00e0 sauter",icon:"\uD83D\uDCA6",                                 unit:"min",  target:20, xp:500, xp2:250, stat2:"Agilite", days:1, desc:"20 min de corde \u00e0 sauter", noRestMode:true},
+    {id:"sp_walk30",  name:"30min de marche",     icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F",           unit:"min",  target:30, xp:300, days:1, desc:"30 min de marche"},
   ],
   Agilite:[
-    {id:"sp_flow20",  name:"Animal flow", icon:"\uD83D\uDC0A",                                         unit:"min",  target:30, xp:1500, days:1, tiers:[{at:15,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"},{at:30,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"}], desc:"30 min d'animal flow (palier à 15 min)"},
-    {id:"sp_fluide",  name:"Flow martial", icon:"\uD83C\uDF0A",                              unit:"min",  target:30, xp:1500, days:1, tiers:[{at:15,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"},{at:30,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"}], desc:"30 min de flow martial / mouvement continu sans rupture"},
-
-    {id:"sp_flex30",  name:"Souplesse longue", icon:"\uD83E\uDD38\uD83C\uDFFB",                              unit:"min",  target:30, xp:1500, days:1, tiers:[{at:15,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"},{at:30,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"}], desc:"30 min de souplesse (palier à 15 min)"},    {id:"sp_silent",  name:"Déplacements silencieux", icon:"\uD83D\uDC08",                          unit:"min",  target:10, xp:500, days:1, desc:"Marcher sans bruit (escaliers, pièces)"},
-        {id:"sp_footwork", name:"Footwork rapide", icon:"\u26A1",                                            unit:"min",  target:10, xp:500, step:5, days:1, desc:"Footwork rapide (carrelage, devant/derrière/côtés)"},
+    {id:"sp_flow20",  name:"20min d'animal flow", icon:"\uD83D\uDC0A",                                         unit:"min",  target:20, xp:750, days:1, tiers:[{at:10,xp:250,stat:"Agilite"},{at:20,xp:500,stat:"Agilite"}], desc:"20 min d'animal flow (palier \u00e0 10min)"},
+    {id:"sp_fluide",  name:"15min de flow martial", icon:"\uD83C\uDF0A",                              unit:"min",  target:15, xp:375, days:1, desc:"Capoeira flow / mouvement continu sans rupture"},
+    {id:"sp_silent",  name:"10min de d\u00e9placements silencieux", icon:"\uD83D\uDC08",                          unit:"min",  target:10, xp:300, days:1, desc:"Marcher sans bruit (escaliers, pi\u00e8ces)"},
+    {id:"sp_balance_eyes", name:"10min d'\u00e9quilibre yeux ferm\u00e9s", icon:"\uD83E\uDDB6\uD83C\uDFFB",          unit:"min",  target:10, xp:300, xp2:150, stat2:"Esprit", days:1, desc:"\u00c9quilibre sur un pied yeux ferm\u00e9s"},
+    {id:"sp_footwork", name:"10min de footwork rapide", icon:"\u26A1",                                            unit:"min",  target:10, xp:250, step:5, days:1, desc:"Footwork rapide (carrelage, devant/derri\u00e8re/c\u00f4t\u00e9s)"},
   ],
   Discipline:[
-    {id:"sp_no_passive", name:"Aucun contenu passif", icon:"\uD83D\uDEAB", unit:"jour", target:1, xp:500, days:1, binary:true, desc:"Aucun contenu passif"},
-    {id:"sp_cold",      name:"Douche froide 3min",              icon:"\uD83D\uDEBF",                          unit:"min",  target:3, xp:500, stat:"Sante", xp2:250, stat2:"Discipline", days:1, binary:true, compactUnit:true, desc:"Douche froide 3 min"},
-    {id:"sp_task",      name:"Accomplir une tâche repoussée", icon:"\uD83D\uDD57",                   unit:"jour", target:1, xp:500, days:1, binary:true, desc:"Accomplir une tâche repoussée"},
-    {id:"sp_declutter", name:"Désencombrement",            icon:"\uD83D\uDCE6",                          unit:"objet",target:10,xp:500, days:1, desc:"Jeter/ranger 10 objets"},
+    {id:"sp_cold",      name:"Douche froide 3min",              icon:"\uD83D\uDEBF",                          unit:"min",  target:3, xp:150, stat:"Sante", xp2:150, stat2:"Discipline", days:1, binary:true, compactUnit:true, desc:"Douche froide 3 min"},
+    {id:"sp_task",      name:"Accomplir une t\u00e2che repouss\u00e9e", icon:"\uD83D\uDD57",                   unit:"jour", target:1, xp:250, days:1, binary:true, desc:"Accomplir une t\u00e2che repouss\u00e9e"},
+    {id:"sp_declutter", name:"D\u00e9sencombrement",            icon:"\uD83D\uDCE6",                          unit:"objet",target:10,xp:250, days:1, desc:"Jeter/ranger 10 objets"},
   ],
 };
 
-
-// Couleurs et libellés des tiers des quêtes urgentes
+// Couleurs et libellés des tiers (partagés avec les Épreuves)
 const SQ_TIER_COLOR = {mineure:"#fbbf24", majeure:"#f59e0b", legendaire:"#f97316"};
-const SQ_TIER_LABEL = {mineure:"Mineure", majeure:"Majeure", legendaire:"Légendaire"};
+const SQ_TIER_LABEL = {mineure:"Mineure", majeure:"Majeure", legendaire:"L\u00e9gendaire"};
 
-// Quêtes urgentes : fonctions de délai
+// ─── ÉPREUVES / DONJONS ────────────────────────────────────────────────────
+// Fonctionnalités désactivées : supprimées de l'app pour stabiliser le reset hebdomadaire.
+const EPREUVE_COOLDOWN = {};
+const EPREUVES = [];
+const DONJONS = [];
+function pickRandomDonjon(){ return null; }
+function pickRandomEpreuve(){ return null; }
+
+// Spawn programmé : prochain lundi à 7h00 local (à partir de "from", défaut now)
+// Si on est lundi avant 7h, retourne aujourd'hui 7h.
+function nextMondayAt7(from){
+  const d = new Date(from||Date.now());
+  const day = d.getDay(); // 0=dim, 1=lun, ...
+  const result = new Date(d.getFullYear(),d.getMonth(),d.getDate(),7,0,0,0);
+  if(day===1 && d.getHours()<7){
+    // On est lundi avant 7h → cible aujourd'hui 7h
+    return result.getTime();
+  }
+  // Avance jusqu'au prochain lundi
+  const daysUntilMonday = day===0 ? 1 : (8-day);
+  result.setDate(result.getDate()+daysUntilMonday);
+  return result.getTime();
+}
+
 // Prochain 7h00 (aujourd'hui si on est avant 7h, sinon demain)
 function next7AM(from){
   const d = new Date(from||Date.now());
@@ -139,6 +163,27 @@ function next7AM(from){
   if(d.getHours()<7) return result.getTime();
   result.setDate(result.getDate()+1);
   return result.getTime();
+}
+
+function pickRandomEpreuve(completedIds, cooldownUntil, statCycle){
+  if(cooldownUntil && Date.now() < cooldownUntil) return null;
+  const allAvail = EPREUVES.filter(e => !completedIds.includes(e.id));
+  if(allAvail.length === 0) return null;
+  const stats=["Sante","Force","Esprit","Endurance","Agilite","Discipline"];
+  const cycle = statCycle||[];
+  const remaining = stats.filter(s=>!cycle.includes(s));
+  const pool = remaining.length===0 ? stats : remaining;
+  // Filtrer pour ne garder que les stats qui ont au moins une épreuve disponible
+  const usable = pool.filter(s=>allAvail.some(e=>e.stat===s));
+  if(usable.length===0){
+    // Fallback : aucune épreuve dispo dans les stats du cycle → on prend n'importe laquelle
+    const ep = allAvail[Math.floor(Math.random()*allAvail.length)];
+    return {tpl:ep, pickedStat:ep.stat, cycleReset:remaining.length===0};
+  }
+  const stat = usable[Math.floor(Math.random()*usable.length)];
+  const avail = allAvail.filter(e=>e.stat===stat);
+  const ep = avail[Math.floor(Math.random()*avail.length)];
+  return {tpl:ep, pickedStat:stat, cycleReset:remaining.length===0};
 }
 
 const getRank    = xp => { for(let i=RANKS.length-1;i>=0;i--)if(xp>=RANKS[i].xpRequired)return RANKS[i]; return RANKS[0]; };
@@ -170,10 +215,9 @@ const RANK_BASES = {
   squats:  [15, 22, 29,  36,  43,  50],
   calves:  [30, 44, 58,  72,  86,  100],
   reading: [5, 10, 15, 20, 25, 30],
-  run:     [4,  5,  6,   7,   8,   10],
+  run:     [5,  7,  9,   11,  13,  15],
   med:     [15, 18, 21,  24,  27,  30],
   flex:    [15, 18, 21,  24,  27,  30],
-  walk:    [4,  5,  6,   7,   8,   10],
   balance: [5,  10, 15,  20,  25,  30],
   grips:   [10, 12, 14,  16,  18,  20],
 };
@@ -199,7 +243,7 @@ function getRankBase(objId, rankIdx, prestige){
   const base = RANK_BASES[objId]?.[rankIdx] ?? (def?.base ?? 0);
   if(!prestige||prestige===0)return base;
   const sBase = RANK_BASES[objId]?.[5] ?? base;
-  if(objId==="reading" || objId==="run" || objId==="walk") return sBase;
+  if(objId==="reading") return sBase;
   return Math.round(sBase * Math.pow(1.2, prestige));
 }
 
@@ -222,28 +266,6 @@ const sortStat   = arr => [...arr].sort((a,b)=>STATS.indexOf(a.stat)-STATS.index
 const xpForLvl   = l => Math.round(1000*Math.pow(1.1,l));
 const totForLvl  = l => { let t=0; for(let i=0;i<l;i++)t+=xpForLvl(i); return t; };
 const getLvl     = xp => { let l=0; while(xp>=totForLvl(l+1))l++; return l; };
-
-// Niveau global du personnage : progression courte/moyenne, indépendante des rangs.
-// Niveau 1 -> 2 = 3 000 XP, puis +250 XP requis à chaque niveau.
-const GLOBAL_MAX_LEVEL = 100;
-const globalXpForNextLevel = lvl => 3000 + (Math.max(1,lvl)-1)*250;
-const globalTotForLevel = lvl => {
-  let t=0;
-  for(let i=1;i<Math.max(1,lvl);i++)t+=globalXpForNextLevel(i);
-  return t;
-};
-function getGlobalLevelInfo(xp){
-  const total = Math.max(0,Number(xp)||0);
-  let level = 1;
-  while(level < GLOBAL_MAX_LEVEL && total >= globalTotForLevel(level+1)) level++;
-  const nextLevel = Math.min(GLOBAL_MAX_LEVEL, level+1);
-  const start = globalTotForLevel(level);
-  const next = level >= GLOBAL_MAX_LEVEL ? start : globalTotForLevel(nextLevel);
-  const need = Math.max(1,next-start);
-  const inLevel = Math.max(0,total-start);
-  const pct = level >= GLOBAL_MAX_LEVEL ? 100 : Math.max(0,Math.min(100,(inLevel/need)*100));
-  return {level,nextLevel,start,next,need,inLevel,pct,maxed:level>=GLOBAL_MAX_LEVEL};
-}
 
 
 function hexToRgb(hex){
@@ -317,7 +339,10 @@ function calcXp(obj,total,baseOverride){
     return tierXp + overXp;
   }
   const xpPer=obj.xpPer;
-  const effectiveTotal = total;
+  // Plafonner si cap défini
+  const hasCap = (obj.cap || obj.capValue) && t && !obj.binary;
+  const capThreshold = obj.capValue ? obj.capValue : (hasCap ? t * obj.cap : Infinity);
+  const effectiveTotal = Math.min(total, capThreshold);
   // Cas spécial reading : Esprit linéaire
   if(obj.id==="reading") return effectiveTotal*xpPer;
   // Cas spécial water : linéaire dès le 1er
@@ -343,7 +368,7 @@ function calcXp(obj,total,baseOverride){
   }
 }
 
-function pickRandomSq(usedIds,statCycle,completedLog){
+function pickRandomSq(usedIds,restMode,statCycle,completedLog){
   const stats=["Sante","Force","Esprit","Endurance","Agilite","Discipline"];
   const cycle = statCycle||[];
   const remaining = stats.filter(s=>!cycle.includes(s));
@@ -360,6 +385,7 @@ function pickRandomSq(usedIds,statCycle,completedLog){
 
   const availableForStat = (s, respectCooldown=true) => (SP[s]||[]).filter(t =>
     !usedIds.includes(t.id) &&
+    !(t.noRestMode&&restMode) &&
     (!respectCooldown || !recentIds.includes(t.id))
   );
 
@@ -429,7 +455,8 @@ function migrateRuntimeQuestDefinitions(state){
   Object.values(SP).forEach(list => (list||[]).forEach(q => { specialById[q.id] = q; }));
   if(Array.isArray(state.specialQuests)){
     state.specialQuests = state.specialQuests
-            .map(q => {
+      .filter(q => q.id !== "sp_flex30")
+      .map(q => {
         const tpl = specialById[q.id];
         if(!tpl) return q;
         return {
@@ -443,6 +470,12 @@ function migrateRuntimeQuestDefinitions(state){
         };
       });
   }
+  if(Array.isArray(state.completedSqLog)){
+    state.completedSqLog = state.completedSqLog.filter(q => (typeof q === "string" ? q : q?.id) !== "sp_flex30");
+  }
+
+  // Épreuves et donjons supprimés : aucune migration nécessaire.
+  state.epreuves = [];
 
   return state;
 }
@@ -496,8 +529,8 @@ const saveState  = s  => {
 const IMPORTED = {
   totalXp:45775, streak:6, lastActiveDay:"2026-05-11",
   streakBonusDay:"2026-05-10", weeklyBonusWk:"2026-W15", lastStreakDay:"2026-05-10",
-  streakMilestones:[7,14],
-  prestige:0,
+  streakMilestones:[7,14], penaltyDay:"2026-05-01",
+  prestige:0, restMode:false, walkTarget:0,
   dailyLog:{
     "2026-04-06":{water:8,push:36,abs:72,sleep:1},
     "2026-04-07":{water:8,push:36,abs:72,squats:15,reading:11,flex:5,sleep:1,med:6},
@@ -540,9 +573,14 @@ const IMPORTED = {
   stats:{Sante:getLvl(10100),Force:getLvl(13488),Esprit:getLvl(12700),Endurance:getLvl(2962),Agilite:getLvl(1652),Discipline:getLvl(3150)},
   statXp:{Sante:10100,Force:13488,Esprit:12700,Endurance:2962,Agilite:1652,Discipline:3150},
   specialQuests:[],
+  epreuves:[],
+  epreuveCooldownUntil:null,
   sqCooldownUntil:null,
+  completedEpreuveIds:[],
   completedSqLog:[],
   sqStatCycle:[],
+  epStatCycle:[],
+  capReached:{},
   objectives:DEFS,
 };
 
@@ -570,15 +608,22 @@ function buildState(){
     ...saved,
     objectives:DEFS,
     specialQuests:saved.specialQuests||[],
+    epreuves:[],
+    epreuveCooldownUntil:null,
     sqCooldownUntil:saved.sqCooldownUntil||null,
+    completedEpreuveIds:[],
     completedSqLog:saved.completedSqLog||[],
     sqStatCycle:saved.sqStatCycle||[],
+    epStatCycle:[],
+    capReached:saved.capReached||{},
     stats:saved.stats||IMPORTED.stats,
     statXp:saved.statXp||IMPORTED.statXp,
     dailyLog:migratedLog,
     weeklyLog:saved.weeklyLog||IMPORTED.weeklyLog,
     totalXp:Math.max(saved.totalXp||0, IMPORTED.totalXp),
     prestige:saved.prestige||IMPORTED.prestige||0,
+    restMode:saved.restMode||false,
+    walkTarget:saved.walkTarget||0,
   };
   // Recalcul defensif: rebuild stats levels from statXp (cohérence après changement de formule)
   const recomputed={};
@@ -591,6 +636,7 @@ function buildState(){
     // Pour une quête active, expiresAt = prochain 7h après startedAt
     return {...q, expiresAt: next7AM(q.startedAt||Date.now())};
   });
+  out.epreuves = [];
   return out;
 }
 
@@ -606,7 +652,7 @@ function App(){
     const sqCdUntil=base.sqCooldownUntil||0;
     const cooldownOk = now>=sqCdUntil;
     if(!hasActive&&cooldownOk){
-      const result=pickRandomSq(sqs.map(q=>q.id),base.sqStatCycle,base.completedSqLog);
+      const result=pickRandomSq(sqs.map(q=>q.id),base.restMode,base.sqStatCycle,base.completedSqLog);
       if(result){
         const {tpl,pickedStat,cycleReset}=result;
         const sq={...tpl,sqid:"sq_"+now,progress:0,startedAt:now,expiresAt:next7AM(now),completedAt:null};
@@ -620,8 +666,9 @@ function App(){
   const scrollRef = useRef(null);
   function switchTab(id){ setTab(id); if(scrollRef.current) scrollRef.current.scrollTop=0; }
   const [rankUp,setRankUp] = useState(null);
+  const [capAnim,setCapAnim] = useState(null);
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
-  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,cs:false});
+  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,reg:false,sq:false,ep:false,dj:false,cs:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
   const [showStatReqDetail,setShowStatReqDetail] = useState(false);
   const [showRankReqStats,setShowRankReqStats] = useState(false);
@@ -631,6 +678,9 @@ function App(){
   const [confirmReset,setConfirmReset] = useState(false);
   const [wkOff,setWkOff]  = useState(0);
   const inputs = useRef({});
+  const walkTargetRef = useRef(state.walkTarget||0);
+  // Sync ref from state on mount (after reload)
+  useEffect(()=>{ walkTargetRef.current=state.walkTarget||0; },[]);
 
   // Migration grips sec→min sur le state en mémoire (au cas où localStorage non migré)
   useEffect(()=>{
@@ -684,7 +734,6 @@ function App(){
   const xpInRank = effectiveXp - rank.xpRequired;
   const xpToNext = nextRank ? nextRank.xpRequired - rank.xpRequired : 1;
   const rankPct  = nextRank ? Math.min(100,(xpInRank/xpToNext)*100) : 100;
-  const globalLevel = getGlobalLevelInfo(effectiveXp);
 
   // 5b. Prestige disponible : rang S atteint + XP max du rang S
   const S_RANK = RANKS[RANKS.length-1];
@@ -706,7 +755,7 @@ function App(){
   },0) + (state.specialQuests||[]).filter(q=>q.completedAt&&new Date(q.completedAt).toDateString()===new Date().toDateString()).reduce((s,q)=>s+q.xp,0);
 
   // 7. Quetes journalieres obligatoires toutes faites ?
-  const reqDailyObjs  = objs.filter(o=>!o.optional&&o.daily);
+  const reqDailyObjs  = objs.filter(o=>!o.optional&&o.daily&&!o.regression);
   // Quêtes actives pour un jour donné (exclut les quêtes ajoutées après ce jour)
   const activeOn = (day) => reqDailyObjs.filter(o=>!o.startDate||o.startDate<=day);
   // Base applicable pour un jour donné (gère baseHistory pour les changements rétroactifs)
@@ -731,11 +780,19 @@ function App(){
     return getBaseForDay(obj, day);
   };
 
+  // 7b. Système de dette supprimé
+  const yesterday = (()=>{ const d=new Date(today); d.setDate(d.getDate()-1); return d.toISOString().slice(0,10); })();
+  const reqWeeklyObjs = objs.filter(o=>!o.optional&&o.weekly);
+  const debt = {};
+  const debtActive = false;
+
   function getEffectiveTarget(objId, isWeekly=false){
     const obj = objs.find(o=>o.id===objId);
     if(obj && obj.validateAt != null) return obj.validateAt;
     return getRankBase(objId, ri, prestige);
   }
+
+  const sleepDebtMed = 0;
 
   const allDailyDone = (()=>{
     return reqDailyObjs.every(o=>(tLog[o.id]||0)>=getEffectiveTarget(o.id));
@@ -759,8 +816,36 @@ function App(){
     return streak;
   })();
 
-  // 9. Bonus hebdo supprimé : Running et Marche sont désormais des quêtes bonus.
-  const weeklyDone = false;
+  // 9. Bonus hebdo
+  const restMode = state.restMode||false;
+  const walkDef = objs.find(o=>o.id==="walk");
+  // En mode blessure : walk passe de bonus daily → hebdo avec objectif adapté
+  const walkObj = restMode && walkDef ? (()=>{
+    const walkTarget = walkTargetRef.current||state.walkTarget||0;
+    return walkTarget>0
+      ? {...walkDef, daily:false, weekly:true, optional:false, base:walkTarget}
+      : null;
+  })() : null;
+
+  // Semaine validée si : quêtes journalières OK sur les jours passés + course atteinte
+  const weeklyDone = (()=>{
+    const ws=new Date(); ws.setDate(ws.getDate()-((ws.getDay()+6)%7)); ws.setHours(0,0,0,0);
+    const days=Array.from({length:7},(_,i)=>{const d=new Date(ws);d.setDate(ws.getDate()+i);return d.toISOString().slice(0,10);});
+    const pastDays=days.filter(d=>d<=today);
+    if(pastDays.length===0)return false;
+    const dailyOk=reqDailyObjs.every(o=>pastDays.every(d=>activeOn(d).indexOf(o)<0||(state.dailyLog[d]?.[o.id]||0)>=getEffectiveTarget(o.id)));
+    if(!dailyOk)return false;
+    const runBase=getEffectiveTarget("run", true);
+    const runDone=wLog["run"]||0;
+    if(runDone>=runBase)return true;
+    if(restMode&&walkObj){
+      const walkDone=wLog["walk"]||0;
+      const walkBase=getEffectiveTarget("walk", true);
+      const runCredit=walkDone*2;
+      return (runDone+runCredit)>=runBase || walkDone>=walkBase;
+    }
+    return false;
+  })();
 
   // 10. Quete speciale
   const [now,setNow] = useState(Date.now());
@@ -774,6 +859,15 @@ function App(){
   const sqCooldownUntil = state.sqCooldownUntil||null;
   const sqCooldownActive = sqCooldownUntil && now < sqCooldownUntil;
   const sqReady = !activeSq && !sqCooldownActive;
+
+  // 11. Épreuves / Donjons supprimés
+  const epreuves = [];
+  const activeEp = null;
+  const completedEp = null;
+  const cooldownUntil = null;
+  const cooldownActive = false;
+  const epReady = false;
+  const failedEp = null;
 
   // Flags bonus
   const bonusGiven       = state.streakBonusDay===today;
@@ -850,7 +944,7 @@ function App(){
       const hasActive = sqsNow.find(q=>!q.completedAt&&Date.now()<q.expiresAt);
       const cd = s.sqCooldownUntil||0;
       if(hasActive || Date.now()<cd) return s;
-      const result=pickRandomSq(sqsNow.map(q=>q.id),s.sqStatCycle);
+      const result=pickRandomSq(sqsNow.map(q=>q.id),s.restMode,s.sqStatCycle);
       if(!result)return s;
       const {tpl,pickedStat,cycleReset}=result;
       const t = Date.now();
@@ -872,6 +966,8 @@ function App(){
 
   // Épreuves supprimées : pas de détection d'échec.
 
+
+  // Épreuves / donjons supprimés : pas d'auto-lancement hebdomadaire.
 
 
   function spawnFloat(txt,e){
@@ -904,14 +1000,22 @@ function App(){
     const val=parseFloat(raw); if(!val||val<=0)return;
     inputs.current[obj.id]="";
     if(el){el.value="";setTimeout(()=>{try{el.focus();}catch(_){}},50);}
-    const cur=(obj.weekly)?(wLog[obj.id]||0):(tLog[obj.id]||0);
+    const cur=(obj.weekly||obj.id==="walk")?(wLog[obj.id]||0):(tLog[obj.id]||0);
     let xp=0;
-    let capJustReached_DISABLED=false;
+    let capJustReached=false; // true si on franchit le cap dans cette session
+    // Calcul du cap (si défini)
     const b=getRankBase(obj.id,ri,prestige);
+    const hasCap = (obj.cap || obj.capValue) && obj.base && !obj.binary;
+    const capThreshold = obj.capValue ? obj.capValue : (hasCap ? b * obj.cap : Infinity);
     const prev=cur, next=cur+val;
-    const alreadyCapped_DISABLED = false;
-    const effectiveNext = next;
-    const effectiveVal = val;
+    // Si déjà au-delà du cap : pas d'XP pour cette session
+    const alreadyCapped = hasCap && prev >= capThreshold;
+    // Si on franchit le cap pendant cette session, on plafonne le "next effectif" à capThreshold
+    const effectiveNext = hasCap ? Math.min(next, capThreshold) : next;
+    const effectiveVal = effectiveNext - prev; // partie qui compte pour l'XP
+    if(hasCap && prev < capThreshold && next >= capThreshold){
+      capJustReached = true;
+    }
     // Tout objectif avec un base, non-binary, hors cas spéciaux (water/run) entre dans le système palier
     const isPalier = obj.base && !obj.binary && obj.id!=="water" && obj.id!=="run";
 
@@ -920,7 +1024,7 @@ function App(){
       // Sauvegarder le log d'abord
       setState(s=>{
         const d={...s.dailyLog};d[today]={...(d[today]||{}),[obj.id]:(d[today]?.[obj.id]||0)+val};
-        if(obj.weekly){
+        if(obj.weekly||obj.id==="walk"){
           const w={...s.weeklyLog};w[wk]={...(w[wk]||{}),[obj.id]:(w[wk]?.[obj.id]||0)+val};
           return{...s,weeklyLog:w,dailyLog:d,lastActiveDay:todayStr()};
         }
@@ -966,6 +1070,10 @@ function App(){
       setState(s=>{
         const d={...s.dailyLog};d[today]={...(d[today]||{}),[obj.id]:(d[today]?.[obj.id]||0)+val};
         let next2={...s,dailyLog:d,lastActiveDay:todayStr()};
+        if(capJustReached){
+          const periodKey = obj.weekly ? wk : today;
+          next2={...next2, capReached:{...(next2.capReached||{}),[obj.id]:periodKey}};
+        }
         return next2;
       });
       if(espritXp>0){
@@ -973,16 +1081,17 @@ function App(){
         const id=Date.now()+Math.random();
         setFloats(f=>[...f,{id,y:"38%",txt:"+"+Math.round(espritXp)+" XP "+(STAT_LBL2[obj.stat]||obj.stat)}]);
         setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id)),2300);
-      } else if(!capJustReached_DISABLED && !alreadyCapped_DISABLED) spawnFloat("0 XP",e);
+      } else if(!capJustReached && !alreadyCapped) spawnFloat("0 XP",e);
+      if(capJustReached){ addXp(200,"Discipline",null,true); setCapAnim({obj,xMult:"60min"}); }
       return;
     }
     if(obj.binary){const was=cur>=getRankBase(obj.id,ri,prestige),now2=(cur+val)>=getRankBase(obj.id,ri,prestige); xp=(!was&&now2)?(obj.binaryXp||50):0;}
-    else if(alreadyCapped_DISABLED){
-      // Aucun cap : on log toujours la valeur
+    else if(alreadyCapped){
+      // Déjà cappé : 0 XP, mais on log la valeur quand même
       xp=0;
     }
     else if(isPalier){
-      // Utilise effectiveVal
+      // Utilise effectiveVal (plafonné au cap si on dépasse)
       if(obj.optional){
         // Quêtes bonus : XP linéaire dès le début + 1 bonus par palier franchi à partir du palier 2
         xp=effectiveVal*obj.xpPer;
@@ -1008,15 +1117,22 @@ function App(){
     }
     else if(obj.id==="run"){
       // Course : linéaire 100xp/km + 50% bonus si total >= 2x objectif
-      
+      // Avec cap éventuel
       xp=effectiveVal*obj.xpPer;
       const totalAfter=effectiveNext;
       if(totalAfter>=b*2) xp+=Math.round(effectiveVal*obj.xpPer*0.5);
     }
+    else if(obj.id==="walk"&&restMode){
+      // Marche en mode blessure : linéaire 50xp/km + 50% bonus si total >= 2x objectif
+      const bw=walkObj?walkObj.base:getRankBase("run",ri);
+      xp=val*obj.xpPer;
+      const totalAfter=cur+val;
+      if(totalAfter>=bw*2) xp+=Math.round(val*obj.xpPer*0.5);
+    }
     else{const nt=cur+val; if(cur>=b)xp=val*obj.xpPer; else if(nt<=b)xp=val*obj.xpPer; else xp=val*obj.xpPer;}
     setState(s=>{
       let next2 = s;
-      if(obj.weekly){
+      if(obj.weekly||obj.id==="walk"){
         const w={...s.weeklyLog};w[wk]={...(w[wk]||{}),[obj.id]:(w[wk]?.[obj.id]||0)+val};
         // Stocker aussi dans dailyLog pour l'XP du jour
         const d2={...s.dailyLog};d2[today]={...(d2[today]||{}),[obj.id]:(d2[today]?.[obj.id]||0)+val};
@@ -1025,7 +1141,11 @@ function App(){
         const d={...s.dailyLog};d[today]={...(d[today]||{}),[obj.id]:(d[today]?.[obj.id]||0)+val};
         next2={...s,dailyLog:d,lastActiveDay:todayStr()};
       }
-      
+      // Marquer cap atteint
+      if(capJustReached){
+        const periodKey = obj.weekly ? wk : today;
+        next2={...next2, capReached:{...(next2.capReached||{}),[obj.id]:periodKey}};
+      }
       return next2;
     });
     if(xp>0){
@@ -1053,7 +1173,12 @@ function App(){
       } else {
         addXp(xp,obj.stat,e,false,obj.stat);
       }
-    } else if(!capJustReached_DISABLED && !alreadyCapped_DISABLED) spawnFloat("0 XP",e);
+    } else if(!capJustReached && !alreadyCapped) spawnFloat("0 XP",e);
+    // Cap atteint : déclencher animation + bonus 200 XP Discipline
+    if(capJustReached){
+      addXp(200,"Discipline",null,true);
+      setCapAnim({obj,xMult:obj.cap});
+    }
   }
 
   function progressSq(sq,e,directVal){
@@ -1129,7 +1254,7 @@ function App(){
 
   function launchNewSq(){
     setState(s=>{
-      const result=pickRandomSq(s.specialQuests.map(q=>q.id),s.sqStatCycle);
+      const result=pickRandomSq(s.specialQuests.map(q=>q.id),s.restMode,s.sqStatCycle);
       if(!result)return s;
       const {tpl,pickedStat,cycleReset}=result;
       const sq={...tpl,sqid:"sq_"+Date.now(),progress:0,startedAt:Date.now(),expiresAt:next7AM(Date.now()),completedAt:null};
@@ -1152,24 +1277,33 @@ function QuestBadge({label,color,filled=false,extra=""}){
 }
 const WEEKLY_BADGE_COLOR = "#818cf8";
 const BONUS_BADGE_COLOR = "#fbbf24";
+const CAP_BADGE_COLOR = "#ef4444";
 
   // ─── SOUS-COMPOSANTS ──────────────────────────────────────────────────
 
   function QI({obj}){
-    const isWeekly = obj.weekly;
+    const isWeekly = obj.weekly || obj.id==="walk";
     const t = getEffectiveTarget(obj.id, isWeekly);
     // Si obj.target est défini sans binary, on l'utilise pour l'affichage (ex: protein 1/2 → 2/2)
     const displayTarget = (obj.target && !obj.binary) ? obj.target : t;
     const d = isWeekly ? (wLog[obj.id]||0) : (tLog[obj.id]||0);
 
-    const effectiveT = t;
+    // Détection dette par type
+    const isDebtX15  = debtActive && ["push","abs","squats","reading"].includes(obj.id) && !!debt[obj.id];
+    const isDebtWater = debtActive && obj.id==="water" && !!debt["water_extra"];
+    const isDebtWeekly= debtActive && isWeekly && !!debt["weekly_"+obj.id];
+    // Dette méditation (sommeil) — on modifie l'affichage de la quête méditation
+    const isDebtMed  = sleepDebtMed > 0 && obj.id==="med";
+    const medTarget  = isDebtMed ? Math.max(t, sleepDebtMed) : t;
+    const effectiveT = isDebtMed ? medTarget : t;
+    const isDebt = isDebtX15 || isDebtWater || isDebtWeekly || isDebtMed;
     const done=obj.binary?(d>=1):(d>=effectiveT);
 
 
     // Quêtes binaires : boutons Échec / Succès
     if(obj.binary){
       function setBinary(val,e){
-        const curRaw=(obj.weekly)?wLog[obj.id]:tLog[obj.id];
+        const curRaw=(obj.weekly||obj.id==="walk")?wLog[obj.id]:tLog[obj.id];
         const cur=curRaw||0;
         const wasD=cur>=1;
         const xp=(!wasD&&val>=1)?obj.binaryXp:0;
@@ -1200,7 +1334,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{class:"qhdr",style:"align-items:center",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:5px"},
           h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:center;gap:7px;line-height:1.25;white-space:normal;overflow:visible;min-height:18px"},QuestIcon(obj.id,obj.icon,14,"width:18px;height:18px;margin-top:0"),h("span",{style:"line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip;display:inline-flex;align-items:center;min-height:18px"},obj.name)),
           h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.25;padding-top:0"},
-            (obj.binaryXp+" XP "+(STAT_LBL[obj.stat]||obj.stat))
+            (obj.binaryXp+" XP · "+(STAT_LBL[obj.stat]||obj.stat))
           )
         ),
         h("div",{style:"display:flex;gap:8px;margin-top:8px"},
@@ -1218,23 +1352,38 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }
 
     const pct=(d/displayTarget)*100, over=d>displayTarget;
+    const debtLabel = isDebtX15?"×1.5":isDebtWater?"+"+debt["water_extra"]+" verres":isDebtWeekly?"×1.5 hebdo":isDebtMed?"🛌 +30min obligatoire":"";
+    // ── Système de cap ──
+    const hasCap = (obj.cap || obj.capValue) && obj.base && !obj.binary;
+    const capThreshold = obj.capValue ? obj.capValue : (hasCap ? (obj.base&&!RANK_BASES[obj.id]?obj.base:getRankBase(obj.id,ri,prestige))*obj.cap : Infinity);
+    const isCapped = hasCap && d >= capThreshold;
+    const capProgress = hasCap ? Math.min(1, d/capThreshold) : 0;
+    const isNearCap = hasCap && !isCapped && capProgress >= 0.75;
+    const remainingToCap = hasCap ? Math.max(0, capThreshold - d) : 0;
+    // Couleur de la barre : du rang vers orange à l'approche du cap
     const rankColor = rank.color || "#9ca3af";
-    const isCapped = false;
+    const capColor = "#ef4444";
     let barColor = rankColor;
+    if(isCapped){ barColor = capColor; }
+    else if(isNearCap){
+      barColor = "linear-gradient(90deg,"+rankColor+","+capColor+")";
+    }
     // Barre alignée sur Historique :
-    // en cours = hachurée, complétée = pleine, dépassée = pleine + glow
+    // en cours = hachurée, complétée = pleine, dépassée/cap = pleine + glow
     const fillStateClass = isCapped || over
       ? " over"
       : (d>=effectiveT&&effectiveT>0)
         ? " done"
         : (pct>0 ? " partial" : "");
     const barInnerStyle = "width:"+(isCapped?100:Math.min(100,pct))+"%";
-    return h("div",{class:"qi "+(d>=effectiveT&&effectiveT>0?"done":""),style:""},
+    return h("div",{class:"qi "+(d>=effectiveT&&effectiveT>0?"done":""),style:(isDebt&&!done?"border-color:#ef444466;background:rgba(239,68,68,0.04)":"")+(isCapped?";border-color:"+capColor+"66;background:linear-gradient(135deg,rgba(255,255,255,0.02),rgba(239,68,68,0.06))":"")},
       h("div",{class:"qhdr",style:"align-items:center",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
         h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:center;gap:8px;white-space:normal;overflow:visible;line-height:1.25;min-height:18px;flex-wrap:wrap"},
-          QuestIcon(obj.id,obj.icon,14,"width:18px;height:18px;margin-top:0;line-height:1"),
+          QuestIcon(obj.id,obj.icon,14,isCapped?"filter:grayscale(60%);opacity:0.7;width:18px;height:18px;margin-top:0;line-height:1":"width:18px;height:18px;margin-top:0;line-height:1"),
           h("span",{style:"white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;word-break:normal;display:inline-flex;align-items:center;min-height:18px"},obj.name),
           isWeekly&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
+          hasCap&&h(QuestBadge,{label:isCapped?"CAP ATTEINT":(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap)),color:capColor,filled:isCapped}),
+          isDebt&&!done&&h("span",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;border:1px solid #ef444455;border-radius:4px;padding:1px 5px;flex-shrink:0"},"\u26A0 DETTE "+debtLabel)
         ),
         h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.25;align-self:flex-start;padding-top:0"},
           obj.tiers
@@ -1255,22 +1404,25 @@ const BONUS_BADGE_COLOR = "#fbbf24";
                 obj.overGoalXpPer&&h("div",{style:"opacity:"+(d>(obj.target||obj.base||0)?"1":"0.6")+";white-space:nowrap"},"+"+obj.overGoalXpPer+" XP/"+obj.unit+" au-delà")
               )
             :obj.binary
-              ?(obj.binaryXp+" XP "+(STAT_LBL[obj.stat]||obj.stat))
+              ?(obj.binaryXp+" XP \u00b7 "+(STAT_LBL[obj.stat]||obj.stat))
               :obj.stat2
                 ?h(Fragment,null,
-                    h("div",null,obj.xpPer+" XP/"+obj.unit+" "+(STAT_LBL[obj.stat]||obj.stat)),
-                    h("div",null,(obj.xpPer2||obj.xpPer)+" XP/"+obj.unit+" "+(STAT_LBL[obj.stat2]||obj.stat2))
+                    h("div",null,obj.xpPer+" XP/"+obj.unit+" \u00b7 "+(STAT_LBL[obj.stat]||obj.stat)),
+                    h("div",null,(obj.xpPer2||obj.xpPer)+" XP/"+obj.unit+" \u00b7 "+(STAT_LBL[obj.stat2]||obj.stat2))
                   )
-                :(obj.xpPer+" XP/"+obj.unit+" "+(STAT_LBL[obj.stat]||obj.stat))
+                :(obj.xpPer+" XP/"+obj.unit+" \u00b7 "+(STAT_LBL[obj.stat]||obj.stat))
         )
       ),
       h("div",{class:"qrow"},
         h(Fragment,null,
             h("div",{class:"qbar"},h("div",{class:"qfill"+fillStateClass,style:barInnerStyle})),
-            h("div",{class:"qxp",style:"white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},fmtNum(d)+"/"+fmtNum(displayTarget)+" "+((d>1||displayTarget>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[obj.unit]||obj.unit))
+            h("div",{class:"qxp",style:(isCapped?"color:"+capColor:isDebt&&!done?"color:#ef4444":"")+";white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},fmtNum(d)+"/"+fmtNum(displayTarget)+" "+((d>1||displayTarget>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[obj.unit]||obj.unit))
           )
       ),
+      isNearCap&&h("div",{style:"font-size:9px;color:"+capColor+";font-family:Orbitron,sans-serif;text-align:center;margin-top:6px;letter-spacing:0.5px;opacity:0.85"},"\u26A0 Cap dans "+fmtNum(remainingToCap)+" "+obj.unit+(remainingToCap>1?"s":"")+" \u00b7 r\u00e9cup\u00e9ration forc\u00e9e"),
+      isCapped&&h("div",{style:"font-size:9px;color:"+capColor+";font-family:Orbitron,sans-serif;text-align:center;margin-top:6px;letter-spacing:0.5px;font-style:italic"},"\uD83D\uDCA4 R\u00e9cup\u00e9ration forc\u00e9e jusqu'\u00e0 "+(obj.weekly?"la semaine prochaine":"demain")),
       (()=>{
+        if(isCapped) return null;
         // Quête avec tiers (ex: protein x/2) : bouton unique +1 unité
         if(obj.tiers && obj.tiers.length>0){
           const isMax = !obj.overGoalXpPer && d >= (obj.target||obj.tiers[obj.tiers.length-1].at);
@@ -1321,7 +1473,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   }
 
   function RR({obj,isW}){
-    const isWeeklyRow = isW || obj.weekly;
+    const isWeeklyRow = isW || obj.weekly || obj.id==="walk";
     const t=obj.base&&!RANK_BASES[obj.id]?obj.base:getRankBase(obj.id,ri,prestige), d=isWeeklyRow?(wLog[obj.id]||0):(tLog[obj.id]||0);
     const displayTarget = (obj.target && !obj.binary) ? obj.target : t;
     const pct=Math.min(100,(d/displayTarget)*100), done=d>=displayTarget, over=d>displayTarget;
@@ -1342,24 +1494,31 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         )
       );
     }
-    const isCapped = false;
+    // Système de cap dans RR
+    const hasCap = obj.cap && obj.base && !obj.binary;
+    const capThreshold = hasCap ? t * obj.cap : Infinity;
+    const isCapped = hasCap && d >= capThreshold;
+    const capProgress = hasCap ? Math.min(1, d/capThreshold) : 0;
+    const isNearCap = hasCap && !isCapped && capProgress >= 0.75;
+    const capColor = "#ef4444";
     const rankColor = rank.color || "#9ca3af";
     // Barre alignée sur Historique :
-    // en cours = hachurée, complétée = pleine, dépassée = pleine + glow
+    // en cours = hachurée, complétée = pleine, dépassée/cap = pleine + glow
     const fillStateClass = isCapped || over
       ? " over"
       : (done ? " done" : (pct>0 ? " partial" : ""));
     const barInnerStyle = "width:"+(isCapped?100:Math.min(100,pct))+"%";
     return h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
-      QuestIcon(obj.id,obj.icon,14),
+      QuestIcon(obj.id,obj.icon,14,isCapped?"filter:grayscale(60%);opacity:0.7":""),
       h("div",{style:"flex:1"},
         h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center"},
           h("div",{style:"display:flex;align-items:flex-start;gap:6px;min-width:0;flex:1;white-space:normal;line-height:1.25"},
             h("span",{style:"white-space:normal;line-height:1.25;word-break:normal"},obj.name),
-            (obj.weekly)&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
+            (obj.weekly||obj.id==="walk")&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
+            hasCap&&h(QuestBadge,{label:isCapped?"CAP ATTEINT":(obj.capValue?("CAP "+obj.capValue+" "+obj.unit):("CAP \u00d7"+obj.cap)),color:capColor,filled:isCapped})
           ),
           h("div",{style:"display:flex;align-items:center;gap:6px"},
-            h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+(d>=displayTarget?"var(--rc)":d>0?"var(--tx)":"var(--td)")},fmtNum(d)+"/"+fmtNum(displayTarget)+" "+((d>1||displayTarget>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[obj.unit]||obj.unit)),
+            h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+(isCapped?capColor:d>=displayTarget?"var(--rc)":d>0?"var(--tx)":"var(--td)")},fmtNum(d)+"/"+fmtNum(displayTarget)+" "+((d>1||displayTarget>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[obj.unit]||obj.unit)),
             h("span",{style:"font-family:Orbitron,sans-serif;font-size:11px;font-weight:700;color:#4ade80;width:10px;text-align:center"},done?"\u2713":"")
           )
         ),
@@ -1368,37 +1527,283 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
-  function rewardLineText(item){
-    const primaryStat = STAT_LBL[item.stat] || item.stat;
-    const secondaryStat = item.stat2 ? (STAT_LBL[item.stat2] || item.stat2) : null;
-    const thirdStat = item.stat3 ? (STAT_LBL[item.stat3] || item.stat3) : null;
-    let rewardText = (item.xp||0)+" XP "+primaryStat;
-    if(item.xp2 && item.stat2){
-      rewardText += item.xp2===(item.xp||0) ? " + "+secondaryStat : " + "+item.xp2+" XP "+secondaryStat;
-    }
-    if(item.xp3 && item.stat3){
-      rewardText += item.xp3===(item.xp||0) ? " + "+thirdStat : " + "+item.xp3+" XP "+thirdStat;
-    }
-    return rewardText;
-  }
+  function EpCard({ep, showInput=true}){
+    const remaining = ep.expiresAt - now;
+    const tier = ep.tier||"mineure";
+    const tierColor = {mineure:"#fbbf24",majeure:"#f59e0b",legendaire:"#f97316"}[tier]||"#f59e0b";
+    const tierLabel = {mineure:"MINEURE",majeure:"MAJEURE",legendaire:"L\u00c9GENDAIRE"}[tier]||tier.toUpperCase();
+    const done = ep.completedAt;
+    const failed = ep.failedAt;
+    const vals = ep.dailyValidations||[];
+    const todayValidated = vals.includes(today);
+    const streakTarget = ep.streakDays || 7;
+    const isStreakLike = ep.streak7 || ep.cumDays;
+    const hasDailyMin = !!ep.dailyMin;
+    const dailyMinutes = ep.dailyMinutes || {};
+    const todayMin = dailyMinutes[today] || 0;
+    const pct = isStreakLike ? Math.min(100,(vals.length/streakTarget)*100) : ep.binary ? (done?100:0) : Math.min(100,((ep.progress||0)/(ep.target||1))*100);
+    const barInProgress = !done && !failed && pct > 0;
+    const barStyle = done?"width:100%;background:"+tierColor:failed?"width:100%;background:#ef4444;opacity:0.4":barInProgress?"width:"+pct+"%;background:repeating-linear-gradient(45deg,"+tierColor+","+tierColor+" 4px,"+tierColor+"44 4px,"+tierColor+"44 8px)":"width:0%";
 
-  function sqRewardLines(sq){
-    if(sq?.tiers && sq.tiers.length>0){
-      return sq.tiers.map((tier,i)=>({
-        key:"tier_"+i,
-        at:tier.at,
-        text:rewardLineText(tier)
+    if(ep.kind==="donjon"){
+      const goals = ep.goals||[];
+      const gp = ep.goalProgress||{};
+      const totalGoals = goals.length || 1;
+      const doneGoals = goals.filter(g=>(gp[g.id]||0)>=g.target).length;
+      const donjonPct = Math.min(100,(doneGoals/totalGoals)*100);
+      const donjonColor = "#a855f7";
+      const donjonDone = !!ep.completedAt;
+      const donjonFailed = !!ep.failedAt;
+      const donjonActive = !donjonDone && !donjonFailed;
+
+      function updateDonjonGoal(goal,delta){
+        if(donjonDone||donjonFailed) return;
+        const cur = gp[goal.id]||0;
+        const next = Math.max(0,Math.min(goal.target,cur+delta));
+        const newGp = {...gp,[goal.id]:next};
+        const nowComplete = goals.every(g=>(newGp[g.id]||0)>=g.target);
+        setState(s=>({...s, epreuves:s.epreuves.map(e=>e.epid===ep.epid?{...e,goalProgress:newGp,completedAt:nowComplete?Date.now():null}:e)}));
+        if(nowComplete){ grantEpXp(ep); }
+      }
+
+      const totalXp=(ep.xp||0)+(ep.xp2||0)+(ep.xp3||0);
+      return h("div",{class:"sqcard"+(donjonActive?" ep-pulse":""),style:"border-color:"+donjonColor+"55;background:"+donjonColor+"0A;--epc1:"+donjonColor+"44;--epc2:"+donjonColor+"00"},
+        h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px"},
+          h("div",{style:"display:flex;align-items:center;gap:8px;min-width:0"},
+            QuestIcon(ep.id,ep.icon||"🏰",14),
+            h("div",{style:"min-width:0"},
+              h("div",{style:"font-size:13px;font-weight:800;color:var(--tx);letter-spacing:.3px"},ep.name),
+              ep.desc&&h("div",{style:"font-size:10px;color:var(--td);margin-top:2px;line-height:1.25"},ep.desc)
+            )
+          ),
+          showInput&&h("div",{style:"text-align:right;flex:0 0 auto"},
+            donjonDone?h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:#4ade80"},"✓ DONJON VALIDÉ")
+            :donjonFailed?h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:#ef4444"},"✘ DONJON ÉCHOUÉ")
+            :h(Fragment,null,
+              h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif"},totalXp+" XP total"),
+              h("div",{style:"font-size:9px;color:"+donjonColor+";font-family:Orbitron,sans-serif;margin-top:2px"},"DONJON")
+            )
+          )
+        ),
+        h("div",{class:"sqbar",style:"background:"+donjonColor+"22"},
+          h("div",{class:"sqbarfill",style:"width:"+donjonPct+"%;background:"+donjonColor+(donjonDone?";box-shadow:0 0 12px "+donjonColor:"")})
+        ),
+        h("div",{style:"display:flex;justify-content:space-between;font-size:10px;color:var(--td);margin-top:4px;margin-bottom:8px"},
+          h("span",null,doneGoals+"/"+totalGoals+" objectifs complétés"),
+          donjonActive&&h("span",{style:"color:"+donjonColor+";font-family:Orbitron,sans-serif"},"⏱ "+fmtCD(remaining)+" restants")
+        ),
+        h("div",{style:"display:flex;flex-direction:column;gap:7px;margin-top:8px"},
+          goals.map(goal=>{
+            const cur=gp[goal.id]||0;
+            const gDone=cur>=goal.target;
+            return h("div",{key:goal.id,style:"padding:8px;border:1px solid rgba(255,255,255,0.06);border-radius:8px;background:rgba(255,255,255,0.025)"},
+              h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:8px"},
+                h("div",{style:"font-size:12px;color:var(--tx);font-weight:600;line-height:1.15"},goal.label),
+                h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+(gDone?"#4ade80":"var(--td)")},cur+"/"+goal.target+" "+goal.unit)
+              ),
+              donjonActive&&showInput&&h("div",{style:"display:flex;gap:8px;margin-top:7px"},
+                h("button",{onClick:()=>updateDonjonGoal(goal,1),disabled:gDone,style:"flex:1;padding:8px;border-radius:7px;border:1px solid "+(gDone?"#4ade8055":donjonColor+"55")+";background:"+(gDone?"#4ade8011":donjonColor+"11")+";color:"+(gDone?"#4ade80":donjonColor)+";font-family:Orbitron,sans-serif;font-size:10px;cursor:"+(gDone?"default":"pointer")},gDone?"Validé ✓":"+1"),
+                cur>0&&h("button",{onClick:()=>updateDonjonGoal(goal,-1),style:"width:42px;padding:8px;border-radius:7px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);color:var(--td);font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},"-1")
+              )
+            );
+          })
+        ),
+        showInput&&!donjonDone&&!donjonFailed&&h("div",{style:"font-size:10px;color:var(--td);margin-top:9px;line-height:1.3"},
+          "XP accordée uniquement si tous les objectifs du donjon sont complétés."
+        )
+      );
+    }
+
+    function completeEp(val){
+      if(done||failed) return;
+      let newProgress = ep.progress;
+      let nowComplete = false;
+      if(ep.binary){ newProgress=1; nowComplete=true; }
+      else if(hasDailyMin){
+        // cumDays + dailyMin : on track les minutes par jour, un jour est validé à dailyMin atteint
+        const addMin = val || 0;
+        if(addMin<=0) return;
+        const newDailyMin = todayMin + addMin;
+        const newDailyMinutes = {...dailyMinutes, [today]: newDailyMin};
+        let newVals = [...vals];
+        // Si on franchit le seuil quotidien et que ce jour n'est pas encore validé
+        if(todayMin < ep.dailyMin && newDailyMin >= ep.dailyMin && !todayValidated){
+          newVals = [...vals, today];
+        }
+        nowComplete = newVals.length >= streakTarget;
+        setState(s=>({...s, epreuves:s.epreuves.map(e=>e.epid===ep.epid?{...e,dailyMinutes:newDailyMinutes,dailyValidations:newVals,completedAt:nowComplete?Date.now():null}:e)}));
+        if(nowComplete){ grantEpXp(ep); }
+        return;
+      }
+      else if(isStreakLike){
+        if(todayValidated) return;
+        const newVals=[...vals,today];
+        nowComplete = newVals.length>=streakTarget;
+        setState(s=>({...s, epreuves:s.epreuves.map(e=>e.epid===ep.epid?{...e,dailyValidations:newVals,completedAt:nowComplete?Date.now():null}:e)}));
+        if(nowComplete){ grantEpXp(ep); }
+        return;
+      } else {
+        newProgress = Math.min(ep.target, ep.progress + val);
+        nowComplete = newProgress >= ep.target;
+      }
+      // Si l'épreuve est progressive avec dailyTrack, on track aussi les minutes par jour
+      if(ep.dailyTrack && !ep.binary && !isStreakLike){
+        const newDailyMinutes = {...dailyMinutes, [today]: todayMin + val};
+        setState(s=>({...s, epreuves:s.epreuves.map(e=>e.epid===ep.epid?{...e,progress:newProgress,dailyMinutes:newDailyMinutes,completedAt:nowComplete?Date.now():null}:e)}));
+        if(nowComplete){ grantEpXp(ep); }
+        return;
+      }
+      setState(s=>({...s, epreuves:s.epreuves.map(e=>e.epid===ep.epid?{...e,progress:newProgress,completedAt:nowComplete?Date.now():null}:e)}));
+      if(nowComplete){ grantEpXp(ep); }
+    }
+
+    function grantEpXp(ep){
+      addXp(ep.xp, ep.stat, null, true);
+      if(ep.xp2&&ep.stat2) addXp(ep.xp2, ep.stat2, null, true);
+      if(ep.xp3&&ep.stat3) addXp(ep.xp3, ep.stat3, null, true);
+      setState(s=>({...s,
+        epreuveCooldownUntil:nextMondayAt7(),
+        completedEpreuveIds:[...(s.completedEpreuveIds||[]),ep.id]
       }));
+      const totalXp=(ep.xp||0)+(ep.xp2||0)+(ep.xp3||0);
+      setTimeout(()=>{
+        const id1=Date.now()+Math.random(),id2=id1+0.1;
+        setFloats(f=>[...f,{id:id1,y:"28%",txt:(ep.kind==="donjon"?"🏰 DONJON VALIDÉ !":"\uD83C\uDFC6 \u00c9PREUVE VALID\u00c9E !")},{id:id2,y:"34%",txt:"+"+totalXp+" XP total"}]);
+        setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id1&&p.id!==id2)),2000);
+      },200);
     }
-    return [
-      sq?.xp ? {key:"xp1", text:rewardLineText({xp:sq.xp, stat:sq.stat})} : null,
-      sq?.xp2&&sq?.stat2 ? {key:"xp2", text:rewardLineText({xp:sq.xp2, stat:sq.stat2})} : null,
-      sq?.xp3&&sq?.stat3 ? {key:"xp3", text:rewardLineText({xp:sq.xp3, stat:sq.stat3})} : null,
-    ].filter(Boolean);
-  }
 
-  function sqRewardSummary(sq){
-    return sqRewardLines(sq).map(l=>l.text).join(" ");
+    const isActive = !done && !failed;
+    return h("div",{class:"sqcard"+(isActive?" ep-pulse":""),style:"border-color:"+tierColor+"44;background:"+tierColor+"08;--epc1:"+tierColor+"44;--epc2:"+tierColor+"00"},
+      h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"},
+        h("div",{style:"display:flex;align-items:center;gap:8px"},
+          QuestIcon(ep.iconId,ep.icon||"⚔️",14,"line-height:1.1;min-width:24px;text-align:center"),
+          h("div",null,
+            h("div",{style:"font-size:13px;font-weight:700;color:var(--tx)"},ep.name)
+          )
+        ),
+        showInput&&h("div",{style:"text-align:right"},
+          done?h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:#4ade80"},"\u2713 VALID\u00c9E")
+          :failed?h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:#ef4444"},"\u2718 \u00c9CHOU\u00c9E")
+          :h(Fragment,null,
+            ep.xp2
+              ? h(Fragment,null,
+                  h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif"},ep.xp+" XP \u00b7 "+(STAT_LBL[ep.stat]||ep.stat)),
+                  h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif"},ep.xp2+" XP \u00b7 "+(STAT_LBL[ep.stat2]||ep.stat2)),
+                  ep.xp3&&h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif"},ep.xp3+" XP \u00b7 "+(STAT_LBL[ep.stat3]||ep.stat3))
+                )
+              : h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif"},ep.xp+" XP \u00b7 "+(STAT_LBL[ep.stat]||ep.stat))
+          )
+        )
+      ),
+      // Barre progression
+      h("div",{class:"sqbar",style:"background:"+tierColor+"22"},
+        h("div",{class:"sqbarfill",style:barStyle})
+      ),
+      h("div",{style:"display:flex;justify-content:space-between;font-size:10px;color:var(--td);margin-top:4px"},
+        hasDailyMin
+          ? h("span",null,vals.length+"/"+streakTarget+" jours valid\u00e9s \u00b7 aujourd'hui : "+todayMin+"/"+ep.dailyMin+" min"+(todayValidated?" \u2713":""))
+          : isStreakLike
+            ? h("span",null,vals.length+"/"+streakTarget+" jours valid\u00e9s"+(todayValidated?" \u2713":""))
+            : ep.dailyTrack
+              ? (function(){
+                  const dailyComplete = Object.values(dailyMinutes).filter(m=>m>=(ep.dailyTrackMin||5)).length;
+                  const todayDone = todayMin >= (ep.dailyTrackMin||5);
+                  return h("span",null,ep.progress+"/"+ep.target+" "+ep.unit+" \u00b7 "+dailyComplete+" jour"+(dailyComplete>1?"s":"")+" compl\u00e9t\u00e9"+(dailyComplete>1?"s":"")+" \u00b7 aujourd'hui : "+todayMin+"/"+(ep.dailyTrackMin||5)+" min"+(todayDone?" \u2713":""));
+                })()
+              : h("span",null,(ep.binary?"":ep.progress+"/"+ep.target+" "+ep.unit)),
+        !done&&!failed&&h("span",{style:"color:"+tierColor+";font-family:Orbitron,sans-serif"},"\u23F1 "+fmtCD(remaining)+" restants")
+      ),
+      // Boutons action
+      !done&&!failed&&showInput&&(
+        ep.binary
+          ? h("button",{onClick:()=>completeEp(1),style:"width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1px solid "+tierColor+"55;background:"+tierColor+"11;color:"+tierColor+";font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px"},"\u2713 Succ\u00e8s")
+          : hasDailyMin
+            ? h("div",{style:"display:flex;gap:8px;margin-top:8px"},
+                h("button",{onClick:()=>completeEp(1),style:"flex:1;padding:10px;border-radius:8px;border:1px solid "+tierColor+"55;background:"+tierColor+"11;color:"+tierColor+";font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer"},"+1 min"),
+                h("button",{onClick:()=>completeEp(10),style:"flex:1;padding:10px;border-radius:8px;border:1px solid "+tierColor+"55;background:"+tierColor+"11;color:"+tierColor+";font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer"},"+10 min")
+              )
+            : isStreakLike
+              ? h("button",{onClick:()=>completeEp(1),disabled:todayValidated,style:"width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1px solid "+(todayValidated?"#4ade8055":tierColor+"55")+";background:"+(todayValidated?"#4ade8011":tierColor+"11")+";color:"+(todayValidated?"#4ade80":tierColor)+";font-family:Orbitron,sans-serif;font-size:11px;cursor:"+(todayValidated?"default":"pointer")+";letter-spacing:1px"},todayValidated?"Fait aujourd'hui \u2713":"Fait aujourd'hui \u2713")
+              : ep.unit==="km"
+                ? h("div",{class:"qinrow",style:"margin-top:8px"},
+                    h("input",{id:"epi_"+ep.epid,class:"qin",type:"text",inputMode:"decimal",placeholder:"+ km",style:"border-color:"+tierColor+"55"}),
+                    h("button",{class:"qbtn",style:"border-color:"+tierColor+"55;color:"+tierColor,onClick:()=>{
+                      const el=document.getElementById("epi_"+ep.epid); if(!el)return;
+                      const raw=el.value.toString().replace(",","."); el.value="";
+                      const v=parseFloat(raw); if(!v||v<=0)return;
+                      completeEp(v);
+                    }},"+XP")
+                  )
+                : ep.id==="ep_project"
+                  ? h("div",{style:"display:flex;gap:8px;margin-top:8px"},
+                      h("button",{onClick:()=>completeEp(10),style:"flex:1;padding:10px;border-radius:8px;border:1px solid "+tierColor+"55;background:"+tierColor+"11;color:"+tierColor+";font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer"},"+10 min"),
+                      h("button",{onClick:()=>completeEp(60),style:"flex:1;padding:10px;border-radius:8px;border:1px solid "+tierColor+"55;background:"+tierColor+"11;color:"+tierColor+";font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer"},"+1 h")
+                    )
+                  : ep.id==="ep_wallsit60"
+                    ? h("div",{style:"display:flex;gap:8px;margin-top:8px"},
+                        h("button",{onClick:()=>completeEp(1),style:"flex:1;padding:10px;border-radius:8px;border:1px solid "+tierColor+"55;background:"+tierColor+"11;color:"+tierColor+";font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer"},"+1 min"),
+                        h("button",{onClick:()=>completeEp(5),style:"flex:1;padding:10px;border-radius:8px;border:1px solid "+tierColor+"55;background:"+tierColor+"11;color:"+tierColor+";font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer"},"+5 min")
+                      )
+                    : h("div",{style:"display:flex;gap:8px;margin-top:8px"},
+                        h("button",{onClick:()=>completeEp(1),style:"flex:1;padding:10px;border-radius:8px;border:1px solid "+tierColor+"55;background:"+tierColor+"11;color:"+tierColor+";font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer"},"+1 "+ep.unit),
+                        h("button",{onClick:()=>completeEp(10),style:"flex:1;padding:10px;border-radius:8px;border:1px solid "+tierColor+"55;background:"+tierColor+"11;color:"+tierColor+";font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer"},"+10 "+ep.unit)
+                      )
+      ),
+      // Menu déroulant des exercices pour Mobilité matinale (épreuve)
+      ep.id==="ep_mob"&&h(Fragment,null,
+        h("div",{
+          onClick:()=>setMobOpen(v=>!v),
+          style:"display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:6px 8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:6px;cursor:pointer;user-select:none;font-size:10px;font-family:Orbitron,sans-serif;letter-spacing:1px"
+        },
+          h("span",{style:"color:var(--td);text-transform:uppercase"},"Programme 5\u00d73min"),
+          h("span",{style:"color:var(--td)"},mobOpen?"\u25B2":"\u25BC")
+        ),
+        mobOpen&&h("div",{style:"margin-top:8px;padding:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);border-radius:6px;font-size:11px;color:var(--tx);line-height:1.5"},
+          h("div",{style:"margin-bottom:10px"},
+            h("div",{style:"font-weight:700;color:"+(STAT_COLOR.Agilite||"#4ade80")},"1. Hanches & jambes \u00b7 3min"),
+            h("div",{style:"color:var(--td);font-size:10px;margin-top:3px"},
+              h("div",null,"\u2022 Cercles de hanches : 10 par sens (1min)"),
+              h("div",null,"\u2022 Leg swings avant/arri\u00e8re : 10 par jambe (1min)"),
+              h("div",null,"\u2022 Leg swings lat\u00e9raux : 10 par jambe (1min)")
+            )
+          ),
+          h("div",{style:"margin-bottom:10px"},
+            h("div",{style:"font-weight:700;color:"+(STAT_COLOR.Agilite||"#4ade80")},"2. Colonne thoracique \u00b7 3min"),
+            h("div",{style:"color:var(--td);font-size:10px;margin-top:3px"},
+              h("div",null,"\u2022 Cat-cow : 15 cycles (1min30)"),
+              h("div",null,"\u2022 Cobra-enfant altern\u00e9 : 15 cycles (1min30)")
+            )
+          ),
+          h("div",{style:"margin-bottom:10px"},
+            h("div",{style:"font-weight:700;color:"+(STAT_COLOR.Agilite||"#4ade80")},"3. \u00c9paules \u00b7 3min"),
+            h("div",{style:"color:var(--td);font-size:10px;margin-top:3px"},
+              h("div",null,"\u2022 Arm circles : 5 par sens par c\u00f4t\u00e9 (1min30)"),
+              h("div",null,"\u2022 Wall slides W \u2192 Y : 10 r\u00e9p\u00e9titions (1min30)")
+            )
+          ),
+          h("div",{style:"margin-bottom:10px"},
+            h("div",{style:"font-weight:700;color:"+(STAT_COLOR.Agilite||"#4ade80")},"4. Rotation & lat\u00e9ral \u00b7 3min"),
+            h("div",{style:"color:var(--td);font-size:10px;margin-top:3px"},
+              h("div",null,"\u2022 T-spine rotations : 8 par c\u00f4t\u00e9 (1min)"),
+              h("div",null,"\u2022 Side bends : 8 par c\u00f4t\u00e9 (1min)"),
+              h("div",null,"\u2022 World's greatest stretch : 4 par c\u00f4t\u00e9 (1min)")
+            )
+          ),
+          h("div",null,
+            h("div",{style:"font-weight:700;color:"+(STAT_COLOR.Agilite||"#4ade80")},"5. \u00c9quilibre & finition \u00b7 3min"),
+            h("div",{style:"color:var(--td);font-size:10px;margin-top:3px"},
+              h("div",null,"\u2022 \u00c9quilibre un pied yeux ferm\u00e9s : 30s par pied (1min)"),
+              h("div",null,"\u2022 Forward fold (flexion avant) respir\u00e9e : 6 respirations lentes (1min)"),
+              h("div",null,"\u2022 Ancrage debout (pieds parall\u00e8les, respirations profondes) : 1min")
+            )
+          ),
+          h("div",{style:"margin-top:12px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.05);font-size:10px;color:var(--td);font-style:italic"},
+            "Respiration nasale uniquement \u00b7 amplitude max, vitesse min"
+          )
+        )
+      )
+    );
   }
 
   function SqCard({sq,showInput}){
@@ -1435,39 +1840,23 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const tier = sq.tier || "majeure";
     const tierColor = SQ_TIER_COLOR[tier] || "#f59e0b";
 
-    const progressText = sq.progress+"/"+sq.target+(sq.compactUnit?"":" ")+sq.unit;
-    const sqFillStyle = done
-      ? "width:"+pct+"%;background:linear-gradient(90deg,#991b1b,#ef4444)"
-      : (pct>0
-        ? "width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,transparent,transparent 4px,#ef4444 4px,#ef4444 8px);background-size:11.31px 11.31px;opacity:0.8"
-        : "width:"+pct+"%;background:linear-gradient(90deg,#991b1b,#ef4444)");
-
     return h("div",{class:"sqcard"+(urgent?" sq-urgent":"")},
-      h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;gap:8px"},
-        h("div",{style:"display:flex;align-items:center;gap:8px;min-width:0"},
+      h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"},
+        h("div",{style:"display:flex;align-items:center;gap:8px"},
           QuestIcon(sq.id,sq.icon,14,"line-height:1.1;min-width:24px;text-align:center"),
           h("div",null,
-            h("div",{style:"font-size:13px;font-weight:700;color:var(--tx);line-height:1.25"},sq.name)
+            h("div",{style:"font-size:13px;font-weight:700;color:var(--tx)"},sq.name)
           )
         ),
-        showInput
-          ? h("div",{style:"text-align:right;flex-shrink:0"},
-              sqRewardLines(sq).map(line=>h("div",{
-                key:line.key,
-                style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.25;white-space:nowrap;opacity:"+((line.at&&sq.progress>=line.at)?"1":"0.65")
-              },(line.at&&sq.progress>=line.at?"\u2713 ":"")+line.text))
-            )
-          : h("div",{class:"qxp",style:"font-size:11px;color:"+(done?"#4ade80":"var(--td)")+";font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.25;padding-top:0;min-width:82px"},progressText)
+        showInput&&h("div",{style:"text-align:right"},
+          xpPairs.map((p,i)=>h("div",{key:i,style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif"},p.xp+" XP \u00b7 "+(STAT_LBL[p.stat]||p.stat)))
+        )
       ),
-      showInput
-        ? h("div",{class:"qrow",style:"align-items:center;margin-top:6px"},
-            h("div",{class:"qbar"},h("div",{class:"qfill"+(done?" done":pct>0?" partial":""),style:sqFillStyle})),
-            h("div",{class:"qxp",style:"color:"+(done?"#4ade80":"#ef4444")+";white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},progressText)
-          )
-        : h("div",{class:"qrow",style:"align-items:center;margin-top:6px"},
-            h("div",{class:"qbar"},h("div",{class:"qfill"+(done?" done":pct>0?" partial":""),style:sqFillStyle}))
-          ),
-      !done&&h("div",{style:"font-size:10px;color:"+(urgent?"#ef4444":"#ef4444bb")+";font-family:Orbitron,sans-serif;margin-top:4px;text-align:"+(showInput?"left":"right")},"\u23F1 "+fmtCD(remaining)+" restants"),
+      h("div",{class:"sqbar"},h("div",{class:"sqbarfill",style:"width:"+pct+"%"})),
+      h("div",{style:"display:flex;justify-content:space-between;font-size:10px;color:var(--td);margin-top:4px"},
+        h("span",null,sq.progress+"/"+sq.target+(sq.compactUnit?"":" ")+sq.unit),
+        !done&&h("span",{style:"color:"+(urgent?"#ef4444":"#ef4444bb")+";font-family:Orbitron,sans-serif"},"\u23F1 "+fmtCD(remaining)+" restants")
+      ),
       showInput&&!done&&(
         sq.binary
           ?h("div",{style:"display:flex;gap:8px;margin-top:8px"},
@@ -1491,12 +1880,14 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
 
   function Home(){
-    const dailyObjs = sortStat(objs.filter(o=>o.daily&&!o.optional));
-    const weeklyObjs = sortStat(objs.filter(o=>o.weekly));
+    const dailyObjs = sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression));
+    const weeklyObjs = restMode && walkObj
+      ? [...sortStat(objs.filter(o=>o.weekly&&!o.optional&&!o.regression)), walkObj]
+      : sortStat(objs.filter(o=>o.weekly&&!o.optional&&!o.regression));
     const secs=[
       {lb:"Qu\u00eates journalières",ob:dailyObjs,iw:false},
       {lb:"Qu\u00eates hebdomadaires",ob:weeklyObjs,iw:true},
-      {lb:"Qu\u00eates bonus", ob:sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden)), iw:false},
+      {lb:"Qu\u00eates bonus", ob:sortStat(objs.filter(o=>((o.daily||o.weekly)&&o.optional||o.id==="walk")&&!(restMode&&o.id==="walk")&&!o.bonusHidden&&!o.regression)), iw:false},
     ];
 
     return h("div",{class:"tab"},
@@ -1538,22 +1929,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
                 ? h("span",{style:"color:#fb923c"},"Stats requises non atteintes")
                 : h("span",{style:"color:var(--rc)"},Math.round(ASCENSION_XP_NEEDED-effectiveXp).toLocaleString("fr-FR")+" XP avant Ascension "+(ROMAN[prestige]||"I"))
         ),
-        h("div",{style:"margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06)"},
-          h("div",{style:"display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--td);margin-bottom:5px;font-family:Orbitron,sans-serif;text-transform:uppercase;letter-spacing:1px"},
-            h("span",null,"Niveau "+globalLevel.level),
-            h("span",{style:"color:var(--td);opacity:.75"},"→"),
-            h("span",null,globalLevel.maxed?"Niveau max":"Niveau "+globalLevel.nextLevel)
-          ),
-          h("div",{class:"xpbar",style:"height:4px"},h("div",{class:"xpfill",style:"width:"+globalLevel.pct+"%"})),
-          h("div",{style:"display:flex;justify-content:space-between;font-size:10px;color:var(--td);margin-top:5px;font-family:Orbitron,sans-serif"},
-            h("span",null,Math.round(globalLevel.inLevel).toLocaleString("fr-FR")+" XP"),
-            h("span",{style:"color:var(--rc)"},globalLevel.maxed?"MAX":Math.max(0,Math.round(globalLevel.need-globalLevel.inLevel)).toLocaleString("fr-FR")+" XP manquants")
-          )
-        ),
         prestigeAvailable&&h("button",{
           onClick:()=>{
             const newPrestige=(state.prestige||0)+1;
-            setState(s=>({...s,streak:0,streakBonusDay:null,weeklyBonusWk:null,streakMilestones:[],dailyLog:{},weeklyLog:{},specialQuests:[],sqStatCycle:[],sqCooldownUntil:null,prestige:newPrestige}));
+            setState(s=>({...s,streak:0,streakBonusDay:null,weeklyBonusWk:null,streakMilestones:[],penaltyDay:null,dailyLog:{},weeklyLog:{},specialQuests:[],sqStatCycle:[],epStatCycle:[],sqCooldownUntil:null,prestige:newPrestige}));
             setPrestigeUp(newPrestige);
           },
           style:"width:100%;margin-top:12px;padding:12px;background:rgba(168,85,247,0.1);border:1px solid #a855f7;border-radius:10px;color:#a855f7;font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:3px;cursor:pointer;text-transform:uppercase;text-shadow:0 0 12px #a855f7"
@@ -1597,7 +1976,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:4px 0;font-family:Orbitron,sans-serif"},"\u23F3 Prochaine qu\u00eate dans "+fmtCD(sqCooldownUntil-now))
       ),
       secs.map(({lb,ob,iw,mixed})=>ob.length===0?null:
-        h("div",{key:lb,class:"card"},h("div",{class:"ctitle"},lb),ob.map(o=>h(RR,{key:o.id,obj:o,isW:mixed?(o.weekly):iw})))
+        h("div",{key:lb,class:"card"},h("div",{class:"ctitle"},lb),ob.map(o=>h(RR,{key:o.id,obj:o,isW:mixed?(o.weekly||o.id==="walk"):iw})))
       )
     );
   }
@@ -1605,14 +1984,16 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   // ─── ONGLET QUETES ────────────────────────────────────────────────────
 
   function Quests(){
-    const reqBase=sortStat(objs.filter(o=>o.daily&&!o.optional));
-    const bonBase=sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden));
-    const wkBase=sortStat(objs.filter(o=>o.weekly));
+    const reqBase=sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression));
+    const bonBase=sortStat(objs.filter(o=>((o.daily||o.weekly)&&o.optional||o.id==="walk")&&!(restMode&&o.id==="walk")&&!o.bonusHidden&&!o.regression));
+    const wkBase=restMode&&walkObj
+      ? [...sortStat(objs.filter(o=>o.weekly&&!o.optional&&!o.regression)), walkObj]
+      : sortStat(objs.filter(o=>o.weekly&&!o.optional&&!o.regression));
 
     const isQuestDone=(obj)=>{
-      const isWeekly = obj.weekly;
+      const isWeekly = obj.weekly || obj.id==="walk";
       const t = getEffectiveTarget(obj.id, isWeekly);
-      const effectiveT = t;
+      const effectiveT = (sleepDebtMed > 0 && obj.id==="med") ? Math.max(t, sleepDebtMed) : t;
       const target = (obj.target && !obj.binary) ? obj.target : effectiveT;
       const d = isWeekly ? (wLog[obj.id]||0) : (tLog[obj.id]||0);
       return obj.binary ? d>=1 : d>=target;
@@ -1626,8 +2007,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const bon=moveCompletedLast(bonBase);
     const wkq=moveCompletedLast(wkBase);
 
-    const reqDone=reqBase.filter(isQuestDone).length;
-    const reqTotal=reqBase.length;
+    const reqDone=reqBase.filter(isQuestDone).length + (sleepDebtMed>0 && (tLog["med"]||0)>=sleepDebtMed ? 1 : 0);
+    const reqTotal=reqBase.length + (sleepDebtMed>0 ? 1 : 0);
     const bonDone=bonBase.filter(isQuestDone).length;
     const bonTotal=bonBase.length;
     const wkDone=wkBase.filter(isQuestDone).length;
@@ -1652,7 +2033,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             QuestIcon(completedSq.id,completedSq.icon,14,"line-height:1.1;min-width:24px;text-align:center"),
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:13px;font-weight:700;color:#4ade80"},completedSq.name+" — COMPLÉTÉ ✓"),
-              h("div",{style:"font-size:11px;color:var(--td);margin-top:2px;white-space:normal;line-height:1.25"},sqRewardSummary(completedSq))
+              h("div",{style:"font-size:11px;color:var(--td);margin-top:2px"},"+"+completedSq.xp+" XP · "+(STAT_LBL[completedSq.stat]||completedSq.stat))
             )
           ),
           sqCooldownActive&&h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:8px 0 4px;font-family:Orbitron,sans-serif"},"⏳ Prochaine quête dans "+fmtCD(sqCooldownUntil-now))
@@ -1668,6 +2049,40 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h("div",{class:"card"},
         h(SectionHeader,{title:"Quêtes journalières",done:reqDone,total:reqTotal}),
         req.map(o=>h(QI,{key:o.id,obj:o})),
+        sleepDebtMed>0&&(()=>{
+          const medDone = tLog["med"]||0;
+          const done = medDone >= sleepDebtMed;
+          const pct = Math.min(100,(medDone/sleepDebtMed)*100);
+          return h("div",{class:"qi"+(done?" done":""),style:done?"":"border-color:#ef444466;background:rgba(239,68,68,0.04)"},
+            h("div",{class:"qhdr",style:"align-items:center",style:"display:flex;justify-content:space-between;align-items:center"},
+              h("div",{class:"qname",style:"align-items:center;gap:8px"},
+                h("span",null,"🧘🏻‍♂️")," Méditation",
+                !done&&h("span",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;border:1px solid #ef444455;border-radius:4px;padding:1px 5px;margin-left:6px"},"⚠ DETTE 🛏️")
+              ),
+              h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px"},"0 XP · obligatoire")
+            ),
+            h("div",{class:"qrow"},
+              h("div",{class:"qbar"},h("div",{class:"qfill"+(done?" done":pct>0?" partial":""),style:"width:"+pct+"%"})),
+              h("div",{class:"qxp",style:done?"":"color:#ef4444"},medDone+"/"+sleepDebtMed+" min")
+            ),
+            h("div",{style:"display:flex;gap:8px;margin-top:8px"},
+              h("button",{
+                onClick:e=>{
+                  const cur=tLog["med"]||0;
+                  setState(s=>{const dl={...s.dailyLog};dl[today]={...(dl[today]||{}),med:cur+1};return{...s,dailyLog:dl,lastActiveDay:today};});
+                },
+                style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px"
+              },"+1 min"),
+              h("button",{
+                onClick:e=>{
+                  const cur=tLog["med"]||0;
+                  setState(s=>{const dl={...s.dailyLog};dl[today]={...(dl[today]||{}),med:cur+10};return{...s,dailyLog:dl,lastActiveDay:today};});
+                },
+                style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px"
+              },"+10 min")
+            )
+          );
+        })()
       ),
       wkq.length>0&&h("div",{class:"card"},
         h(SectionHeader,{title:"Quêtes hebdomadaires",done:wkDone,total:wkTotal}),
@@ -1792,19 +2207,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         })()
       ),
       h("div",{class:"card"},
-        h("div",{class:"ctitle"},"Niveau global"),
-        h("div",{style:"display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:6px"},
-          h("div",null,
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:20px;font-weight:900;color:var(--rc);line-height:1"},"Niveau "+globalLevel.level),
-            h("div",{style:"font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:4px"},globalLevel.maxed?"Progression maximale":"Vers niveau "+globalLevel.nextLevel)
-          ),
-          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;text-align:right"},
-            globalLevel.maxed?"MAX":Math.round(globalLevel.inLevel).toLocaleString("fr-FR")+" / "+Math.round(globalLevel.need).toLocaleString("fr-FR")+" XP"
-          )
-        ),
-        h("div",{class:"xpbar",style:"height:7px"},h("div",{class:"xpfill",style:"width:"+globalLevel.pct+"%"}))
-      ),
-      h("div",{class:"card"},
         h("div",{class:"ctitle"},"Équilibre des stats"),
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px"},
           h("div",{style:"flex:1;min-width:0"},
@@ -1865,35 +2267,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const we=new Date(ws); we.setDate(ws.getDate()+6);
     const fmt=d=>d.getDate().toString().padStart(2,"0")+"/"+(d.getMonth()+1).toString().padStart(2,"0");
     const lbl=wkOff===0?"Cette semaine":wkOff===1?"Semaine derni\u00e8re":fmt(ws)+" \u2013 "+fmt(we);
-    const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional)),...sortStat(objs.filter(o=>o.weekly)),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden))];
+    const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.regression)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.regression))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden&&!o.regression))];
 
     // ── Labels jours de la semaine (lun → dim) ──
     const weekLbls=["L","M","M","J","V","S","D"];
-
-    function weeklyTargetFor(obj){
-      if(obj.binary) return 7;
-      const target = obj.weekly ? getRankBase(obj.id,ri,prestige) : ((obj.target&&!obj.binary?obj.target:getRankBase(obj.id,ri,prestige))*7);
-      return target;
-    }
-    function dayTargetFor(obj,day){
-      if(obj.binary) return 1;
-      if(obj.weekly) return getRankBase(obj.id,ri,prestige);
-      return obj.target&&!obj.binary ? obj.target : getValidateThreshold(obj,day);
-    }
-    function dayMarkFor(obj,day){
-      const log=state.dailyLog[day]||{};
-      const value=log[obj.id]||0;
-      const isFuture=day>today;
-      if(isFuture) return {txt:"·",color:"var(--td)",opacity:.45};
-      const target=dayTargetFor(obj,day);
-      const ok=value>=target;
-      return ok ? {txt:"✓",color:"#4ade80",opacity:1} : {txt:"✘",color:"#ef4444",opacity:1};
-    }
-    function totalLabelFor(obj,val,wt){
-      const unit=((val>1||wt>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[obj.unit]||obj.unit);
-      if(obj.binary) return fmtNum(val)+"/7 "+(obj.id==="sleep"?"nuits":"jours");
-      return fmtNum(val)+"/"+fmtNum(wt)+" "+unit;
-    }
 
     // ── Records personnels (max par quête sur tout le dailyLog) ──
     const records={};
@@ -1902,8 +2279,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         if(!records[id]||val>records[id].val)records[id]={val,date};
       });
     });
-    // Running et Marche sont désormais quotidiens : ne plus utiliser weeklyLog pour les records
-
+    // weekly records
+    Object.entries(state.weeklyLog).forEach(([wk,log])=>{
+      Object.entries(log).forEach(([id,val])=>{
+        if(!records[id]||val>records[id].val)records[id]={val,date:wk};
+      });
+    });
 
     return h("div",{class:"tab"},
       // Navigation semaine
@@ -1918,32 +2299,72 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         ),
         wkOff>0&&h("button",{style:"width:100%;margin-top:10px;background:rgba(255,255,255,0.03);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:2px;padding:7px;cursor:pointer;text-transform:uppercase",onClick:()=>setWkOff(0)},"Aujourd'hui")
       ),
-      // Activité de la semaine : tableau quotidien L M M J V S D
+      // Activité de la semaine (toujours ouvert, avec L M M J V S D en haut)
       h("div",{class:"card"},
-        h("div",{class:"ctitle"},"Activité de la semaine"),
-        h("div",{style:"display:grid;grid-template-columns:minmax(0,1fr) repeat(7,22px) minmax(78px,auto);gap:5px;align-items:center;margin-top:10px;margin-bottom:8px;font-family:Orbitron,sans-serif;font-size:9px;color:var(--td);letter-spacing:1px;text-transform:uppercase"},
-          h("div",null,"Quête"),
-          weekLbls.map((lbl,i)=>h("div",{key:"h"+i,style:"text-align:center;color:var(--rc)"},lbl)),
-          h("div",{style:"text-align:right"},"Total")
-        ),
-        h("div",{style:"display:flex;flex-direction:column;gap:7px"},
+        h("div",{class:"ctitle"},"Activit\u00e9 de la semaine"),
+        // Bandeau jours L M M J V S D
+        h("div",{class:"wgrid",style:"margin-top:8px;margin-bottom:14px"},weekDays.map((d,i)=>{
+          const log=state.dailyLog[d]||{};
+          const xp=Object.entries(log).reduce((s,[id,a])=>{const o=objs.find(x=>x.id===id);return s+(o?calcXp(o,a):0);},0);
+          const isFuture=d>today;
+          const isToday=d===today;
+          const allDone=isToday
+            ?reqDailyObjs.every(o=>(log[o.id]||0)>=getTarget(o.base))
+            :!isFuture&&activeOn(d).every(o=>(log[o.id]||0)>=getValidateThreshold(o,d));
+          const isPast=d<today;
+          const border=isFuture?"1px dashed #ffffff10":allDone?"2px solid #4ade80":isPast&&xp>0?"2px solid #ef4444":isToday?"1px solid "+rank.color:"1px solid #ffffff18";
+          const shadow=allDone?"0 0 6px #4ade8066":isPast&&xp>0?"0 0 6px #ef444466":"";
+          return h("div",{key:d,class:"wday"},
+            h("div",{class:"wdlbl"},weekLbls[i]),
+            h("div",{class:"wddot",style:"background:#000000;border:"+border+(shadow?";box-shadow:"+shadow:"")+(isFuture?";opacity:.3":"")})
+          );
+        })),
+        h(Fragment,null,
           ordered.map(obj=>{
-            const val=obj.binary
-              ? weekDays.filter(d=>d<=today && (state.dailyLog[d]?.[obj.id]||0)>=1).length
-              : (tots[obj.id]||0);
-            const wt=weeklyTargetFor(obj);
-            const marks=weekDays.map(d=>dayMarkFor(obj,d));
-            return h("div",{key:obj.id,style:"display:grid;grid-template-columns:minmax(0,1fr) repeat(7,22px) minmax(78px,auto);gap:5px;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,0.04)"},
-              h("div",{style:"display:flex;align-items:center;gap:6px;min-width:0;color:var(--tx);font-size:12px"},
-                QuestIcon(obj.id,obj.icon,14),
-                h("span",{style:"overflow:hidden;text-overflow:ellipsis;white-space:nowrap"},obj.name)
+          if(obj.binary){
+            const pastDays=weekDays.filter(d=>d<=today);
+            const successes=pastDays.filter(d=>(state.dailyLog[d]?.[obj.id]||0)>=1).length;
+            const pct=Math.min(100,(successes/7)*100), complete=successes>=7;
+            return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:10px"},
+              QuestIcon(obj.id,obj.icon,14),
+              h("div",{style:"flex:1"},
+                h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between"},
+                  h("span",{style:"display:flex;align-items:center;gap:6px"},
+                    obj.name,
+                    (obj.weekly||obj.id==="walk")&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
+                    obj.optional&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR})
+                  ),
+                  h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px"},successes+"/7 "+(obj.id==="sleep"?"nuits":"jours"))
+                ),
+                h("div",{class:"qbar"},h("div",{class:"qfill"+(complete?" done":successes>0?" partial":""),style:"width:"+pct+"%"}))
               ),
-              marks.map((m,i)=>h("div",{key:obj.id+"_d"+i,style:"text-align:center;font-family:Orbitron,sans-serif;font-size:12px;font-weight:700;color:"+m.color+";opacity:"+m.opacity},m.txt)),
-              h("div",{style:"text-align:right;font-family:Orbitron,sans-serif;font-size:9px;color:var(--td);white-space:nowrap"},totalLabelFor(obj,val,wt))
+              complete&&h("span",{style:"font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:#4ade80"},"\u2713")
             );
-          }),
-          ordered.every(o=>!(tots[o.id]>0))&&h("div",{style:"text-align:center;font-size:13px;color:var(--td);padding:16px 0"},"Aucune activité cette semaine")
-        )
+          }
+          const val=tots[obj.id]||0, wt=obj.weekly?(obj.id==="walk"&&restMode&&walkObj?walkObj.base:getRankBase(obj.id,ri)):obj.id==="walk"?obj.base:(obj.target&&!obj.binary?obj.target:getRankBase(obj.id,ri,prestige))*7;
+          const pct=Math.min(100,(val/wt)*100), complete=val>=wt, over=val>wt;
+          return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:10px"},
+            QuestIcon(obj.id,obj.icon,14),
+            h("div",{style:"flex:1"},
+              h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between"},
+                h("span",{style:"display:flex;align-items:center;gap:6px"},
+                  obj.name,
+                  obj.weekly&&!obj.optional&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
+                  obj.optional&&obj.id!=="walk"&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR}),
+                  obj.id==="walk"&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR}),
+                  obj.id==="walk"&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR,extra:"margin-left:2px"}),
+
+                ),
+                h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px"},
+                  fmtNum(val)+"/"+fmtNum(wt)+" "+((val>1||wt>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[obj.unit]||obj.unit))
+              ),
+              h("div",{class:"qbar"},h("div",{class:"qfill"+(over?" over":complete?" done":pct>0?" partial":""),style:"width:"+pct+"%"}))
+            ),
+            complete&&h("span",{style:"font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:#4ade80"},"\u2713")
+          );
+        }),
+        ordered.every(o=>!(tots[o.id]>0))&&h("div",{style:"text-align:center;font-size:13px;color:var(--td);padding:16px 0"},"Aucune activit\u00e9 cette semaine")
+        )// end Fragment
       ),
       // Records personnels
       h("div",{class:"card"},
@@ -1953,15 +2374,15 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         ),
         open.records&&h(Fragment,null,
           h("div",{style:"margin-top:12px"}),
-          [...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary)),...sortStat(objs.filter(o=>o.weekly&&!o.binary)),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden))].map(o=>{
+          [...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary&&!o.regression)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.binary&&!o.regression)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.binary&&!o.regression))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden&&!o.regression))].map(o=>{
           const rec=records[o.id];
           if(!rec)return h("div",{key:o.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px;opacity:.35"},
             QuestIcon(o.id,o.icon,14),
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:12px;color:var(--td);display:flex;align-items:center;gap:5px"},
                 o.name,
-                (o.weekly)&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
-                o.optional&&!o.weekly&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR})
+                (o.weekly||o.id==="walk")&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
+                o.optional&&o.id!=="walk"&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR})
               )
             ),
             h("span",{style:"font-size:11px;color:var(--td)"},"—")
@@ -1972,8 +2393,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("div",{style:"flex:1"},
               h("div",{style:"font-size:12px;color:var(--tx);display:flex;align-items:center;gap:5px"},
                 o.name,
-                (o.weekly)&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
-                o.optional&&!o.weekly&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR}),
+                (o.weekly||o.id==="walk")&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
+                o.optional&&o.id!=="walk"&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR}),
+                o.id==="walk"&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR,extra:"margin-left:2px"})
               ),
               h("div",{style:"font-size:10px;color:var(--td);margin-top:1px"},fmt2(rec.date))
             ),
@@ -1998,7 +2420,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         Object.values(state.weeklyLog).forEach(log=>{
           Object.entries(log).forEach(([id,val])=>{totals[id]=(totals[id]||0)+val;});
         });
-        const displayObjs=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary)),...sortStat(objs.filter(o=>o.weekly&&!o.binary)),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden))];
+        const displayObjs=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary&&!o.regression)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.binary&&!o.regression)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.binary&&!o.regression))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden&&!o.regression))];
         return h("div",{class:"card"},
           h("div",{style:"display:flex;align-items:center;justify-content:space-between;cursor:pointer",onClick:()=>toggle("totals")},
             h("div",{class:"ctitle",style:"margin:0"},"Totaux depuis le d\u00e9but"+(firstDay?" \u2014 "+fmtFirst(firstDay):"")),
@@ -2014,9 +2436,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
                 h("div",{style:"flex:1"},
                   h("div",{style:"font-size:12px;color:var(--tx);display:flex;align-items:center;gap:5px"},
                     o.name,
-                    (o.weekly)&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
-                    o.optional&&!o.weekly&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR}),
-                      )
+                    (o.weekly||o.id==="walk")&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
+                    o.optional&&o.id!=="walk"&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR}),
+                    o.id==="walk"&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR,extra:"margin-left:2px"})
+                  )
                 ),
                 h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--tx)"},
                   total===0?"—":(total%1===0?total.toLocaleString("fr-FR"):total.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2}))+(total>0?" "+unitLbl:""))
@@ -2032,7 +2455,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
   function Settings(){
     if(!showSet)return null;
-    const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional)),...sortStat(objs.filter(o=>o.weekly)),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden))];
+    const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.regression)),...(restMode&&walkObj?[...sortStat(objs.filter(o=>o.weekly&&!o.regression)),walkObj]:sortStat(objs.filter(o=>o.weekly&&!o.regression))),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden&&!o.regression))];
     function applyEdit(){
       setState(s=>{
         let xpD=0;
@@ -2058,9 +2481,34 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("button",{style:"background:none;border:none;color:var(--td);font-size:44px;line-height:1;cursor:pointer",onClick:()=>{setShowSet(false);setConfirmReset(false);}},"\u2715")
         ),
         h("div",{class:"msec"},
+          h("div",{class:"mlbl"},"Mode blessure — Course"),
+          h("div",{style:"font-size:11px;color:var(--td);margin-bottom:10px;line-height:1.5"},
+            restMode
+              ? "Mode blessure actif \u2014 la marche remplace la course cette semaine."
+              : "Active ce mode si tu es bless\u00e9. La marche remplace la course avec un objectif adapt\u00e9."
+          ),
+          !restMode
+            ? h("button",{class:"mbtn",style:"width:100%;background:#ef444411;border:1px solid #ef444466;color:#ef4444",onClick:()=>{
+                const currentWk=wkStr();
+                const runDone=(state.weeklyLog[currentWk]||{})["run"]||0;
+                const runBase=getRankBase("run",ri,prestige);
+                const remaining=Math.max(0,runBase-runDone);
+                const walkTarget=Math.max(1,Math.ceil(remaining*0.5));
+                walkTargetRef.current=walkTarget;
+                setState(s=>({...s,restMode:true,walkTarget}));
+                setShowSet(false);
+              }},"Blessure — activer la marche")
+            : h("button",{class:"mbtn",style:"width:100%;background:#4ade8011;border:1px solid #4ade8066;color:#4ade80",onClick:()=>{
+                walkTargetRef.current=0;
+                setState(s=>({...s,restMode:false,walkTarget:0}));
+                setShowSet(false);
+              }},"Rétablissement — reprendre la course")
+        ),
+        h("div",{class:"divider"}),
+        h("div",{class:"msec"},
           h("div",{class:"mlbl"},"Corriger les données du jour"),
           ordered.map(obj=>{
-            const cur=(obj.weekly)?(wLog[obj.id]||0):(tLog[obj.id]||0);
+            const cur=(obj.weekly||obj.id==="walk")?(wLog[obj.id]||0):(tLog[obj.id]||0);
             return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
               QuestIcon(obj.id,obj.icon,14,"min-width:24px"),
               h("span",{style:"flex:1;font-size:13px"},obj.name),
@@ -2200,12 +2648,17 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }
 
     function targetForQuest(obj){
-      const isWeekly = obj.weekly;
+      const isWeekly = obj.weekly || obj.id==="walk";
       const period = isWeekly ? " / semaine" : " / jour";
       if(obj.binary) return "Validation simple";
       if(obj.tiers) return (obj.target||obj.base||1)+" "+unitPlural(obj.unit,obj.target||obj.base||1)+period;
       const base = getRankBase(obj.id, ri, prestige);
       return base+" "+unitPlural(obj.unit,base)+period;
+    }
+
+    function capForQuest(obj){
+      if(obj.binary || obj.tiers) return "—";
+      return obj.cap ? "×"+obj.cap : "Aucun";
     }
 
     function renderQuest(obj){
@@ -2217,12 +2670,13 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15;display:flex;align-items:center;gap:6px;flex-wrap:wrap"},
               obj.name,
-              (obj.weekly)&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR})
+              (obj.weekly||obj.id==="walk")&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR})
             ),
             subtitle&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},subtitle),
             h("div",{style:"margin-top:7px"},renderXpPills(obj)),
             h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:6px"},
-              h("div",{style:detailStyle},"▸ Objectif : "+targetForQuest(obj))
+              h("div",{style:detailStyle},"▸ Objectif : "+targetForQuest(obj)),
+              h("div",{style:detailStyle},"▸ Cap : "+capForQuest(obj))
             )
           )
         )
@@ -2245,7 +2699,57 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("div",{style:"margin-top:7px"},renderXpPills(q)),
             h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:6px"},
               h("div",{style:detailStyle},"▸ Objectif : "+targetForSpecial(q)),
-              h("div",{style:detailStyle},"▸ Délai : "+(q.days||1)+" jour"+((q.days||1)>1?"s":""))
+              h("div",{style:detailStyle},"▸ Délai : "+(q.days||1)+" jour"+((q.days||1)>1?"s":"")),
+              h("div",{style:detailStyle},"▸ Cap : —")
+            )
+          )
+        )
+      );
+    }
+
+    function targetForEpreuve(ep){
+      if(ep.binary) return "Validation simple";
+      if(ep.cumDays) return (ep.streakDays||ep.target||5)+" jours à valider"+(ep.dailyMin?" · "+ep.dailyMin+" min/jour":"");
+      if(ep.streak7 || ep.streakDays) return "Streak "+(ep.streakDays||7)+" jours";
+      return (ep.target||1)+" "+unitPlural(ep.unit,ep.target||1);
+    }
+
+    function renderEpreuve(ep){
+      return h("div",{key:ep.id,style:cardStyle},
+        h("div",{style:"display:flex;align-items:center;gap:8px"},
+          QuestIcon(ep.iconId,ep.icon||"⚔️",14,"line-height:1.1;min-width:24px;text-align:center"),
+          h("div",{style:"flex:1;min-width:0"},
+            h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},ep.name),
+            ep.desc&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},ep.desc),
+            h("div",{style:"margin-top:7px"},renderXpPills(ep)),
+            h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:6px"},
+              h("div",{style:detailStyle},"▸ Objectif : "+targetForEpreuve(ep)),
+              h("div",{style:detailStyle},"▸ Délai : "+(ep.days||7)+" jours"),
+              h("div",{style:detailStyle},"▸ Cap : —")
+            )
+          )
+        )
+      );
+    }
+
+    function renderDonjon(dj){
+      return h("div",{key:dj.id,style:cardStyle},
+        h("div",{style:"display:flex;align-items:center;gap:8px"},
+          QuestIcon(dj.id,dj.icon||"🏰",14,"line-height:1.1;min-width:22px;text-align:center"),
+          h("div",{style:"flex:1;min-width:0"},
+            h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},dj.name),
+            dj.desc&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},dj.desc),
+            h("div",{style:"margin-top:7px"},renderXpPills(dj)),
+            h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:6px"},
+              h("div",{style:detailStyle},"▸ Objectif : compléter tous les objectifs du donjon"),
+              h("div",{style:detailStyle},"▸ Délai : "+(dj.days||7)+" jours"),
+              h("div",{style:detailStyle},"▸ Cap : —")
+            ),
+            dj.goals&&dj.goals.length>0&&h("div",{style:"margin-top:8px;border-top:1px solid rgba(255,255,255,0.05);padding-top:7px"},
+              h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-bottom:5px"},"OBJECTIFS"),
+              dj.goals.map(g=>h("div",{key:g.id,style:"font-size:10px;color:var(--td);line-height:1.45"},
+                "▸ "+g.label+" : "+g.target+" "+unitPlural(g.unit,g.target)
+              ))
             )
           )
         )
@@ -2324,10 +2828,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       ));
     }
 
-    const required = objs.filter(o=>o.daily&&!o.optional);
-    const weeklyCodex = objs.filter(o=>o.weekly);
-    const bonus = objs.filter(o=>o.optional&&!o.weekly&&!o.bonusHidden);
-    const hiddenBonus = objs.filter(o=>o.optional&&!o.weekly&&o.bonusHidden);
+    const required = objs.filter(o=>o.daily&&!o.optional&&!o.regression).concat(objs.filter(o=>o.weekly&&!o.optional&&!o.regression));
+    const bonus = objs.filter(o=>o.optional&&!o.bonusHidden&&!o.regression);
+    const hiddenBonus = objs.filter(o=>o.optional&&o.bonusHidden&&!o.regression);
     const specialList = STATS.flatMap(stat=>(SP[stat]||[]).map(q=>({...q,stat:q.stat||stat})));
 
     return h("div",{class:"tab"},
@@ -2346,6 +2849,37 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial))
     );
   }
+
+  // ─── ANIMATION CAP ATTEINT (RÉCUPÉRATION FORCÉE) ─────────────────────
+
+  function CapOverlay(){
+    if(!capAnim)return null;
+    const {obj,xMult}=capAnim;
+    const capColor="#ef4444";
+    const capGlow="#ef444466";
+    const particles=Array.from({length:40},(_,i)=>({
+      id:i,
+      left:Math.random()*100,
+      delay:Math.random()*3,
+      dur:1.2+Math.random()*2,
+      size:2+Math.random()*4,
+      violet:Math.random()>0.7
+    }));
+    return h("div",{class:"ruov",style:"--rc:"+capColor+";--rg:"+capGlow},
+      h("div",{class:"ruparts"},particles.map(p=>
+        h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.violet?"rgba(192,132,252,0.6)":capColor)+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
+      )),
+      h("div",{class:"rucont"},
+        h("div",{class:"ruevol"},"R\u00e9cup\u00e9ration forc\u00e9e"),
+        h("div",{style:"font-size:64px;margin-bottom:8px;filter:drop-shadow(0 0 20px "+capColor+")"},"\u26A1"),
+        h("div",{style:"font-family:Orbitron,sans-serif;color:"+capColor+";font-size:18px;font-weight:700;letter-spacing:3px;margin-bottom:6px;text-shadow:0 0 14px "+capColor},obj.name.toUpperCase()),
+        h("div",{style:"font-family:Orbitron,sans-serif;color:"+capColor+";font-size:12px;letter-spacing:2px;opacity:0.7"},"CAP \u00d7"+xMult+" ATTEINT"),
+        h("div",{style:"font-family:Orbitron,sans-serif;color:#c084fc;font-size:16px;font-weight:700;letter-spacing:2px;margin-top:24px;text-shadow:0 0 12px #c084fc"},"+ 200 XP DISCIPLINE"),
+        h("button",{class:"rudis",onClick:()=>setCapAnim(null)},"Continuer")
+      )
+    );
+  }
+
   // ─── RENDU PRINCIPAL ──────────────────────────────────────────────────
 
   const parts=Array.from({length:15},(_,i)=>({id:i,s:Math.random()*3+1,l:Math.random()*100,dur:Math.random()*10+8,del:Math.random()*10}));
@@ -2390,6 +2924,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(Settings,null),
       h(RankUp,null),
       h(PrestigeUp,null),
+      h(CapOverlay,null),
     )
   );
 }
