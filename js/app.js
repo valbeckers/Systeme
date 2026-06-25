@@ -1881,14 +1881,32 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       return obj.target&&!obj.binary ? obj.target : getValidateThreshold(obj,day);
     }
     function dayMarkFor(obj,day){
-      const log=state.dailyLog[day]||{};
-      const value=log[obj.id]||0;
-      const isFuture=day>today;
-      if(isFuture) return {txt:"·",color:"var(--td)",opacity:.45};
-      const target=dayTargetFor(obj,day);
-      const ok=value>=target;
-      return ok ? {txt:"✓",color:"#4ade80",opacity:1} : {txt:"✘",color:"#ef4444",opacity:1};
-    }
+  const log=state.dailyLog[day]||{};
+  const value=log[obj.id]||0;
+
+  const target=dayTargetFor(obj,day);
+
+  const validationTarget =
+    obj.optional
+      ? Math.ceil(target * 0.5)
+      : target;
+
+  const ok = value >= validationTarget;
+
+  if(ok){
+    return {txt:"✓",color:"#4ade80",opacity:1};
+  }
+
+  if(day>today){
+    return {txt:"·",color:"var(--td)",opacity:.45};
+  }
+
+  if(day===today){
+    return {txt:"·",color:"var(--td)",opacity:.75};
+  }
+
+  return {txt:"✘",color:"#ef4444",opacity:1};
+}
     function totalLabelFor(obj,val,wt){
       const unit=((val>1||wt>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[obj.unit]||obj.unit);
       if(obj.binary) return fmtNum(val)+"/7 "+(obj.id==="sleep"?"nuits":"jours");
