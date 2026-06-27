@@ -2155,83 +2155,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
-// ─── ANIMATION LEVEL UP ────────────────────────────────────────────────
-
-function LevelUp(){
-  if(!levelUp) return null;
-
-  const particles = Array.from({length:40},(_,i)=>({
-    id:i,
-    left:Math.random()*100,
-    delay:Math.random()*3,
-    dur:1.2+Math.random()*2,
-    size:2+Math.random()*4,
-    cyan:Math.random()>0.7
-  }));
-
-  return h(
-    "div",
-    {
-      class:"ruov",
-      style:"--rc:"+levelUp.color+";--rg:"+levelUp.glow
-    },
-
-    h(
-      "div",
-      {class:"ruparts"},
-      particles.map(p=>
-        h("div",{
-          key:p.id,
-          class:"rupart",
-          style:
-            "left:"+p.left+
-            "%;bottom:0;width:"+p.size+
-            "px;height:"+p.size+
-            "px;background:"+
-            (p.cyan?"rgba(74,222,128,0.6)":levelUp.color)+
-            ";animation-delay:"+p.delay+
-            "s;animation-duration:"+p.dur+"s"
-        })
-      )
-    ),
-
-    h(
-      "div",
-      {class:"rucont"},
-
-      h(
-        "div",
-        {class:"ruevol"},
-        "LEVEL UP !"
-      ),
-
-      h(
-        "div",
-        {
-          class:"rurank",
-          style:"font-size:56px;letter-spacing:2px;"
-        },
-        levelUp.from+" → "+levelUp.to
-      ),
-
-      h(
-        "button",
-        {
-          class:"rudis",
-          onClick:()=>{
-            setLevelUp(null);
-
-            if(rankUp){
-              setTimeout(()=>setRankUp(rankUp),150);
-            }
-          }
-        },
-        "Continuer"
-      )
-    )
-  );
-}
-  
   // ─── ANIMATION PRESTIGE ───────────────────────────────────────────────
 
   function PrestigeUp(){
@@ -2482,13 +2405,9 @@ function LevelUp(){
           h("span",null,"Codex")
         )
       ),
-     h(Settings,null),
-
-levelUp
-  ? h(LevelUp,null)
-  : h(RankUp,null),
-
-h(PrestigeUp,null),
+      h(Settings,null),
+      h(RankUp,null),
+      h(PrestigeUp,null),
     )
   );
 }
