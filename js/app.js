@@ -620,7 +620,6 @@ function App(){
   const scrollRef = useRef(null);
   function switchTab(id){ setTab(id); if(scrollRef.current) scrollRef.current.scrollTop=0; }
   const [rankUp,setRankUp] = useState(null);
-  const [levelUp,setLevelUp] = useState(null);
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
   const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,cs:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
@@ -807,63 +806,40 @@ function App(){
 
   // Bonus streak + increment streak au moment ou toutes les quetes sont faites
   useEffect(()=>{
-  if(!allDailyDone)return;
-  setState(s=>{
-    const t=todayStr();
-    let next={...s};
-    if(s.lastStreakDay!==t){
-      next={...next,lastStreakDay:t};
-    }
-    if(s.streakBonusDay!==t){
-      const sx={
-        ...next.statXp,
-        Discipline:(next.statXp.Discipline||0)+250
-      };
-      const rkBefore = getRankWithStats(next.totalXp, next.stats);
-      const lvlBefore = getLvl(next.totalXp);
-      next = {
-        ...next,
-        totalXp: next.totalXp + 250,
-        statXp: sx,
-        stats: {
-          ...next.stats,
-          Discipline: getLvl(sx.Discipline)
-        },
-        streakBonusDay: t
-      };
-      const rkAfter = getRankWithStats(next.totalXp, next.stats);
-      const lvlAfter = getLvl(next.totalXp);
-        if(lvlAfter !== lvlBefore){
-          setTimeout(() => 
-            setLevelUp(...),300);
-}
-      if (rkAfter.id !== rkBefore.id || lvlAfter !== lvlBefore) {
-        setTimeout(() => {
-          if (rkAfter.id !== rkBefore.id && lvlAfter !== lvlBefore) {
-            setRankUp({
-              id: rkAfter.id,
-              color: rkAfter.color,
-              glow: rkAfter.glow,
-              level: lvlAfter
-            });
-            return;
-          }
-          if (rkAfter.id !== rkBefore.id) {
-            setRankUp(rkAfter);
-            return;
-          }
-          setRankUp({
-            id: null,
-            color: "var(--td)",
-            glow: "transparent",
-            level: lvlAfter
-          });
-        }, 300);
+    if(!allDailyDone)return;
+    setState(s=>{
+      const t=todayStr();
+      let next={...s};
+      if(s.lastStreakDay!==t)next={...next,lastStreakDay:t};
+      if(s.streakBonusDay!==t){
+        const sx={...next.statXp,Discipline:(next.statXp.Discipline||0)+250};
+        const rkBefore=getRankWithStats(next.totalXp, next.stats);
+        next={...next,totalXp:next.totalXp+250,statXp:sx,stats:{...next.stats,Discipline:getLvl(sx.Discipline)},streakBonusDay:t};
+        const rkAfter=getRankWithStats(next.totalXp, next.stats);
+        if(rkAfter.id!==rkBefore.id)setTimeout(()=>setRankUp(rkAfter),300);
+        // Milestone tous les 7 jours de streak
+        const newStreak=next.streak;
+        const milestones=next.streakMilestones||[];
+        if(newStreak>0 && newStreak%7===0 && !milestones.includes(newStreak)){
+          const milestoneXp=500;
+          const sx2={...sx,Discipline:(sx.Discipline||0)+milestoneXp};
+          next={...next,totalXp:next.totalXp+milestoneXp,statXp:sx2,stats:{...next.stats,Discipline:getLvl(sx2.Discipline)},streakMilestones:[...milestones,newStreak]};
+          setTimeout(()=>{
+            const id1=Date.now()+Math.random(),id2=id1+0.1;
+            setFloats(f=>[...f,{id:id1,y:"30%",txt:"\uD83C\uDFC6 MILESTONE "+newStreak+" JOURS !"},{id:id2,y:"35%",txt:"+500 XP Discipline"}]);
+            setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id1&&p.id!==id2)),2000);
+          },600);
+        } else {
+          setTimeout(()=>{
+            const id1=Date.now()+Math.random(),id2=id1+0.1;
+            setFloats(f=>[...f,{id:id1,y:"35%",txt:"\uD83D\uDD25 STREAK BONUS !"},{id:id2,y:"40%",txt:"+250 XP Discipline"}]);
+            setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id1&&p.id!==id2)),1400);
+          },300);
+        }
       }
-    }
-    return next;
-  });
-},[allDailyDone]);
+      return next;
+    });
+  },[allDailyDone]);
 
   // Auto-launch quete speciale si sqReady (pas active + cooldown passé)
   useEffect(()=>{
@@ -2178,34 +2154,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       )
     );
   }
-
- // ─── ANIMATION LEVEL UP ────────────────────────────────────────────────
-
- function LevelUp(){
-  if(!levelUp)return null;
-
-  const particles=Array.from({length:30},(_,i)=>({
-    id:i,
-    left:Math.random()*100,
-    delay:Math.random()*2,
-    dur:1+Math.random()*1.5,
-    size:2+Math.random()*3
-  }));
-
-  return h("div",{class:"ruov",style:"--rc:var(--td);--rg:transparent"},
-    h("div",{class:"ruparts"},particles.map(p=>
-      h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:rgba(255,255,255,0.5);animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
-    )),
-
-    h("div",{class:"rucont"},
-      h("div",{class:"ruevol"},"LEVEL UP !"),
-      h("div",{class:"rurank"},levelUp.level),
-
-      h("button",{class:"rudis",onClick:()=>setLevelUp(null)},"Continuer")
-    )
-  );
-}
-
 
   // ─── ANIMATION PRESTIGE ───────────────────────────────────────────────
 
