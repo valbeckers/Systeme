@@ -85,6 +85,7 @@ const SP = {
     {id:"sp_fruits",  name:"Manger 5 fruits & légumes",  icon:"\uD83C\uDF4F",                              unit:"portion", target:5, xp:500, days:1, binary:true, desc:"Manger 5 fruits et légumes"},
     {id:"sp_breath",  name:"Séance de cohérence cardiaque",icon:"\uD83D\uDC93",                             unit:"min", target:10, xp:500, days:1, binary:true, desc:"10 min de cohérence cardiaque"},
     {id:"sp_nojunk",  name:"Pas de junk-food",                icon:"\uD83C\uDF55",                              unit:"jour", target:1, xp:500, days:1, binary:true, desc:"Zéro junk-food"},
+    {id:"sp_fasting", name:"Jeûne 24h",                  icon:"\u23F3",                                    unit:"jour", target:1, xp:1000, xp2:500, stat2:"Discipline", days:1, binary:true, desc:"Jeûne 24h complet"},
 
     {id:"sp_balanced_meals", name:"Repas équilibrés", icon:"\uD83C\uDF4C", unit:"repas", target:2, xp:750, days:1, tiers:[{at:1,xp:250,stat:"Sante"},{at:2,xp:500,stat:"Sante"}], desc:"2 repas équilibrés (palier à 1 repas)"},
     {id:"sp_no_sugar", name:"Aucun sucre transformé", icon:"\uD83C\uDF6C", unit:"jour", target:1, xp:500, days:1, binary:true, desc:"Aucun sucre transformé"},
@@ -805,78 +806,17 @@ function App(){
 
   // Bonus streak + increment streak au moment ou toutes les quetes sont faites
   useEffect(()=>{
-  if(!allDailyDone)return;
-
-  setState(s=>{
-    const t=todayStr();
-    let next={...s};
-
-    if(s.lastStreakDay!==t)
-      next={...next,lastStreakDay:t};
-
-    if(s.streakBonusDay!==t){
-
-      const sx={
-        ...next.statXp,
-        Discipline:(next.statXp.Discipline||0)+250
-      };
-
-      const rkBefore = getRankWithStats(next.totalXp, next.stats);
-      const lvlBefore = getLvl(next.totalXp);
-
-      // APPLY XP
-      next = {
-        ...next,
-        totalXp: next.totalXp + 250,
-        statXp: sx,
-        stats: {
-          ...next.stats,
-          Discipline: getLvl(sx.Discipline)
-        },
-        streakBonusDay: t
-      };
-
-      const rkAfter = getRankWithStats(next.totalXp, next.stats);
-      const lvlAfter = getLvl(next.totalXp);
-
-      if (rkAfter.id !== rkBefore.id || lvlAfter !== lvlBefore) {
-
-        setTimeout(() => {
-
-          // CAS 1 : Rank + Level
-          if (rkAfter.id !== rkBefore.id && lvlAfter !== lvlBefore) {
-            setRankUp({
-              id: rkAfter.id,
-              color: rkAfter.color,
-              glow: rkAfter.glow,
-              level: lvlAfter
-            });
-            return;
-          }
-
-          // CAS 2 : Rank seul
-          if (rkAfter.id !== rkBefore.id) {
-            setRankUp(rkAfter);
-            return;
-          }
-
-          // CAS 3 : Level seul
-          setRankUp({
-            id: null,
-            color: "var(--td)",
-            glow: "transparent",
-            level: lvlAfter
-          });
-
-        }, 300);
-      }
-    }
-
-    return next;
-  });
-
-},[allDailyDone]);
-  
+    if(!allDailyDone)return;
+    setState(s=>{
+      const t=todayStr();
+      let next={...s};
+      if(s.lastStreakDay!==t)next={...next,lastStreakDay:t};
+      if(s.streakBonusDay!==t){
+        const sx={...next.statXp,Discipline:(next.statXp.Discipline||0)+250};
+        const rkBefore=getRankWithStats(next.totalXp, next.stats);
+        next={...next,totalXp:next.totalXp+250,statXp:sx,stats:{...next.stats,Discipline:getLvl(sx.Discipline)},streakBonusDay:t};
+        const rkAfter=getRankWithStats(next.totalXp, next.stats);
+        if(rkAfter.id!==rkBefore.id)setTimeout(()=>setRankUp(rkAfter),300);
         // Milestone tous les 7 jours de streak
         const newStreak=next.streak;
         const milestones=next.streakMilestones||[];
@@ -2191,41 +2131,29 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   // ─── ANIMATION RANK UP ────────────────────────────────────────────────
 
   function RankUp(){
-  if(!rankUp)return null;
-
-  const particles=Array.from({length:40},(_,i)=>({
-    id:i,
-    left:Math.random()*100,
-    delay:Math.random()*3,
-    dur:1.2+Math.random()*2,
-    size:2+Math.random()*4,
-    cyan:Math.random()>0.7
-  }));
-
-  return h("div",{class:"ruov",style:"--rc:"+rankUp.color+";--rg:"+rankUp.glow},
-    h("div",{class:"ruparts"},particles.map(p=>
-      h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.cyan?"rgba(74,222,128,0.6)":rankUp.color)+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
-    )),
-
-    h("div",{class:"rucont"},
-
-      h("div",{class:"ruevol"},"RANK UP !"),
-
-      h("div",{class:"rurank","data-r":rankUp.id},rankUp.id),
-
-      rankUp.level && h(
-        "div",
-        {
-          style:"margin-top:10px;font:700 18px Orbitron,sans-serif;letter-spacing:2px;color:#fff;text-transform:uppercase"
-        },
-        "LEVEL ",
-        rankUp.level
-      ),
-
-      h("button",{class:"rudis",onClick:()=>setRankUp(null)},"Continuer")
-    )
-  );
-}
+    if(!rankUp)return null;
+    const prevRankIdx=RANKS.findIndex(r=>r.id===rankUp.id)-1;
+    const prevRank=prevRankIdx>=0?RANKS[prevRankIdx]:null;
+    const particles=Array.from({length:40},(_,i)=>({
+      id:i,
+      left:Math.random()*100,
+      delay:Math.random()*3,
+      dur:1.2+Math.random()*2,
+      size:2+Math.random()*4,
+      cyan:Math.random()>0.7
+    }));
+    return h("div",{class:"ruov",style:"--rc:"+rankUp.color+";--rg:"+rankUp.glow},
+      h("div",{class:"ruparts"},particles.map(p=>
+        h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.cyan?"rgba(74,222,128,0.6)":rankUp.color)+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
+      )),
+      h("div",{class:"rucont"},
+        h("div",{class:"ruevol"},"\u00c9volution de rang"),
+        h("div",{class:"rurank",style:"data-r:"+rankUp.id,"data-r":rankUp.id},rankUp.id),
+        
+        h("button",{class:"rudis",onClick:()=>setRankUp(null)},"Continuer")
+      )
+    );
+  }
 
   // ─── ANIMATION PRESTIGE ───────────────────────────────────────────────
 
