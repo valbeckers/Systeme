@@ -833,8 +833,9 @@ function App(){
       };
       const rkAfter = getRankWithStats(next.totalXp, next.stats);
       const lvlAfter = getLvl(next.totalXp);
-      if(lvlAfter !== lvlBefore){
-  setTimeout(()=>setLevelUp(...),300);
+        if(lvlAfter !== lvlBefore){
+          setTimeout(() => 
+            setLevelUp(...),300);
 }
       if (rkAfter.id !== rkBefore.id || lvlAfter !== lvlBefore) {
         setTimeout(() => {
