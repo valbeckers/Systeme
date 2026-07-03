@@ -1666,15 +1666,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         !activeSq&&sqCooldownActive&&h("div",{class:"card",style:"border-color:#ef444433"},
           h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Urgente"),
           h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:4px 0;font-family:Orbitron,sans-serif"},"\u23F3 Prochaine qu\u00eate dans "+fmtCD(sqCooldownUntil-now))
-        ),
-
-        h("div",{class:"card"},
-          h("div",{class:"ctitle"},"Reste aujourd'hui"),
-          h("div",{style:"display:flex;flex-direction:column;gap:8px;font-family:Orbitron,sans-serif;font-size:11px;color:var(--td);letter-spacing:1px"},
-            h("div",null,"Obligatoires : "+reqRemaining+" restante"+(reqRemaining>1?"s":"")),
-            h("div",null,"Bonus : "+bonusAvailable+" disponible"+(bonusAvailable>1?"s":"")),
-            weeklyObjs.length>0&&h("div",null,"Hebdomadaires : "+weeklyRemaining+" restante"+(weeklyRemaining>1?"s":""))
-          )
         )
       );
     }
