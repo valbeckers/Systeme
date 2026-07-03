@@ -539,6 +539,7 @@ const IMPORTED = {
   statXp:{Sante:10100,Force:13488,Esprit:12700,Endurance:2962,Agilite:1652,Discipline:3150},
   specialQuests:[],
   sqCooldownUntil:null,
+  sqRerollDay:null,
   completedSqLog:[],
   sqStatCycle:[],
   objectives:DEFS,
@@ -569,6 +570,7 @@ function buildState(){
     objectives:DEFS,
     specialQuests:saved.specialQuests||[],
     sqCooldownUntil:saved.sqCooldownUntil||null,
+    sqRerollDay:saved.sqRerollDay||null,
     completedSqLog:saved.completedSqLog||[],
     sqStatCycle:saved.sqStatCycle||[],
     stats:saved.stats||IMPORTED.stats,
@@ -773,6 +775,7 @@ function App(){
   const sqCooldownUntil = state.sqCooldownUntil||null;
   const sqCooldownActive = sqCooldownUntil && now < sqCooldownUntil;
   const sqReady = !activeSq && !sqCooldownActive;
+  const sqRerollUsed = state.sqRerollDay===today;
 
   // Flags bonus
   const bonusGiven       = state.streakBonusDay===today;
@@ -878,7 +881,7 @@ function App(){
       const hasActive = sqsNow.find(q=>!q.completedAt&&Date.now()<q.expiresAt);
       const cd = s.sqCooldownUntil||0;
       if(hasActive || Date.now()<cd) return s;
-      const result=pickRandomSq(sqsNow.map(q=>q.id),s.sqStatCycle);
+      const result=pickRandomSq(sqsNow.map(q=>q.id),s.sqStatCycle,s.completedSqLog);
       if(!result)return s;
       const {tpl,pickedStat,cycleReset}=result;
       const t = Date.now();
@@ -1155,12 +1158,50 @@ function App(){
 
   function launchNewSq(){
     setState(s=>{
-      const result=pickRandomSq(s.specialQuests.map(q=>q.id),s.sqStatCycle);
+      const result=pickRandomSq(s.specialQuests.map(q=>q.id),s.sqStatCycle,s.completedSqLog);
       if(!result)return s;
       const {tpl,pickedStat,cycleReset}=result;
       const sq={...tpl,sqid:"sq_"+Date.now(),progress:0,startedAt:Date.now(),expiresAt:next7AM(Date.now()),completedAt:null};
       const newCycle = cycleReset ? [pickedStat] : [...(s.sqStatCycle||[]),pickedStat];
-      return {...s,specialQuests:[...s.specialQuests.filter(q=>q.completedAt),sq],sqStatCycle:newCycle};
+      return {...s,specialQuests:[...s.specialQuests.filter(q=>q.completedAt),sq],sqStatCycle:newCycle,sqCooldownUntil:next7AM(Date.now())};
+    });
+  }
+
+  function rerollSq(sq){
+    if(!sq || sq.completedAt) return;
+    const tDay=todayStr();
+    if(state.sqRerollDay===tDay || (sq.progress||0)>0) return;
+
+    setState(s=>{
+      const active=(s.specialQuests||[]).find(q=>q.sqid===sq.sqid&&!q.completedAt);
+      if(!active || (active.progress||0)>0 || s.sqRerollDay===tDay) return s;
+
+      const cycleBase=[...(s.sqStatCycle||[])];
+      if(cycleBase.length && cycleBase[cycleBase.length-1]===active.stat){
+        cycleBase.pop();
+      }
+
+      const usedIds=(s.specialQuests||[]).map(q=>q.id).filter(Boolean);
+      const result=pickRandomSq(usedIds,cycleBase,s.completedSqLog);
+      if(!result) return s;
+
+      const {tpl,pickedStat,cycleReset}=result;
+      const t=Date.now();
+      const newSq={...tpl,sqid:"sq_"+t,progress:0,startedAt:t,expiresAt:next7AM(t),completedAt:null};
+      const newCycle=cycleReset ? [pickedStat] : [...cycleBase,pickedStat];
+
+      const id=Date.now()+Math.random();
+      setFloats(f=>[...f,{id,y:"35%",txt:"↻ QUÊTE RELANCÉE"}]);
+      setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id)),1400);
+
+      return {
+        ...s,
+        specialQuests:[...(s.specialQuests||[]).filter(q=>q.completedAt),newSq],
+        sqStatCycle:newCycle,
+        sqCooldownUntil:next7AM(t),
+        sqRerollDay:tDay,
+        lastActiveDay:tDay
+      };
     });
   }
 
@@ -1496,6 +1537,15 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("div",{class:"qbar"},h("div",{class:"qfill"+(done?" done":pct>0?" partial":""),style:sqFillStyle}))
           ),
       !done&&h("div",{style:"font-size:10px;color:"+(urgent?"#ef4444":"#ef4444bb")+";font-family:Orbitron,sans-serif;margin-top:4px;text-align:"+(showInput?"left":"right")},"\u23F1 "+fmtCD(remaining)+" restants"),
+      showInput&&!done&&h("div",{style:"margin-top:8px"},
+        h("button",{
+          disabled:sqRerollUsed || (sq.progress||0)>0,
+          onClick:()=>rerollSq(sq),
+          style:"width:100%;padding:9px;border-radius:8px;border:1px solid "+(sqRerollUsed || (sq.progress||0)>0 ? "rgba(255,255,255,0.08)" : "#f59e0b66")+";background:"+(sqRerollUsed || (sq.progress||0)>0 ? "rgba(255,255,255,0.02)" : "rgba(245,158,11,0.06)")+";color:"+(sqRerollUsed || (sq.progress||0)>0 ? "var(--td)" : "#f59e0b")+";font-family:Orbitron,sans-serif;font-size:10px;cursor:"+(sqRerollUsed || (sq.progress||0)>0 ? "default" : "pointer")+";letter-spacing:1px;text-transform:uppercase;opacity:"+(sqRerollUsed || (sq.progress||0)>0 ? ".65" : "1")
+        },
+          sqRerollUsed ? "Relance utilisée aujourd'hui" : ((sq.progress||0)>0 ? "Relance indisponible après progression" : "↻ Relancer la quête (1/jour)")
+        )
+      ),
       showInput&&!done&&(
         sq.binary
           ?h("div",{style:"display:flex;gap:8px;margin-top:8px"},
@@ -1581,7 +1631,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         prestigeAvailable&&h("button",{
           onClick:()=>{
             const newPrestige=(state.prestige||0)+1;
-            setState(s=>({...s,streak:0,streakBonusDay:null,weeklyBonusWk:null,streakMilestones:[],dailyLog:{},weeklyLog:{},specialQuests:[],sqStatCycle:[],sqCooldownUntil:null,prestige:newPrestige}));
+            setState(s=>({...s,streak:0,streakBonusDay:null,weeklyBonusWk:null,streakMilestones:[],dailyLog:{},weeklyLog:{},specialQuests:[],sqStatCycle:[],sqCooldownUntil:null,sqRerollDay:null,prestige:newPrestige}));
             setPrestigeUp(newPrestige);
           },
           style:"width:100%;margin-top:12px;padding:12px;background:rgba(168,85,247,0.1);border:1px solid #a855f7;border-radius:10px;color:#a855f7;font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:3px;cursor:pointer;text-transform:uppercase;text-shadow:0 0 12px #a855f7"
