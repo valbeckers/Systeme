@@ -621,6 +621,9 @@ function App(){
   function switchTab(id){ setTab(id); if(scrollRef.current) scrollRef.current.scrollTop=0; }
   const [rankUp,setRankUp] = useState(null);
   const [levelUp,setLevelUp] = useState(null);
+  const [recordUp,setRecordUp] = useState(null);
+  const [confirmRerollSq,setConfirmRerollSq] = useState(null);
+  const [focusMode,setFocusMode] = useState(false);
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
   const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,cs:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
@@ -809,6 +812,38 @@ function App(){
     },delay);
   }
 
+  function questRecordUnit(unit,value){
+    const n=Number(value)||0;
+    const plurals={rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",km:"km",contact:"contacts",action:"actions",objet:"objets","sér.":"sér."};
+    if(n>1 && plurals[unit]) return plurals[unit];
+    return unit || "";
+  }
+
+  function maybeTriggerQuestRecord(obj,prevVal,nextVal,delay=850){
+    if(!obj || obj.binary || obj.weekly) return;
+    const nextNumber=Number(nextVal)||0;
+    if(nextNumber<=0) return;
+
+    let best=0;
+    Object.entries(state.dailyLog||{}).forEach(([day,log])=>{
+      const v=Number(log&&log[obj.id]);
+      if(Number.isFinite(v) && v>best) best=v;
+    });
+
+    // Pas d'animation sur la toute première valeur enregistrée : on célèbre seulement un vrai record battu.
+    if(best<=0 || nextNumber<=best) return;
+
+    const color=STAT_COLOR[obj.stat] || rank.color || "#fbbf24";
+    const label=fmtNum(nextNumber)+" "+questRecordUnit(obj.unit,nextNumber);
+    setTimeout(()=>setRecordUp({
+      name:obj.name,
+      icon:obj.icon,
+      value:label,
+      color,
+      glow:color+"55"
+    }),delay);
+  }
+
 
   // ─── EFFECTS ──────────────────────────────────────────────────────────
 
@@ -938,6 +973,7 @@ function App(){
     let capJustReached_DISABLED=false;
     const b=getRankBase(obj.id,ri,prestige);
     const prev=cur, next=cur+val;
+    maybeTriggerQuestRecord(obj,prev,next);
     const alreadyCapped_DISABLED = false;
     const effectiveNext = next;
     const effectiveVal = val;
@@ -1540,7 +1576,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       showInput&&!done&&h("div",{style:"margin-top:8px"},
         h("button",{
           disabled:sqRerollUsed || (sq.progress||0)>0,
-          onClick:()=>rerollSq(sq),
+          onClick:()=>setConfirmRerollSq(sq),
           style:"width:100%;padding:9px;border-radius:8px;border:1px solid "+(sqRerollUsed || (sq.progress||0)>0 ? "rgba(255,255,255,0.08)" : "#f59e0b66")+";background:"+(sqRerollUsed || (sq.progress||0)>0 ? "rgba(255,255,255,0.02)" : "rgba(245,158,11,0.06)")+";color:"+(sqRerollUsed || (sq.progress||0)>0 ? "var(--td)" : "#f59e0b")+";font-family:Orbitron,sans-serif;font-size:10px;cursor:"+(sqRerollUsed || (sq.progress||0)>0 ? "default" : "pointer")+";letter-spacing:1px;text-transform:uppercase;opacity:"+(sqRerollUsed || (sq.progress||0)>0 ? ".65" : "1")
         },
           sqRerollUsed ? "Relance utilisée aujourd'hui" : ((sq.progress||0)>0 ? "Relance indisponible après progression" : "↻ Relancer la quête (1/jour)")
@@ -1571,14 +1607,83 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function Home(){
     const dailyObjs = sortStat(objs.filter(o=>o.daily&&!o.optional));
     const weeklyObjs = sortStat(objs.filter(o=>o.weekly));
+    const bonusObjs = sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden));
     const secs=[
       {lb:"Qu\u00eates journalières",ob:dailyObjs,iw:false},
       {lb:"Qu\u00eates hebdomadaires",ob:weeklyObjs,iw:true},
-      {lb:"Qu\u00eates bonus", ob:sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden)), iw:false},
+      {lb:"Qu\u00eates bonus", ob:bonusObjs, iw:false},
     ];
+
+    const isDone=(obj,isWeeklyRow)=>{
+      const isW = isWeeklyRow || obj.weekly;
+      const target = obj.target && !obj.binary ? obj.target : getEffectiveTarget(obj.id,isW);
+      const doneVal = isW ? (wLog[obj.id]||0) : (tLog[obj.id]||0);
+      return obj.binary ? doneVal>=1 : doneVal>=target;
+    };
+    const nextFocusObj = dailyObjs.find(o=>!isDone(o,false)) || null;
+    const reqRemaining = dailyObjs.filter(o=>!isDone(o,false)).length;
+    const bonusAvailable = bonusObjs.filter(o=>!isDone(o,false)).length;
+    const weeklyRemaining = weeklyObjs.filter(o=>!isDone(o,true)).length;
+
+    const focusToggle = h("button",{
+      onClick:()=>setFocusMode(v=>!v),
+      style:"padding:8px 11px;border-radius:9px;border:1px solid var(--rc);background:rgba(255,255,255,0.03);color:var(--rc);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"
+    },focusMode?"Mode complet":"Mode Focus");
+
+    if(focusMode){
+      return h("div",{class:"tab"},
+        missedDays>=2&&h("div",{class:"warn"},"\u26A0\uFE0F P\u00e9nalit\u00e9 : -"+(missedDays*10)+" XP ("+missedDays+" jours manqu\u00e9s)"),
+        h("div",{class:"card",style:"border-color:"+rank.color+"55"},
+          h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px"},
+            h("div",null,
+              h("div",{class:"ctitle",style:"margin:0;color:var(--rc)"},"Mode Focus"),
+              h("div",{style:"font-size:11px;color:var(--td);font-family:Orbitron,sans-serif;margin-top:4px;letter-spacing:1px"},"Rang "+rank.id+" · Niveau "+globalLevel.level+" · Streak "+state.streak)
+            ),
+            focusToggle
+          ),
+          h("div",{style:"display:grid;grid-template-columns:1fr 1px 1fr;gap:10px;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)"},
+            h("div",{style:"text-align:center"},
+              h("div",{style:"font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:var(--rc)"},todayXp.toFixed(0)),
+              h("div",{style:"font-size:10px;color:var(--td);letter-spacing:1px;text-transform:uppercase"},"XP aujourd'hui")
+            ),
+            h("div",{style:"width:1px;height:34px;background:rgba(255,255,255,0.08)"}),
+            h("div",{style:"text-align:center"},
+              h("div",{style:"font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:"+(reqRemaining===0?"#4ade80":"var(--rc)")},reqRemaining),
+              h("div",{style:"font-size:10px;color:var(--td);letter-spacing:1px;text-transform:uppercase"},"obligatoires restantes")
+            )
+          )
+        ),
+
+        h("div",{class:"card",style:"border-color:"+(nextFocusObj?"var(--rc)":"#4ade8044")},
+          h("div",{class:"ctitle",style:"margin-bottom:8px"},"Prochaine action"),
+          nextFocusObj
+            ? h(QI,{obj:nextFocusObj})
+            : h("div",{style:"text-align:center;padding:14px 0;color:#4ade80;font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:1px"},"Toutes les obligatoires sont termin\u00e9es ✓")
+        ),
+
+        activeSq&&h("div",{class:"card",style:"border-color:#ef444444"},
+          h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Urgente"+(activeSq.tier?" · "+(SQ_TIER_LABEL[activeSq.tier]||""):"")),
+          h(SqCard,{sq:activeSq,showInput:true})
+        ),
+        !activeSq&&sqCooldownActive&&h("div",{class:"card",style:"border-color:#ef444433"},
+          h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Urgente"),
+          h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:4px 0;font-family:Orbitron,sans-serif"},"\u23F3 Prochaine qu\u00eate dans "+fmtCD(sqCooldownUntil-now))
+        ),
+
+        h("div",{class:"card"},
+          h("div",{class:"ctitle"},"Reste aujourd'hui"),
+          h("div",{style:"display:flex;flex-direction:column;gap:8px;font-family:Orbitron,sans-serif;font-size:11px;color:var(--td);letter-spacing:1px"},
+            h("div",null,"Obligatoires : "+reqRemaining+" restante"+(reqRemaining>1?"s":"")),
+            h("div",null,"Bonus : "+bonusAvailable+" disponible"+(bonusAvailable>1?"s":"")),
+            weeklyObjs.length>0&&h("div",null,"Hebdomadaires : "+weeklyRemaining+" restante"+(weeklyRemaining>1?"s":""))
+          )
+        )
+      );
+    }
 
     return h("div",{class:"tab"},
       missedDays>=2&&h("div",{class:"warn"},"\u26A0\uFE0F P\u00e9nalit\u00e9 : -"+(missedDays*10)+" XP ("+missedDays+" jours manqu\u00e9s)"),
+      h("div",{style:"display:flex;justify-content:flex-end;margin-bottom:8px"},focusToggle),
 
       h("div",{class:"card"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"},
@@ -2235,6 +2340,55 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
   // ─── ANIMATION LEVEL UP ───────────────────────────────────────────────
 
+  function RecordUp(){
+    if(!recordUp)return null;
+    const color=recordUp.color||"#fbbf24";
+    const glow=recordUp.glow||"#fbbf2455";
+    const particles=Array.from({length:42},(_,i)=>({
+      id:i,
+      left:Math.random()*100,
+      delay:Math.random()*2.5,
+      dur:1.1+Math.random()*1.8,
+      size:2+Math.random()*4,
+      gold:Math.random()>0.35
+    }));
+    return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+glow},
+      h("div",{class:"ruparts"},particles.map(p=>
+        h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.gold?"#fbbf24":color)+";box-shadow:0 0 8px "+glow+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
+      )),
+      h("div",{class:"rucont"},
+        h("div",{class:"ruevol"},"NOUVEAU RECORD"),
+        h("div",{class:"rurank","data-r":"REC"},"REC"),
+        h("div",{class:"rulabel",style:"margin-top:8px;letter-spacing:3px;max-width:280px;line-height:1.35"},recordUp.name),
+        h("div",{class:"ruprev",style:"margin-top:8px;color:#fbbf24"},recordUp.value),
+        h("button",{class:"rudis",onClick:()=>setRecordUp(null)},"Continuer")
+      )
+    );
+  }
+
+  function ConfirmReroll(){
+    if(!confirmRerollSq)return null;
+    return h("div",{class:"ruov",style:"--rc:#f59e0b;--rg:#f59e0b55;background:rgba(0,0,0,0.92)"},
+      h("div",{class:"rucont",style:"width:min(330px,calc(100vw - 38px));background:rgba(15,15,18,0.96);border:1px solid #f59e0b66;border-radius:18px;padding:20px;box-shadow:0 0 30px #f59e0b22"},
+        h("div",{class:"ruevol",style:"margin-bottom:10px;color:#f59e0b"},"CONFIRMATION"),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:#f59e0b;letter-spacing:1px;text-transform:uppercase;text-align:center;line-height:1.25"},"Relancer la quête urgente ?"),
+        h("div",{style:"font-size:12px;color:var(--td);line-height:1.5;text-align:center;margin-top:12px"},
+          "Cette action remplacera la quête actuelle par une nouvelle. Tu ne peux relancer qu'une seule quête urgente par jour."
+        ),
+        h("div",{style:"display:flex;gap:10px;width:100%;margin-top:18px"},
+          h("button",{
+            onClick:()=>setConfirmRerollSq(null),
+            style:"flex:1;padding:11px;border-radius:9px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);color:var(--td);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"
+          },"Annuler"),
+          h("button",{
+            onClick:()=>{const sq=confirmRerollSq;setConfirmRerollSq(null);rerollSq(sq);},
+            style:"flex:1;padding:11px;border-radius:9px;border:1px solid #f59e0b;background:rgba(245,158,11,0.1);color:#f59e0b;font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"
+          },"Relancer")
+        )
+      )
+    );
+  }
+
   function LevelUp(){
     if(!levelUp)return null;
     const color = levelUp.color || rank.color;
@@ -2513,6 +2667,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(Settings,null),
       h(RankUp,null),
       h(LevelUp,null),
+      h(RecordUp,null),
+      h(ConfirmReroll,null),
       h(PrestigeUp,null),
     )
   );
