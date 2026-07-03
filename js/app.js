@@ -1620,7 +1620,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const doneVal = isW ? (wLog[obj.id]||0) : (tLog[obj.id]||0);
       return obj.binary ? doneVal>=1 : doneVal>=target;
     };
-    const nextFocusObj = dailyObjs.find(o=>!isDone(o,false)) || null;
+    // Mode Focus : certaines quêtes sont des habitudes de fond sur la journée.
+    // Elles ne doivent pas bloquer la prochaine action immédiate.
+    const focusDeferredIds = ["water"];
+    const focusPrimaryObjs = dailyObjs.filter(o=>!focusDeferredIds.includes(o.id));
+    const nextFocusObj = focusPrimaryObjs.find(o=>!isDone(o,false)) || dailyObjs.find(o=>!isDone(o,false)) || null;
     const reqRemaining = dailyObjs.filter(o=>!isDone(o,false)).length;
     const bonusAvailable = bonusObjs.filter(o=>!isDone(o,false)).length;
     const weeklyRemaining = weeklyObjs.filter(o=>!isDone(o,true)).length;
