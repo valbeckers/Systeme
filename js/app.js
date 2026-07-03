@@ -2358,9 +2358,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       )),
       h("div",{class:"rucont"},
         h("div",{class:"ruevol"},"NOUVEAU RECORD"),
-        h("div",{class:"rurank","data-r":"REC"},"REC"),
-        h("div",{class:"rulabel",style:"margin-top:8px;letter-spacing:3px;max-width:280px;line-height:1.35"},recordUp.name),
-        h("div",{class:"ruprev",style:"margin-top:8px;color:#fbbf24"},recordUp.value),
+        h("div",{class:"rurank",style:"font-size:clamp(48px,16vw,76px);letter-spacing:-1px;white-space:nowrap","data-r":recordUp.value},recordUp.value),
+        h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:3px;max-width:280px;line-height:1.35"},recordUp.name),
         h("button",{class:"rudis",onClick:()=>setRecordUp(null)},"Continuer")
       )
     );
