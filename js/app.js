@@ -1628,18 +1628,16 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const focusToggle = h("button",{
       onClick:()=>setFocusMode(v=>!v),
       style:"padding:8px 11px;border-radius:9px;border:1px solid var(--rc);background:rgba(255,255,255,0.03);color:var(--rc);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"
-    },focusMode?"Mode complet":"Mode Focus");
+    },focusMode?"Mode Classique":"Mode Focus");
 
     if(focusMode){
       return h("div",{class:"tab"},
         missedDays>=2&&h("div",{class:"warn"},"\u26A0\uFE0F P\u00e9nalit\u00e9 : -"+(missedDays*10)+" XP ("+missedDays+" jours manqu\u00e9s)"),
+        h("div",{style:"display:flex;justify-content:center;margin-bottom:8px"},focusToggle),
         h("div",{class:"card",style:"border-color:"+rank.color+"55"},
-          h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px"},
-            h("div",null,
-              h("div",{class:"ctitle",style:"margin:0;color:var(--rc)"},"Mode Focus"),
-              h("div",{style:"font-size:11px;color:var(--td);font-family:Orbitron,sans-serif;margin-top:4px;letter-spacing:1px"},"Rang "+rank.id+" · Niveau "+globalLevel.level+" · Streak "+state.streak)
-            ),
-            focusToggle
+          h("div",{style:"text-align:center"},
+            h("div",{class:"ctitle",style:"margin:0;color:var(--rc)"},"Mode Focus"),
+            h("div",{style:"font-size:11px;color:var(--td);font-family:Orbitron,sans-serif;margin-top:4px;letter-spacing:1px"},"Rang "+rank.id+" · Niveau "+globalLevel.level+" · Streak "+state.streak)
           ),
           h("div",{style:"display:grid;grid-template-columns:1fr 1px 1fr;gap:10px;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)"},
             h("div",{style:"text-align:center"},
@@ -1683,7 +1681,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
     return h("div",{class:"tab"},
       missedDays>=2&&h("div",{class:"warn"},"\u26A0\uFE0F P\u00e9nalit\u00e9 : -"+(missedDays*10)+" XP ("+missedDays+" jours manqu\u00e9s)"),
-      h("div",{style:"display:flex;justify-content:flex-end;margin-bottom:8px"},focusToggle),
+      h("div",{style:"display:flex;justify-content:center;margin-bottom:8px"},focusToggle),
 
       h("div",{class:"card"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"},
@@ -1978,7 +1976,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{class:"ctitle"},"Niveau global"),
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:6px"},
           h("div",null,
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:20px;font-weight:900;color:var(--rc);line-height:1"},"Niveau "+globalLevel.level),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;font-weight:800;letter-spacing:1px;color:var(--rc);line-height:1"},"Niveau "+globalLevel.level),
             h("div",{style:"font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:4px"},globalLevel.maxed?"Progression maximale":"Vers niveau "+globalLevel.nextLevel)
           ),
           h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;text-align:right"},
