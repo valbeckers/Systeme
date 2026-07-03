@@ -618,6 +618,7 @@ function App(){
   const scrollRef = useRef(null);
   function switchTab(id){ setTab(id); if(scrollRef.current) scrollRef.current.scrollTop=0; }
   const [rankUp,setRankUp] = useState(null);
+  const [levelUp,setLevelUp] = useState(null);
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
   const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,cs:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
@@ -782,6 +783,29 @@ function App(){
     return d>1?d:0;
   })();
 
+  function triggerProgressOverlay(beforeXp,beforeStats,afterXp,afterStats,delay=300){
+    const beforeRank = getRankWithStats(beforeXp,beforeStats);
+    const afterRank = getRankWithStats(afterXp,afterStats);
+    const beforeLevel = getGlobalLevelInfo(beforeXp).level;
+    const afterLevel = getGlobalLevelInfo(afterXp).level;
+    const rankChanged = afterRank.id !== beforeRank.id;
+    const levelChanged = afterLevel !== beforeLevel;
+
+    if(!rankChanged && !levelChanged) return;
+
+    setTimeout(()=>{
+      if(rankChanged){
+        setRankUp(levelChanged ? {...afterRank, level:afterLevel} : afterRank);
+        return;
+      }
+      setLevelUp({
+        level:afterLevel,
+        color:afterRank.color,
+        glow:afterRank.glow
+      });
+    },delay);
+  }
+
 
   // ─── EFFECTS ──────────────────────────────────────────────────────────
 
@@ -808,13 +832,16 @@ function App(){
     setState(s=>{
       const t=todayStr();
       let next={...s};
+
       if(s.lastStreakDay!==t)next={...next,lastStreakDay:t};
+
       if(s.streakBonusDay!==t){
+        const beforeXp = next.totalXp;
+        const beforeStats = {...next.stats};
+
         const sx={...next.statXp,Discipline:(next.statXp.Discipline||0)+250};
-        const rkBefore=getRankWithStats(next.totalXp, next.stats);
         next={...next,totalXp:next.totalXp+250,statXp:sx,stats:{...next.stats,Discipline:getLvl(sx.Discipline)},streakBonusDay:t};
-        const rkAfter=getRankWithStats(next.totalXp, next.stats);
-        if(rkAfter.id!==rkBefore.id)setTimeout(()=>setRankUp(rkAfter),300);
+
         // Milestone tous les 7 jours de streak
         const newStreak=next.streak;
         const milestones=next.streakMilestones||[];
@@ -834,7 +861,10 @@ function App(){
             setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id1&&p.id!==id2)),1400);
           },300);
         }
+
+        triggerProgressOverlay(beforeXp,beforeStats,next.totalXp,next.stats,300);
       }
+
       return next;
     });
   },[allDailyDone]);
@@ -884,9 +914,7 @@ function App(){
       const nt=s.totalXp+amount;
       const sx={...s.statXp,[stat]:(s.statXp[stat]||0)+amount};
       const newStats={...s.stats,[stat]:getLvl(sx[stat])};
-      const rkBefore=getRankWithStats(s.totalXp, s.stats);
-      const rkAfter=getRankWithStats(nt, newStats);
-      if(rkAfter.id!==rkBefore.id)setTimeout(()=>setRankUp(rkAfter),100);
+      triggerProgressOverlay(s.totalXp,s.stats,nt,newStats,100);
       return {...s,totalXp:nt,statXp:sx,stats:newStats,lastActiveDay:todayStr()};
     });
     if(e&&!silent){
@@ -1187,7 +1215,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           setState(s=>{
             const sx={...s.statXp,[obj.stat]:(s.statXp[obj.stat]||0)+xp};
             const st={...s.stats,[obj.stat]:getLvl(sx[obj.stat])};
-            return {...s,totalXp:s.totalXp+xp,statXp:sx,stats:st,lastActiveDay:todayStr()};
+            const nt=s.totalXp+xp;
+            triggerProgressOverlay(s.totalXp,s.stats,nt,st,100);
+            return {...s,totalXp:nt,statXp:sx,stats:st,lastActiveDay:todayStr()};
           });
         }
       }
@@ -2063,7 +2093,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           else ndl[today]={...(ndl[today]||{}),[obj.id]:nv};
         });
         const ns={...s.stats}; Object.keys(nsx).forEach(st=>{ns[st]=getLvl(nsx[st]);});
-        return {...s,totalXp:Math.max(0,s.totalXp+xpD),dailyLog:ndl,weeklyLog:nwl,statXp:nsx,stats:ns};
+        const nt=Math.max(0,s.totalXp+xpD);
+        triggerProgressOverlay(s.totalXp,s.stats,nt,ns,100);
+        return {...s,totalXp:nt,dailyLog:ndl,weeklyLog:nwl,statXp:nsx,stats:ns};
       });
       setShowSet(false);
     }
@@ -2130,8 +2162,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
   function RankUp(){
     if(!rankUp)return null;
-    const prevRankIdx=RANKS.findIndex(r=>r.id===rankUp.id)-1;
-    const prevRank=prevRankIdx>=0?RANKS[prevRankIdx]:null;
     const particles=Array.from({length:40},(_,i)=>({
       id:i,
       left:Math.random()*100,
@@ -2145,10 +2175,37 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.cyan?"rgba(74,222,128,0.6)":rankUp.color)+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
       )),
       h("div",{class:"rucont"},
-        h("div",{class:"ruevol"},"\u00c9volution de rang"),
-        h("div",{class:"rurank",style:"data-r:"+rankUp.id,"data-r":rankUp.id},rankUp.id),
-        
+        h("div",{class:"ruevol"},"RANK UP !"),
+        h("div",{class:"rurank","data-r":rankUp.id},rankUp.id),
+        rankUp.level&&h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:3px"},"LEVEL "+rankUp.level),
         h("button",{class:"rudis",onClick:()=>setRankUp(null)},"Continuer")
+      )
+    );
+  }
+
+  // ─── ANIMATION LEVEL UP ───────────────────────────────────────────────
+
+  function LevelUp(){
+    if(!levelUp)return null;
+    const color = levelUp.color || rank.color;
+    const glow = levelUp.glow || rank.glow;
+    const particles=Array.from({length:34},(_,i)=>({
+      id:i,
+      left:Math.random()*100,
+      delay:Math.random()*2.4,
+      dur:1.1+Math.random()*1.7,
+      size:2+Math.random()*4,
+      accent:Math.random()>0.65
+    }));
+    return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+glow},
+      h("div",{class:"ruparts"},particles.map(p=>
+        h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?"rgba(255,255,255,0.65)":color)+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
+      )),
+      h("div",{class:"rucont"},
+        h("div",{class:"ruevol"},"LEVEL UP !"),
+        h("div",{class:"rurank","data-r":String(levelUp.level)},levelUp.level),
+        h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:3px"},"NIVEAU GLOBAL"),
+        h("button",{class:"rudis",onClick:()=>setLevelUp(null)},"Continuer")
       )
     );
   }
@@ -2405,6 +2462,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       ),
       h(Settings,null),
       h(RankUp,null),
+      h(LevelUp,null),
       h(PrestigeUp,null),
     )
   );
