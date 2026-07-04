@@ -747,7 +747,7 @@ function App(){
   const [focusMode,setFocusMode] = useState(false);
   const [dungeonHelpOpen,setDungeonHelpOpen] = useState({});
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
-  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,dj:false,cs:false});
+  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,ev:false,dj:false,cs:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
   const [showStatReqDetail,setShowStatReqDetail] = useState(false);
   const [showRankReqStats,setShowRankReqStats] = useState(false);
@@ -3135,7 +3135,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   // ─── ONGLET CODEX ─────────────────────────────────────────────────────
 
   function Codex(){
-    const toggleC = k => setCodexOpen(o=>({obl:false,bonus:false,reg:false,sq:false,ep:false,dj:false,cs:false,[k]:!o[k]}));
+    const toggleC = k => setCodexOpen(o=>({obl:false,bonus:false,reg:false,sq:false,ev:false,ep:false,dj:false,cs:false,[k]:!o[k]}));
     const statLabel = stat => STAT_LBL2[stat] || STAT_LBL[stat] || stat || "";
     const unitPlural = (unit, value) => {
       if(!unit) return "";
@@ -3222,6 +3222,32 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:6px"},
               h("div",{style:detailStyle},"▸ Objectif : "+targetForSpecial(q)),
               h("div",{style:detailStyle},"▸ Délai : "+(q.days||1)+" jour"+((q.days||1)>1?"s":""))
+            )
+          )
+        )
+      );
+    }
+
+    function renderEventCodex(ev){
+      const color = ev.type==="bonus" ? (STAT_COLOR[ev.stat]||"var(--rc)") : (ev.type==="surprise" ? "#f97316" : "#f59e0b");
+      const family = ev.type==="bonus" ? "Bonus de stat" : (ev.type==="surprise" ? "Épreuve surprise" : "Invitation");
+      return h("div",{key:ev.id,style:cardStyle},
+        h("div",{style:"display:flex;align-items:flex-start;gap:8px"},
+          h("div",{style:"font-size:16px;line-height:1;min-width:24px;text-align:center"},ev.type==="bonus"?"✦":(ev.type==="surprise"?"⚡":"◇")),
+          h("div",{style:"flex:1;min-width:0"},
+            h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},ev.title),
+            h("div",{style:"font-size:9px;color:"+color+";margin-top:3px;font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase"},family),
+            h("div",{style:"font-size:10px;color:var(--td);margin-top:5px;line-height:1.35"},ev.desc),
+            ev.type==="bonus"&&h("div",{style:"margin-top:7px"},
+              h("span",{style:"display:inline-block;border:1px solid "+color+"55;color:"+color+";border-radius:999px;padding:2px 7px;margin:2px 4px 2px 0;font-size:10px;font-family:Orbitron,sans-serif;background:"+color+"11"},"+15% XP "+statLabel(ev.stat))
+            ),
+            ev.type!=="bonus"&&h("div",{style:"margin-top:7px"},(ev.reward||[]).map((r,i)=>h(StatPill,{key:i,stat:r.stat,xp:r.xp}))),
+            h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:6px"},
+              h("div",{style:detailStyle},"▸ Déclenchement : tirage quotidien au reset de 7h"),
+              h("div",{style:detailStyle},"▸ Pénalité : aucune si ignoré"),
+              ev.type==="bonus"&&h("div",{style:detailStyle},"▸ Effet : bonus automatique sur les gains de la stat concernée"),
+              ev.type==="invite"&&h("div",{style:detailStyle},"▸ Validation : manuelle depuis la carte événement"),
+              ev.type==="surprise"&&h("div",{style:detailStyle},"▸ Délai : environ "+(ev.hours||6)+"h, sans dépasser le prochain reset")
             )
           )
         )
@@ -3328,6 +3354,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const bonus = objs.filter(o=>o.optional&&!o.weekly&&!o.bonusHidden);
     const hiddenBonus = objs.filter(o=>o.optional&&!o.weekly&&o.bonusHidden);
     const specialList = STATS.flatMap(stat=>(SP[stat]||[]).map(q=>({...q,stat:q.stat||stat})));
+    const eventList = [
+      ...EVENT_BONUSES.map(e=>({...e,type:"bonus"})),
+      ...EVENT_INVITES.map(e=>({...e,type:"invite"})),
+      ...EVENT_SURPRISES.map(e=>({...e,type:"surprise"}))
+    ];
 
     return h("div",{class:"tab"},
       h("div",{class:"card"},
@@ -3343,6 +3374,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         )
       ),
       h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial)),
+      h(Section,{id:"ev",title:"Événements",count:eventList.length},
+        h(Fragment,null,
+          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Tirage quotidien : 50% aucun événement · 25% bonus de stat · 15% invitation · 10% épreuve surprise."),
+          eventList.map(renderEventCodex)
+        )
+      ),
       h(Section,{id:"dj",title:"Donjons",count:DUNGEONS.length},groupByDominantStat(DUNGEONS,renderDungeonCodex,dg=>dg.stat))
     );
   }
