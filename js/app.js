@@ -175,6 +175,60 @@ const DUNGEONS = [
 const SQ_TIER_COLOR = {mineure:"#fbbf24", majeure:"#f59e0b", legendaire:"#f97316"};
 const SQ_TIER_LABEL = {mineure:"Mineure", majeure:"Majeure", legendaire:"Légendaire"};
 
+// Événements aléatoires — V1 : 1 tirage/jour au reset de 7h, sans pénalité.
+const EVENT_BONUSES = [
+  {id:"ev_force",title:"Jour de Force",desc:"Les gains Force sont augmentés de 15% aujourd’hui.",stat:"Force",bonusPct:0.15},
+  {id:"ev_sante",title:"Vitalité",desc:"Les gains Santé sont augmentés de 15% aujourd’hui.",stat:"Sante",bonusPct:0.15},
+  {id:"ev_esprit",title:"Clarté mentale",desc:"Les gains Esprit sont augmentés de 15% aujourd’hui.",stat:"Esprit",bonusPct:0.15},
+  {id:"ev_endurance",title:"Élan d’Endurance",desc:"Les gains Endurance sont augmentés de 15% aujourd’hui.",stat:"Endurance",bonusPct:0.15},
+  {id:"ev_agilite",title:"Souplesse du Chasseur",desc:"Les gains Agilité sont augmentés de 15% aujourd’hui.",stat:"Agilite",bonusPct:0.15},
+  {id:"ev_discipline",title:"Ordre du Gardien",desc:"Les gains Discipline sont augmentés de 15% aujourd’hui.",stat:"Discipline",bonusPct:0.15},
+];
+const EVENT_INVITES = [
+  {id:"ev_outside",title:"Appel du dehors",desc:"Passe 10 min dehors, sans téléphone.",reward:[{stat:"Sante",xp:150},{stat:"Endurance",xp:50}]},
+  {id:"ev_space_reset",title:"Reset de l’espace",desc:"Range ou traite 10 objets autour de toi.",reward:[{stat:"Discipline",xp:150}]},
+  {id:"ev_breath",title:"Retour au souffle",desc:"Fais 5 min de respiration lente.",reward:[{stat:"Esprit",xp:150}]},
+  {id:"ev_activation",title:"Activation rapide",desc:"Fais 50 squats ou 50 jumping jacks.",reward:[{stat:"Force",xp:100},{stat:"Endurance",xp:100}]},
+];
+const EVENT_SURPRISES = [
+  {id:"ev_silence",title:"Silence court",desc:"30 min sans téléphone, musique, podcast ni écran.",reward:[{stat:"Esprit",xp:300},{stat:"Discipline",xp:100}],hours:6},
+  {id:"ev_task_now",title:"Tâche maintenant",desc:"Termine une tâche repoussée dans le temps imparti.",reward:[{stat:"Discipline",xp:300}],hours:6},
+  {id:"ev_mindful_walk",title:"Marche consciente",desc:"15 min de marche sans téléphone.",reward:[{stat:"Endurance",xp:250},{stat:"Esprit",xp:100}],hours:6},
+  {id:"ev_cold_short",title:"Douche froide courte",desc:"2 min de douche froide.",reward:[{stat:"Sante",xp:250},{stat:"Discipline",xp:100}],hours:6},
+];
+
+function eventDayStr(from=Date.now()){
+  const d=new Date(from);
+  if(d.getHours()<7) d.setDate(d.getDate()-1);
+  const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");
+  return y+"-"+m+"-"+day;
+}
+function eventRewardText(ev){
+  return (ev?.reward||[]).map(r=>"+"+r.xp+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ");
+}
+function pickFrom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function buildDailyEvent(now=Date.now()){
+  const day=eventDayStr(now);
+  const roll=Math.random();
+  if(roll<0.50) return {id:"none",type:"none",day,startedAt:now,expiresAt:next7AM(now)};
+  if(roll<0.75){
+    const e=pickFrom(EVENT_BONUSES);
+    return {...e,type:"bonus",day,startedAt:now,expiresAt:next7AM(now)};
+  }
+  if(roll<0.90){
+    const e=pickFrom(EVENT_INVITES);
+    return {...e,type:"invite",day,startedAt:now,expiresAt:next7AM(now),completedAt:null};
+  }
+  const e=pickFrom(EVENT_SURPRISES);
+  const shortExpiry=now+(e.hours||6)*3600000;
+  return {...e,type:"surprise",day,startedAt:now,expiresAt:Math.min(shortExpiry,next7AM(now)),completedAt:null};
+}
+function applyDailyEventReset(s,now=Date.now()){
+  const day=eventDayStr(now);
+  if(s.eventDay===day && s.dailyEvent) return s;
+  return {...s,eventDay:day,dailyEvent:buildDailyEvent(now)};
+}
+
 // Quêtes urgentes : fonctions de délai
 // Prochain 7h00 (aujourd'hui si on est avant 7h, sinon demain)
 function next7AM(from){
@@ -590,6 +644,8 @@ const IMPORTED = {
   dungeonRunsByWeek:{},
   dungeonLog:[],
   dailyExtraXp:{},
+  dailyEvent:null,
+  eventDay:null,
   sqRerollDay:null,
   completedSqLog:[],
   sqStatCycle:[],
@@ -627,6 +683,8 @@ function buildState(){
     dungeonRunsByWeek:saved.dungeonRunsByWeek||{},
     dungeonLog:saved.dungeonLog||[],
     dailyExtraXp:saved.dailyExtraXp||IMPORTED.dailyExtraXp||{},
+    dailyEvent:saved.dailyEvent||IMPORTED.dailyEvent||null,
+    eventDay:saved.eventDay||IMPORTED.eventDay||null,
     completedSqLog:saved.completedSqLog||[],
     sqStatCycle:saved.sqStatCycle||[],
     stats:saved.stats||IMPORTED.stats,
@@ -654,9 +712,9 @@ function buildState(){
 
 function App(){
   const [state,setState]   = useState(()=>{
-    const base=buildState();
-    // Auto-init quete speciale si aucune active
     const now=Date.now();
+    const base=applyDailyEventReset(buildState(),now);
+    // Auto-init quete speciale si aucune active
     const sqs=base.specialQuests||[];
     const hasActive=sqs.find(q=>!q.completedAt&&now<q.expiresAt);
     const sqCdUntil=base.sqCooldownUntil||0;
@@ -874,6 +932,12 @@ function App(){
     const id=setInterval(()=>setNow(Date.now()),30000); // tick toutes les 30s
     return ()=>clearInterval(id);
   },[]);
+  useEffect(()=>{
+    const day=eventDayStr(now);
+    if(state.eventDay!==day){
+      setState(s=>applyDailyEventReset(s,now));
+    }
+  },[now,state.eventDay]);
   const sqs         = state.specialQuests||[];
   const activeSq    = sqs.find(q=>!q.completedAt&&now<q.expiresAt)||null;
   const completedSq = sqs.find(q=>q.completedAt&&(now-q.completedAt)<86400000)||null;
@@ -891,6 +955,10 @@ function App(){
   const dungeonWeekCount = dungeonRunsByWeek[wk]||0;
   const dungeonDailyUsed = dungeonRunDay===today;
   const dungeonCanStart = !activeDungeon && !dungeonDailyUsed && dungeonWeekCount<3;
+
+  const dailyEvent = state.dailyEvent && state.dailyEvent.type!=="none" && now < (state.dailyEvent.expiresAt||0)
+    ? state.dailyEvent
+    : null;
 
   // Flags bonus
   const bonusGiven       = state.streakBonusDay===today;
@@ -1125,16 +1193,57 @@ function App(){
   const STAT_LBL2={"Force":"Force","Sante":"Sant\u00e9","Esprit":"Esprit","Endurance":"Endurance","Agilite":"Agilit\u00e9","Discipline":"Discipline"};
   function addXp(amount,stat,e,silent,showStat){
     setState(s=>{
-      const nt=s.totalXp+amount;
-      const sx={...s.statXp,[stat]:(s.statXp[stat]||0)+amount};
+      const ev=s.dailyEvent;
+      const eventBonus = ev && ev.type==="bonus" && !ev.completedAt && Date.now()<(ev.expiresAt||0) && ev.stat===stat
+        ? Math.round((Number(amount)||0)*(ev.bonusPct||0))
+        : 0;
+      const gain=(Number(amount)||0)+eventBonus;
+      const nt=s.totalXp+gain;
+      const sx={...s.statXp,[stat]:(s.statXp[stat]||0)+gain};
       const newStats={...s.stats,[stat]:getLvl(sx[stat])};
+      const daily={...(s.dailyExtraXp||{})};
+      if(eventBonus>0){
+        const day=todayStr();
+        const dayLog={...(daily[day]||{})};
+        dayLog.eventBonus=(dayLog.eventBonus||0)+eventBonus;
+        daily[day]=dayLog;
+      }
       triggerProgressOverlay(s.totalXp,s.stats,nt,newStats,100);
-      return {...s,totalXp:nt,statXp:sx,stats:newStats,lastActiveDay:todayStr()};
+      return {...s,totalXp:nt,statXp:sx,stats:newStats,dailyExtraXp:eventBonus>0?daily:(s.dailyExtraXp||{}),lastActiveDay:todayStr()};
     });
     if(e&&!silent){
       const lbl=showStat?("+"+Math.round(amount)+" XP "+( STAT_LBL2[showStat]||showStat)):("+"+Math.round(amount)+" XP");
       spawnFloat(lbl,e);
     }
+  }
+
+  function completeDailyEvent(ev,e){
+    if(e){e.preventDefault();e.stopPropagation();}
+    if(!ev || ev.completedAt || now>=(ev.expiresAt||0) || !(ev.reward||[]).length) return;
+    const rewards=ev.reward||[];
+    const totalReward=rewards.reduce((s,r)=>s+(r.xp||0),0);
+    setState(s=>{
+      const beforeXp=s.totalXp;
+      const beforeStats=s.stats;
+      let totalXp=s.totalXp;
+      const statXp={...s.statXp};
+      const stats={...s.stats};
+      rewards.forEach(r=>{
+        totalXp+=(r.xp||0);
+        statXp[r.stat]=(statXp[r.stat]||0)+(r.xp||0);
+        stats[r.stat]=getLvl(statXp[r.stat]);
+      });
+      const day=todayStr();
+      const daily={...(s.dailyExtraXp||{})};
+      const dayLog={...(daily[day]||{})};
+      dayLog.event=(dayLog.event||0)+totalReward;
+      daily[day]=dayLog;
+      triggerProgressOverlay(beforeXp,beforeStats,totalXp,stats,300);
+      return {...s,totalXp,statXp,stats,dailyExtraXp:daily,dailyEvent:{...s.dailyEvent,completedAt:Date.now()},lastActiveDay:day};
+    });
+    const id1=Date.now()+Math.random(),id2=id1+0.1;
+    setFloats(f=>[...f,{id:id1,y:"35%",txt:"ÉVÉNEMENT VALIDÉ !"},{id:id2,y:"40%",txt:eventRewardText(ev)}]);
+    setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id1&&p.id!==id2)),1700);
   }
 
   function validate(obj,e,forceVal){
@@ -1940,6 +2049,32 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
+  function DailyEventCard(){
+    const ev=dailyEvent;
+    if(!ev) return null;
+    const color = ev.type==="bonus" ? (STAT_COLOR[ev.stat]||rank.color) : (ev.type==="surprise" ? "#f97316" : "#f59e0b");
+    const label = ev.type==="bonus" ? "ÉVÉNEMENT DU JOUR" : (ev.type==="surprise" ? "ÉPREUVE SURPRISE" : "INVITATION");
+    const expired = now >= (ev.expiresAt||0);
+    const done = !!ev.completedAt;
+    return h("div",{class:"card",style:"border-color:"+color+"66;background:linear-gradient(135deg,"+color+"14,rgba(255,255,255,0.025))"},
+      h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
+        h("div",{style:"min-width:0"},
+          h("div",{class:"ctitle",style:"margin:0;color:"+color},label),
+          h("div",{style:"font-size:14px;color:var(--tx);font-weight:800;line-height:1.25;margin-top:4px"},ev.title),
+          h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin-top:5px"},ev.desc)
+        ),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap;text-transform:uppercase"},ev.type==="bonus" ? "+15%" : (done ? "validé" : fmtCD((ev.expiresAt||0)-now)))
+      ),
+      ev.type==="bonus"&&h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:8px"},"Bonus actif sur "+(STAT_LBL[ev.stat]||ev.stat)),
+      ev.type!=="bonus"&&h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:8px"},eventRewardText(ev)),
+      ev.type!=="bonus"&&!done&&!expired&&h("button",{
+        onClick:e=>completeDailyEvent(ev,e),
+        style:"width:100%;margin-top:10px;padding:10px;border-radius:9px;border:1px solid "+color+"66;background:rgba(255,255,255,0.035);color:"+color+";font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer"
+      },"Valider l’événement"),
+      ev.type!=="bonus"&&done&&h("div",{style:"margin-top:10px;text-align:center;color:#4ade80;font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase"},"Événement complété ✓")
+    );
+  }
+
   // ─── ONGLET ACCUEIL ───────────────────────────────────────────────────
 
 
@@ -2013,6 +2148,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             )
           )
         ),
+
+        dailyEvent&&h(DailyEventCard,null),
 
         activeSq&&h("div",{class:"card",style:"border-color:#ef444444"},
           h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Urgente"+(activeSq.tier?" · "+(SQ_TIER_LABEL[activeSq.tier]||""):"")),
@@ -2123,7 +2260,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         )
       ),
 
-      activeSq&&h("div",{class:"card",style:"border-color:#ef444444"},
+      dailyEvent&&h(DailyEventCard,null),
+        activeSq&&h("div",{class:"card",style:"border-color:#ef444444"},
         h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Qu\u00eate urgente"+(activeSq.tier?" \u00b7 "+(SQ_TIER_LABEL[activeSq.tier]||""):"")),
         h(SqCard,{sq:activeSq,showInput:false})
       ),
