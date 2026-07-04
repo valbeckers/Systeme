@@ -131,15 +131,15 @@ const DUNGEONS = [
   {id:"alchemist", title:"Donjon de l’Alchimiste", short:"Alchimiste", stat:"Sante", icon:"⚗️", color:"#ef4444", reward:{xp:1500,stat:"Sante",xp2:300,stat2:"Esprit"}, rooms:[
     {name:"Hydratation", desc:"2 verres d’eau d'une traite"},
     {name:"Lumière naturelle", desc:"10 min au soleil"},
-    {name:"Salle 3", desc:"À définir"},
-    {name:"Salle 4", desc:"À définir"},
+    {name:"Repas propre", desc:"1 repas équilibré sans écran"},
+    {name:"Respiration calme", desc:"5 min de respiration lente / cohérence cardiaque"},
     {name:"Boss : Relaxation", desc:"Douche froide 3 min sans interruption"},
   ]},
   {id:"warrior", title:"Donjon du Guerrier", short:"Guerrier", stat:"Force", icon:"⚔️", color:"#fb923c", reward:{xp:1500,stat:"Force",xp2:300,stat2:"Discipline"}, rooms:[
     {name:"Pompes", desc:"100 reps"},
     {name:"Abdos", desc:"150 reps"},
     {name:"Squats", desc:"50 reps"},
-    {name:"Salle 4", desc:"À définir"},
+    {name:"Wall sit", desc:"5 min cumulées"},
     {name:"Boss : Gainage", desc:"10 min"},
   ]},
   {id:"monk", title:"Donjon du Moine", short:"Moine", stat:"Esprit", icon:"🧘🏻‍♂️", color:"#ec4899", reward:{xp:1500,stat:"Esprit",xp2:300,stat2:"Discipline"}, rooms:[
@@ -152,19 +152,19 @@ const DUNGEONS = [
   {id:"pilgrim", title:"Donjon du Pèlerin", short:"Pèlerin", stat:"Endurance", icon:"🥾", color:"#22d3ee", reward:{xp:1500,stat:"Endurance",xp2:300,stat2:"Agilite"}, rooms:[
     {name:"Stepper", desc:"15 min"},
     {name:"Escaliers", desc:"15 allers-retours"},
-    {name:"Salle 3", desc:"À définir"},
-    {name:"Salle 4", desc:"À définir"},
+    {name:"Marche rapide", desc:"20 min à allure soutenue"},
+    {name:"Fentes marchées", desc:"50 reps"},
     {name:"Boss : Running", desc:"30 min sans s’arrêter"},
   ]},
   {id:"hunter", title:"Donjon du Chasseur", short:"Chasseur", stat:"Agilite", icon:"🏹", color:"#4ade80", reward:{xp:1500,stat:"Agilite",xp2:300,stat2:"Endurance"}, rooms:[
     {name:"Éveil corporel", desc:"10 min mobilité douce"},
     {name:"Déplacements", desc:"10 min footwork"},
     {name:"Équilibre sur un pied", desc:"10 min"},
-    {name:"Salle 4", desc:"À définir"},
+    {name:"Déplacements silencieux", desc:"10 min"},
     {name:"Boss : Souplesse active / Animal flow", desc:"20 min"},
   ]},
   {id:"guardian", title:"Donjon du Gardien", short:"Gardien", stat:"Discipline", icon:"🛡️", color:"#c084fc", reward:{xp:1500,stat:"Discipline",xp2:300,stat2:"Esprit"}, rooms:[
-    {name:"Salle 1", desc:"À définir"},
+    {name:"Plan d’attaque", desc:"Écrire la tâche prioritaire et la première action concrète"},
     {name:"Téléphone hors de portée", desc:"1h"},
     {name:"Aucun contenu passif", desc:"2h", helpTitle:"Contenu passif", help:"À inclure : doomscrolling, vidéos courtes, scroll automatique, réseaux sociaux sans intention, YouTube en consommation passive, fils d’actualité, zapping, jeux vidéo lancés par réflexe, film ou série regardés pour combler le vide. Mon avis : film/série/jeu vidéo peuvent rester autorisés s’ils sont choisis volontairement comme vraie activité de détente ; ils comptent comme passifs s’ils servent juste à fuir l’ennui, repousser une tâche ou remplir automatiquement le temps."},
     {name:"Rangement", desc:"10 objets"},
@@ -682,7 +682,7 @@ function App(){
   const [focusMode,setFocusMode] = useState(false);
   const [dungeonHelpOpen,setDungeonHelpOpen] = useState({});
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
-  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,cs:false});
+  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,dj:false,cs:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
   const [showStatReqDetail,setShowStatReqDetail] = useState(false);
   const [showRankReqStats,setShowRankReqStats] = useState(false);
@@ -2077,6 +2077,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           : h("div",{style:"font-size:12px;color:var(--td);text-align:center;padding:8px 0"},"Chargement du défi...")
         )
       ),
+      activeDungeon&&h(DungeonCard,{compact:true}),
       h("div",{class:"card"},
         h(SectionHeader,{title:"Quêtes journalières",done:reqDone,total:reqTotal}),
         req.map(o=>h(QI,{key:o.id,obj:o})),
@@ -2207,7 +2208,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{class:"ctitle"},"Niveau global"),
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:6px"},
           h("div",null,
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;font-weight:800;letter-spacing:1px;color:var(--rc);line-height:1"},"Niveau "+globalLevel.level),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;font-weight:800;letter-spacing:1px;color:"+statBalance.strongest.color+";line-height:1;text-shadow:0 0 10px "+statBalance.strongest.color+"55"},"Niveau "+globalLevel.level),
             h("div",{style:"font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:4px"},globalLevel.maxed?"Progression maximale":"Vers niveau "+globalLevel.nextLevel)
           ),
           h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;text-align:right"},
@@ -2819,6 +2820,29 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       );
     }
 
+    function renderDungeonCodex(dg){
+      const rewards=dungeonRewardPairs(dg);
+      return h("div",{key:dg.id,style:cardStyle},
+        h("div",{style:"display:flex;align-items:flex-start;gap:8px"},
+          h("div",{style:"font-size:18px;line-height:1;min-width:24px;text-align:center"},dg.icon),
+          h("div",{style:"flex:1;min-width:0"},
+            h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},dg.title),
+            h("div",{style:"font-size:10px;color:"+(STAT_COLOR[dg.stat]||dg.color)+";margin-top:3px;font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase"},statLabel(dg.stat)),
+            h("div",{style:"margin-top:7px"},rewards.map((r,i)=>h(StatPill,{key:i,stat:r.stat,xp:r.xp}))),
+            h("div",{style:"display:flex;flex-direction:column;gap:5px;margin-top:8px"},
+              dg.rooms.map((room,i)=>h("div",{key:i,style:detailStyle},
+                "▸ "+(i===dg.rooms.length-1?"Boss":"Salle "+(i+1))+" — "+room.name+" : "+room.desc,
+                room.help&&h("div",{style:"margin-top:4px;padding:7px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);line-height:1.45"},
+                  h("div",{style:"color:"+(STAT_COLOR[dg.stat]||dg.color)+";font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px"},room.helpTitle||"Aide"),
+                  room.help
+                )
+              ))
+            )
+          )
+        )
+      );
+    }
+
     function Section({id,title,count,children}){
       const open=!!codexOpen[id];
       return h("div",{class:"card"},
@@ -2910,7 +2934,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           hiddenBonus.length>0&&groupByDominantStat(hiddenBonus,renderQuest)
         )
       ),
-      h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial))
+      h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial)),
+      h(Section,{id:"dj",title:"Donjons",count:DUNGEONS.length},groupByDominantStat(DUNGEONS,renderDungeonCodex,dg=>dg.stat))
     );
   }
   // ─── RENDU PRINCIPAL ──────────────────────────────────────────────────
