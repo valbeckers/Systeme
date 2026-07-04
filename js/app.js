@@ -66,7 +66,7 @@ const DEFS = [
   {id:"calves", name:"Mollets",unit:"rep", xpPer:1.5, daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDBF",               base:30, stat2:"Agilite", xpPer2:1},
   {id:"grips",  name:"Hand grips",      unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Force",         icon:"\u270A\uD83C\uDFFB",         base:10, fixedBase:true},
   // ─── ESPRIT ───────────────────────────────────────────────────────────
-  {id:"reading",name:"Lecture",unit:"min",xpPer:15,daily:true,weekly:false,optional:false,stat:"Esprit",icon:"📚",base:20,startDate:"2026-05-21"},
+  {id:"reading",name:"Lecture",unit:"min",xpPer:20,daily:true,weekly:false,optional:false,stat:"Esprit",icon:"📚",base:20,startDate:"2026-05-21"},
   // ─── ESPRIT ───────────────────────────────────────────────────────────
   
   {id:"med",    name:"M\u00e9ditation", unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Esprit",  icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F", base:15, fixedBase:true},
@@ -1434,8 +1434,8 @@ function App(){
   function dungeonRoomRewardPairs(dungeon,roomIdx){
     if(!dungeon || !dungeon.reward) return [];
     const isBoss = roomIdx >= (dungeon.rooms||[]).length-1;
-    const mainXp = isBoss ? 500 : 250;
-    const secondXp = isBoss ? 100 : 50;
+    const mainXp = isBoss ? 900 : 150;
+    const secondXp = isBoss ? 180 : 30;
     return [
       {xp:mainXp,stat:dungeon.reward.stat},
       dungeon.reward.stat2 ? {xp:secondXp,stat:dungeon.reward.stat2} : null,
