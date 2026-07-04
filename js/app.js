@@ -3120,7 +3120,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         )
       ),
       h("div",{class:"scroll-area",ref:scrollRef},
-        h("div",{style:"height:30px;flex:0 0 auto"}),
+        h("div",{style:"height:15px;flex:0 0 auto"}),
         tab==="home"    &&h(Home,null),
         tab==="quests"  &&h(Quests,null),
         tab==="stats"   &&h(Stats,null),
