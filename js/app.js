@@ -177,24 +177,47 @@ const SQ_TIER_LABEL = {mineure:"Mineure", majeure:"Majeure", legendaire:"Légend
 
 // Événements aléatoires — V1 : 1 tirage/jour au reset de 7h, sans pénalité.
 const EVENT_BONUSES = [
-  {id:"ev_force",title:"Jour de Force",desc:"Les gains Force sont augmentés de 15% aujourd’hui.",stat:"Force",bonusPct:0.15},
+  {id:"ev_force",title:"Élan de Force",desc:"Les gains Force sont augmentés de 15% aujourd’hui.",stat:"Force",bonusPct:0.15},
   {id:"ev_sante",title:"Vitalité",desc:"Les gains Santé sont augmentés de 15% aujourd’hui.",stat:"Sante",bonusPct:0.15},
   {id:"ev_esprit",title:"Clarté mentale",desc:"Les gains Esprit sont augmentés de 15% aujourd’hui.",stat:"Esprit",bonusPct:0.15},
   {id:"ev_endurance",title:"Élan d’Endurance",desc:"Les gains Endurance sont augmentés de 15% aujourd’hui.",stat:"Endurance",bonusPct:0.15},
   {id:"ev_agilite",title:"Souplesse du Chasseur",desc:"Les gains Agilité sont augmentés de 15% aujourd’hui.",stat:"Agilite",bonusPct:0.15},
   {id:"ev_discipline",title:"Ordre du Gardien",desc:"Les gains Discipline sont augmentés de 15% aujourd’hui.",stat:"Discipline",bonusPct:0.15},
 ];
+
 const EVENT_INVITES = [
-  {id:"ev_outside",title:"Appel du dehors",desc:"Passe 10 min dehors, sans téléphone.",reward:[{stat:"Sante",xp:150},{stat:"Endurance",xp:50}]},
-  {id:"ev_space_reset",title:"Reset de l’espace",desc:"Range ou traite 10 objets autour de toi.",reward:[{stat:"Discipline",xp:150}]},
-  {id:"ev_breath",title:"Retour au souffle",desc:"Fais 5 min de respiration lente.",reward:[{stat:"Esprit",xp:150}]},
-  {id:"ev_activation",title:"Activation rapide",desc:"Fais 50 squats ou 50 jumping jacks.",reward:[{stat:"Force",xp:100},{stat:"Endurance",xp:100}]},
-];
-const EVENT_SURPRISES = [
-  {id:"ev_silence",title:"Silence court",desc:"30 min sans téléphone, musique, podcast ni écran.",reward:[{stat:"Esprit",xp:300},{stat:"Discipline",xp:100}],hours:6},
-  {id:"ev_task_now",title:"Tâche maintenant",desc:"Termine une tâche repoussée dans le temps imparti.",reward:[{stat:"Discipline",xp:300}],hours:6},
-  {id:"ev_mindful_walk",title:"Marche consciente",desc:"15 min de marche sans téléphone.",reward:[{stat:"Endurance",xp:250},{stat:"Esprit",xp:100}],hours:6},
-  {id:"ev_cold_short",title:"Douche froide courte",desc:"2 min de douche froide.",reward:[{stat:"Sante",xp:250},{stat:"Discipline",xp:100}],hours:6},
+  // Santé
+  {id:"ev_outside",title:"Appel du dehors",desc:"Passe 10 min dehors, idéalement à la lumière naturelle.",stat:"Sante",reward:[{stat:"Sante",xp:150}]},
+  {id:"ev_water_mindful",title:"Hydratation consciente",desc:"Bois 2 verres d’eau lentement, sans écran.",stat:"Sante",reward:[{stat:"Sante",xp:100},{stat:"Discipline",xp:50}]},
+  {id:"ev_breath_health",title:"Respiration de reset",desc:"Fais 5 min de respiration lente.",stat:"Sante",reward:[{stat:"Sante",xp:100},{stat:"Esprit",xp:100}]},
+  {id:"ev_clean_meal",title:"Repas propre",desc:"Fais un repas simple et propre, sans junk-food.",stat:"Sante",reward:[{stat:"Sante",xp:150}]},
+
+  // Force
+  {id:"ev_muscle_activation",title:"Activation musculaire",desc:"Fais 50 squats ou 50 pompes cumulées.",stat:"Force",reward:[{stat:"Force",xp:150}]},
+  {id:"ev_micro_session",title:"Micro-séance",desc:"Fais 5 min d’exercice au choix : pompes, squats, abdos ou gainage.",stat:"Force",reward:[{stat:"Force",xp:100},{stat:"Discipline",xp:50}]},
+  {id:"ev_plank_short",title:"Gainage court",desc:"Fais 2 min de gainage cumulé.",stat:"Force",reward:[{stat:"Force",xp:120},{stat:"Discipline",xp:30}]},
+
+  // Esprit
+  {id:"ev_calm",title:"Retour au calme",desc:"Reste 5 min sans téléphone, juste assis ou debout au calme.",stat:"Esprit",reward:[{stat:"Esprit",xp:150}]},
+  {id:"ev_page",title:"Page unique",desc:"Lis 5 min ou 3 pages.",stat:"Esprit",reward:[{stat:"Esprit",xp:150}]},
+  {id:"ev_recall",title:"Rappel actif express",desc:"Restitue de mémoire une idée apprise récemment.",stat:"Esprit",reward:[{stat:"Esprit",xp:120},{stat:"Discipline",xp:50}]},
+  {id:"ev_gratitude",title:"Gratitude simple",desc:"Note une chose positive ou utile dans ta journée.",stat:"Esprit",reward:[{stat:"Esprit",xp:100},{stat:"Sante",xp:50}]},
+  {id:"ev_writing_block",title:"Bloc d’écriture",desc:"Écris pendant 10 min sans interruption : pensée, synthèse, journal ou idée à clarifier.",stat:"Esprit",reward:[{stat:"Esprit",xp:120},{stat:"Discipline",xp:50}]},
+
+  // Endurance
+  {id:"ev_walk_restart",title:"Marche de relance",desc:"Fais 10 min de marche.",stat:"Endurance",reward:[{stat:"Endurance",xp:150}]},
+  {id:"ev_stairs_short",title:"Escaliers courts",desc:"Fais 5 allers-retours d’escaliers.",stat:"Endurance",reward:[{stat:"Endurance",xp:120},{stat:"Force",xp:50}]},
+  {id:"ev_cardio_activation",title:"Activation cardio",desc:"Fais 50 jumping jacks ou 5 min de stepper.",stat:"Endurance",reward:[{stat:"Endurance",xp:150}]},
+
+  // Agilité
+  {id:"ev_mobility_fast",title:"Mobilité rapide",desc:"Fais 5 min de mobilité douce.",stat:"Agilite",reward:[{stat:"Agilite",xp:150}]},
+  {id:"ev_body_unlock",title:"Déverrouillage corporel",desc:"Mobilité nuque, hanches et chevilles pendant 5 min.",stat:"Agilite",reward:[{stat:"Agilite",xp:100},{stat:"Sante",xp:50}]},
+  {id:"ev_balance_express",title:"Équilibre express",desc:"Fais 3 min d’équilibre sur un pied, en alternant.",stat:"Agilite",reward:[{stat:"Agilite",xp:120},{stat:"Discipline",xp:30}]},
+
+  // Discipline
+  {id:"ev_space_reset",title:"Reset de l’espace",desc:"Range ou traite 10 objets autour de toi.",stat:"Discipline",reward:[{stat:"Discipline",xp:150}]},
+  {id:"ev_task_5",title:"Tâche de 5 minutes",desc:"Fais avancer une tâche repoussée pendant 5 min.",stat:"Discipline",reward:[{stat:"Discipline",xp:150}]},
+  {id:"ev_mental_capture",title:"Capture mentale",desc:"Note 5 choses qui encombrent ton esprit, puis traite ou planifie au moins 1 élément.",stat:"Discipline",reward:[{stat:"Discipline",xp:120},{stat:"Esprit",xp:50}]},
 ];
 
 function eventDayStr(from=Date.now()){
@@ -203,30 +226,63 @@ function eventDayStr(from=Date.now()){
   const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");
   return y+"-"+m+"-"+day;
 }
+function addDaysStr(day,delta){
+  const d=new Date(day+"T12:00:00");
+  d.setDate(d.getDate()+delta);
+  const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),dd=String(d.getDate()).padStart(2,"0");
+  return y+"-"+m+"-"+dd;
+}
 function eventRewardText(ev){
   return (ev?.reward||[]).map(r=>"+"+r.xp+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ");
 }
 function pickFrom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-function buildDailyEvent(now=Date.now()){
+function lowestStatFromState(s){
+  const stats=s?.stats||{};
+  let best=STATS[0];
+  STATS.forEach(stat=>{
+    if((stats[stat]||0)<(stats[best]||0)) best=stat;
+  });
+  return best;
+}
+function wasDayCompleteForEvent(s,day){
+  const log=(s.dailyLog&&s.dailyLog[day])||{};
+  const prestige=s.prestige||0;
+  const rank=getRankWithStats(s.totalXp||0,s.stats||{});
+  const ri=RANKS.findIndex(r=>r.id===rank.id);
+  const required=DEFS.filter(o=>o.daily&&!o.optional&&(!o.startDate||o.startDate<=day));
+  if(required.length===0) return false;
+  return required.every(o=>{
+    const target = o.validateAt != null ? o.validateAt : getRankBase(o.id,ri,prestige);
+    return (log[o.id]||0)>=target;
+  });
+}
+function buildBonusEvent(now=Date.now()){
   const day=eventDayStr(now);
+  const e=pickFrom(EVENT_BONUSES);
+  return {...e,type:"bonus",day,startedAt:now,expiresAt:next7AM(now),source:"previous_day_complete"};
+}
+function buildInviteEvent(s,now=Date.now()){
+  const day=eventDayStr(now);
+  const lowest=lowestStatFromState(s);
+  const discipline=EVENT_INVITES.filter(e=>e.stat==="Discipline");
+  const recovery=EVENT_INVITES.filter(e=>e.stat==="Sante"||e.stat==="Esprit");
+  const weak=EVENT_INVITES.filter(e=>e.stat===lowest);
   const roll=Math.random();
-  if(roll<0.50) return {id:"none",type:"none",day,startedAt:now,expiresAt:next7AM(now)};
-  if(roll<0.75){
-    const e=pickFrom(EVENT_BONUSES);
-    return {...e,type:"bonus",day,startedAt:now,expiresAt:next7AM(now)};
-  }
-  if(roll<0.90){
-    const e=pickFrom(EVENT_INVITES);
-    return {...e,type:"invite",day,startedAt:now,expiresAt:next7AM(now),completedAt:null};
-  }
-  const e=pickFrom(EVENT_SURPRISES);
-  const shortExpiry=now+(e.hours||6)*3600000;
-  return {...e,type:"surprise",day,startedAt:now,expiresAt:Math.min(shortExpiry,next7AM(now)),completedAt:null};
+  const pool = roll<0.50 ? discipline : (roll<0.75 ? recovery : weak);
+  const e=pickFrom(pool.length?pool:EVENT_INVITES);
+  return {...e,type:"invite",day,startedAt:now,expiresAt:next7AM(now),completedAt:null,source:"previous_day_incomplete"};
+}
+function buildDailyEvent(s,now=Date.now()){
+  const day=eventDayStr(now);
+  const prev=addDaysStr(day,-1);
+  const hasHistory=!!(s.dailyLog&&s.dailyLog[prev]);
+  if(hasHistory && wasDayCompleteForEvent(s,prev)) return buildBonusEvent(now);
+  return buildInviteEvent(s,now);
 }
 function applyDailyEventReset(s,now=Date.now()){
   const day=eventDayStr(now);
   if(s.eventDay===day && s.dailyEvent) return s;
-  return {...s,eventDay:day,dailyEvent:buildDailyEvent(now)};
+  return {...s,eventDay:day,dailyEvent:buildDailyEvent(s,now)};
 }
 
 // Quêtes urgentes : fonctions de délai
@@ -2052,8 +2108,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function DailyEventCard(){
     const ev=dailyEvent;
     if(!ev) return null;
-    const color = ev.type==="bonus" ? (STAT_COLOR[ev.stat]||rank.color) : (ev.type==="surprise" ? "#f97316" : "#f59e0b");
-    const label = ev.type==="bonus" ? "ÉVÉNEMENT DU JOUR" : (ev.type==="surprise" ? "ÉPREUVE SURPRISE" : "INVITATION");
+    const color = ev.type==="bonus" ? (STAT_COLOR[ev.stat]||rank.color) : "#f59e0b";
+    const label = ev.type==="bonus" ? "ÉLAN DU JOUR" : "INVITATION DE REPRISE";
+    const reason = ev.type==="bonus" ? "Hier complété" : "Reprise douce";
     const expired = now >= (ev.expiresAt||0);
     const done = !!ev.completedAt;
     return h("div",{class:"card",style:"border-color:"+color+"66;background:linear-gradient(135deg,"+color+"14,rgba(255,255,255,0.025))"},
@@ -2065,13 +2122,14 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         ),
         h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap;text-transform:uppercase"},ev.type==="bonus" ? "+15%" : (done ? "validé" : fmtCD((ev.expiresAt||0)-now)))
       ),
+      h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:2px"},reason),
       ev.type==="bonus"&&h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:8px"},"Bonus actif sur "+(STAT_LBL[ev.stat]||ev.stat)),
       ev.type!=="bonus"&&h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:8px"},eventRewardText(ev)),
       ev.type!=="bonus"&&!done&&!expired&&h("button",{
         onClick:e=>completeDailyEvent(ev,e),
         style:"width:100%;margin-top:10px;padding:10px;border-radius:9px;border:1px solid "+color+"66;background:rgba(255,255,255,0.035);color:"+color+";font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer"
-      },"Valider l’événement"),
-      ev.type!=="bonus"&&done&&h("div",{style:"margin-top:10px;text-align:center;color:#4ade80;font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase"},"Événement complété ✓")
+      },"Valider l’invitation"),
+      ev.type!=="bonus"&&done&&h("div",{style:"margin-top:10px;text-align:center;color:#4ade80;font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase"},"Invitation complétée ✓")
     );
   }
 
@@ -3229,11 +3287,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }
 
     function renderEventCodex(ev){
-      const color = ev.type==="bonus" ? (STAT_COLOR[ev.stat]||"var(--rc)") : (ev.type==="surprise" ? "#f97316" : "#f59e0b");
-      const family = ev.type==="bonus" ? "Bonus de stat" : (ev.type==="surprise" ? "Épreuve surprise" : "Invitation");
+      const color = ev.type==="bonus" ? (STAT_COLOR[ev.stat]||"var(--rc)") : "#f59e0b";
+      const family = ev.type==="bonus" ? "Bonus de stat" : "Invitation de reprise";
       return h("div",{key:ev.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:flex-start;gap:8px"},
-          h("div",{style:"font-size:16px;line-height:1;min-width:24px;text-align:center"},ev.type==="bonus"?"✦":(ev.type==="surprise"?"⚡":"◇")),
+          h("div",{style:"font-size:16px;line-height:1;min-width:24px;text-align:center"},ev.type==="bonus"?"✦":"◇"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},ev.title),
             h("div",{style:"font-size:9px;color:"+color+";margin-top:3px;font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase"},family),
@@ -3243,11 +3301,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             ),
             ev.type!=="bonus"&&h("div",{style:"margin-top:7px"},(ev.reward||[]).map((r,i)=>h(StatPill,{key:i,stat:r.stat,xp:r.xp}))),
             h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:6px"},
-              h("div",{style:detailStyle},"▸ Déclenchement : tirage quotidien au reset de 7h"),
+              ev.type==="bonus"&&h("div",{style:detailStyle},"▸ Déclenchement : si la journée précédente est complète"),
+              ev.type==="invite"&&h("div",{style:detailStyle},"▸ Déclenchement : si la journée précédente est incomplète"),
+              h("div",{style:detailStyle},"▸ Reset : 7h"),
               h("div",{style:detailStyle},"▸ Pénalité : aucune si ignoré"),
               ev.type==="bonus"&&h("div",{style:detailStyle},"▸ Effet : bonus automatique sur les gains de la stat concernée"),
-              ev.type==="invite"&&h("div",{style:detailStyle},"▸ Validation : manuelle depuis la carte événement"),
-              ev.type==="surprise"&&h("div",{style:detailStyle},"▸ Délai : environ "+(ev.hours||6)+"h, sans dépasser le prochain reset")
+              ev.type==="invite"&&h("div",{style:detailStyle},"▸ Validation : manuelle depuis la carte événement")
             )
           )
         )
@@ -3356,8 +3415,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const specialList = STATS.flatMap(stat=>(SP[stat]||[]).map(q=>({...q,stat:q.stat||stat})));
     const eventList = [
       ...EVENT_BONUSES.map(e=>({...e,type:"bonus"})),
-      ...EVENT_INVITES.map(e=>({...e,type:"invite"})),
-      ...EVENT_SURPRISES.map(e=>({...e,type:"surprise"}))
+      ...EVENT_INVITES.map(e=>({...e,type:"invite"}))
     ];
 
     return h("div",{class:"tab"},
@@ -3376,7 +3434,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial)),
       h(Section,{id:"ev",title:"Événements",count:eventList.length},
         h(Fragment,null,
-          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Tirage quotidien : 50% aucun événement · 25% bonus de stat · 15% invitation · 10% épreuve surprise."),
+          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Logique quotidienne : journée précédente complète → bonus de stat aléatoire ; journée précédente incomplète → invitation de reprise. Aucune pénalité si ignoré."),
           eventList.map(renderEventCodex)
         )
       ),
