@@ -125,6 +125,52 @@ const SP = {
 };
 
 
+// Donjons volontaires — V1 simple : 1 actif à la fois, 1/jour, 3/semaine, 24h.
+const DUNGEONS = [
+  {id:"monk", title:"Donjon du Moine", short:"Moine", stat:"Esprit", icon:"🧘🏻‍♂️", color:"#ec4899", reward:{xp:1500,stat:"Esprit",xp2:300,stat2:"Discipline"}, rooms:[
+    {name:"Lecture profonde", desc:"Lire 20 min sans téléphone"},
+    {name:"Mémoire", desc:"10 min de rappel actif"},
+    {name:"Silence", desc:"15 min sans stimulation"},
+    {name:"Méditation", desc:"10 min"},
+    {name:"Boss : Clarté", desc:"Écrire 5 lignes sur ce que tu retiens"},
+  ]},
+  {id:"hunter", title:"Donjon du Chasseur", short:"Chasseur", stat:"Agilite", icon:"🏹", color:"#4ade80", reward:{xp:1200,stat:"Agilite",xp2:300,stat2:"Endurance"}, rooms:[
+    {name:"Éveil corporel", desc:"5 min de mobilité douce"},
+    {name:"Déplacements", desc:"10 min de footwork"},
+    {name:"Souplesse active", desc:"10 min"},
+    {name:"Équilibre", desc:"5 min"},
+    {name:"Boss : Fluidité", desc:"5 min d'enchaînement libre sans interruption"},
+  ]},
+  {id:"warrior", title:"Donjon du Guerrier", short:"Guerrier", stat:"Force", icon:"⚔️", color:"#fb923c", reward:{xp:1500,stat:"Force",xp2:300,stat2:"Discipline"}, rooms:[
+    {name:"Pompes", desc:"50 reps au total"},
+    {name:"Abdos", desc:"80 reps"},
+    {name:"Squats", desc:"50 reps"},
+    {name:"Gainage", desc:"3 min"},
+    {name:"Boss : Mur de volonté", desc:"Max pompes en une série"},
+  ]},
+  {id:"pilgrim", title:"Donjon du Pèlerin", short:"Pèlerin", stat:"Endurance", icon:"🥾", color:"#22d3ee", reward:{xp:1500,stat:"Endurance",xp2:300,stat2:"Agilite"}, rooms:[
+    {name:"Marche", desc:"20 min"},
+    {name:"Escaliers", desc:"10 allers-retours"},
+    {name:"Course ou marche rapide", desc:"15 min"},
+    {name:"Respiration en mouvement", desc:"5 min de rythme régulier"},
+    {name:"Boss : Continuité", desc:"30 min sans s'arrêter"},
+  ]},
+  {id:"alchemist", title:"Donjon de l’Alchimiste", short:"Alchimiste", stat:"Sante", icon:"⚗️", color:"#ef4444", reward:{xp:1200,stat:"Sante",xp2:300,stat2:"Esprit"}, rooms:[
+    {name:"Hydratation", desc:"3 verres d'eau"},
+    {name:"Repas propre", desc:"1 repas équilibré"},
+    {name:"Lumière naturelle", desc:"10 min dehors"},
+    {name:"Respiration", desc:"5 min de cohérence cardiaque"},
+    {name:"Boss : Corps calme", desc:"Soirée sans sucre transformé"},
+  ]},
+  {id:"guardian", title:"Donjon du Gardien", short:"Gardien", stat:"Discipline", icon:"🛡️", color:"#c084fc", reward:{xp:1500,stat:"Discipline",xp2:300,stat2:"Esprit"}, rooms:[
+    {name:"Tâche repoussée", desc:"1 action concrète"},
+    {name:"Téléphone hors de portée", desc:"1h"},
+    {name:"Aucun contenu passif", desc:"2h"},
+    {name:"Rangement", desc:"10 objets"},
+    {name:"Boss : Engagement", desc:"Terminer une chose commencée"},
+  ]},
+];
+
 // Couleurs et libellés des tiers des quêtes urgentes
 const SQ_TIER_COLOR = {mineure:"#fbbf24", majeure:"#f59e0b", legendaire:"#f97316"};
 const SQ_TIER_LABEL = {mineure:"Mineure", majeure:"Majeure", legendaire:"Légendaire"};
@@ -539,6 +585,10 @@ const IMPORTED = {
   statXp:{Sante:10100,Force:13488,Esprit:12700,Endurance:2962,Agilite:1652,Discipline:3150},
   specialQuests:[],
   sqCooldownUntil:null,
+  activeDungeon:null,
+  dungeonRunDay:null,
+  dungeonRunsByWeek:{},
+  dungeonLog:[],
   sqRerollDay:null,
   completedSqLog:[],
   sqStatCycle:[],
@@ -571,6 +621,10 @@ function buildState(){
     specialQuests:saved.specialQuests||[],
     sqCooldownUntil:saved.sqCooldownUntil||null,
     sqRerollDay:saved.sqRerollDay||null,
+    activeDungeon:saved.activeDungeon||null,
+    dungeonRunDay:saved.dungeonRunDay||null,
+    dungeonRunsByWeek:saved.dungeonRunsByWeek||{},
+    dungeonLog:saved.dungeonLog||[],
     completedSqLog:saved.completedSqLog||[],
     sqStatCycle:saved.sqStatCycle||[],
     stats:saved.stats||IMPORTED.stats,
@@ -622,6 +676,7 @@ function App(){
   const [rankUp,setRankUp] = useState(null);
   const [levelUp,setLevelUp] = useState(null);
   const [recordUp,setRecordUp] = useState(null);
+  const [dungeonUp,setDungeonUp] = useState(null);
   const [confirmRerollSq,setConfirmRerollSq] = useState(null);
   const [focusMode,setFocusMode] = useState(false);
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
@@ -780,6 +835,16 @@ function App(){
   const sqReady = !activeSq && !sqCooldownActive;
   const sqRerollUsed = state.sqRerollDay===today;
 
+  const activeDungeonTpl = state.activeDungeon ? DUNGEONS.find(d=>d.id===state.activeDungeon.id) : null;
+  const activeDungeon = state.activeDungeon && activeDungeonTpl && !state.activeDungeon.completedAt && now < state.activeDungeon.expiresAt
+    ? {...activeDungeonTpl,...state.activeDungeon,tpl:activeDungeonTpl}
+    : null;
+  const dungeonRunDay = state.dungeonRunDay||null;
+  const dungeonRunsByWeek = state.dungeonRunsByWeek||{};
+  const dungeonWeekCount = dungeonRunsByWeek[wk]||0;
+  const dungeonDailyUsed = dungeonRunDay===today;
+  const dungeonCanStart = !activeDungeon && !dungeonDailyUsed && dungeonWeekCount<3;
+
   // Flags bonus
   const bonusGiven       = state.streakBonusDay===today;
   const weeklyBonusGiven = state.weeklyBonusWk===wk;
@@ -903,6 +968,13 @@ function App(){
   useEffect(()=>{
     if(computedStreak!==state.streak)setState(s=>({...s,streak:computedStreak}));
   },[computedStreak]);
+
+  // Expiration des donjons non terminés après 24h
+  useEffect(()=>{
+    if(!state.activeDungeon || state.activeDungeon.completedAt) return;
+    if(now < state.activeDungeon.expiresAt) return;
+    setState(s=>s.activeDungeon && !s.activeDungeon.completedAt && Date.now()>=s.activeDungeon.expiresAt ? {...s,activeDungeon:null} : s);
+  },[now,state.activeDungeon?.expiresAt]);
 
   // Bonus streak + increment streak au moment ou toutes les quetes sont faites
   useEffect(()=>{
@@ -1282,6 +1354,60 @@ function App(){
     });
   }
 
+  function dungeonRewardPairs(dungeon){
+    if(!dungeon || !dungeon.reward) return [];
+    return [
+      {xp:dungeon.reward.xp,stat:dungeon.reward.stat},
+      dungeon.reward.xp2&&dungeon.reward.stat2 ? {xp:dungeon.reward.xp2,stat:dungeon.reward.stat2} : null,
+      dungeon.reward.xp3&&dungeon.reward.stat3 ? {xp:dungeon.reward.xp3,stat:dungeon.reward.stat3} : null,
+    ].filter(Boolean);
+  }
+
+  function startDungeon(id){
+    setState(s=>{
+      const t=Date.now();
+      const day=todayStr();
+      const week=wkStr();
+      const runs={...(s.dungeonRunsByWeek||{})};
+      const current=s.activeDungeon;
+      if(current && !current.completedAt && t<current.expiresAt) return s;
+      if(s.dungeonRunDay===day || (runs[week]||0)>=3) return s;
+      const dungeon=DUNGEONS.find(d=>d.id===id);
+      if(!dungeon) return s;
+      runs[week]=(runs[week]||0)+1;
+      return {...s,activeDungeon:{id,runId:"dg_"+t,startedAt:t,expiresAt:t+86400000,completedRooms:[],completedAt:null},dungeonRunDay:day,dungeonRunsByWeek:runs,lastActiveDay:day};
+    });
+  }
+
+  function validateDungeonRoom(){
+    setState(s=>{
+      const ad=s.activeDungeon;
+      if(!ad || ad.completedAt) return s;
+      const dungeon=DUNGEONS.find(d=>d.id===ad.id);
+      if(!dungeon) return {...s,activeDungeon:null};
+      const t=Date.now();
+      if(t>=ad.expiresAt) return {...s,activeDungeon:null};
+      const completed=Array.isArray(ad.completedRooms)?ad.completedRooms:[];
+      const nextIdx=completed.length;
+      if(nextIdx>=dungeon.rooms.length) return s;
+      const nextCompleted=[...completed,nextIdx];
+      const isComplete=nextCompleted.length>=dungeon.rooms.length;
+      if(!isComplete) return {...s,activeDungeon:{...ad,completedRooms:nextCompleted},lastActiveDay:todayStr()};
+      const beforeXp=s.totalXp;
+      const beforeStats=s.stats;
+      let totalXp=s.totalXp;
+      const statXp={...s.statXp};
+      const stats={...s.stats};
+      const rewards=dungeonRewardPairs(dungeon);
+      rewards.forEach(r=>{totalXp+=(r.xp||0);statXp[r.stat]=(statXp[r.stat]||0)+(r.xp||0);stats[r.stat]=getLvl(statXp[r.stat]);});
+      const completedAt=t;
+      const rewardText=rewards.map(r=>"+"+r.xp+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ");
+      setTimeout(()=>setDungeonUp({title:dungeon.title,short:dungeon.short,icon:dungeon.icon,color:dungeon.color,reward:rewardText}),200);
+      triggerProgressOverlay(beforeXp,beforeStats,totalXp,stats,900);
+      return {...s,totalXp,statXp,stats,activeDungeon:null,dungeonLog:[...(s.dungeonLog||[]),{id:dungeon.id,title:dungeon.title,stat:dungeon.stat,xp:rewards.reduce((a,r)=>a+(r.xp||0),0),completedAt}],lastActiveDay:todayStr()};
+    });
+  }
+
   function fmtCD(ms){
     const d=Math.floor(ms/86400000),hh=Math.floor((ms%86400000)/3600000),mm=Math.floor((ms%3600000)/60000);
     if(d>0)return d+"j "+hh+"h"; if(hh>0)return hh+"h "+mm+"min"; return mm+"min";
@@ -1642,6 +1768,44 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
+  function DungeonCard({compact=false}={}){
+    const d=activeDungeon;
+    const remaining=d ? d.expiresAt-now : 0;
+    const completedRooms=d ? (d.completedRooms||[]) : [];
+    const nextRoom=d ? d.rooms[completedRooms.length] : null;
+    const color=d ? d.color : rank.color;
+    if(compact && !d) return null;
+    if(d){
+      return h("div",{class:"card",style:"border-color:"+color+"66"},
+        h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
+          h("div",{style:"min-width:0"},
+            h("div",{class:"ctitle",style:"margin:0;color:"+color},d.icon+" "+d.title),
+            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"Progression "+completedRooms.length+"/"+d.rooms.length+" salles · "+fmtCD(remaining)+" restants")
+          ),
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap"},STAT_LBL[d.stat]||d.stat)
+        ),
+        h("div",{style:"display:flex;flex-direction:column;gap:6px;margin-top:10px"},d.rooms.map((room,i)=>{
+          const done=completedRooms.includes(i);
+          const current=i===completedRooms.length;
+          return h("div",{key:i,style:"display:flex;gap:8px;align-items:flex-start;padding:8px;border-radius:10px;background:"+(current?color+"12":"rgba(255,255,255,0.025)")+";border:1px solid "+(current?color+"44":"rgba(255,255,255,0.05)")+";opacity:"+(done?"0.75":"1")},
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:"+(done?"#4ade80":current?color:"var(--td)")+";width:18px;text-align:center;flex-shrink:0"},done?"✓":(i+1)),
+            h("div",{style:"min-width:0"},h("div",{style:"font-size:12px;color:var(--tx);font-weight:700;line-height:1.25"},room.name),h("div",{style:"font-size:10px;color:var(--td);line-height:1.35;margin-top:2px"},room.desc))
+          );
+        })),
+        nextRoom&&h("button",{onClick:validateDungeonRoom,style:"width:100%;margin-top:10px;padding:11px;border-radius:9px;border:1px solid "+color+"66;background:"+color+"12;color:"+color+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"},completedRooms.length===d.rooms.length-1?"Valider le boss":"Valider la salle suivante")
+      );
+    }
+    return h("div",{class:"card",style:"border-color:var(--rc)44"},
+      h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px"},
+        h("div",null,h("div",{class:"ctitle",style:"margin:0;color:var(--rc)"},"Donjons"),h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"1/jour · "+dungeonWeekCount+"/3 cette semaine")),
+        h("div",{style:"font-size:10px;color:"+(dungeonCanStart?"#4ade80":"var(--td)")+";font-family:Orbitron,sans-serif;text-transform:uppercase;white-space:nowrap"},dungeonCanStart?"Disponible":(dungeonDailyUsed?"Déjà lancé":"Limite hebdo"))
+      ),
+      dungeonCanStart
+        ? h("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:8px"},DUNGEONS.map(dg=>h("button",{key:dg.id,onClick:()=>startDungeon(dg.id),style:"padding:10px 8px;border-radius:10px;border:1px solid "+dg.color+"55;background:"+dg.color+"0f;color:"+dg.color+";font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:.7px;text-transform:uppercase;cursor:pointer;text-align:center;line-height:1.25"},h("div",{style:"font-size:16px;margin-bottom:4px"},dg.icon),h("div",null,dg.short),h("div",{style:"font-size:8px;color:var(--td);margin-top:3px"},STAT_LBL[dg.stat]||dg.stat))))
+        : h("div",{style:"text-align:center;padding:10px 0;color:var(--td);font-size:11px;line-height:1.45"},dungeonDailyUsed?"Tu as déjà lancé un donjon aujourd'hui. Prochain lancement disponible demain.":"Limite hebdomadaire atteinte. Prochain lancement disponible la semaine prochaine.")
+    );
+  }
+
   // ─── ONGLET ACCUEIL ───────────────────────────────────────────────────
 
 
@@ -1730,13 +1894,14 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         !activeSq&&sqCooldownActive&&h("div",{class:"card",style:"border-color:#ef444433"},
           h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Urgente"),
           h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:4px 0;font-family:Orbitron,sans-serif"},"\u23F3 Prochaine qu\u00eate dans "+fmtCD(sqCooldownUntil-now))
-        )
-      );
+        ),
+        activeDungeon&&h(DungeonCard,{compact:true})      );
     }
 
     return h("div",{class:"tab"},
       missedDays>=2&&h("div",{class:"warn"},"\u26A0\uFE0F P\u00e9nalit\u00e9 : -"+(missedDays*10)+" XP ("+missedDays+" jours manqu\u00e9s)"),
       h("div",{style:"display:flex;justify-content:center;margin-bottom:8px"},focusToggle),
+      h(DungeonCard,null),
 
       h("div",{class:"card"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"},
@@ -1789,7 +1954,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         prestigeAvailable&&h("button",{
           onClick:()=>{
             const newPrestige=(state.prestige||0)+1;
-            setState(s=>({...s,streak:0,streakBonusDay:null,weeklyBonusWk:null,streakMilestones:[],dailyLog:{},weeklyLog:{},specialQuests:[],sqStatCycle:[],sqCooldownUntil:null,sqRerollDay:null,prestige:newPrestige}));
+            setState(s=>({...s,streak:0,streakBonusDay:null,weeklyBonusWk:null,streakMilestones:[],dailyLog:{},weeklyLog:{},specialQuests:[],sqStatCycle:[],sqCooldownUntil:null,sqRerollDay:null,activeDungeon:null,dungeonRunDay:null,dungeonRunsByWeek:{},dungeonLog:[],prestige:newPrestige}));
             setPrestigeUp(newPrestige);
           },
           style:"width:100%;margin-top:12px;padding:12px;background:rgba(168,85,247,0.1);border:1px solid #a855f7;border-radius:10px;color:#a855f7;font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:3px;cursor:pointer;text-transform:uppercase;text-shadow:0 0 12px #a855f7"
@@ -2439,6 +2604,22 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
   // ─── ANIMATION LEVEL UP ───────────────────────────────────────────────
 
+  function DungeonUp(){
+    if(!dungeonUp)return null;
+    const color=dungeonUp.color||"#c084fc";
+    const glow=color+"66";
+    const particles=Array.from({length:46},(_,i)=>({id:i,left:Math.random()*100,delay:Math.random()*2.8,dur:1.2+Math.random()*2,size:2+Math.random()*4,accent:Math.random()>0.45}));
+    return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+glow},
+      h("div",{class:"ruparts"},particles.map(p=>h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?"#ffffff":color)+";box-shadow:0 0 8px "+glow+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"}))),
+      h("div",{class:"rucont"},
+        h("div",{class:"ruevol"},"DONJON TERMINÉ"),
+        h("div",{class:"rurank",style:"font-size:clamp(48px,16vw,82px);letter-spacing:-1px;white-space:nowrap","data-r":dungeonUp.short},dungeonUp.short),
+        h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:3px;max-width:300px;line-height:1.35"},dungeonUp.reward),
+        h("button",{class:"rudis",onClick:()=>setDungeonUp(null)},"Continuer")
+      )
+    );
+  }
+
   function RecordUp(){
     if(!recordUp)return null;
     const color=recordUp.color||"#fbbf24";
@@ -2766,6 +2947,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(RankUp,null),
       h(LevelUp,null),
       h(RecordUp,null),
+      h(DungeonUp,null),
       h(ConfirmReroll,null),
       h(PrestigeUp,null),
     )
