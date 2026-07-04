@@ -3102,6 +3102,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   ];
   const mantraDayIndex = Math.floor(new Date(today).getTime()/86400000);
   const dailyMantra = DAILY_MANTRAS[Math.abs(mantraDayIndex)%DAILY_MANTRAS.length];
+  const mantraColor = STAT_COLOR.Force || "#fb923c";
 
   return h(Fragment,null,
     h("div",{id:"app"},
@@ -3111,7 +3112,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{class:"hdr-top",style:"position:relative"},
             h("div",null,
               h("div",{class:"pname"},"VAL"),
-              h("div",{style:"margin-top:7px;max-width:calc(100vw - 112px);font-size:10.5px;line-height:1.35;color:"+rank.color+";font-family:Orbitron,sans-serif;letter-spacing:0.7px;text-transform:uppercase;background:"+rank.color+"14;border:1px solid "+rank.color+"44;border-radius:999px;padding:6px 10px;display:inline-block"},dailyMantra)
+              h("div",{style:"margin-top:7px;max-width:calc(100vw - 112px);font-size:10.5px;line-height:1.35;color:"+mantraColor+";font-family:Orbitron,sans-serif;letter-spacing:0.7px;text-transform:uppercase;background:"+mantraColor+"18;border:1px solid "+mantraColor+"66;border-radius:999px;padding:6px 10px;display:inline-block"},dailyMantra)
             ),
             prestige>0&&h("div",{class:"prestige-badge"},"\u269B\uFE0F Ascension "+ROMAN[prestige-1]),
             h("button",{class:"gbtn",style:"display:flex;align-items:center;justify-content:center",onClick:()=>setShowSet(true)},"⚙️")
