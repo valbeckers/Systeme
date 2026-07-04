@@ -589,6 +589,7 @@ const IMPORTED = {
   dungeonRunDay:null,
   dungeonRunsByWeek:{},
   dungeonLog:[],
+  dailyExtraXp:{},
   sqRerollDay:null,
   completedSqLog:[],
   sqStatCycle:[],
@@ -625,6 +626,7 @@ function buildState(){
     dungeonRunDay:saved.dungeonRunDay||null,
     dungeonRunsByWeek:saved.dungeonRunsByWeek||{},
     dungeonLog:saved.dungeonLog||[],
+    dailyExtraXp:saved.dailyExtraXp||IMPORTED.dailyExtraXp||{},
     completedSqLog:saved.completedSqLog||[],
     sqStatCycle:saved.sqStatCycle||[],
     stats:saved.stats||IMPORTED.stats,
@@ -763,12 +765,50 @@ function App(){
   const prestigeAvailable = prestigeXpReached && ascStatsOk;
   const prestigeBlocked = prestigeXpReached && !ascStatsOk;
 
-  // 6. XP du jour (journalières uniquement, pas l'hebdo)
+  // 6. XP du jour : journalières + XP ponctuelle gagnée aujourd'hui
+  // Inclut maintenant les quêtes urgentes et les salles de donjon.
+  const sameDayTs = ts => ts && new Date(ts).toDateString()===new Date().toDateString();
+  const sumXpPairs = pairs => (pairs||[]).reduce((s,p)=>s+(Number(p?.xp)||0),0);
+  const sqEarnedXp = q => {
+    if(!q) return 0;
+    if(q.tiers && q.tiers.length>0){
+      const prog = Number(q.progress||0);
+      return q.tiers.reduce((sum,tier)=>{
+        if(prog < tier.at) return sum;
+        return sum + (tier.xp||0) + (tier.xp2||0) + (tier.xp3||0);
+      },0);
+    }
+    if(q.completedAt || (q.progress||0)>=(q.target||1)){
+      return (q.xp||0) + (q.xp2||0) + (q.xp3||0);
+    }
+    return 0;
+  };
+  const extraToday = (state.dailyExtraXp&&state.dailyExtraXp[today]) || {};
+  const extraTodayXp = Object.values(extraToday).reduce((s,v)=>s+(Number(v)||0),0);
+  const legacyStreakTodayXp = extraToday.streak ? 0 : (
+    state.streakBonusDay===today
+      ? 250 + (((state.streak||0)>0 && (state.streak||0)%7===0 && (state.streakMilestones||[]).includes(state.streak)) ? 500 : 0)
+      : 0
+  );
+  const legacySqTodayXp = extraToday.sq ? 0 : (state.specialQuests||[])
+    .filter(q=>sameDayTs(q.completedAt))
+    .reduce((s,q)=>s+sqEarnedXp(q),0);
+  const legacyActiveDungeonTodayXp = extraToday.dungeon ? 0 : (()=>{
+    const ad=state.activeDungeon;
+    if(!ad || !sameDayTs(ad.startedAt)) return 0;
+    const dg=DUNGEONS.find(d=>d.id===ad.id);
+    if(!dg) return 0;
+    return (ad.completedRooms||[]).reduce((sum,idx)=>sum+sumXpPairs(dungeonRoomRewardPairs(dg,idx)),0);
+  })();
+  const legacyCompletedDungeonTodayXp = extraToday.dungeon ? 0 : (state.dungeonLog||[])
+    .filter(e=>sameDayTs(e.completedAt))
+    .reduce((s,e)=>s+(Number(e.xp)||0),0);
+
   const todayXp = Object.entries(tLog).reduce((s,[id,a])=>{
     const o=objs.find(x=>x.id===id); if(!o) return s;
     const b = o.base && !RANK_BASES[o.id] ? o.base : getRankBase(o.id, ri, prestige);
     return s + calcXp(o, a, b);
-  },0) + (state.specialQuests||[]).filter(q=>q.completedAt&&new Date(q.completedAt).toDateString()===new Date().toDateString()).reduce((s,q)=>s+q.xp,0);
+  },0) + extraTodayXp + legacyStreakTodayXp + legacySqTodayXp + legacyActiveDungeonTodayXp + legacyCompletedDungeonTodayXp;
 
   // 7. Quetes journalieres obligatoires toutes faites ?
   const reqDailyObjs  = objs.filter(o=>!o.optional&&o.daily);
@@ -995,6 +1035,7 @@ function App(){
         const beforeXp = next.totalXp;
         const beforeStats = {...next.stats};
 
+        let streakXpToday = 250;
         const sx={...next.statXp,Discipline:(next.statXp.Discipline||0)+250};
         next={...next,totalXp:next.totalXp+250,statXp:sx,stats:{...next.stats,Discipline:getLvl(sx.Discipline)},streakBonusDay:t};
 
@@ -1003,6 +1044,7 @@ function App(){
         const milestones=next.streakMilestones||[];
         if(newStreak>0 && newStreak%7===0 && !milestones.includes(newStreak)){
           const milestoneXp=500;
+          streakXpToday += milestoneXp;
           const sx2={...sx,Discipline:(sx.Discipline||0)+milestoneXp};
           next={...next,totalXp:next.totalXp+milestoneXp,statXp:sx2,stats:{...next.stats,Discipline:getLvl(sx2.Discipline)},streakMilestones:[...milestones,newStreak]};
           setTimeout(()=>{
@@ -1017,6 +1059,12 @@ function App(){
             setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id1&&p.id!==id2)),1400);
           },300);
         }
+
+        const daily={...(next.dailyExtraXp||{})};
+        const dayLog={...(daily[t]||{})};
+        dayLog.streak=(dayLog.streak||0)+streakXpToday;
+        daily[t]=dayLog;
+        next={...next,dailyExtraXp:daily};
 
         triggerProgressOverlay(beforeXp,beforeStats,next.totalXp,next.stats,300);
       }
@@ -1282,8 +1330,18 @@ function App(){
         ]);
         setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id1&&p.id!==id2)),1400);
       }
-      setState(s=>({...s,specialQuests:s.specialQuests.map(q=>q.sqid===sq.sqid?{...q,progress:newProg,completedAt:(nowComplete&&!wasComplete)?Date.now():q.completedAt}:q),
-        sqCooldownUntil:(nowComplete&&!wasComplete)?next7AM():(s.sqCooldownUntil||null)}));
+      const awardedXp = crossedTiers.reduce((sum,t)=>
+        sum + (t.xp||0) + (t.xp2||0) + (t.xp3||0),0);
+      setState(s=>{
+        const day=todayStr();
+        const daily={...(s.dailyExtraXp||{})};
+        const dayLog={...(daily[day]||{})};
+        if(awardedXp>0) dayLog.sq=(dayLog.sq||0)+awardedXp;
+        if(awardedXp>0) daily[day]=dayLog;
+        return {...s,specialQuests:s.specialQuests.map(q=>q.sqid===sq.sqid?{...q,progress:newProg,completedAt:(nowComplete&&!wasComplete)?Date.now():q.completedAt}:q),
+          sqCooldownUntil:(nowComplete&&!wasComplete)?next7AM():(s.sqCooldownUntil||null),
+          dailyExtraXp:awardedXp>0?daily:(s.dailyExtraXp||{})};
+      });
       return;
     }
 
@@ -1307,8 +1365,21 @@ function App(){
       ]);
       setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id1&&p.id!==id2)),1400);
     }
-    setState(s=>({...s,specialQuests:s.specialQuests.map(q=>q.sqid===sq.sqid?{...q,progress:newProg,completedAt:(nowComplete&&!wasComplete)?Date.now():q.completedAt}:q),
-      sqCooldownUntil:(nowComplete&&!wasComplete)?next7AM():(s.sqCooldownUntil||null)}));
+    const awardedXp = (!wasComplete&&nowComplete) ? [
+      {xp:sq.xp, stat:sq.stat},
+      sq.xp2&&sq.stat2 ? {xp:sq.xp2, stat:sq.stat2} : null,
+      sq.xp3&&sq.stat3 ? {xp:sq.xp3, stat:sq.stat3} : null,
+    ].filter(Boolean).reduce((sum,p)=>sum+(p.xp||0),0) : 0;
+    setState(s=>{
+      const day=todayStr();
+      const daily={...(s.dailyExtraXp||{})};
+      const dayLog={...(daily[day]||{})};
+      if(awardedXp>0) dayLog.sq=(dayLog.sq||0)+awardedXp;
+      if(awardedXp>0) daily[day]=dayLog;
+      return {...s,specialQuests:s.specialQuests.map(q=>q.sqid===sq.sqid?{...q,progress:newProg,completedAt:(nowComplete&&!wasComplete)?Date.now():q.completedAt}:q),
+        sqCooldownUntil:(nowComplete&&!wasComplete)?next7AM():(s.sqCooldownUntil||null),
+        dailyExtraXp:awardedXp>0?daily:(s.dailyExtraXp||{})};
+    });
   }
 
   function launchNewSq(){
@@ -1420,20 +1491,26 @@ function App(){
         statXp[r.stat]=(statXp[r.stat]||0)+(r.xp||0);
         stats[r.stat]=getLvl(statXp[r.stat]);
       });
+      const awardedXp = roomRewards.reduce((sum,r)=>sum+(r.xp||0),0);
+      const day=todayStr();
+      const daily={...(s.dailyExtraXp||{})};
+      const dayLog={...(daily[day]||{})};
+      if(awardedXp>0) dayLog.dungeon=(dayLog.dungeon||0)+awardedXp;
+      if(awardedXp>0) daily[day]=dayLog;
 
       const nextCompleted=[...completed,nextIdx];
       const isComplete=nextCompleted.length>=dungeon.rooms.length;
       triggerProgressOverlay(beforeXp,beforeStats,totalXp,stats,300);
 
       if(!isComplete){
-        return {...s,totalXp,statXp,stats,activeDungeon:{...ad,completedRooms:nextCompleted},lastActiveDay:todayStr()};
+        return {...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:{...ad,completedRooms:nextCompleted},lastActiveDay:todayStr()};
       }
 
       const completedAt=t;
       const rewards=dungeonRewardPairs(dungeon);
       const rewardText=rewards.map(r=>"+"+r.xp+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ");
       setTimeout(()=>setDungeonUp({title:dungeon.title,short:dungeon.short,icon:dungeon.icon,color:dungeon.color,reward:rewardText}),200);
-      return {...s,totalXp,statXp,stats,activeDungeon:null,dungeonLog:[...(s.dungeonLog||[]),{id:dungeon.id,title:dungeon.title,stat:dungeon.stat,xp:rewards.reduce((a,r)=>a+(r.xp||0),0),completedAt}],lastActiveDay:todayStr()};
+      return {...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:null,dungeonLog:[...(s.dungeonLog||[]),{id:dungeon.id,title:dungeon.title,stat:dungeon.stat,xp:rewards.reduce((a,r)=>a+(r.xp||0),0),completedAt}],lastActiveDay:todayStr()};
     });
   }
 
@@ -1718,6 +1795,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     function completeBinary(val,e){
       if(sq.progress>=sq.target)return;
       const nowComplete=val>=1;
+      const awardedXp = nowComplete ? xpPairs.reduce((sum,p)=>sum+(p.xp||0),0) : 0;
       if(nowComplete){
         const id1=Date.now()+Math.random(), id2=id1+0.1;
         const xpText = xpPairs.map(p=>{
@@ -1728,9 +1806,17 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id1&&p.id!==id2)),1400);
         xpPairs.forEach(p=>addXp(p.xp,p.stat,null,true));
       }
-      setState(s=>({...s,specialQuests:s.specialQuests.map(q=>q.sqid===sq.sqid
-        ?{...q,progress:nowComplete?(sq.target||1):val,completedAt:nowComplete?Date.now():q.completedAt}:q),
-        sqCooldownUntil:nowComplete?next7AM():(s.sqCooldownUntil||null)}));
+      setState(s=>{
+        const day=todayStr();
+        const daily={...(s.dailyExtraXp||{})};
+        const dayLog={...(daily[day]||{})};
+        if(awardedXp>0) dayLog.sq=(dayLog.sq||0)+awardedXp;
+        if(awardedXp>0) daily[day]=dayLog;
+        return {...s,specialQuests:s.specialQuests.map(q=>q.sqid===sq.sqid
+          ?{...q,progress:nowComplete?(sq.target||1):val,completedAt:nowComplete?Date.now():q.completedAt}:q),
+          sqCooldownUntil:nowComplete?next7AM():(s.sqCooldownUntil||null),
+          dailyExtraXp:awardedXp>0?daily:(s.dailyExtraXp||{})};
+      });
     }
 
     const tier = sq.tier || "majeure";
