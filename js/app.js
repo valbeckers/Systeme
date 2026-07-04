@@ -677,6 +677,7 @@ function App(){
   function switchTab(id){ setTab(id); if(scrollRef.current) scrollRef.current.scrollTop=0; }
   const [rankUp,setRankUp] = useState(null);
   const [levelUp,setLevelUp] = useState(null);
+  const [streakUp,setStreakUp] = useState(null);
   const [recordUp,setRecordUp] = useState(null);
   const [dungeonUp,setDungeonUp] = useState(null);
   const [confirmRerollSq,setConfirmRerollSq] = useState(null);
@@ -1042,23 +1043,32 @@ function App(){
         // Milestone tous les 7 jours de streak
         const newStreak=next.streak;
         const milestones=next.streakMilestones||[];
+        let streakAnim = {
+          title:"STREAK BONUS !",
+          streak:newStreak,
+          xp:250,
+          subtitle:"+250 XP Discipline",
+          color:STAT_COLOR.Discipline,
+          glow:STAT_COLOR.Discipline+"66"
+        };
+
         if(newStreak>0 && newStreak%7===0 && !milestones.includes(newStreak)){
           const milestoneXp=500;
           streakXpToday += milestoneXp;
           const sx2={...sx,Discipline:(sx.Discipline||0)+milestoneXp};
           next={...next,totalXp:next.totalXp+milestoneXp,statXp:sx2,stats:{...next.stats,Discipline:getLvl(sx2.Discipline)},streakMilestones:[...milestones,newStreak]};
-          setTimeout(()=>{
-            const id1=Date.now()+Math.random(),id2=id1+0.1;
-            setFloats(f=>[...f,{id:id1,y:"30%",txt:"\uD83C\uDFC6 MILESTONE "+newStreak+" JOURS !"},{id:id2,y:"35%",txt:"+500 XP Discipline"}]);
-            setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id1&&p.id!==id2)),2000);
-          },600);
-        } else {
-          setTimeout(()=>{
-            const id1=Date.now()+Math.random(),id2=id1+0.1;
-            setFloats(f=>[...f,{id:id1,y:"35%",txt:"\uD83D\uDD25 STREAK BONUS !"},{id:id2,y:"40%",txt:"+250 XP Discipline"}]);
-            setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id1&&p.id!==id2)),1400);
-          },300);
+          streakAnim = {
+            title:"MILESTONE !",
+            streak:newStreak,
+            xp:streakXpToday,
+            subtitle:"+750 XP Discipline",
+            detail:newStreak+" jours de streak",
+            color:STAT_COLOR.Discipline,
+            glow:STAT_COLOR.Discipline+"66"
+          };
         }
+
+        setTimeout(()=>setStreakUp(streakAnim),300);
 
         const daily={...(next.dailyExtraXp||{})};
         const dayLog={...(daily[t]||{})};
@@ -1066,7 +1076,7 @@ function App(){
         daily[t]=dayLog;
         next={...next,dailyExtraXp:daily};
 
-        triggerProgressOverlay(beforeXp,beforeStats,next.totalXp,next.stats,300);
+        triggerProgressOverlay(beforeXp,beforeStats,next.totalXp,next.stats,1800);
       }
 
       return next;
@@ -2733,6 +2743,35 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
+  // ─── ANIMATION STREAK BONUS ───────────────────────────────────────────
+
+  function StreakUp(){
+    if(!streakUp)return null;
+    const color = streakUp.color || STAT_COLOR.Discipline || "#c084fc";
+    const glow = streakUp.glow || color+"66";
+    const particles=Array.from({length:38},(_,i)=>({
+      id:i,
+      left:Math.random()*100,
+      delay:Math.random()*2.5,
+      dur:1.1+Math.random()*1.8,
+      size:2+Math.random()*4,
+      accent:Math.random()>0.58
+    }));
+    return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+glow},
+      h("div",{class:"ruparts"},particles.map(p=>
+        h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?"rgba(255,255,255,0.7)":color)+";box-shadow:0 0 8px "+glow+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
+      )),
+      h("div",{class:"rucont"},
+        h("div",{class:"ruevol"},streakUp.title || "STREAK BONUS !"),
+        h("div",{class:"rurank","data-r":String(streakUp.streak||0)},String(streakUp.streak||0)),
+        h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:3px"},"JOURS DE STREAK"),
+        h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:2px;color:"+color},streakUp.subtitle || ("+"+(streakUp.xp||250)+" XP Discipline")),
+        streakUp.detail&&h("div",{style:"margin-top:8px;font-size:11px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase"},streakUp.detail),
+        h("button",{class:"rudis",onClick:()=>setStreakUp(null)},"Continuer")
+      )
+    );
+  }
+
   // ─── ANIMATION LEVEL UP ───────────────────────────────────────────────
 
   function DungeonUp(){
@@ -3234,6 +3273,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(Settings,null),
       h(RankUp,null),
       h(LevelUp,null),
+      h(StreakUp,null),
       h(RecordUp,null),
       h(DungeonUp,null),
       h(ConfirmReroll,null),
