@@ -678,6 +678,8 @@ function App(){
   const [recordUp,setRecordUp] = useState(null);
   const [dungeonUp,setDungeonUp] = useState(null);
   const [confirmRerollSq,setConfirmRerollSq] = useState(null);
+  const [importModal,setImportModal] = useState(false);
+  const [importValue,setImportValue] = useState("");
   const [focusMode,setFocusMode] = useState(false);
   const [dungeonHelpOpen,setDungeonHelpOpen] = useState({});
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
@@ -2581,9 +2583,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               navigator.clipboard.writeText(json).then(()=>alert("\u2705 Donn\u00e9es copi\u00e9es !")).catch(()=>window.prompt("Copie ce texte :",json));
             }},"Exporter"),
             h("button",{class:"mbtn mprim",style:"flex:1",onClick:()=>{
-              const json=window.prompt("Colle tes donn\u00e9es ici :");
-              if(!json)return;
-              try{const imported=JSON.parse(json);setState(s=>({...s,...imported,objectives:DEFS}));alert("\u2705 Restaur\u00e9 !");setShowSet(false);}catch{alert("\u274C Donn\u00e9es invalides.");}
+              setImportValue("");
+              setImportModal(true);
             }},"Importer")
           ),
           h("button",{class:"mbtn mprim",style:"width:100%",onClick:()=>{
@@ -2698,6 +2699,59 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             onClick:()=>{const sq=confirmRerollSq;setConfirmRerollSq(null);rerollSq(sq);},
             style:"flex:1;padding:11px;border-radius:9px;border:1px solid #f59e0b;background:rgba(245,158,11,0.1);color:#f59e0b;font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"
           },"Relancer")
+        )
+      )
+    );
+  }
+
+  function ImportModal(){
+    if(!importModal)return null;
+    const color = rank.color;
+    const soft = color + "33";
+    const border = color + "99";
+    function close(){
+      setImportModal(false);
+      setImportValue("");
+    }
+    function doImport(){
+      const json=(importValue||"").trim();
+      if(!json)return;
+      try{
+        const imported=JSON.parse(json);
+        const cleaned=migrateRuntimeQuestDefinitions(migrateMergedEspritState(imported));
+        setState(s=>({...s,...cleaned,objectives:DEFS}));
+        close();
+        setShowSet(false);
+        spawnFloat("✅ Restauré !");
+      }catch(_){
+        const id=Date.now()+Math.random();
+        setFloats(f=>[...f,{id,y:"38%",txt:"❌ Données invalides"}]);
+        setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id)),1800);
+      }
+    }
+    return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+rank.glow+";background:rgba(0,0,0,0.92)",onClick:e=>{if(e.target===e.currentTarget)close();}},
+      h("div",{class:"rucont",style:"width:min(560px,calc(100vw - 34px));background:rgba(15,15,18,0.96);border:1px solid "+border+";border-radius:18px;padding:22px;box-shadow:none"},
+        h("div",{class:"ruevol",style:"margin-bottom:10px;color:"+color},"IMPORTATION"),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:clamp(22px,6vw,36px);font-weight:900;color:"+color+";letter-spacing:1px;text-transform:uppercase;text-align:center;line-height:1.15"},"Importer des données"),
+        h("div",{style:"font-size:12px;color:var(--td);line-height:1.5;text-align:center;margin-top:12px"},
+          "Colle ici les données exportées de ton Système."
+        ),
+        h("textarea",{
+          value:importValue,
+          onInput:e=>setImportValue(e.currentTarget.value),
+          placeholder:"Données de sauvegarde...",
+          spellCheck:false,
+          style:"width:100%;height:170px;margin-top:18px;resize:vertical;border-radius:10px;border:1px solid "+border+";background:rgba(255,255,255,0.05);color:var(--tx);padding:12px;font-size:12px;line-height:1.45;outline:none;box-sizing:border-box;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace"
+        }),
+        h("div",{style:"display:flex;gap:10px;width:100%;margin-top:18px"},
+          h("button",{
+            onClick:close,
+            style:"flex:1;padding:12px;border-radius:9px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);color:var(--td);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"
+          },"Annuler"),
+          h("button",{
+            onClick:doImport,
+            style:"flex:1;padding:12px;border-radius:9px;border:1px solid "+color+";background:"+soft+";color:"+color+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"
+          },"Importer")
         )
       )
     );
@@ -3008,6 +3062,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(RecordUp,null),
       h(DungeonUp,null),
       h(ConfirmReroll,null),
+      h(ImportModal,null),
       h(PrestigeUp,null),
     )
   );
