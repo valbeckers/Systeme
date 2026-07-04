@@ -836,6 +836,46 @@ function App(){
     const color=STAT_COLOR[obj.stat] || rank.color || "#fbbf24";
     const label=fmtNum(nextNumber)+" "+questRecordUnit(obj.unit,nextNumber);
     setTimeout(()=>setRecordUp({
+      title:"NOUVEAU RECORD",
+      name:obj.name,
+      icon:obj.icon,
+      value:label,
+      color,
+      glow:color+"55"
+    }),delay);
+  }
+
+  function maybeTriggerWeeklyQuestRecord(obj,prevVal,nextVal,delay=1450){
+    if(!obj || obj.binary || obj.weekly) return;
+    const prevNumber=Number(prevVal)||0;
+    const nextNumber=Number(nextVal)||0;
+    if(nextNumber<=prevNumber) return;
+
+    let currentBefore=prevNumber;
+    let currentAfter=nextNumber;
+    const previousWeekTotals={};
+
+    Object.entries(state.dailyLog||{}).forEach(([day,log])=>{
+      const v=Number(log&&log[obj.id]);
+      if(!Number.isFinite(v) || v<=0) return;
+      const weekKey=wkStr(new Date(day));
+      if(weekKey===wk){
+        if(day!==today){
+          currentBefore+=v;
+          currentAfter+=v;
+        }
+      } else {
+        previousWeekTotals[weekKey]=(previousWeekTotals[weekKey]||0)+v;
+      }
+    });
+
+    const bestPreviousWeek=Math.max(0,...Object.values(previousWeekTotals));
+    if(bestPreviousWeek<=0 || currentBefore>bestPreviousWeek || currentAfter<=bestPreviousWeek) return;
+
+    const color=STAT_COLOR[obj.stat] || rank.color || "#fbbf24";
+    const label=fmtNum(currentAfter)+" "+questRecordUnit(obj.unit,currentAfter);
+    setTimeout(()=>setRecordUp({
+      title:"NOUVEAU RECORD SEMAINE",
       name:obj.name,
       icon:obj.icon,
       value:label,
@@ -974,6 +1014,7 @@ function App(){
     const b=getRankBase(obj.id,ri,prestige);
     const prev=cur, next=cur+val;
     maybeTriggerQuestRecord(obj,prev,next);
+    maybeTriggerWeeklyQuestRecord(obj,prev,next);
     const alreadyCapped_DISABLED = false;
     const effectiveNext = next;
     const effectiveVal = val;
@@ -1620,11 +1661,30 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const doneVal = isW ? (wLog[obj.id]||0) : (tLog[obj.id]||0);
       return obj.binary ? doneVal>=1 : doneVal>=target;
     };
-    // Mode Focus : certaines quêtes sont des habitudes de fond sur la journée.
-    // Elles ne doivent pas bloquer la prochaine action immédiate.
-    const focusDeferredIds = ["water"];
-    const focusPrimaryObjs = dailyObjs.filter(o=>!focusDeferredIds.includes(o.id));
-    const nextFocusObj = focusPrimaryObjs.find(o=>!isDone(o,false)) || dailyObjs.find(o=>!isDone(o,false)) || null;
+    // Mode Focus : choix dynamique de la meilleure action immédiate.
+    // Hydratation et sommeil sont des habitudes de fond : elles ne remontent qu'en dernier recours.
+    const focusDeferredIds = ["water","sleep"];
+    const focusQuickIds = ["push","abs","squats","calves","reading"];
+    const focusScore = obj => {
+      if(!obj || isDone(obj,false)) return -9999;
+      const target = getEffectiveTarget(obj.id,false) || 1;
+      const curVal = tLog[obj.id] || 0;
+      const pct = Math.max(0,Math.min(1,curVal/target));
+      let score = 0;
+      if(focusDeferredIds.includes(obj.id)) score -= 100;
+      if(focusQuickIds.includes(obj.id)) score += 18;
+      if(curVal>0) score += 20;
+      if(pct>=0.8) score += 70;
+      else if(pct>=0.5) score += 35;
+      else if(pct>=0.25) score += 15;
+      score += pct*30;
+      score -= Math.max(0,target-curVal)*0.02;
+      return score;
+    };
+    const focusCandidates = dailyObjs.filter(o=>!isDone(o,false));
+    const nextFocusObj = focusCandidates.length
+      ? [...focusCandidates].sort((a,b)=>focusScore(b)-focusScore(a))[0]
+      : null;
     const reqRemaining = dailyObjs.filter(o=>!isDone(o,false)).length;
     const bonusAvailable = bonusObjs.filter(o=>!isDone(o,false)).length;
     const weeklyRemaining = weeklyObjs.filter(o=>!isDone(o,true)).length;
@@ -2098,6 +2158,24 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     });
     // Running et Marche sont désormais quotidiens : ne plus utiliser weeklyLog pour les records
 
+    // ── Records hebdomadaires (meilleur total sur une semaine ISO) ──
+    const weeklyRecordTotals={};
+    Object.entries(state.dailyLog).forEach(([date,log])=>{
+      const key=wkStr(new Date(date));
+      Object.entries(log).forEach(([id,val])=>{
+        const n=Number(val)||0;
+        if(n<=0) return;
+        weeklyRecordTotals[id]=weeklyRecordTotals[id]||{};
+        weeklyRecordTotals[id][key]=(weeklyRecordTotals[id][key]||0)+n;
+      });
+    });
+    const weeklyRecords={};
+    Object.entries(weeklyRecordTotals).forEach(([id,weeks])=>{
+      Object.entries(weeks).forEach(([week,val])=>{
+        if(!weeklyRecords[id]||val>weeklyRecords[id].val) weeklyRecords[id]={val,week};
+      });
+    });
+
 
     return h("div",{class:"tab"},
       // Navigation semaine
@@ -2174,7 +2252,35 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--tx)"},
               fmtNum(rec.val)+" "+((rec.val>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",contact:"contacts",action:"actions"}[o.unit]||o.unit))
           );
-        })
+        }),
+          h("div",{style:"height:1px;background:rgba(255,255,255,0.06);margin:12px 0"}),
+          h("div",{class:"ctitle",style:"font-size:10px;margin-bottom:10px;color:var(--td)"},"Records hebdomadaires"),
+          [...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary)),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden))].map(o=>{
+            const rec=weeklyRecords[o.id];
+            if(!rec)return h("div",{key:o.id+"_wkrec",style:"display:flex;align-items:center;gap:8px;margin-bottom:8px;opacity:.35"},
+              QuestIcon(o.id,o.icon,14),
+              h("div",{style:"flex:1"},
+                h("div",{style:"font-size:12px;color:var(--td);display:flex;align-items:center;gap:5px"},
+                  o.name,
+                  o.optional&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR})
+                )
+              ),
+              h("span",{style:"font-size:11px;color:var(--td)"},"—")
+            );
+            const wkLabel=rec.week.replace("-W","-S");
+            return h("div",{key:o.id+"_wkrec",style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
+              QuestIcon(o.id,o.icon,14),
+              h("div",{style:"flex:1"},
+                h("div",{style:"font-size:12px;color:var(--tx);display:flex;align-items:center;gap:5px"},
+                  o.name,
+                  o.optional&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR})
+                ),
+                h("div",{style:"font-size:10px;color:var(--td);margin-top:1px"},wkLabel)
+              ),
+              h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--tx)"},
+                fmtNum(rec.val)+" "+questRecordUnit(o.unit,rec.val))
+            );
+          })
         )// end Fragment
       ),
       // Totaux depuis le début
@@ -2350,7 +2456,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.gold?"#fbbf24":color)+";box-shadow:0 0 8px "+glow+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
       )),
       h("div",{class:"rucont"},
-        h("div",{class:"ruevol"},"NOUVEAU RECORD"),
+        h("div",{class:"ruevol"},recordUp.title||"NOUVEAU RECORD"),
         h("div",{class:"rurank",style:"font-size:clamp(48px,16vw,76px);letter-spacing:-1px;white-space:nowrap","data-r":recordUp.value},recordUp.value),
         h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:3px;max-width:280px;line-height:1.35"},recordUp.name),
         h("button",{class:"rudis",onClick:()=>setRecordUp(null)},"Continuer")
