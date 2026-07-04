@@ -126,48 +126,49 @@ const SP = {
 
 
 // Donjons volontaires — V1 simple : 1 actif à la fois, 1/jour, 3/semaine, 24h.
+// Ordre aligné sur les stats : Santé, Force, Esprit, Endurance, Agilité, Discipline.
 const DUNGEONS = [
-  {id:"monk", title:"Donjon du Moine", short:"Moine", stat:"Esprit", icon:"🧘🏻‍♂️", color:"#ec4899", reward:{xp:1500,stat:"Esprit",xp2:300,stat2:"Discipline"}, rooms:[
-    {name:"Lecture profonde", desc:"Lire 20 min sans téléphone"},
-    {name:"Mémoire", desc:"10 min de rappel actif"},
-    {name:"Silence", desc:"15 min sans stimulation"},
-    {name:"Méditation", desc:"10 min"},
-    {name:"Boss : Clarté", desc:"Écrire 5 lignes sur ce que tu retiens"},
-  ]},
-  {id:"hunter", title:"Donjon du Chasseur", short:"Chasseur", stat:"Agilite", icon:"🏹", color:"#4ade80", reward:{xp:1200,stat:"Agilite",xp2:300,stat2:"Endurance"}, rooms:[
-    {name:"Éveil corporel", desc:"5 min de mobilité douce"},
-    {name:"Déplacements", desc:"10 min de footwork"},
-    {name:"Souplesse active", desc:"10 min"},
-    {name:"Équilibre", desc:"5 min"},
-    {name:"Boss : Fluidité", desc:"5 min d'enchaînement libre sans interruption"},
+  {id:"alchemist", title:"Donjon de l’Alchimiste", short:"Alchimiste", stat:"Sante", icon:"⚗️", color:"#ef4444", reward:{xp:1500,stat:"Sante",xp2:300,stat2:"Esprit"}, rooms:[
+    {name:"Hydratation", desc:"2 verres d’eau d'une traite"},
+    {name:"Lumière naturelle", desc:"10 min au soleil"},
+    {name:"Salle 3", desc:"À définir"},
+    {name:"Salle 4", desc:"À définir"},
+    {name:"Boss : Relaxation", desc:"Douche froide 3 min sans interruption"},
   ]},
   {id:"warrior", title:"Donjon du Guerrier", short:"Guerrier", stat:"Force", icon:"⚔️", color:"#fb923c", reward:{xp:1500,stat:"Force",xp2:300,stat2:"Discipline"}, rooms:[
-    {name:"Pompes", desc:"50 reps au total"},
-    {name:"Abdos", desc:"80 reps"},
+    {name:"Pompes", desc:"100 reps"},
+    {name:"Abdos", desc:"150 reps"},
     {name:"Squats", desc:"50 reps"},
-    {name:"Gainage", desc:"3 min"},
-    {name:"Boss : Mur de volonté", desc:"Max pompes en une série"},
+    {name:"Salle 4", desc:"À définir"},
+    {name:"Boss : Gainage", desc:"10 min"},
+  ]},
+  {id:"monk", title:"Donjon du Moine", short:"Moine", stat:"Esprit", icon:"🧘🏻‍♂️", color:"#ec4899", reward:{xp:1500,stat:"Esprit",xp2:300,stat2:"Discipline"}, rooms:[
+    {name:"Lecture profonde", desc:"Lire 20 min sans interruption"},
+    {name:"Respiration Wim Hof", desc:"10 min de cohérence cardiaque"},
+    {name:"Mémoire", desc:"10 min de rappel actif", helpTitle:"Rappel actif", help:"Le rappel actif consiste à récupérer une information de mémoire, sans relire directement la réponse. Exemple simple : lis un passage, ferme la source, puis note tout ce dont tu te souviens. Ensuite seulement, compare avec la source et corrige. Tu peux aussi utiliser des flashcards, te poser 5 questions, ou réciter une idée à voix haute comme si tu l’expliquais à quelqu’un."},
+    {name:"Méditation", desc:"15 min"},
+    {name:"Boss : Gratitude", desc:"Écrire 3 choses pour lesquelles je suis reconnaissant"},
   ]},
   {id:"pilgrim", title:"Donjon du Pèlerin", short:"Pèlerin", stat:"Endurance", icon:"🥾", color:"#22d3ee", reward:{xp:1500,stat:"Endurance",xp2:300,stat2:"Agilite"}, rooms:[
-    {name:"Marche", desc:"20 min"},
-    {name:"Escaliers", desc:"10 allers-retours"},
-    {name:"Course ou marche rapide", desc:"15 min"},
-    {name:"Respiration en mouvement", desc:"5 min de rythme régulier"},
-    {name:"Boss : Continuité", desc:"30 min sans s'arrêter"},
+    {name:"Stepper", desc:"15 min"},
+    {name:"Escaliers", desc:"15 allers-retours"},
+    {name:"Salle 3", desc:"À définir"},
+    {name:"Salle 4", desc:"À définir"},
+    {name:"Boss : Running", desc:"30 min sans s’arrêter"},
   ]},
-  {id:"alchemist", title:"Donjon de l’Alchimiste", short:"Alchimiste", stat:"Sante", icon:"⚗️", color:"#ef4444", reward:{xp:1200,stat:"Sante",xp2:300,stat2:"Esprit"}, rooms:[
-    {name:"Hydratation", desc:"3 verres d'eau"},
-    {name:"Repas propre", desc:"1 repas équilibré"},
-    {name:"Lumière naturelle", desc:"10 min dehors"},
-    {name:"Respiration", desc:"5 min de cohérence cardiaque"},
-    {name:"Boss : Corps calme", desc:"Soirée sans sucre transformé"},
+  {id:"hunter", title:"Donjon du Chasseur", short:"Chasseur", stat:"Agilite", icon:"🏹", color:"#4ade80", reward:{xp:1500,stat:"Agilite",xp2:300,stat2:"Endurance"}, rooms:[
+    {name:"Éveil corporel", desc:"10 min mobilité douce"},
+    {name:"Déplacements", desc:"10 min footwork"},
+    {name:"Équilibre sur un pied", desc:"10 min"},
+    {name:"Salle 4", desc:"À définir"},
+    {name:"Boss : Souplesse active / Animal flow", desc:"20 min"},
   ]},
   {id:"guardian", title:"Donjon du Gardien", short:"Gardien", stat:"Discipline", icon:"🛡️", color:"#c084fc", reward:{xp:1500,stat:"Discipline",xp2:300,stat2:"Esprit"}, rooms:[
-    {name:"Tâche repoussée", desc:"1 action concrète"},
+    {name:"Salle 1", desc:"À définir"},
     {name:"Téléphone hors de portée", desc:"1h"},
-    {name:"Aucun contenu passif", desc:"2h"},
+    {name:"Aucun contenu passif", desc:"2h", helpTitle:"Contenu passif", help:"À inclure : doomscrolling, vidéos courtes, scroll automatique, réseaux sociaux sans intention, YouTube en consommation passive, fils d’actualité, zapping, jeux vidéo lancés par réflexe, film ou série regardés pour combler le vide. Mon avis : film/série/jeu vidéo peuvent rester autorisés s’ils sont choisis volontairement comme vraie activité de détente ; ils comptent comme passifs s’ils servent juste à fuir l’ennui, repousser une tâche ou remplir automatiquement le temps."},
     {name:"Rangement", desc:"10 objets"},
-    {name:"Boss : Engagement", desc:"Terminer une chose commencée"},
+    {name:"Boss : Engagement", desc:"Terminer totalement une tâche repoussée"},
   ]},
 ];
 
@@ -679,6 +680,7 @@ function App(){
   const [dungeonUp,setDungeonUp] = useState(null);
   const [confirmRerollSq,setConfirmRerollSq] = useState(null);
   const [focusMode,setFocusMode] = useState(false);
+  const [dungeonHelpOpen,setDungeonHelpOpen] = useState({});
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
   const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,cs:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
@@ -1789,7 +1791,15 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           const current=i===completedRooms.length;
           return h("div",{key:i,style:"display:flex;gap:8px;align-items:flex-start;padding:8px;border-radius:10px;background:"+(current?color+"12":"rgba(255,255,255,0.025)")+";border:1px solid "+(current?color+"44":"rgba(255,255,255,0.05)")+";opacity:"+(done?"0.75":"1")},
             h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:"+(done?"#4ade80":current?color:"var(--td)")+";width:18px;text-align:center;flex-shrink:0"},done?"✓":(i+1)),
-            h("div",{style:"min-width:0"},h("div",{style:"font-size:12px;color:var(--tx);font-weight:700;line-height:1.25"},room.name),h("div",{style:"font-size:10px;color:var(--td);line-height:1.35;margin-top:2px"},room.desc))
+            h("div",{style:"min-width:0;flex:1"},
+              h("div",{style:"font-size:12px;color:var(--tx);font-weight:700;line-height:1.25"},room.name),
+              h("div",{style:"font-size:10px;color:var(--td);line-height:1.35;margin-top:2px"},room.desc),
+              room.help&&h("button",{onClick:()=>setDungeonHelpOpen(o=>({...o,[d.id+"_"+i]:!o[d.id+"_"+i]})),style:"margin-top:6px;padding:5px 7px;border-radius:7px;border:1px solid "+color+"55;background:rgba(255,255,255,0.025);color:"+color+";font-family:Orbitron,sans-serif;font-size:8px;letter-spacing:1px;text-transform:uppercase;cursor:pointer"},dungeonHelpOpen[d.id+"_"+i]?"Masquer l’aide":"Aide"),
+              room.help&&dungeonHelpOpen[d.id+"_"+i]&&h("div",{style:"margin-top:6px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.07);font-size:10px;color:var(--td);line-height:1.45"},
+                h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+color+";letter-spacing:1px;text-transform:uppercase;margin-bottom:4px"},room.helpTitle||"Aide"),
+                room.help
+              )
+            )
           );
         })),
         nextRoom&&h("button",{onClick:validateDungeonRoom,style:"width:100%;margin-top:10px;padding:11px;border-radius:9px;border:1px solid "+color+"66;background:"+color+"12;color:"+color+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"},completedRooms.length===d.rooms.length-1?"Valider le boss":"Valider la salle suivante")
@@ -1880,13 +1890,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           )
         ),
 
-        h("div",{class:"card",style:"border-color:"+(nextFocusObj?"var(--rc)":"#4ade8044")},
-          h("div",{class:"ctitle",style:"margin-bottom:8px"},"Prochaine action"),
-          nextFocusObj
-            ? h(QI,{obj:nextFocusObj})
-            : h("div",{style:"text-align:center;padding:14px 0;color:#4ade80;font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:1px"},"Toutes les obligatoires sont termin\u00e9es ✓")
-        ),
-
         activeSq&&h("div",{class:"card",style:"border-color:#ef444444"},
           h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Urgente"+(activeSq.tier?" · "+(SQ_TIER_LABEL[activeSq.tier]||""):"")),
           h(SqCard,{sq:activeSq,showInput:true})
@@ -1895,13 +1898,20 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Urgente"),
           h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:4px 0;font-family:Orbitron,sans-serif"},"\u23F3 Prochaine qu\u00eate dans "+fmtCD(sqCooldownUntil-now))
         ),
-        activeDungeon&&h(DungeonCard,{compact:true})      );
+        activeDungeon&&h(DungeonCard,{compact:true}),
+
+        h("div",{class:"card",style:"border-color:"+(nextFocusObj?"var(--rc)":"#4ade8044")},
+          h("div",{class:"ctitle",style:"margin-bottom:8px"},"Prochaine action"),
+          nextFocusObj
+            ? h(QI,{obj:nextFocusObj})
+            : h("div",{style:"text-align:center;padding:14px 0;color:#4ade80;font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:1px"},"Toutes les obligatoires sont termin\u00e9es ✓")
+        )
+      );
     }
 
     return h("div",{class:"tab"},
       missedDays>=2&&h("div",{class:"warn"},"\u26A0\uFE0F P\u00e9nalit\u00e9 : -"+(missedDays*10)+" XP ("+missedDays+" jours manqu\u00e9s)"),
       h("div",{style:"display:flex;justify-content:center;margin-bottom:8px"},focusToggle),
-      h(DungeonCard,null),
 
       h("div",{class:"card"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"},
@@ -1997,6 +2007,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Qu\u00eate urgente"),
         h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:4px 0;font-family:Orbitron,sans-serif"},"\u23F3 Prochaine qu\u00eate dans "+fmtCD(sqCooldownUntil-now))
       ),
+      h(DungeonCard,null),
       secs.map(({lb,ob,iw,mixed})=>ob.length===0?null:
         h("div",{key:lb,class:"card"},h("div",{class:"ctitle"},lb),ob.map(o=>h(RR,{key:o.id,obj:o,isW:mixed?(o.weekly):iw})))
       )
