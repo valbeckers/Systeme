@@ -1893,7 +1893,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
     const focusToggle = h("button",{
       onClick:()=>setFocusMode(v=>!v),
-      style:"padding:8px 11px;border-radius:9px;border:1px solid var(--rc);background:rgba(255,255,255,0.03);color:var(--rc);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"
+      style:"min-width:172px;text-align:center;padding:8px 11px;border-radius:9px;border:1px solid var(--rc);background:rgba(255,255,255,0.03);color:var(--rc);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"
     },focusMode?"Mode Classique":"Mode Focus");
 
     if(focusMode){
@@ -3087,13 +3087,32 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
   const parts=Array.from({length:15},(_,i)=>({id:i,s:Math.random()*3+1,l:Math.random()*100,dur:Math.random()*10+8,del:Math.random()*10}));
 
+  const DAILY_MANTRAS = [
+    "Accepte ce que tu ne peux contrôler.",
+    "Mets de l'ordre dans ce que tu maîtrises.",
+    "Fais toujours de ton mieux.",
+    "N'en fais jamais une histoire personnelle.",
+    "Observe, vérifie, puis agis.",
+    "Agis pour toi-même, pas pour la reconnaissance d'autrui.",
+    "Concentre-toi sur l'essentiel.",
+    "Aie toujours une parole impeccable.",
+    "Tiens-toi droit.",
+    "Assume tes responsabilités.",
+    "Apprécie les choses simples de la vie."
+  ];
+  const mantraDayIndex = Math.floor(new Date(today).getTime()/86400000);
+  const dailyMantra = DAILY_MANTRAS[Math.abs(mantraDayIndex)%DAILY_MANTRAS.length];
+
   return h(Fragment,null,
     h("div",{id:"app"},
       h("div",{class:"particles"},parts.map(p=>h("div",{key:p.id,class:"particle",style:"width:"+p.s+"px;height:"+p.s+"px;left:"+p.l+"%;bottom:-10px;background:"+rank.color+";box-shadow:0 0 4px "+rank.glow+";animation-duration:"+p.dur+"s;animation-delay:"+p.del+"s"}))),
       h("div",{class:"hdr-wrap"},
         h("div",{class:"hdr"},
           h("div",{class:"hdr-top",style:"position:relative"},
-            h("div",null,h("div",{class:"pname"},"VAL")),
+            h("div",null,
+              h("div",{class:"pname"},"VAL"),
+              h("div",{style:"margin-top:7px;max-width:calc(100vw - 112px);font-size:10.5px;line-height:1.35;color:"+rank.color+";font-family:Orbitron,sans-serif;letter-spacing:0.7px;text-transform:uppercase;background:"+rank.color+"14;border:1px solid "+rank.color+"44;border-radius:999px;padding:6px 10px;display:inline-block"},dailyMantra)
+            ),
             prestige>0&&h("div",{class:"prestige-badge"},"\u269B\uFE0F Ascension "+ROMAN[prestige-1]),
             h("button",{class:"gbtn",style:"display:flex;align-items:center;justify-content:center",onClick:()=>setShowSet(true)},"⚙️")
           )
