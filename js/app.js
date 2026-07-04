@@ -3112,7 +3112,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{class:"hdr-top",style:"position:relative"},
             h("div",null,
               h("div",{class:"pname"},"VAL"),
-              h("div",{style:"margin-top:6px;max-width:calc(100vw - 112px);font-size:9.5px;line-height:1.3;color:"+mantraColor+";font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-transform:uppercase;display:block;opacity:.96"},dailyMantra)
+              h("div",{style:"margin-top:6px;width:min(340px,calc(100vw - 112px));min-height:26px;font-size:9.5px;line-height:1.3;color:"+mantraColor+";font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-transform:uppercase;display:block;opacity:.96;white-space:normal;overflow:hidden"},dailyMantra)
             ),
             prestige>0&&h("div",{class:"prestige-badge"},"\u269B\uFE0F Ascension "+ROMAN[prestige-1]),
             h("button",{class:"gbtn",style:"display:flex;align-items:center;justify-content:center",onClick:()=>setShowSet(true)},"⚙️")
@@ -3120,7 +3120,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         )
       ),
       h("div",{class:"scroll-area",ref:scrollRef},
-        h("div",{style:"height:15px;flex:0 0 auto"}),
+        h("div",{style:"height:26px;flex:0 0 auto"}),
         tab==="home"    &&h(Home,null),
         tab==="quests"  &&h(Quests,null),
         tab==="stats"   &&h(Stats,null),
