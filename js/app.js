@@ -66,7 +66,7 @@ const DEFS = [
   {id:"calves", name:"Mollets",unit:"rep", xpPer:1.5, daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDBF",               base:30, stat2:"Agilite", xpPer2:1},
   {id:"grips",  name:"Hand grips",      unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Force",         icon:"\u270A\uD83C\uDFFB",         base:10, fixedBase:true},
   // ─── ESPRIT ───────────────────────────────────────────────────────────
-  {id:"reading",name:"Lecture",unit:"min",xpPer:20,daily:true,weekly:false,optional:false,stat:"Esprit",icon:"📚",base:20,startDate:"2026-05-21"},
+  {id:"reading",name:"Lecture",unit:"min",xpPer:15,daily:true,weekly:false,optional:false,stat:"Esprit",icon:"📚",base:20,startDate:"2026-05-21"},
   // ─── ESPRIT ───────────────────────────────────────────────────────────
   
   {id:"med",    name:"M\u00e9ditation", unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Esprit",  icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F", base:15, fixedBase:true},
@@ -236,6 +236,13 @@ function eventRewardText(ev){
   return (ev?.reward||[]).map(r=>"+"+r.xp+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ");
 }
 function pickFrom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function recentEventIds(s,limit=5){
+  return ((s&&s.eventHistory)||[]).slice(-limit).map(e=>e.id).filter(Boolean);
+}
+function pickAvoidingRecent(list,recentIds){
+  const pool=(list||[]).filter(e=>!recentIds.includes(e.id));
+  return pickFrom(pool.length?pool:list);
+}
 function lowestStatFromState(s){
   const stats=s?.stats||{};
   let best=STATS[0];
@@ -244,45 +251,82 @@ function lowestStatFromState(s){
   });
   return best;
 }
-function wasDayCompleteForEvent(s,day){
-  const log=(s.dailyLog&&s.dailyLog[day])||{};
+function requiredDailyForEvent(s,day){
+  return DEFS.filter(o=>o.daily&&!o.optional&&(!o.startDate||o.startDate<=day));
+}
+function eventQuestTarget(s,o,day){
   const prestige=s.prestige||0;
   const rank=getRankWithStats(s.totalXp||0,s.stats||{});
   const ri=RANKS.findIndex(r=>r.id===rank.id);
-  const required=DEFS.filter(o=>o.daily&&!o.optional&&(!o.startDate||o.startDate<=day));
-  if(required.length===0) return false;
-  return required.every(o=>{
-    const target = o.validateAt != null ? o.validateAt : getRankBase(o.id,ri,prestige);
-    return (log[o.id]||0)>=target;
-  });
+  return o.validateAt != null ? o.validateAt : getRankBase(o.id,ri,prestige);
 }
-function buildBonusEvent(now=Date.now()){
+function missedRequiredQuestsForEvent(s,day){
+  const log=(s.dailyLog&&s.dailyLog[day])||{};
+  return requiredDailyForEvent(s,day).filter(o=>(log[o.id]||0)<eventQuestTarget(s,o,day));
+}
+function wasDayCompleteForEvent(s,day){
+  const required=requiredDailyForEvent(s,day);
+  if(required.length===0) return false;
+  return missedRequiredQuestsForEvent(s,day).length===0;
+}
+const MISSED_QUEST_INVITES = {
+  water:["ev_water_mindful","ev_outside","ev_breath_health"],
+  sleep:["ev_calm","ev_breath_health","ev_gratitude"],
+  push:["ev_muscle_activation","ev_micro_session"],
+  abs:["ev_micro_session","ev_plank_short"],
+  squats:["ev_muscle_activation","ev_stairs_short","ev_cardio_activation"],
+  calves:["ev_micro_session","ev_mobility_fast"],
+  reading:["ev_page","ev_writing_block","ev_recall"],
+};
+function invitePoolForMissedQuests(missed){
+  const ids=[];
+  (missed||[]).forEach(q=>(MISSED_QUEST_INVITES[q.id]||[]).forEach(id=>ids.push(id)));
+  const unique=[...new Set(ids)];
+  return unique.map(id=>EVENT_INVITES.find(e=>e.id===id)).filter(Boolean);
+}
+function buildBonusEvent(s,now=Date.now()){
   const day=eventDayStr(now);
-  const e=pickFrom(EVENT_BONUSES);
+  const recent=recentEventIds(s);
+  const lowest=lowestStatFromState(s);
+  const lowPool=EVENT_BONUSES.filter(e=>e.stat===lowest);
+  const roll=Math.random();
+  const pool = roll<0.60 ? lowPool : EVENT_BONUSES;
+  const e=pickAvoidingRecent(pool.length?pool:EVENT_BONUSES,recent);
   return {...e,type:"bonus",day,startedAt:now,expiresAt:next7AM(now),source:"previous_day_complete"};
 }
-function buildInviteEvent(s,now=Date.now()){
+function buildInviteEvent(s,now=Date.now(),missed=[]){
   const day=eventDayStr(now);
+  const recent=recentEventIds(s);
   const lowest=lowestStatFromState(s);
+  const missedPool=invitePoolForMissedQuests(missed);
   const discipline=EVENT_INVITES.filter(e=>e.stat==="Discipline");
   const recovery=EVENT_INVITES.filter(e=>e.stat==="Sante"||e.stat==="Esprit");
   const weak=EVENT_INVITES.filter(e=>e.stat===lowest);
   const roll=Math.random();
-  const pool = roll<0.50 ? discipline : (roll<0.75 ? recovery : weak);
-  const e=pickFrom(pool.length?pool:EVENT_INVITES);
-  return {...e,type:"invite",day,startedAt:now,expiresAt:next7AM(now),completedAt:null,source:"previous_day_incomplete"};
+  const pool = missedPool.length && roll<0.55
+    ? missedPool
+    : (roll<0.75 ? discipline : (roll<0.90 ? recovery : weak));
+  const e=pickAvoidingRecent(pool.length?pool:EVENT_INVITES,recent);
+  return {...e,type:"invite",day,startedAt:now,expiresAt:next7AM(now),completedAt:null,source:missedPool.length?"missed_quest":"previous_day_incomplete"};
 }
 function buildDailyEvent(s,now=Date.now()){
   const day=eventDayStr(now);
   const prev=addDaysStr(day,-1);
   const hasHistory=!!(s.dailyLog&&s.dailyLog[prev]);
-  if(hasHistory && wasDayCompleteForEvent(s,prev)) return buildBonusEvent(now);
-  return buildInviteEvent(s,now);
+  if(hasHistory){
+    const missed=missedRequiredQuestsForEvent(s,prev);
+    if(missed.length===0) return buildBonusEvent(s,now);
+    return buildInviteEvent(s,now,missed);
+  }
+  return buildInviteEvent(s,now,[]);
 }
 function applyDailyEventReset(s,now=Date.now()){
   const day=eventDayStr(now);
   if(s.eventDay===day && s.dailyEvent) return s;
-  return {...s,eventDay:day,dailyEvent:buildDailyEvent(s,now)};
+  const ev=buildDailyEvent(s,now);
+  const oldHistory=s.eventHistory||[];
+  const eventHistory=ev ? [...oldHistory,{day,id:ev.id,type:ev.type,source:ev.source}].slice(-12) : oldHistory.slice(-12);
+  return {...s,eventDay:day,dailyEvent:ev,eventHistory};
 }
 
 // Quêtes urgentes : fonctions de délai
@@ -702,6 +746,7 @@ const IMPORTED = {
   dailyExtraXp:{},
   dailyEvent:null,
   eventDay:null,
+  eventHistory:[],
   sqRerollDay:null,
   completedSqLog:[],
   sqStatCycle:[],
@@ -741,6 +786,7 @@ function buildState(){
     dailyExtraXp:saved.dailyExtraXp||IMPORTED.dailyExtraXp||{},
     dailyEvent:saved.dailyEvent||IMPORTED.dailyEvent||null,
     eventDay:saved.eventDay||IMPORTED.eventDay||null,
+    eventHistory:saved.eventHistory||IMPORTED.eventHistory||[],
     completedSqLog:saved.completedSqLog||[],
     sqStatCycle:saved.sqStatCycle||[],
     stats:saved.stats||IMPORTED.stats,
@@ -2110,7 +2156,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     if(!ev) return null;
     const color = ev.type==="bonus" ? (STAT_COLOR[ev.stat]||rank.color) : "#f59e0b";
     const label = ev.type==="bonus" ? "ÉLAN DU JOUR" : "INVITATION DE REPRISE";
-    const reason = ev.type==="bonus" ? "Hier complété" : "Reprise douce";
+    const reason = ev.type==="bonus" ? "Hier complété" : (ev.source==="missed_quest" ? "Liée à une quête manquée" : "Reprise douce");
     const expired = now >= (ev.expiresAt||0);
     const done = !!ev.completedAt;
     return h("div",{class:"card",style:"border-color:"+color+"66;background:linear-gradient(135deg,"+color+"14,rgba(255,255,255,0.025))"},
@@ -3302,7 +3348,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             ev.type!=="bonus"&&h("div",{style:"margin-top:7px"},(ev.reward||[]).map((r,i)=>h(StatPill,{key:i,stat:r.stat,xp:r.xp}))),
             h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:6px"},
               ev.type==="bonus"&&h("div",{style:detailStyle},"▸ Déclenchement : si la journée précédente est complète"),
+              ev.type==="bonus"&&h("div",{style:detailStyle},"▸ Sélection : favorise la stat la plus basse, avec anti-répétition"),
               ev.type==="invite"&&h("div",{style:detailStyle},"▸ Déclenchement : si la journée précédente est incomplète"),
+              ev.type==="invite"&&h("div",{style:detailStyle},"▸ Sélection : favorise les quêtes manquées, puis reprise Discipline/Santé/Esprit/stat faible"),
               h("div",{style:detailStyle},"▸ Reset : 7h"),
               h("div",{style:detailStyle},"▸ Pénalité : aucune si ignoré"),
               ev.type==="bonus"&&h("div",{style:detailStyle},"▸ Effet : bonus automatique sur les gains de la stat concernée"),
@@ -3434,7 +3482,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial)),
       h(Section,{id:"ev",title:"Événements",count:eventList.length},
         h(Fragment,null,
-          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Logique quotidienne : journée précédente complète → bonus de stat aléatoire ; journée précédente incomplète → invitation de reprise. Aucune pénalité si ignoré."),
+          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Logique quotidienne : journée précédente complète → bonus de stat orienté stat faible ; journée précédente incomplète → invitation liée aux quêtes manquées ou à la reprise. Anti-répétition sur les derniers événements."),
           eventList.map(renderEventCodex)
         )
       ),
