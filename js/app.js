@@ -129,49 +129,48 @@ const SP = {
 // Ordre aligné sur les stats : Santé, Force, Esprit, Endurance, Agilité, Discipline.
 const DUNGEONS = [
   {id:"alchemist", title:"Donjon de l’Alchimiste", short:"Alchimiste", stat:"Sante", icon:"⚗️", color:"#ef4444", reward:{xp:1500,stat:"Sante",xp2:300,stat2:"Esprit"}, rooms:[
-    {name:"Hydratation", desc:"2 verres d’eau d'une traite"},
+    {name:"Hydratation", desc:"2 verres d’eau d’une traite"},
     {name:"Lumière naturelle", desc:"10 min au soleil"},
-    {name:"Repas propre", desc:"1 repas équilibré sans écran"},
-    {name:"Respiration calme", desc:"5 min de respiration lente / cohérence cardiaque"},
-    {name:"Boss : Relaxation", desc:"Douche froide 3 min sans interruption"},
+    {name:"Repas propre", desc:"1 repas équilibré, sans sucre transformé ni junk-food"},
+    {name:"Respiration calme", desc:"5 min de cohérence cardiaque ou respiration lente"},
+    {name:"Relaxation", desc:"Douche froide 3 min sans interruption"},
   ]},
   {id:"warrior", title:"Donjon du Guerrier", short:"Guerrier", stat:"Force", icon:"⚔️", color:"#fb923c", reward:{xp:1500,stat:"Force",xp2:300,stat2:"Discipline"}, rooms:[
     {name:"Pompes", desc:"100 reps"},
     {name:"Abdos", desc:"150 reps"},
     {name:"Squats", desc:"50 reps"},
-    {name:"Wall sit", desc:"5 min cumulées"},
-    {name:"Boss : Gainage", desc:"10 min"},
+    {name:"Gainage", desc:"10 min"},
+    {name:"Wall sit", desc:"10 min"},
   ]},
   {id:"monk", title:"Donjon du Moine", short:"Moine", stat:"Esprit", icon:"🧘🏻‍♂️", color:"#ec4899", reward:{xp:1500,stat:"Esprit",xp2:300,stat2:"Discipline"}, rooms:[
     {name:"Lecture profonde", desc:"Lire 20 min sans interruption"},
-    {name:"Respiration Wim Hof", desc:"10 min de cohérence cardiaque"},
+    {name:"Apprentissage actif", desc:"30 min d’apprentissage volontaire avec prise de notes minimale"},
     {name:"Mémoire", desc:"10 min de rappel actif", helpTitle:"Rappel actif", help:"Le rappel actif consiste à récupérer une information de mémoire, sans relire directement la réponse. Exemple simple : lis un passage, ferme la source, puis note tout ce dont tu te souviens. Ensuite seulement, compare avec la source et corrige. Tu peux aussi utiliser des flashcards, te poser 5 questions, ou réciter une idée à voix haute comme si tu l’expliquais à quelqu’un."},
     {name:"Méditation", desc:"15 min"},
-    {name:"Boss : Gratitude", desc:"Écrire 3 choses pour lesquelles je suis reconnaissant"},
+    {name:"Gratitude", desc:"Écrire 3 choses pour lesquelles je suis reconnaissant"},
   ]},
   {id:"pilgrim", title:"Donjon du Pèlerin", short:"Pèlerin", stat:"Endurance", icon:"🥾", color:"#22d3ee", reward:{xp:1500,stat:"Endurance",xp2:300,stat2:"Agilite"}, rooms:[
     {name:"Stepper", desc:"15 min"},
     {name:"Escaliers", desc:"15 allers-retours"},
-    {name:"Marche rapide", desc:"20 min à allure soutenue"},
+    {name:"Jumping jacks", desc:"100 reps"},
     {name:"Fentes marchées", desc:"50 reps"},
-    {name:"Boss : Running", desc:"30 min sans s’arrêter"},
+    {name:"Running", desc:"30 min sans s’arrêter"},
   ]},
   {id:"hunter", title:"Donjon du Chasseur", short:"Chasseur", stat:"Agilite", icon:"🏹", color:"#4ade80", reward:{xp:1500,stat:"Agilite",xp2:300,stat2:"Endurance"}, rooms:[
     {name:"Éveil corporel", desc:"10 min mobilité douce"},
     {name:"Déplacements", desc:"10 min footwork"},
     {name:"Équilibre sur un pied", desc:"10 min"},
     {name:"Déplacements silencieux", desc:"10 min"},
-    {name:"Boss : Souplesse active / Animal flow", desc:"20 min"},
+    {name:"Souplesse active / Animal flow", desc:"20 min"},
   ]},
   {id:"guardian", title:"Donjon du Gardien", short:"Gardien", stat:"Discipline", icon:"🛡️", color:"#c084fc", reward:{xp:1500,stat:"Discipline",xp2:300,stat2:"Esprit"}, rooms:[
-    {name:"Plan d’attaque", desc:"Écrire la tâche prioritaire et la première action concrète"},
-    {name:"Téléphone hors de portée", desc:"1h"},
-    {name:"Aucun contenu passif", desc:"2h", helpTitle:"Contenu passif", help:"À inclure : doomscrolling, vidéos courtes, scroll automatique, réseaux sociaux sans intention, YouTube en consommation passive, fils d’actualité, zapping, jeux vidéo lancés par réflexe, film ou série regardés pour combler le vide. Mon avis : film/série/jeu vidéo peuvent rester autorisés s’ils sont choisis volontairement comme vraie activité de détente ; ils comptent comme passifs s’ils servent juste à fuir l’ennui, repousser une tâche ou remplir automatiquement le temps."},
+    {name:"Capture mentale", desc:"Traiter, planifier ou supprimer 5 éléments de ta charge mentale", helpTitle:"Capture mentale", help:"Note tout ce qui te prend de l’espace mental : petites tâches, démarches, messages, idées, choses à ranger ou décisions à prendre. Pour valider : 5 éléments doivent être traités, planifiés à une date précise, ou supprimés si inutiles."},
+    {name:"Tâches repoussées", desc:"Terminer totalement 2 tâches repoussées"},
+    {name:"Aucun contenu passif", desc:"2h", helpTitle:"Contenu passif", help:"À inclure : doomscrolling, vidéos courtes, réseaux sociaux sans intention, YouTube en consommation passive, fils d’actualité, jeux vidéo lancés par réflexe, film ou série regardés pour combler le vide. Film/série/jeu vidéo peuvent rester autorisés s’ils sont choisis volontairement comme vraie activité de détente ; ils comptent comme passifs s’ils servent juste à fuir l’ennui, repousser une tâche ou remplir automatiquement le temps."},
     {name:"Rangement", desc:"10 objets"},
-    {name:"Boss : Engagement", desc:"Terminer totalement une tâche repoussée"},
+    {name:"Bloc profond", desc:"45 min sur une tâche choisie, sans interruption volontaire"},
   ]},
 ];
-
 // Couleurs et libellés des tiers des quêtes urgentes
 const SQ_TIER_COLOR = {mineure:"#fbbf24", majeure:"#f59e0b", legendaire:"#f97316"};
 const SQ_TIER_LABEL = {mineure:"Mineure", majeure:"Majeure", legendaire:"Légendaire"};
@@ -1356,13 +1355,25 @@ function App(){
     });
   }
 
+  function dungeonRoomRewardPairs(dungeon,roomIdx){
+    if(!dungeon || !dungeon.reward) return [];
+    const isBoss = roomIdx >= (dungeon.rooms||[]).length-1;
+    const mainXp = isBoss ? 500 : 250;
+    const secondXp = isBoss ? 100 : 50;
+    return [
+      {xp:mainXp,stat:dungeon.reward.stat},
+      dungeon.reward.stat2 ? {xp:secondXp,stat:dungeon.reward.stat2} : null,
+      dungeon.reward.stat3 ? {xp:secondXp,stat:dungeon.reward.stat3} : null,
+    ].filter(Boolean);
+  }
+
   function dungeonRewardPairs(dungeon){
     if(!dungeon || !dungeon.reward) return [];
-    return [
-      {xp:dungeon.reward.xp,stat:dungeon.reward.stat},
-      dungeon.reward.xp2&&dungeon.reward.stat2 ? {xp:dungeon.reward.xp2,stat:dungeon.reward.stat2} : null,
-      dungeon.reward.xp3&&dungeon.reward.stat3 ? {xp:dungeon.reward.xp3,stat:dungeon.reward.stat3} : null,
-    ].filter(Boolean);
+    const totals={};
+    (dungeon.rooms||[]).forEach((_,idx)=>{
+      dungeonRoomRewardPairs(dungeon,idx).forEach(r=>{ totals[r.stat]=(totals[r.stat]||0)+(r.xp||0); });
+    });
+    return Object.entries(totals).map(([stat,xp])=>({stat,xp}));
   }
 
   function startDungeon(id){
@@ -1392,20 +1403,31 @@ function App(){
       const completed=Array.isArray(ad.completedRooms)?ad.completedRooms:[];
       const nextIdx=completed.length;
       if(nextIdx>=dungeon.rooms.length) return s;
-      const nextCompleted=[...completed,nextIdx];
-      const isComplete=nextCompleted.length>=dungeon.rooms.length;
-      if(!isComplete) return {...s,activeDungeon:{...ad,completedRooms:nextCompleted},lastActiveDay:todayStr()};
+
       const beforeXp=s.totalXp;
       const beforeStats=s.stats;
       let totalXp=s.totalXp;
       const statXp={...s.statXp};
       const stats={...s.stats};
-      const rewards=dungeonRewardPairs(dungeon);
-      rewards.forEach(r=>{totalXp+=(r.xp||0);statXp[r.stat]=(statXp[r.stat]||0)+(r.xp||0);stats[r.stat]=getLvl(statXp[r.stat]);});
+      const roomRewards=dungeonRoomRewardPairs(dungeon,nextIdx);
+      roomRewards.forEach(r=>{
+        totalXp+=(r.xp||0);
+        statXp[r.stat]=(statXp[r.stat]||0)+(r.xp||0);
+        stats[r.stat]=getLvl(statXp[r.stat]);
+      });
+
+      const nextCompleted=[...completed,nextIdx];
+      const isComplete=nextCompleted.length>=dungeon.rooms.length;
+      triggerProgressOverlay(beforeXp,beforeStats,totalXp,stats,300);
+
+      if(!isComplete){
+        return {...s,totalXp,statXp,stats,activeDungeon:{...ad,completedRooms:nextCompleted},lastActiveDay:todayStr()};
+      }
+
       const completedAt=t;
+      const rewards=dungeonRewardPairs(dungeon);
       const rewardText=rewards.map(r=>"+"+r.xp+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ");
       setTimeout(()=>setDungeonUp({title:dungeon.title,short:dungeon.short,icon:dungeon.icon,color:dungeon.color,reward:rewardText}),200);
-      triggerProgressOverlay(beforeXp,beforeStats,totalXp,stats,900);
       return {...s,totalXp,statXp,stats,activeDungeon:null,dungeonLog:[...(s.dungeonLog||[]),{id:dungeon.id,title:dungeon.title,stat:dungeon.stat,xp:rewards.reduce((a,r)=>a+(r.xp||0),0),completedAt}],lastActiveDay:todayStr()};
     });
   }
@@ -1792,8 +1814,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           return h("div",{key:i,style:"display:flex;gap:8px;align-items:flex-start;padding:8px;border-radius:10px;background:"+(current?color+"12":"rgba(255,255,255,0.025)")+";border:1px solid "+(current?color+"44":"rgba(255,255,255,0.05)")+";opacity:"+(done?"0.75":"1")},
             h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:"+(done?"#4ade80":current?color:"var(--td)")+";width:18px;text-align:center;flex-shrink:0"},done?"✓":(i+1)),
             h("div",{style:"min-width:0;flex:1"},
-              h("div",{style:"font-size:12px;color:var(--tx);font-weight:700;line-height:1.25"},room.name),
+              h("div",{style:"font-size:12px;color:var(--tx);font-weight:700;line-height:1.25"},(i===d.rooms.length-1?"Boss — ":"")+room.name),
               h("div",{style:"font-size:10px;color:var(--td);line-height:1.35;margin-top:2px"},room.desc),
+              h("div",{style:"font-size:8.5px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:4px"},dungeonRoomRewardPairs(d,i).map(r=>"+"+r.xp+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ")),
               room.help&&h("button",{onClick:()=>setDungeonHelpOpen(o=>({...o,[d.id+"_"+i]:!o[d.id+"_"+i]})),style:"margin-top:6px;padding:5px 7px;border-radius:7px;border:1px solid "+color+"55;background:rgba(255,255,255,0.025);color:"+color+";font-family:Orbitron,sans-serif;font-size:8px;letter-spacing:1px;text-transform:uppercase;cursor:pointer"},dungeonHelpOpen[d.id+"_"+i]?"Masquer l’aide":"Aide"),
               room.help&&dungeonHelpOpen[d.id+"_"+i]&&h("div",{style:"margin-top:6px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.07);font-size:10px;color:var(--td);line-height:1.45"},
                 h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+color+";letter-spacing:1px;text-transform:uppercase;margin-bottom:4px"},room.helpTitle||"Aide"),
@@ -2831,7 +2854,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("div",{style:"margin-top:7px"},rewards.map((r,i)=>h(StatPill,{key:i,stat:r.stat,xp:r.xp}))),
             h("div",{style:"display:flex;flex-direction:column;gap:5px;margin-top:8px"},
               dg.rooms.map((room,i)=>h("div",{key:i,style:detailStyle},
-                "▸ "+(i===dg.rooms.length-1?"Boss":"Salle "+(i+1))+" — "+room.name+" : "+room.desc,
+                "▸ "+(i===dg.rooms.length-1?"Boss":"Salle "+(i+1))+" — "+room.name+" : "+room.desc+" · "+dungeonRoomRewardPairs(dg,i).map(r=>"+"+r.xp+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" / "),
                 room.help&&h("div",{style:"margin-top:4px;padding:7px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);line-height:1.45"},
                   h("div",{style:"color:"+(STAT_COLOR[dg.stat]||dg.color)+";font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px"},room.helpTitle||"Aide"),
                   room.help
