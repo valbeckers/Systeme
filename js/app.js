@@ -680,6 +680,9 @@ function App(){
   const [confirmRerollSq,setConfirmRerollSq] = useState(null);
   const [importModal,setImportModal] = useState(false);
   const [importValue,setImportValue] = useState("");
+  const [exportCopiedModal,setExportCopiedModal] = useState(false);
+  const [exportManualModal,setExportManualModal] = useState(false);
+  const [exportValue,setExportValue] = useState("");
   const [focusMode,setFocusMode] = useState(false);
   const [dungeonHelpOpen,setDungeonHelpOpen] = useState({});
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
@@ -2580,7 +2583,13 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{class:"mrow",style:"margin-bottom:8px"},
             h("button",{class:"mbtn mprim",style:"flex:1",onClick:()=>{
               const json=JSON.stringify(state);
-              navigator.clipboard.writeText(json).then(()=>alert("\u2705 Donn\u00e9es copi\u00e9es !")).catch(()=>window.prompt("Copie ce texte :",json));
+              navigator.clipboard.writeText(json).then(()=>{
+                setExportValue(json);
+                setExportCopiedModal(true);
+              }).catch(()=>{
+                setExportValue(json);
+                setExportManualModal(true);
+              });
             }},"Exporter"),
             h("button",{class:"mbtn mprim",style:"flex:1",onClick:()=>{
               setImportValue("");
@@ -2752,6 +2761,65 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             onClick:doImport,
             style:"flex:1;padding:12px;border-radius:9px;border:1px solid "+color+";background:"+soft+";color:"+color+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"
           },"Importer")
+        )
+      )
+    );
+  }
+
+  function ExportCopiedModal(){
+    if(!exportCopiedModal)return null;
+    const color = rank.color;
+    const soft = color + "33";
+    const border = color + "99";
+    function close(){ setExportCopiedModal(false); }
+    return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+rank.glow+";background:rgba(0,0,0,0.92)",onClick:e=>{if(e.target===e.currentTarget)close();}},
+      h("div",{class:"rucont",style:"width:min(470px,calc(100vw - 34px));background:rgba(15,15,18,0.96);border:1px solid "+border+";border-radius:18px;padding:22px;box-shadow:none"},
+        h("div",{class:"ruevol",style:"margin-bottom:10px;color:"+color},"EXPORTATION"),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:clamp(22px,6vw,34px);font-weight:900;color:"+color+";letter-spacing:1px;text-transform:uppercase;text-align:center;line-height:1.15"},"Données copiées"),
+        h("div",{style:"font-size:12px;color:var(--td);line-height:1.5;text-align:center;margin-top:12px"},
+          "Tes données ont bien été copiées dans le presse-papiers."
+        ),
+        h("div",{style:"display:flex;justify-content:flex-end;gap:10px;width:100%;margin-top:18px"},
+          h("button",{
+            onClick:close,
+            style:"min-width:170px;padding:12px 18px;border-radius:9px;border:1px solid "+color+";background:"+soft+";color:"+color+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"
+          },"Fermer")
+        )
+      )
+    );
+  }
+
+  function ExportManualModal(){
+    if(!exportManualModal)return null;
+    const color = rank.color;
+    const soft = color + "33";
+    const border = color + "99";
+    function close(){
+      setExportManualModal(false);
+      setExportValue("");
+    }
+    return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+rank.glow+";background:rgba(0,0,0,0.92)",onClick:e=>{if(e.target===e.currentTarget)close();}},
+      h("div",{class:"rucont",style:"width:min(560px,calc(100vw - 34px));background:rgba(15,15,18,0.96);border:1px solid "+border+";border-radius:18px;padding:22px;box-shadow:none"},
+        h("div",{class:"ruevol",style:"margin-bottom:10px;color:"+color},"EXPORTATION"),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:clamp(22px,6vw,36px);font-weight:900;color:"+color+";letter-spacing:1px;text-transform:uppercase;text-align:center;line-height:1.15"},"Copie manuelle"),
+        h("div",{style:"font-size:12px;color:var(--td);line-height:1.5;text-align:center;margin-top:12px"},
+          "Ton navigateur n'a pas pu copier automatiquement. Copie le texte ci-dessous."
+        ),
+        h("textarea",{
+          value:exportValue,
+          readOnly:true,
+          spellCheck:false,
+          style:"width:100%;height:170px;margin-top:18px;resize:vertical;border-radius:10px;border:1px solid "+border+";background:rgba(255,255,255,0.05);color:var(--tx);padding:12px;font-size:12px;line-height:1.45;outline:none;box-sizing:border-box;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace"
+        }),
+        h("div",{style:"display:flex;gap:10px;width:100%;margin-top:18px"},
+          h("button",{
+            onClick:close,
+            style:"flex:1;padding:12px;border-radius:9px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);color:var(--td);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"
+          },"Fermer"),
+          h("button",{
+            onClick:e=>{ e.currentTarget.parentNode.parentNode.querySelector('textarea').select(); },
+            style:"flex:1;padding:12px;border-radius:9px;border:1px solid "+color+";background:"+soft+";color:"+color+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"
+          },"Tout sélectionner")
         )
       )
     );
@@ -3063,6 +3131,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(DungeonUp,null),
       h(ConfirmReroll,null),
       h(ImportModal,null),
+      h(ExportCopiedModal,null),
+      h(ExportManualModal,null),
       h(PrestigeUp,null),
     )
   );
