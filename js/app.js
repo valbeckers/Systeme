@@ -905,7 +905,7 @@ function App(){
   const [focusMode,setFocusMode] = useState(false);
   const [dungeonHelpOpen,setDungeonHelpOpen] = useState({});
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
-  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,ev:false,dj:false,cs:false});
+  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,ev:false,mm:false,dj:false,cs:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
   const [showStatReqDetail,setShowStatReqDetail] = useState(false);
   const [showRankReqStats,setShowRankReqStats] = useState(false);
@@ -3401,7 +3401,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   // ─── ONGLET CODEX ─────────────────────────────────────────────────────
 
   function Codex(){
-    const toggleC = k => setCodexOpen(o=>({obl:false,bonus:false,reg:false,sq:false,ev:false,ep:false,dj:false,cs:false,[k]:!o[k]}));
+    const toggleC = k => setCodexOpen(o=>({obl:false,bonus:false,reg:false,sq:false,ev:false,mm:false,ep:false,dj:false,cs:false,[k]:!o[k]}));
     const statLabel = stat => STAT_LBL2[stat] || STAT_LBL[stat] || stat || "";
     const unitPlural = (unit, value) => {
       if(!unit) return "";
@@ -3518,6 +3518,26 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               ev.type==="bonus"&&h("div",{style:detailStyle},"▸ Effet : bonus automatique sur les gains de la stat concernée"),
               ev.type==="invite"&&h("div",{style:detailStyle},"▸ Validation : manuelle depuis la carte événement")
             )
+          )
+        )
+      );
+    }
+
+    function renderMentalModeCodex(mode){
+      const color="#f59e0b";
+      return h("div",{key:mode.id,style:cardStyle},
+        h("div",{style:"display:flex;align-items:flex-start;gap:8px"},
+          h("div",{style:"font-size:16px;line-height:1;min-width:24px;text-align:center"},"◈"),
+          h("div",{style:"flex:1;min-width:0"},
+            h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},mode.label),
+            h("div",{style:"font-size:9px;color:"+color+";margin-top:3px;font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase"},"Mode mental · "+mode.enemy),
+            h("div",{style:"font-size:10px;color:var(--td);margin-top:5px;line-height:1.35"},mode.enemyDesc),
+            h("div",{style:"margin-top:7px;padding:8px;border-radius:9px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.025)"},
+              h("div",{style:"font-size:9px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px"},"Contre-mesure SMART"),
+              h("div",{style:"font-size:12px;color:var(--tx);font-weight:700;line-height:1.25"},mode.actionTitle),
+              h("div",{style:"font-size:10px;color:var(--td);margin-top:4px;line-height:1.35"},mode.desc)
+            ),
+            h("div",{style:"margin-top:7px"},(mode.reward||[]).map((r,i)=>h(StatPill,{key:i,stat:r.stat,xp:r.xp})))
           )
         )
       );
@@ -3646,6 +3666,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h(Fragment,null,
           h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Logique quotidienne : journée précédente complète → bonus de stat orienté stat faible ; journée précédente incomplète → invitation liée aux quêtes manquées ou à la reprise. Anti-répétition sur les derniers événements."),
           eventList.map(renderEventCodex)
+        )
+      ),
+      h(Section,{id:"mm",title:"Mode mental",count:MENTAL_MODES.length},
+        h(Fragment,null,
+          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Disponible sur l’Accueil après 12h, uniquement s’il reste au moins une quête journalière. 1 validation maximum par jour. Pas de donjon ni de quête urgente : seulement une contre-mesure SMART liée à l’état mental choisi."),
+          MENTAL_MODES.map(renderMentalModeCodex)
         )
       ),
       h(Section,{id:"dj",title:"Donjons",count:DUNGEONS.length},groupByDominantStat(DUNGEONS,renderDungeonCodex,dg=>dg.stat))
