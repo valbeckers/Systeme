@@ -1,4 +1,3 @@
-
 const { h, render, Fragment } = preact;
 const { useState, useEffect, useRef } = preactHooks;
 
@@ -2166,10 +2165,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{style:"font-size:14px;color:var(--tx);font-weight:800;line-height:1.25;margin-top:4px"},ev.title),
           h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin-top:5px"},ev.desc)
         ),
-        h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap;text-transform:uppercase"},ev.type==="bonus" ? "+15%" : (done ? "validé" : fmtCD((ev.expiresAt||0)-now)))
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap;text-transform:uppercase"},ev.type==="bonus" ? ("+15% XP "+(STAT_LBL[ev.stat]||ev.stat)) : (done ? "validé" : fmtCD((ev.expiresAt||0)-now)))
       ),
-      h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:2px"},reason),
-      ev.type==="bonus"&&h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:8px"},"Bonus actif sur "+(STAT_LBL[ev.stat]||ev.stat)),
+      ev.type!=="bonus"&&h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:2px"},reason),
       ev.type!=="bonus"&&h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:8px"},eventRewardText(ev)),
       ev.type!=="bonus"&&!done&&!expired&&h("button",{
         onClick:e=>completeDailyEvent(ev,e),
@@ -2186,11 +2184,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const dailyObjs = sortStat(objs.filter(o=>o.daily&&!o.optional));
     const weeklyObjs = sortStat(objs.filter(o=>o.weekly));
     const bonusObjs = sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden));
-    const secs=[
-      {lb:"Qu\u00eates journalières",ob:dailyObjs,iw:false},
-      {lb:"Qu\u00eates hebdomadaires",ob:weeklyObjs,iw:true},
-      {lb:"Qu\u00eates bonus", ob:bonusObjs, iw:false},
-    ];
 
     const isDone=(obj,isWeeklyRow)=>{
       const isW = isWeeklyRow || obj.weekly;
@@ -2198,100 +2191,33 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const doneVal = isW ? (wLog[obj.id]||0) : (tLog[obj.id]||0);
       return obj.binary ? doneVal>=1 : doneVal>=target;
     };
-    // Mode Focus : choix dynamique de la meilleure action immédiate.
-    // Hydratation et sommeil sont des habitudes de fond : elles ne remontent qu'en dernier recours.
-    const focusDeferredIds = ["water","sleep"];
-    const focusQuickIds = ["push","abs","squats","calves","reading"];
-    const focusScore = obj => {
-      if(!obj || isDone(obj,false)) return -9999;
-      const target = getEffectiveTarget(obj.id,false) || 1;
-      const curVal = tLog[obj.id] || 0;
-      const pct = Math.max(0,Math.min(1,curVal/target));
-      let score = 0;
-      if(focusDeferredIds.includes(obj.id)) score -= 100;
-      if(focusQuickIds.includes(obj.id)) score += 18;
-      if(curVal>0) score += 20;
-      if(pct>=0.8) score += 70;
-      else if(pct>=0.5) score += 35;
-      else if(pct>=0.25) score += 15;
-      score += pct*30;
-      score -= Math.max(0,target-curVal)*0.02;
-      return score;
-    };
-    const focusCandidates = dailyObjs.filter(o=>!isDone(o,false));
-    const nextFocusObj = focusCandidates.length
-      ? [...focusCandidates].sort((a,b)=>focusScore(b)-focusScore(a))[0]
-      : null;
-    const reqRemaining = dailyObjs.filter(o=>!isDone(o,false)).length;
-    const bonusAvailable = bonusObjs.filter(o=>!isDone(o,false)).length;
-    const weeklyRemaining = weeklyObjs.filter(o=>!isDone(o,true)).length;
 
-    const focusToggle = h("button",{
-      onClick:()=>setFocusMode(v=>!v),
-      style:"min-width:172px;text-align:center;padding:8px 11px;border-radius:9px;border:1px solid var(--rc);background:rgba(255,255,255,0.03);color:var(--rc);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"
-    },focusMode?"Mode Classique":"Mode Focus");
+    const remainingDaily = dailyObjs.filter(o=>!isDone(o,false));
+    const remainingWeekly = weeklyObjs.filter(o=>!isDone(o,true));
+    const remainingBonus = bonusObjs.filter(o=>!isDone(o,false));
+    const reqRemaining = remainingDaily.length;
 
-    if(focusMode){
-      return h("div",{class:"tab"},
-        missedDays>=2&&h("div",{class:"warn"},"\u26A0\uFE0F P\u00e9nalit\u00e9 : -"+(missedDays*10)+" XP ("+missedDays+" jours manqu\u00e9s)"),
-        h("div",{style:"display:flex;justify-content:center;margin-bottom:8px"},focusToggle),
-        h("div",{class:"card",style:"border-color:"+rank.color+"55"},
-          h("div",{style:"text-align:center"},
-            h("div",{class:"ctitle",style:"margin:0;color:var(--rc)"},"Mode Focus"),
-            h("div",{style:"font-size:11px;color:var(--td);font-family:Orbitron,sans-serif;margin-top:4px;letter-spacing:1px"},"Rang "+rank.id+" · Niveau "+globalLevel.level+" · Streak "+state.streak)
-          ),
-          h("div",{style:"display:grid;grid-template-columns:1fr 1px 1fr;gap:10px;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)"},
-            h("div",{style:"text-align:center"},
-              h("div",{style:"font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:var(--rc)"},todayXp.toFixed(0)),
-              h("div",{style:"font-size:10px;color:var(--td);letter-spacing:1px;text-transform:uppercase"},"XP aujourd'hui")
-            ),
-            h("div",{style:"width:1px;height:34px;background:rgba(255,255,255,0.08)"}),
-            h("div",{style:"text-align:center"},
-              h("div",{style:"font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:"+(reqRemaining===0?"#4ade80":"var(--rc)")},reqRemaining),
-              h("div",{style:"font-size:10px;color:var(--td);letter-spacing:1px;text-transform:uppercase"},"obligatoires restantes")
-            )
-          )
-        ),
-
-        dailyEvent&&h(DailyEventCard,null),
-
-        activeSq&&h("div",{class:"card",style:"border-color:#ef444444"},
-          h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Urgente"+(activeSq.tier?" · "+(SQ_TIER_LABEL[activeSq.tier]||""):"")),
-          h(SqCard,{sq:activeSq,showInput:true})
-        ),
-        !activeSq&&sqCooldownActive&&h("div",{class:"card",style:"border-color:#ef444433"},
-          h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Urgente"),
-          h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:4px 0;font-family:Orbitron,sans-serif"},"\u23F3 Prochaine qu\u00eate dans "+fmtCD(sqCooldownUntil-now))
-        ),
-        activeDungeon&&h(DungeonCard,{compact:true}),
-
-        h("div",{class:"card",style:"border-color:"+(nextFocusObj?"var(--rc)":"#4ade8044")},
-          h("div",{class:"ctitle",style:"margin-bottom:8px"},"Prochaine action"),
-          nextFocusObj
-            ? h(QI,{obj:nextFocusObj})
-            : h("div",{style:"text-align:center;padding:14px 0;color:#4ade80;font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:1px"},"Toutes les obligatoires sont termin\u00e9es ✓")
-        )
-      );
-    }
+    const secs=[
+      {lb:"Quêtes journalières restantes",ob:remainingDaily,iw:false,empty:"Toutes les quêtes journalières sont terminées ✓"},
+      {lb:"Quêtes hebdomadaires restantes",ob:remainingWeekly,iw:true,empty:null},
+      {lb:"Quêtes bonus restantes",ob:remainingBonus,iw:false,empty:null},
+    ];
 
     return h("div",{class:"tab"},
-      missedDays>=2&&h("div",{class:"warn"},"\u26A0\uFE0F P\u00e9nalit\u00e9 : -"+(missedDays*10)+" XP ("+missedDays+" jours manqu\u00e9s)"),
-      h("div",{style:"display:flex;justify-content:center;margin-bottom:8px"},focusToggle),
+      missedDays>=2&&h("div",{class:"warn"},"⚠️ Pénalité : -"+(missedDays*10)+" XP ("+missedDays+" jours manqués)"),
 
       h("div",{class:"card"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"},
           h("div",{style:"display:flex;align-items:center;gap:8px"},
             h("div",{style:"font-family:Orbitron,sans-serif;font-size:36px;font-weight:900;color:var(--rc);text-shadow:0 0 12px var(--rg),0 0 30px var(--rg);line-height:1"},rank.id),
             h("div",null,
-              
               h("div",{style:"font-size:10px;color:var(--td);letter-spacing:1px;text-transform:uppercase;margin-top:2px"},"Rang actuel")
             )
           ),
-          h("div",{style:"font-size:18px;color:var(--td)"},"\u2192"),
+          h("div",{style:"font-size:18px;color:var(--td)"},"→"),
           nextRank
             ? h("div",{style:"display:flex;align-items:center;gap:8px"},
                 h("div",{style:"text-align:right"},
-                  
                   h("div",{style:"font-size:10px;color:var(--td);letter-spacing:1px;text-transform:uppercase;margin-top:2px"},"Rang suivant")
                 ),
                 h("div",{style:"font-family:Orbitron,sans-serif;font-size:36px;font-weight:900;color:var(--td);line-height:1"},nextRank.id)
@@ -2333,49 +2259,54 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             setPrestigeUp(newPrestige);
           },
           style:"width:100%;margin-top:12px;padding:12px;background:rgba(168,85,247,0.1);border:1px solid #a855f7;border-radius:10px;color:#a855f7;font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:3px;cursor:pointer;text-transform:uppercase;text-shadow:0 0 12px #a855f7"
-        },"\u269B\uFE0F Mont\u00e9e en Ascension"),
-        h("div",{style:"display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);align-items:center;justify-items:stretch;margin-top:12px;padding-top:16px;padding-bottom:0px;border-top:1px solid rgba(255,255,255,0.06)"},
+        },"⚛️ Montée en Ascension"),
+        h("div",{style:"display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr) 1px minmax(0,1fr);align-items:center;justify-items:stretch;margin-top:12px;padding-top:16px;padding-bottom:0px;border-top:1px solid rgba(255,255,255,0.06)"},
           h("div",{style:"width:100%;display:flex;align-items:center;justify-content:center;gap:5px;padding:0"},
             h("div",{style:"display:flex;flex-direction:column;align-items:center;justify-content:center"},
-              h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:var(--rc);line-height:0.9"},
-                state.streak
-              ),
-              h("div",{style:"font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px"},
-                "STREAK"
-              ),
-              bonusGiven&&h("div",{style:"font-size:10px;color:#c084fc;font-family:Orbitron,sans-serif;margin-top:3px"},
-                "+250 XP ✓"
-              )
+              h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:var(--rc);line-height:0.9"},state.streak),
+              h("div",{style:"font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px"},"STREAK"),
+              bonusGiven&&h("div",{style:"font-size:10px;color:#c084fc;font-family:Orbitron,sans-serif;margin-top:3px"},"+250 XP ✓")
             )
           ),
-
           h("div",{style:"width:1px;height:38px;background:rgba(255,255,255,0.06);justify-self:center"}),
-
           h("div",{style:"width:100%;display:flex;align-items:center;justify-content:center;gap:5px;padding:0"},
             h("div",{style:"display:flex;flex-direction:column;align-items:center;justify-content:center"},
-              h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:var(--rc);line-height:0.9"},
-                todayXp.toFixed(0)
-              ),
-              h("div",{style:"font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px"},
-                "XP DU JOUR"
-              )
+              h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:var(--rc);line-height:0.9"},todayXp.toFixed(0)),
+              h("div",{style:"font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px"},"XP DU JOUR")
+            )
+          ),
+          h("div",{style:"width:1px;height:38px;background:rgba(255,255,255,0.06);justify-self:center"}),
+          h("div",{style:"width:100%;display:flex;align-items:center;justify-content:center;gap:5px;padding:0"},
+            h("div",{style:"display:flex;flex-direction:column;align-items:center;justify-content:center"},
+              h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:"+(reqRemaining===0?"#4ade80":"var(--rc)")+";line-height:0.9"},reqRemaining),
+              h("div",{style:"font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px"},"RESTANTES")
             )
           )
         )
       ),
 
       dailyEvent&&h(DailyEventCard,null),
-        activeSq&&h("div",{class:"card",style:"border-color:#ef444444"},
-        h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Qu\u00eate urgente"+(activeSq.tier?" \u00b7 "+(SQ_TIER_LABEL[activeSq.tier]||""):"")),
+
+      activeSq&&h("div",{class:"card",style:"border-color:#ef444444"},
+        h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Quête urgente"+(activeSq.tier?" · "+(SQ_TIER_LABEL[activeSq.tier]||""):"")),
         h(SqCard,{sq:activeSq,showInput:false})
       ),
       !activeSq&&sqCooldownActive&&h("div",{class:"card",style:"border-color:#ef444433"},
-        h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Qu\u00eate urgente"),
-        h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:4px 0;font-family:Orbitron,sans-serif"},"\u23F3 Prochaine qu\u00eate dans "+fmtCD(sqCooldownUntil-now))
+        h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Quête urgente"),
+        h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:4px 0;font-family:Orbitron,sans-serif"},"⏳ Prochaine quête dans "+fmtCD(sqCooldownUntil-now))
       ),
+
       h(DungeonCard,null),
-      secs.map(({lb,ob,iw,mixed})=>ob.length===0?null:
-        h("div",{key:lb,class:"card"},h("div",{class:"ctitle"},lb),ob.map(o=>h(RR,{key:o.id,obj:o,isW:mixed?(o.weekly):iw})))
+
+      secs.map(({lb,ob,iw,empty})=>
+        ob.length>0
+          ? h("div",{key:lb,class:"card"},h("div",{class:"ctitle"},lb),ob.map(o=>h(RR,{key:o.id,obj:o,isW:iw})))
+          : empty
+            ? h("div",{key:lb,class:"card",style:"border-color:#4ade8044"},
+                h("div",{class:"ctitle",style:"color:#4ade80"},lb),
+                h("div",{style:"text-align:center;padding:14px 0;color:#4ade80;font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:1px"},empty)
+              )
+            : null
       )
     );
   }
