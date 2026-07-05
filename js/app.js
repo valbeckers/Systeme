@@ -740,6 +740,7 @@ const IMPORTED = {
   sqCooldownUntil:null,
   activeDungeon:null,
   dungeonRunDay:null,
+  dungeonSkipDay:null,
   dungeonRunsByWeek:{},
   dungeonLog:[],
   dailyExtraXp:{},
@@ -780,6 +781,7 @@ function buildState(){
     sqRerollDay:saved.sqRerollDay||null,
     activeDungeon:saved.activeDungeon||null,
     dungeonRunDay:saved.dungeonRunDay||null,
+    dungeonSkipDay:saved.dungeonSkipDay||null,
     dungeonRunsByWeek:saved.dungeonRunsByWeek||{},
     dungeonLog:saved.dungeonLog||[],
     dailyExtraXp:saved.dailyExtraXp||IMPORTED.dailyExtraXp||{},
@@ -840,6 +842,7 @@ function App(){
   const [recordUp,setRecordUp] = useState(null);
   const [dungeonUp,setDungeonUp] = useState(null);
   const [confirmRerollSq,setConfirmRerollSq] = useState(null);
+  const [confirmDungeonChoice,setConfirmDungeonChoice] = useState(null);
   const [importModal,setImportModal] = useState(false);
   const [importValue,setImportValue] = useState("");
   const [exportCopiedModal,setExportCopiedModal] = useState(false);
@@ -1055,7 +1058,9 @@ function App(){
   const dungeonRunsByWeek = state.dungeonRunsByWeek||{};
   const dungeonWeekCount = dungeonRunsByWeek[wk]||0;
   const dungeonDailyUsed = dungeonRunDay===today;
-  const dungeonCanStart = !activeDungeon && !dungeonDailyUsed && dungeonWeekCount<3;
+  const dungeonSkipDay = state.dungeonSkipDay||null;
+  const dungeonSkippedToday = dungeonSkipDay===today;
+  const dungeonCanStart = !activeDungeon && !dungeonDailyUsed && !dungeonSkippedToday && dungeonWeekCount<3;
 
   const dailyEvent = state.dailyEvent && state.dailyEvent.type!=="none" && now < (state.dailyEvent.expiresAt||0)
     ? state.dailyEvent
@@ -1680,12 +1685,16 @@ function App(){
       const runs={...(s.dungeonRunsByWeek||{})};
       const current=s.activeDungeon;
       if(current && !current.completedAt && t<current.expiresAt) return s;
-      if(s.dungeonRunDay===day || (runs[week]||0)>=3) return s;
+      if(s.dungeonRunDay===day || s.dungeonSkipDay===day || (runs[week]||0)>=3) return s;
       const dungeon=DUNGEONS.find(d=>d.id===id);
       if(!dungeon) return s;
       runs[week]=(runs[week]||0)+1;
       return {...s,activeDungeon:{id,runId:"dg_"+t,startedAt:t,expiresAt:t+86400000,completedRooms:[],completedAt:null},dungeonRunDay:day,dungeonRunsByWeek:runs,lastActiveDay:day};
     });
+  }
+
+  function skipDungeonToday(){
+    setState(s=>({...s,dungeonSkipDay:todayStr()}));
   }
 
   function validateDungeonRoom(){
@@ -2150,6 +2159,50 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
+  function DungeonConsultCard(){
+    const d=activeDungeon;
+    if(!d) return null;
+    const remaining=d.expiresAt-now;
+    const completedRooms=d.completedRooms||[];
+    const color=d.color||rank.color;
+    return h("div",{class:"card",style:"border-color:"+color+"66"},
+      h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
+        h("div",{style:"min-width:0"},
+          h("div",{class:"ctitle",style:"margin:0;color:"+color},d.icon+" "+d.title),
+          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"Progression "+completedRooms.length+"/"+d.rooms.length+" salles · "+fmtCD(remaining)+" restants")
+        ),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap"},STAT_LBL[d.stat]||d.stat)
+      ),
+      h("div",{style:"display:flex;flex-direction:column;gap:5px;margin-top:10px"},d.rooms.map((room,i)=>{
+        const done=completedRooms.includes(i);
+        const current=i===completedRooms.length;
+        return h("div",{key:i,style:"display:flex;gap:8px;align-items:center;padding:7px 8px;border-radius:9px;background:"+(current?color+"12":"rgba(255,255,255,0.02)")+";border:1px solid "+(current?color+"44":"rgba(255,255,255,0.045)")+";opacity:"+(done?"0.7":"1")},
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:"+(done?"#4ade80":current?color:"var(--td)")+";width:18px;text-align:center;flex-shrink:0"},done?"✓":(i+1)),
+          h("div",{style:"font-size:12px;color:var(--tx);font-weight:700;line-height:1.25;min-width:0"},(i===d.rooms.length-1?"Boss — ":"")+room.name)
+        );
+      }))
+    );
+  }
+
+  function DungeonChoiceCard(){
+    if(!dungeonCanStart) return null;
+    return h("div",{class:"card",style:"border-color:var(--rc)44"},
+      h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px"},
+        h("div",null,
+          h("div",{class:"ctitle",style:"margin:0;color:var(--rc)"},"Donjon du jour"),
+          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"Choisis un donjon ou passe pour aujourd’hui · "+dungeonWeekCount+"/3 cette semaine")
+        ),
+        h("div",{style:"font-size:10px;color:#4ade80;font-family:Orbitron,sans-serif;text-transform:uppercase;white-space:nowrap"},"Disponible")
+      ),
+      h("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:8px"},DUNGEONS.map(dg=>h("button",{key:dg.id,onClick:()=>setConfirmDungeonChoice({type:"start",id:dg.id,title:dg.title,short:dg.short,icon:dg.icon,color:dg.color,stat:dg.stat}),style:"padding:10px 8px;border-radius:10px;border:1px solid "+dg.color+"55;background:"+dg.color+"0f;color:"+dg.color+";font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:.7px;text-transform:uppercase;cursor:pointer;text-align:center;line-height:1.25"},
+        h("div",{style:"font-size:16px;margin-bottom:4px"},dg.icon),
+        h("div",null,dg.short),
+        h("div",{style:"font-size:8px;color:var(--td);margin-top:3px"},STAT_LBL[dg.stat]||dg.stat)
+      ))),
+      h("button",{onClick:()=>setConfirmDungeonChoice({type:"skip"}),style:"width:100%;margin-top:9px;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.025);color:var(--td);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer"},"Ne pas faire de donjon aujourd’hui")
+    );
+  }
+
   function DailyEventCard(){
     const ev=dailyEvent;
     if(!ev) return null;
@@ -2296,7 +2349,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:4px 0;font-family:Orbitron,sans-serif"},"⏳ Prochaine quête dans "+fmtCD(sqCooldownUntil-now))
       ),
 
-      h(DungeonCard,null),
+      activeDungeon ? h(DungeonConsultCard,null) : h(DungeonChoiceCard,null),
 
       secs.map(({lb,ob,iw,empty})=>
         ob.length>0
@@ -2374,7 +2427,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           : h("div",{style:"font-size:12px;color:var(--td);text-align:center;padding:8px 0"},"Chargement du défi...")
         )
       ),
-      activeDungeon&&h(DungeonCard,{compact:true}),
+      activeDungeon&&h(DungeonCard,null),
       h("div",{class:"card"},
         h(SectionHeader,{title:"Quêtes journalières",done:reqDone,total:reqTotal}),
         req.map(o=>h(QI,{key:o.id,obj:o})),
@@ -2988,6 +3041,41 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
+  function ConfirmDungeonChoice(){
+    if(!confirmDungeonChoice)return null;
+    const isSkip=confirmDungeonChoice.type==="skip";
+    const color=isSkip ? "#f59e0b" : (confirmDungeonChoice.color||"var(--rc)");
+    const title=isSkip ? "Ne pas faire de donjon aujourd’hui ?" : "Activer ce donjon ?";
+    const main=isSkip ? "Passer les donjons" : ((confirmDungeonChoice.icon||"")+" "+(confirmDungeonChoice.title||"Donjon"));
+    const desc=isSkip
+      ? "La carte de choix disparaîtra de l’accueil jusqu’au prochain reset de 7h."
+      : "Ce choix consommera ton lancement de donjon du jour et comptera dans la limite hebdomadaire.";
+    return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+color+"55;background:rgba(0,0,0,0.92)"},
+      h("div",{class:"rucont",style:"width:min(330px,calc(100vw - 38px));background:rgba(15,15,18,0.96);border:1px solid "+color+"66;border-radius:18px;padding:20px;box-shadow:0 0 30px "+color+"22"},
+        h("div",{class:"ruevol",style:"margin-bottom:10px;color:"+color},"CONFIRMATION"),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:17px;font-weight:900;color:"+color+";letter-spacing:1px;text-transform:uppercase;text-align:center;line-height:1.25"},title),
+        h("div",{style:"font-size:14px;color:var(--tx);font-weight:800;text-align:center;margin-top:10px;line-height:1.35"},main),
+        !isSkip&&h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;text-align:center;margin-top:6px;letter-spacing:1px;text-transform:uppercase"},STAT_LBL[confirmDungeonChoice.stat]||confirmDungeonChoice.stat),
+        h("div",{style:"font-size:12px;color:var(--td);line-height:1.5;text-align:center;margin-top:12px"},desc),
+        h("div",{style:"display:flex;gap:10px;width:100%;margin-top:18px"},
+          h("button",{
+            onClick:()=>setConfirmDungeonChoice(null),
+            style:"flex:1;padding:11px;border-radius:9px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);color:var(--td);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"
+          },"Annuler"),
+          h("button",{
+            onClick:()=>{
+              const choice=confirmDungeonChoice;
+              setConfirmDungeonChoice(null);
+              if(choice.type==="skip") skipDungeonToday();
+              else startDungeon(choice.id);
+            },
+            style:"flex:1;padding:11px;border-radius:9px;border:1px solid "+color+";background:"+color+"1a;color:"+color+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"
+          },isSkip?"Passer":"Activer")
+        )
+      )
+    );
+  }
+
   function ConfirmReroll(){
     if(!confirmRerollSq)return null;
     return h("div",{class:"ruov",style:"--rc:#f59e0b;--rg:#f59e0b55;background:rgba(0,0,0,0.92)"},
@@ -3488,6 +3576,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(StreakUp,null),
       h(RecordUp,null),
       h(DungeonUp,null),
+      h(ConfirmDungeonChoice,null),
       h(ConfirmReroll,null),
       h(ImportModal,null),
       h(ExportCopiedModal,null),
