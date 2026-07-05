@@ -1,3 +1,4 @@
+
 const { h, render, Fragment } = preact;
 const { useState, useEffect, useRef } = preactHooks;
 
@@ -2353,22 +2354,30 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const expired = now >= (ev.expiresAt||0);
     const done = !!ev.completedAt;
     const isBonus = ev.type==="bonus";
+    if(isBonus){
+      return h("div",{class:"card",style:"border-color:"+color+"66;background:linear-gradient(135deg,"+color+"14,rgba(255,255,255,0.025))"},
+        h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:10px"},
+          h("div",{class:"ctitle",style:"margin:0;color:"+color},label),
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap;text-transform:uppercase"},"+15% XP "+(STAT_LBL[ev.stat]||ev.stat))
+        )
+      );
+    }
     return h("div",{class:"card",style:"border-color:"+color+"66;background:linear-gradient(135deg,"+color+"14,rgba(255,255,255,0.025))"},
-      h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:"+(isBonus?"0":"8px")},
+      h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
         h("div",{style:"min-width:0;flex:1"},
           h("div",{class:"ctitle",style:"margin:0;color:"+color},label),
-          !isBonus&&h("div",{style:"font-size:14px;color:var(--tx);font-weight:800;line-height:1.25;margin-top:4px"},ev.title),
-          h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin-top:"+(isBonus?"5px":"5px")+";"+(isBonus?"white-space:nowrap;overflow:hidden;text-overflow:ellipsis;":"")},ev.desc)
+          h("div",{style:"font-size:14px;color:var(--tx);font-weight:800;line-height:1.25;margin-top:4px"},ev.title),
+          h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin-top:5px"},ev.desc)
         ),
-        h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap;text-transform:uppercase"},isBonus ? ("+15% XP "+(STAT_LBL[ev.stat]||ev.stat)) : (done ? "validé" : fmtCD((ev.expiresAt||0)-now)))
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap;text-transform:uppercase"},done ? "validé" : fmtCD((ev.expiresAt||0)-now))
       ),
-      !isBonus&&h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:2px"},reason),
-      !isBonus&&h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:8px"},eventRewardText(ev)),
-      !isBonus&&!done&&!expired&&h("button",{
+      h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:2px"},reason),
+      h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:8px"},eventRewardText(ev)),
+      !done&&!expired&&h("button",{
         onClick:e=>completeDailyEvent(ev,e),
         style:"width:100%;margin-top:10px;padding:10px;border-radius:9px;border:1px solid "+color+"66;background:rgba(255,255,255,0.035);color:"+color+";font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer"
       },"Valider l’invitation"),
-      !isBonus&&done&&h("div",{style:"margin-top:10px;text-align:center;color:#4ade80;font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase"},"Invitation complétée ✓")
+      done&&h("div",{style:"margin-top:10px;text-align:center;color:#4ade80;font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase"},"Invitation complétée ✓")
     );
   }
 
