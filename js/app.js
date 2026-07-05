@@ -144,7 +144,7 @@ const DUNGEONS = [
   {id:"monk", title:"Donjon du Moine", short:"Moine", stat:"Esprit", icon:"🧘🏻‍♂️", color:"#ec4899", reward:{xp:1500,stat:"Esprit",xp2:300,stat2:"Discipline"}, rooms:[
     {name:"Lecture profonde", desc:"Lire 20 min sans interruption"},
     {name:"Apprentissage actif", desc:"30 min d’apprentissage volontaire avec prise de notes minimale"},
-    {name:"Mémoire", desc:"10 min de rappel actif", helpTitle:"Rappel actif", help:"Le rappel actif consiste à récupérer une information de mémoire, sans relire directement la réponse. Exemple simple : lis un passage, ferme la source, puis note tout ce dont tu te souviens. Ensuite seulement, compare avec la source et corrige. Tu peux aussi utiliser des flashcards, te poser 5 questions, ou réciter une idée à voix haute comme si tu l’expliquais à quelqu’un."},
+    {name:"Mémoire", desc:"10 min de rappel actif", helpTitle:"Rappel actif", help:"Le rappel actif consiste à récupérer une information de mémoire, sans relire directement la réponse.\n\nIdées concrètes :\n• Rappel actif simple : ferme la source et restitue ce que tu as retenu.\n• Compression mentale : résume une idée en une phrase, puis en 3 mots-clés.\n• Transmission : explique une notion comme à quelqu’un de 12 ans.\n• Carte mentale : idée centrale + 3 à 5 branches, de mémoire.\n• Flash mental : liste 5 éléments liés à un sujet avant de vérifier.\n• Question-réponse : crée 3 questions et réponds sans relire.\n• Mémoire différée : apprends, attends 5 min, puis restitue."},
     {name:"Méditation", desc:"15 min"},
     {name:"Gratitude", desc:"Écrire 3 choses pour lesquelles je suis reconnaissant"},
   ]},
@@ -201,7 +201,7 @@ const EVENT_INVITES = [
   {id:"ev_page",title:"Page unique",desc:"Lis 5 min ou 3 pages.",stat:"Esprit",reward:[{stat:"Esprit",xp:150}]},
   {id:"ev_recall",title:"Rappel actif express",desc:"Restitue de mémoire une idée apprise récemment.",stat:"Esprit",reward:[{stat:"Esprit",xp:120},{stat:"Discipline",xp:50}]},
   {id:"ev_gratitude",title:"Gratitude simple",desc:"Note une chose positive ou utile dans ta journée.",stat:"Esprit",reward:[{stat:"Esprit",xp:100},{stat:"Sante",xp:50}]},
-  {id:"ev_writing_block",title:"Bloc d’écriture",desc:"Écris pendant 10 min sans interruption : pensée, synthèse, journal ou idée à clarifier.",stat:"Esprit",reward:[{stat:"Esprit",xp:120},{stat:"Discipline",xp:50}]},
+  {id:"ev_writing_block",title:"Synthèse écrite 10 min",desc:"Pendant 10 min sans interruption, écris 5 lignes minimum pour clarifier une idée, une décision ou un problème précis.",stat:"Esprit",reward:[{stat:"Esprit",xp:120},{stat:"Discipline",xp:50}]},
 
   // Endurance
   {id:"ev_walk_restart",title:"Marche de relance",desc:"Fais 10 min de marche.",stat:"Endurance",reward:[{stat:"Endurance",xp:150}]},
@@ -215,9 +215,61 @@ const EVENT_INVITES = [
 
   // Discipline
   {id:"ev_space_reset",title:"Reset de l’espace",desc:"Range ou traite 10 objets autour de toi.",stat:"Discipline",reward:[{stat:"Discipline",xp:150}]},
-  {id:"ev_task_5",title:"Tâche de 5 minutes",desc:"Fais avancer une tâche repoussée pendant 5 min.",stat:"Discipline",reward:[{stat:"Discipline",xp:150}]},
+  {id:"ev_task_5",title:"Tâche repoussée 5 min",desc:"Choisis une tâche précise que tu repousses et travaille dessus pendant 5 min chrono, sans changer de sujet.",stat:"Discipline",reward:[{stat:"Discipline",xp:150}]},
   {id:"ev_mental_capture",title:"Capture mentale",desc:"Note 5 choses qui encombrent ton esprit, puis traite ou planifie au moins 1 élément.",stat:"Discipline",reward:[{stat:"Discipline",xp:120},{stat:"Esprit",xp:50}]},
 ];
+
+const MENTAL_MODES = [
+  {
+    id:"energy_low",
+    label:"Énergie basse",
+    enemy:"Le Mode Économie",
+    enemyDesc:"Il réduit ton initiative et te pousse à l’inertie.",
+    actionTitle:"Eau + lumière 5 min",
+    desc:"Bois 2 verres d’eau, puis passe 5 min dehors ou devant une source de lumière naturelle. Chronomètre obligatoire.",
+    reward:[{stat:"Sante",xp:75},{stat:"Discipline",xp:25}]
+  },
+  {
+    id:"scattered",
+    label:"Mental dispersé",
+    enemy:"Le Brouillard",
+    enemyDesc:"Il te pousse à passer d’une chose à l’autre sans finir.",
+    actionTitle:"Synthèse écrite 10 min",
+    desc:"Pendant 10 min sans interruption, écris 5 lignes minimum pour clarifier une idée, une décision ou un problème précis.",
+    reward:[{stat:"Esprit",xp:75},{stat:"Discipline",xp:25}]
+  },
+  {
+    id:"stress",
+    label:"Stress / tension",
+    enemy:"L’Alarme",
+    enemyDesc:"Elle te fait confondre urgence ressentie et urgence réelle.",
+    actionTitle:"Respiration lente 5 min",
+    desc:"Pendant 5 min chrono, fais une respiration lente : inspire 4 secondes, expire 6 secondes, sans écran.",
+    reward:[{stat:"Sante",xp:75},{stat:"Esprit",xp:75}]
+  },
+  {
+    id:"avoidance",
+    label:"Flemme / évitement",
+    enemy:"Le Négociateur",
+    enemyDesc:"Il transforme “maintenant” en “plus tard”.",
+    actionTitle:"Tâche repoussée 5 min",
+    desc:"Choisis une tâche précise que tu repousses et travaille dessus pendant 5 min chrono, sans changer de sujet.",
+    reward:[{stat:"Discipline",xp:100}]
+  },
+  {
+    id:"momentum",
+    label:"Bonne dynamique",
+    enemy:"La Dispersion Positive",
+    enemyDesc:"Tu as de l’énergie, mais tu risques de t’éparpiller.",
+    actionTitle:"Quête restante ciblée 10 min",
+    desc:"Choisis une seule quête restante sur l’accueil et avance dessus pendant 10 min chrono, sans passer à autre chose.",
+    reward:[{stat:"Discipline",xp:50}]
+  }
+];
+
+function mentalModeRewardText(mode){
+  return (mode?.reward||[]).map(r=>"+"+r.xp+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ");
+}
 
 function eventDayStr(from=Date.now()){
   const d=new Date(from);
@@ -747,6 +799,7 @@ const IMPORTED = {
   dailyEvent:null,
   eventDay:null,
   eventHistory:[],
+  mentalMode:null,
   sqRerollDay:null,
   completedSqLog:[],
   sqStatCycle:[],
@@ -788,6 +841,7 @@ function buildState(){
     dailyEvent:saved.dailyEvent||IMPORTED.dailyEvent||null,
     eventDay:saved.eventDay||IMPORTED.eventDay||null,
     eventHistory:saved.eventHistory||IMPORTED.eventHistory||[],
+    mentalMode:saved.mentalMode||IMPORTED.mentalMode||null,
     completedSqLog:saved.completedSqLog||[],
     sqStatCycle:saved.sqStatCycle||[],
     stats:saved.stats||IMPORTED.stats,
@@ -1321,6 +1375,43 @@ function App(){
       const lbl=showStat?("+"+Math.round(amount)+" XP "+( STAT_LBL2[showStat]||showStat)):("+"+Math.round(amount)+" XP");
       spawnFloat(lbl,e);
     }
+  }
+
+  function chooseMentalMode(id){
+    const mode=MENTAL_MODES.find(m=>m.id===id);
+    if(!mode) return;
+    setState(s=>({...s,mentalMode:{day:todayStr(),id:mode.id,completedAt:null}}));
+  }
+
+  function completeMentalMode(mode,e){
+    if(e){e.preventDefault();e.stopPropagation();}
+    if(!mode) return;
+    const current=state.mentalMode;
+    if(!current || current.day!==todayStr() || current.completedAt) return;
+    const rewards=mode.reward||[];
+    const totalReward=rewards.reduce((sum,r)=>sum+(r.xp||0),0);
+    setState(s=>{
+      const beforeXp=s.totalXp;
+      const beforeStats=s.stats;
+      let totalXp=s.totalXp;
+      const statXp={...s.statXp};
+      const stats={...s.stats};
+      rewards.forEach(r=>{
+        totalXp+=(r.xp||0);
+        statXp[r.stat]=(statXp[r.stat]||0)+(r.xp||0);
+        stats[r.stat]=getLvl(statXp[r.stat]);
+      });
+      const day=todayStr();
+      const daily={...(s.dailyExtraXp||{})};
+      const dayLog={...(daily[day]||{})};
+      dayLog.mental=(dayLog.mental||0)+totalReward;
+      daily[day]=dayLog;
+      triggerProgressOverlay(beforeXp,beforeStats,totalXp,stats,300);
+      return {...s,totalXp,statXp,stats,dailyExtraXp:daily,mentalMode:{...current,completedAt:Date.now()},lastActiveDay:day};
+    });
+    const id1=Date.now()+Math.random(),id2=id1+0.1;
+    setFloats(f=>[...f,{id:id1,y:"35%",txt:"MODE MENTAL VALIDÉ !"},{id:id2,y:"40%",txt:mentalModeRewardText(mode)}]);
+    setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id1&&p.id!==id2)),1700);
   }
 
   function completeDailyEvent(ev,e){
@@ -2140,7 +2231,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               room.help&&h("button",{onClick:()=>setDungeonHelpOpen(o=>({...o,[d.id+"_"+i]:!o[d.id+"_"+i]})),style:"margin-top:6px;padding:5px 7px;border-radius:7px;border:1px solid "+color+"55;background:rgba(255,255,255,0.025);color:"+color+";font-family:Orbitron,sans-serif;font-size:8px;letter-spacing:1px;text-transform:uppercase;cursor:pointer"},dungeonHelpOpen[d.id+"_"+i]?"Masquer l’aide":"Aide"),
               room.help&&dungeonHelpOpen[d.id+"_"+i]&&h("div",{style:"margin-top:6px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.07);font-size:10px;color:var(--td);line-height:1.45"},
                 h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+color+";letter-spacing:1px;text-transform:uppercase;margin-bottom:4px"},room.helpTitle||"Aide"),
-                room.help
+                String(room.help||"").split("\n").map((line,idx)=>h(Fragment,{key:idx},line,idx<String(room.help||"").split("\n").length-1&&h("br",null)))
               )
             )
           );
@@ -2156,6 +2247,56 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       dungeonCanStart
         ? h("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:8px"},DUNGEONS.map(dg=>h("button",{key:dg.id,onClick:()=>startDungeon(dg.id),style:"padding:10px 8px;border-radius:10px;border:1px solid "+dg.color+"55;background:"+dg.color+"0f;color:"+dg.color+";font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:.7px;text-transform:uppercase;cursor:pointer;text-align:center;line-height:1.25"},h("div",{style:"font-size:16px;margin-bottom:4px"},dg.icon),h("div",null,dg.short),h("div",{style:"font-size:8px;color:var(--td);margin-top:3px"},STAT_LBL[dg.stat]||dg.stat))))
         : h("div",{style:"text-align:center;padding:10px 0;color:var(--td);font-size:11px;line-height:1.45"},dungeonDailyUsed?"Tu as déjà lancé un donjon aujourd'hui. Prochain lancement disponible demain.":"Limite hebdomadaire atteinte. Prochain lancement disponible la semaine prochaine.")
+    );
+  }
+
+  function MentalModeCard(){
+    const hour=new Date(now).getHours();
+    const todayMental=state.mentalMode&&state.mentalMode.day===today ? state.mentalMode : null;
+    const selected=todayMental ? MENTAL_MODES.find(m=>m.id===todayMental.id) : null;
+    const completed=!!todayMental?.completedAt;
+    const remainingDailyCount=(typeof remainingDaily!=="undefined" ? remainingDaily.length : 0);
+    if(hour<12 || completed || remainingDailyCount===0) return null;
+    const color="#f59e0b";
+    return h("div",{class:"card",style:"border-color:"+color+"55;background:linear-gradient(135deg,"+color+"10,rgba(255,255,255,0.025))"},
+      h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px"},
+        h("div",{style:"min-width:0"},
+          h("div",{class:"ctitle",style:"margin:0;color:"+color},"Mode mental"),
+          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"Disponible après 12h · 1 validation par jour")
+        ),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap;text-transform:uppercase"},"Reprise")
+      ),
+      !selected&&h(Fragment,null,
+        h("div",{style:"font-size:12px;color:var(--tx);font-weight:700;margin-bottom:8px"},"Comment tu te sens maintenant ?"),
+        h("div",{style:"display:grid;grid-template-columns:1fr;gap:7px"},MENTAL_MODES.map(m=>h("button",{
+          key:m.id,
+          onClick:()=>chooseMentalMode(m.id),
+          style:"width:100%;text-align:left;padding:10px;border-radius:9px;border:1px solid rgba(245,158,11,0.28);background:rgba(255,255,255,0.025);color:var(--tx);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:.8px;text-transform:uppercase;cursor:pointer"
+        },m.label)))
+      ),
+      selected&&h(Fragment,null,
+        h("div",{style:"padding:10px;border-radius:10px;border:1px solid "+color+"44;background:"+color+"10"},
+          h("div",{style:"font-size:9px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px"},"Ennemi identifié"),
+          h("div",{style:"font-size:14px;color:var(--tx);font-weight:800;line-height:1.25"},selected.enemy),
+          h("div",{style:"font-size:11px;color:var(--td);line-height:1.4;margin-top:4px"},selected.enemyDesc)
+        ),
+        h("div",{style:"margin-top:10px;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.025)"},
+          h("div",{style:"font-size:9px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px"},"Contre-mesure SMART"),
+          h("div",{style:"font-size:13px;color:var(--tx);font-weight:800;line-height:1.25"},selected.actionTitle),
+          h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin-top:5px"},selected.desc),
+          h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:8px"},mentalModeRewardText(selected))
+        ),
+        h("div",{style:"display:flex;gap:8px;margin-top:10px"},
+          h("button",{
+            onClick:()=>setState(s=>({...s,mentalMode:null})),
+            style:"flex:1;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.025);color:var(--td);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer"
+          },"Changer"),
+          h("button",{
+            onClick:e=>completeMentalMode(selected,e),
+            style:"flex:1.4;padding:10px;border-radius:9px;border:1px solid "+color+"66;background:"+color+"12;color:"+color+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer"
+          },"Valider")
+        )
+      )
     );
   }
 
@@ -2339,6 +2480,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       ),
 
       dailyEvent&&h(DailyEventCard,null),
+
+      h(MentalModeCard,null),
 
       activeSq&&h("div",{class:"card",style:"border-color:#ef444444"},
         h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Quête urgente"+(activeSq.tier?" · "+(SQ_TIER_LABEL[activeSq.tier]||""):"")),
