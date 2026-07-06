@@ -178,23 +178,23 @@ const SQ_TIER_LABEL = {mineure:"Mineure", majeure:"Majeure", legendaire:"Légend
 const EVENT_BONUSES = [
   {id:"ev_force",title:"Élan de Force",desc:"Les gains Force sont augmentés de 15% aujourd’hui.",stat:"Force",bonusPct:0.15},
   {id:"ev_sante",title:"Élan de Vitalité",desc:"Les gains Santé sont augmentés de 15% aujourd’hui.",stat:"Sante",bonusPct:0.15},
-  {id:"ev_esprit",title:"Élan d'Esprit",desc:"Les gains Esprit sont augmentés de 15% aujourd’hui.",stat:"Esprit",bonusPct:0.15},
+  {id:"ev_esprit",title:"Élan d’Esprit",desc:"Les gains Esprit sont augmentés de 15% aujourd’hui.",stat:"Esprit",bonusPct:0.15},
   {id:"ev_endurance",title:"Élan d’Endurance",desc:"Les gains Endurance sont augmentés de 15% aujourd’hui.",stat:"Endurance",bonusPct:0.15},
-  {id:"ev_agilite",title:"Élan d'Agilité",desc:"Les gains Agilité sont augmentés de 15% aujourd’hui.",stat:"Agilite",bonusPct:0.15},
+  {id:"ev_agilite",title:"Élan d’Agilité",desc:"Les gains Agilité sont augmentés de 15% aujourd’hui.",stat:"Agilite",bonusPct:0.15},
   {id:"ev_discipline",title:"Élan de Discipline",desc:"Les gains Discipline sont augmentés de 15% aujourd’hui.",stat:"Discipline",bonusPct:0.15},
 ];
 
 const EVENT_INVITES = [
   // Santé
   {id:"ev_outside",title:"Invitation à sortir",desc:"Passe 10 min dehors, idéalement à la lumière naturelle.",stat:"Sante",reward:[{stat:"Sante",xp:100}]},
-  {id:"ev_water_mindful",title:"Invitation à t'hydrater",desc:"Bois 2 verres d’eau lentement, sans écran.",stat:"Sante",reward:[{stat:"Sante",xp:70},{stat:"Discipline",xp:30}]},
+  {id:"ev_water_mindful",title:"Invitation à t’hydrater",desc:"Bois 2 verres d’eau lentement, sans écran.",stat:"Sante",reward:[{stat:"Sante",xp:70},{stat:"Discipline",xp:30}]},
   {id:"ev_breath_health",title:"Invitation au calme",desc:"Fais 5 min de respiration lente.",stat:"Sante",reward:[{stat:"Sante",xp:50},{stat:"Esprit",xp:50}]},
   {id:"ev_clean_meal",title:"Invitation à manger sainement",desc:"Fais un repas simple et propre, sans junk-food.",stat:"Sante",reward:[{stat:"Sante",xp:100}]},
 
   // Force
-  {id:"ev_muscle_activation",title:"Invitation à t'exercer",desc:"Fais 50 squats ou 50 pompes cumulées.",stat:"Force",reward:[{stat:"Force",xp:100}]},
-  {id:"ev_micro_session",title:"Invitation à t'exercer",desc:"Fais 5 min d’exercice au choix : pompes, squats, abdos ou gainage.",stat:"Force",reward:[{stat:"Force",xp:70},{stat:"Discipline",xp:30}]},
-  {id:"ev_plank_short",title:"Invitation à t'exercer",desc:"Fais 2 min de gainage cumulé.",stat:"Force",reward:[{stat:"Force",xp:70},{stat:"Discipline",xp:30}]},
+  {id:"ev_muscle_activation",title:"Invitation à t’exercer",desc:"Fais 50 squats ou 50 pompes cumulées.",stat:"Force",reward:[{stat:"Force",xp:100}]},
+  {id:"ev_micro_session",title:"Invitation à t’exercer",desc:"Fais 5 min d’exercice au choix : pompes, squats, abdos ou gainage.",stat:"Force",reward:[{stat:"Force",xp:70},{stat:"Discipline",xp:30}]},
+  {id:"ev_plank_short",title:"Invitation à t’exercer",desc:"Fais 2 min de gainage cumulé.",stat:"Force",reward:[{stat:"Force",xp:70},{stat:"Discipline",xp:30}]},
 
   // Esprit
   {id:"ev_calm",title:"Invitation au calme",desc:"Reste 5 min sans téléphone, juste assis ou debout au calme.",stat:"Esprit",reward:[{stat:"Esprit",xp:100}]},
@@ -3677,4 +3677,134 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }
 
     function groupByDominantStat(list,render,fallbackStatGetter){
-      const 
+      const groups=STATS.map(stat=>({stat,list:[]}));
+      list.forEach(item=>{
+        const fallback = fallbackStatGetter ? fallbackStatGetter(item) : item.stat;
+        const stat = dominantStat(item,fallback);
+        const group = groups.find(g=>g.stat===stat) || groups[groups.length-1];
+        group.list.push(item);
+      });
+      return groups.filter(g=>g.list.length>0).map(group=>h("div",{key:group.stat,style:"margin-bottom:13px"},
+        h("div",{style:"font-size:11px;color:"+(STAT_COLOR[group.stat]||"var(--rc)")+";font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin:2px 0 7px"},statLabel(group.stat)),
+        group.list.map(render)
+      ));
+    }
+
+    const required = objs.filter(o=>o.daily&&!o.optional);
+    const weeklyCodex = objs.filter(o=>o.weekly);
+    const bonus = objs.filter(o=>o.optional&&!o.weekly&&!o.bonusHidden);
+    const hiddenBonus = objs.filter(o=>o.optional&&!o.weekly&&o.bonusHidden);
+    const specialList = STATS.flatMap(stat=>(SP[stat]||[]).map(q=>({...q,stat:q.stat||stat})));
+    const eventList = [
+      ...EVENT_BONUSES.map(e=>({...e,type:"bonus"})),
+      ...EVENT_INVITES.map(e=>({...e,type:"invite"}))
+    ];
+
+    return h("div",{class:"tab"},
+      h("div",{class:"card"},
+        h("div",{class:"ctitle"},"Codex"),
+        h("div",{style:"font-size:12px;color:var(--td);line-height:1.45"},"Catalogue complet des quêtes existantes. Les objectifs des quêtes quotidiennes et hebdomadaires sont calculés au rang actuel.")
+      ),
+      h(Section,{id:"obl",title:"Quêtes obligatoires",count:required.length},groupByDominantStat(required,renderQuest)),
+      h(Section,{id:"bonus",title:"Quêtes bonus",count:bonus.length+hiddenBonus.length},
+        h(Fragment,null,
+          groupByDominantStat(bonus,renderQuest),
+          hiddenBonus.length>0&&h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin:10px 0 8px"},"BONUS MASQUÉS / CONTEXTUELS"),
+          hiddenBonus.length>0&&groupByDominantStat(hiddenBonus,renderQuest)
+        )
+      ),
+      h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial)),
+      h(Section,{id:"ev",title:"Événements",count:eventList.length},
+        h(Fragment,null,
+          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Logique quotidienne : journée précédente complète → Élan choisi selon les XP gagnés hier, avec léger bonus aux stats faibles ; journée précédente incomplète → invitation liée aux quêtes manquées ou à la reprise."),
+          eventList.map(renderEventCodex)
+        )
+      ),
+      h(Section,{id:"mm",title:"Mode mental",count:MENTAL_MODES.length},
+        h(Fragment,null,
+          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Disponible sur l’Accueil après 12h, uniquement s’il reste au moins une quête journalière. 1 validation maximum par jour. Pas de donjon ni de quête urgente : seulement une contre-mesure SMART liée à l’état mental choisi."),
+          MENTAL_MODES.map(renderMentalModeCodex)
+        )
+      ),
+      h(Section,{id:"dj",title:"Donjons",count:DUNGEONS.length},groupByDominantStat(DUNGEONS,renderDungeonCodex,dg=>dg.stat))
+    );
+  }
+  // ─── RENDU PRINCIPAL ──────────────────────────────────────────────────
+
+  const parts=Array.from({length:15},(_,i)=>({id:i,s:Math.random()*3+1,l:Math.random()*100,dur:Math.random()*10+8,del:Math.random()*10}));
+
+  const DAILY_MANTRAS = [
+    "Accepte ce que tu ne peux contrôler.",
+    "Mets de l'ordre dans ce que tu maîtrises.",
+    "Fais toujours de ton mieux.",
+    "N'en fais jamais une histoire personnelle.",
+    "Observe, vérifie, puis agis.",
+    "Agis pour toi-même, pas pour la reconnaissance d'autrui.",
+    "Concentre-toi sur l'essentiel.",
+    "Aie toujours une parole impeccable.",
+    "Tiens-toi droit.",
+    "Assume tes responsabilités.",
+    "Apprécie les choses simples de la vie."
+  ];
+  const mantraDayIndex = Math.floor(new Date(today).getTime()/86400000);
+  const dailyMantra = DAILY_MANTRAS[Math.abs(mantraDayIndex)%DAILY_MANTRAS.length];
+  const mantraColor = STAT_COLOR.Force || "#fb923c";
+
+  return h(Fragment,null,
+    h("div",{id:"app"},
+      h("div",{class:"particles"},parts.map(p=>h("div",{key:p.id,class:"particle",style:"width:"+p.s+"px;height:"+p.s+"px;left:"+p.l+"%;bottom:-10px;background:"+rank.color+";box-shadow:0 0 4px "+rank.glow+";animation-duration:"+p.dur+"s;animation-delay:"+p.del+"s"}))),
+      h("div",{class:"hdr-wrap"},
+        h("div",{class:"hdr"},
+          h("div",{class:"hdr-top",style:"position:relative"},
+            h("div",null,
+              h("div",{class:"pname"},"VAL,"),
+              h("div",{style:"margin-top:6px;width:min(340px,calc(100vw - 112px));min-height:26px;font-size:9.5px;line-height:1.3;color:"+mantraColor+";font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-transform:uppercase;display:block;opacity:.96;white-space:normal;overflow:hidden"},dailyMantra)
+            ),
+            prestige>0&&h("div",{class:"prestige-badge"},"\u269B\uFE0F Ascension "+ROMAN[prestige-1]),
+            h("button",{class:"gbtn",style:"display:flex;align-items:center;justify-content:center",onClick:()=>setShowSet(true)},"⚙️")
+          )
+        )
+      ),
+      h("div",{class:"scroll-area",ref:scrollRef},
+        h("div",{style:"height:26px;flex:0 0 auto"}),
+        tab==="home"    &&h(Home,null),
+        tab==="quests"  &&h(Quests,null),
+        tab==="stats"   &&h(Stats,null),
+        tab==="history" && History(),
+        tab==="codex"   && h(Codex,null),
+        floats.map(f=>h("div",{key:f.id,class:"xpfloat",style:"top:"+(f.y||"40%")+(typeof f.y==="number"?"px":"")+";left:50%;transform:translateX(-50%);white-space:pre-line;text-align:center"},f.txt))
+      ),
+      h("nav",{class:"nav"},
+        h("button",{class:"nbtn "+(tab==="home"?"on":""),onClick:()=>switchTab("home")},
+          h("span",null,"Accueil")
+        ),
+        h("button",{class:"nbtn "+(tab==="quests"?"on":""),onClick:()=>switchTab("quests")},
+          h("span",null,"Quêtes")
+        ),
+        h("button",{class:"nbtn "+(tab==="stats"?"on":""),onClick:()=>switchTab("stats")},
+          h("span",null,"Stats")
+        ),
+        h("button",{class:"nbtn "+(tab==="history"?"on":""),onClick:()=>switchTab("history")},
+          h("span",null,"Historique")
+        ),
+        h("button",{class:"nbtn "+(tab==="codex"?"on":""),onClick:()=>switchTab("codex")},
+          h("span",null,"Codex")
+        )
+      ),
+      h(Settings,null),
+      h(RankUp,null),
+      h(LevelUp,null),
+      h(StreakUp,null),
+      h(RecordUp,null),
+      h(DungeonUp,null),
+      h(ConfirmDungeonChoice,null),
+      h(ConfirmReroll,null),
+      h(ImportModal,null),
+      h(ExportCopiedModal,null),
+      h(ExportManualModal,null),
+      h(PrestigeUp,null),
+    )
+  );
+}
+
+render(h(App,null),document.getElementById("app"));
