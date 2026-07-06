@@ -2445,7 +2445,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     if(!ev) return null;
     const color = ev.type==="bonus" ? (STAT_COLOR[ev.stat]||rank.color) : "#f59e0b";
     const label = ev.type==="bonus" ? "ÉLAN DU JOUR" : "INVITATION DE REPRISE";
-    const reason = ev.type==="bonus" ? "Hier complété" : (ev.source==="missed_quest" ? "Liée à une quête manquée" : "Reprise douce");
     const expired = now >= (ev.expiresAt||0);
     const done = !!ev.completedAt;
     const isBonus = ev.type==="bonus";
@@ -2466,7 +2465,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         ),
         h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap;text-transform:uppercase"},done ? "validé" : fmtCD((ev.expiresAt||0)-now))
       ),
-      h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:2px"},reason),
       h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:8px"},eventRewardText(ev)),
       !done&&!expired&&h("button",{
         onClick:e=>completeDailyEvent(ev,e),
