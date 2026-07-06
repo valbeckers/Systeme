@@ -302,6 +302,106 @@ function lowestStatFromState(s){
   });
   return best;
 }
+function twoWeakestStatsFromState(s){
+  const stats=s?.stats||{};
+  return [...STATS].sort((a,b)=>(stats[a]||0)-(stats[b]||0)).slice(0,2);
+}
+function strongestStatFromState(s){
+  const stats=s?.stats||{};
+  return [...STATS].sort((a,b)=>(stats[b]||0)-(stats[a]||0))[0];
+}
+function lastBonusStatFromHistory(s){
+  const h=[...((s&&s.eventHistory)||[])].reverse();
+  const last=h.find(e=>e&&e.type==="bonus");
+  if(!last) return null;
+  const ev=EVENT_BONUSES.find(e=>e.id===last.id);
+  return ev ? ev.stat : null;
+}
+function addElanXpPair(out,stat,xp){
+  if(!stat || !xp || xp<=0) return;
+  out[stat]=(out[stat]||0)+xp;
+}
+function estimateQuestXpForElan(s,obj,val,day){
+  const out={};
+  const n=Number(val)||0;
+  if(n<=0 || !obj) return out;
+  const b=eventQuestTarget(s,obj,day);
+  if(obj.tiers && obj.tiers.length>0){
+    obj.tiers.filter(t=>n>=t.at).forEach(t=>{
+      addElanXpPair(out,t.stat,t.xp||0);
+      if(t.xp2&&t.stat2) addElanXpPair(out,t.stat2,t.xp2);
+    });
+    if(obj.overGoalXpPer){
+      const overTarget=obj.target || obj.tiers[obj.tiers.length-1].at || obj.base || 0;
+      const overUnits=Math.max(0,n-overTarget);
+      addElanXpPair(out,obj.overGoalStat||obj.stat,overUnits*obj.overGoalXpPer);
+    }
+    return out;
+  }
+  let xp=0;
+  if(obj.id==="reading"){
+    xp=n*(obj.xpPer||0);
+  } else if(obj.binary){
+    xp=n>=1 ? (obj.binaryXp||0) : 0;
+  } else if(obj.base && obj.id!=="water" && obj.id!=="run"){
+    if(obj.optional){
+      xp=n*(obj.xpPer||0);
+      const mult=Math.floor(n/Math.max(1,b));
+      for(let m=2;m<=mult;m++) xp+=b*(obj.xpPer||0);
+    } else {
+      if(n<b) xp=0;
+      else {
+        xp=n*(obj.xpPer||0);
+        const mult=Math.floor(n/Math.max(1,b));
+        for(let m=2;m<=mult;m++) xp+=b*(obj.xpPer||0);
+      }
+    }
+  } else if(obj.id==="run"){
+    xp=n*(obj.xpPer||0);
+    if(n>=b*2) xp+=Math.round(n*(obj.xpPer||0)*0.5);
+  } else if(obj.xpPer){
+    xp=n*obj.xpPer;
+  } else if(obj.xp){
+    xp=obj.xp;
+  }
+  if(xp>0){
+    addElanXpPair(out,obj.stat,xp);
+    if(obj.stat2&&obj.xpPer2&&obj.xpPer){
+      addElanXpPair(out,obj.stat2,Math.round(xp*(obj.xpPer2/obj.xpPer)));
+    } else if(obj.stat2){
+      addElanXpPair(out,obj.stat2,xp);
+    }
+    if(obj.stat3&&obj.xp3) addElanXpPair(out,obj.stat3,obj.xp3);
+  }
+  return out;
+}
+function yesterdayStatXpForElan(s,day){
+  const out={};
+  STATS.forEach(stat=>{out[stat]=0;});
+  const log=(s.dailyLog&&s.dailyLog[day])||{};
+  DEFS.forEach(obj=>{
+    if(log[obj.id]==null) return;
+    const pairs=estimateQuestXpForElan(s,obj,log[obj.id],day);
+    Object.entries(pairs).forEach(([stat,xp])=>addElanXpPair(out,stat,xp));
+  });
+  return out;
+}
+function elanBaseScoreFromXp(xp){
+  if(xp<=0) return 90;
+  if(xp<250) return 70;
+  if(xp<600) return 50;
+  if(xp<1000) return 30;
+  return 15;
+}
+function weightedPickElan(scored){
+  const total=scored.reduce((sum,r)=>sum+Math.max(1,r.score||1),0);
+  let roll=Math.random()*total;
+  for(const row of scored){
+    roll-=Math.max(1,row.score||1);
+    if(roll<=0) return row.event;
+  }
+  return scored[scored.length-1]?.event || pickFrom(EVENT_BONUSES);
+}
 function requiredDailyForEvent(s,day){
   return DEFS.filter(o=>o.daily&&!o.optional&&(!o.startDate||o.startDate<=day));
 }
@@ -337,13 +437,20 @@ function invitePoolForMissedQuests(missed){
 }
 function buildBonusEvent(s,now=Date.now()){
   const day=eventDayStr(now);
-  const recent=recentEventIds(s);
-  const lowest=lowestStatFromState(s);
-  const lowPool=EVENT_BONUSES.filter(e=>e.stat===lowest);
-  const roll=Math.random();
-  const pool = roll<0.60 ? lowPool : EVENT_BONUSES;
-  const e=pickAvoidingRecent(pool.length?pool:EVENT_BONUSES,recent);
-  return {...e,type:"bonus",day,startedAt:now,expiresAt:next7AM(now),source:"previous_day_complete"};
+  const prev=addDaysStr(day,-1);
+  const xpByStat=yesterdayStatXpForElan(s,prev);
+  const weakest=twoWeakestStatsFromState(s);
+  const strongest=strongestStatFromState(s);
+  const lastBonus=lastBonusStatFromHistory(s);
+  const scored=EVENT_BONUSES.map(e=>{
+    let score=elanBaseScoreFromXp(xpByStat[e.stat]||0);
+    if(weakest.includes(e.stat)) score+=15;
+    if(strongest===e.stat) score-=10;
+    if(lastBonus===e.stat) score-=10;
+    return {event:e,score:Math.max(1,score),xp:xpByStat[e.stat]||0};
+  });
+  const e=weightedPickElan(scored);
+  return {...e,type:"bonus",day,startedAt:now,expiresAt:next7AM(now),source:"previous_day_complete_weighted"};
 }
 function buildInviteEvent(s,now=Date.now(),missed=[]){
   const day=eventDayStr(now);
@@ -3455,7 +3562,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             ev.type!=="bonus"&&h("div",{style:"margin-top:7px"},(ev.reward||[]).map((r,i)=>h(StatPill,{key:i,stat:r.stat,xp:r.xp}))),
             h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:6px"},
               ev.type==="bonus"&&h("div",{style:detailStyle},"▸ Déclenchement : si la journée précédente est complète"),
-              ev.type==="bonus"&&h("div",{style:detailStyle},"▸ Sélection : favorise la stat la plus basse, avec anti-répétition"),
+              ev.type==="bonus"&&h("div",{style:detailStyle},"▸ Sélection : favorise une stat à renforcer selon les XP gagnés hier, avec léger bonus aux stats faibles"),
               ev.type==="invite"&&h("div",{style:detailStyle},"▸ Déclenchement : si la journée précédente est incomplète"),
               ev.type==="invite"&&h("div",{style:detailStyle},"▸ Sélection : favorise les quêtes manquées, puis reprise Discipline/Santé/Esprit/stat faible"),
               h("div",{style:detailStyle},"▸ Reset : 7h"),
@@ -3609,7 +3716,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial)),
       h(Section,{id:"ev",title:"Événements",count:eventList.length},
         h(Fragment,null,
-          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Logique quotidienne : journée précédente complète → bonus de stat orienté stat faible ; journée précédente incomplète → invitation liée aux quêtes manquées ou à la reprise. Anti-répétition sur les derniers événements."),
+          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Logique quotidienne : journée précédente complète → Élan choisi selon les XP gagnés hier, avec léger bonus aux stats faibles ; journée précédente incomplète → invitation liée aux quêtes manquées ou à la reprise."),
           eventList.map(renderEventCodex)
         )
       ),
