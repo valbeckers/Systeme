@@ -1002,6 +1002,7 @@ function App(){
   const [streakUp,setStreakUp] = useState(null);
   const [recordUp,setRecordUp] = useState(null);
   const [dungeonUp,setDungeonUp] = useState(null);
+  const [urgentUp,setUrgentUp] = useState(null);
   const [confirmRerollSq,setConfirmRerollSq] = useState(null);
   const [confirmDungeonChoice,setConfirmDungeonChoice] = useState(null);
   const [importModal,setImportModal] = useState(false);
@@ -1740,18 +1741,22 @@ function App(){
             xpByStat[t.stat2]=(xpByStat[t.stat2]||0)+t.xp2;
           }
         });
-        const id1=Date.now()+Math.random();
-        const id2=id1+0.1;
-        const xpText = Object.entries(xpByStat).map(([stat,xp])=>{
-          const lbl = STAT_LBL2[stat] || STAT_LBL[stat] || stat || "";
-          return "+"+xp+" XP"+(lbl?" "+lbl:"");
-        }).join("\n");
-        const headerTxt = nowComplete ? "\uD83C\uDFC6 QU\u00c9TE VALID\u00c9E !" : "\u2728 PALIER FRANCHI !";
-        setFloats(f=>[...f,
-          {id:id1,y:"35%",txt:headerTxt},
-          {id:id2,y:"40%",txt:xpText}
-        ]);
-        setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id1&&p.id!==id2)),1400);
+        const rewardPairs = Object.entries(xpByStat).map(([stat,xp])=>({stat,xp}));
+        if(nowComplete){
+          triggerUrgentUp(sq,rewardPairs);
+        }else{
+          const id1=Date.now()+Math.random();
+          const id2=id1+0.1;
+          const xpText = rewardPairs.map(p=>{
+            const lbl = STAT_LBL2[p.stat] || STAT_LBL[p.stat] || p.stat || "";
+            return "+"+p.xp+" XP"+(lbl?" "+lbl:"");
+          }).join("\n");
+          setFloats(f=>[...f,
+            {id:id1,y:"35%",txt:"\u2728 PALIER FRANCHI !"},
+            {id:id2,y:"40%",txt:xpText}
+          ]);
+          setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id1&&p.id!==id2)),1400);
+        }
       }
       const awardedXp = crossedTiers.reduce((sum,t)=>
         sum + (t.xp||0) + (t.xp2||0) + (t.xp3||0),0);
@@ -1776,17 +1781,7 @@ function App(){
         sq.xp3&&sq.stat3 ? {xp:sq.xp3, stat:sq.stat3} : null,
       ].filter(Boolean);
       xpPairs.forEach(p=>addXp(p.xp,p.stat,null,true));
-      const id1=Date.now()+Math.random();
-      const id2=id1+0.1;
-      const xpText = xpPairs.map(p=>{
-        const lbl = STAT_LBL2[p.stat] || STAT_LBL[p.stat] || p.stat || "";
-        return "+"+p.xp+" XP"+(lbl?" "+lbl:"");
-      }).join("\n");
-      setFloats(f=>[...f,
-        {id:id1,y:"35%",txt:"\uD83C\uDFC6 QU\u00c9TE VALID\u00c9E !"},
-        {id:id2,y:"40%",txt:xpText}
-      ]);
-      setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id1&&p.id!==id2)),1400);
+      triggerUrgentUp(sq,xpPairs);
     }
     const awardedXp = (!wasComplete&&nowComplete) ? [
       {xp:sq.xp, stat:sq.stat},
@@ -2224,13 +2219,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const nowComplete=val>=1;
       const awardedXp = nowComplete ? xpPairs.reduce((sum,p)=>sum+(p.xp||0),0) : 0;
       if(nowComplete){
-        const id1=Date.now()+Math.random(), id2=id1+0.1;
-        const xpText = xpPairs.map(p=>{
-          const lbl = STAT_LBL2[p.stat] || STAT_LBL[p.stat] || p.stat || "";
-          return "+"+p.xp+" XP"+(lbl?" "+lbl:"");
-        }).join("\n");
-        setFloats(f=>[...f,{id:id1,y:"35%",txt:"\uD83C\uDFC6 QU\u00c9TE VALID\u00c9E !"},{id:id2,y:"40%",txt:xpText}]);
-        setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id1&&p.id!==id2)),1400);
+        triggerUrgentUp(sq,xpPairs);
         xpPairs.forEach(p=>addXp(p.xp,p.stat,null,true));
       }
       setState(s=>{
@@ -3141,6 +3130,22 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
   // ─── ANIMATION RANK UP ────────────────────────────────────────────────
 
+  function triggerUrgentUp(sq,pairs){
+    if(!sq || !pairs || !pairs.length) return;
+    setTimeout(()=>setUrgentUp({
+      title:"QUÊTE URGENTE COMPLÉTÉE",
+      name:sq.name,
+      color:rank.color||"#fbbf24",
+      glow:rank.glow||"#fbbf2455",
+      nameColor:STAT_COLOR[sq.stat]||rank.color||"#ef4444",
+      rewards:pairs.map(p=>({
+        xp:p.xp||0,
+        stat:p.stat,
+        label:STAT_LBL2[p.stat] || STAT_LBL[p.stat] || p.stat || ""
+      }))
+    }),300);
+  }
+
   function RankUp(){
     if(!rankUp)return null;
     const particles=Array.from({length:40},(_,i)=>({
@@ -3207,6 +3212,33 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{class:"rurank",style:"font-size:clamp(48px,16vw,82px);letter-spacing:-1px;white-space:nowrap","data-r":dungeonUp.short},dungeonUp.short),
         h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:3px;max-width:300px;line-height:1.35"},dungeonUp.reward),
         h("button",{class:"rudis",onClick:()=>setDungeonUp(null)},"Continuer")
+      )
+    );
+  }
+
+  function UrgentUp(){
+    if(!urgentUp)return null;
+    const color=urgentUp.color||"#fbbf24";
+    const glow=urgentUp.glow||"#fbbf2455";
+    const particles=Array.from({length:42},(_,i)=>({
+      id:i,
+      left:Math.random()*100,
+      delay:Math.random()*2.8,
+      dur:1.1+Math.random()*1.8,
+      size:2+Math.random()*4,
+      accent:Math.random()>0.65
+    }));
+    return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+glow},
+      h("div",{class:"ruparts"},particles.map(p=>
+        h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?(urgentUp.nameColor||color):color)+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
+      )),
+      h("div",{class:"rucont"},
+        h("div",{class:"ruevol"},urgentUp.title||"QUÊTE URGENTE COMPLÉTÉE"),
+        h("div",{class:"rulabel",style:"margin-top:10px;font-size:clamp(18px,4.6vw,28px);letter-spacing:2px;line-height:1.3;color:"+(urgentUp.nameColor||color)+";max-width:320px"},urgentUp.name),
+        h("div",{style:"margin-top:14px;display:flex;flex-direction:column;gap:6px;align-items:center"},
+          (urgentUp.rewards||[]).map((r,i)=>h("div",{key:i,style:"font-family:Orbitron,sans-serif;font-size:clamp(14px,3.8vw,20px);letter-spacing:1.5px;line-height:1.3;color:"+color+";text-transform:uppercase;text-align:center"},("+"+r.xp+" XP "+r.label).trim()))
+        ),
+        h("button",{class:"rudis",onClick:()=>setUrgentUp(null)},"Continuer")
       )
     );
   }
@@ -3797,6 +3829,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(StreakUp,null),
       h(RecordUp,null),
       h(DungeonUp,null),
+      h(UrgentUp,null),
       h(ConfirmDungeonChoice,null),
       h(ConfirmReroll,null),
       h(ImportModal,null),
