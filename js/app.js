@@ -1218,6 +1218,18 @@ function App(){
   // Persistance
   useEffect(()=>{ saveState(state); },[state]);
 
+  // Mode mental : vrai tirage aléatoire 33 %, une seule fois par journée après 12h
+  useEffect(()=>{
+    const hour=new Date(now).getHours();
+    if(hour<12) return;
+    if(state.mentalModeRollDay===today) return;
+    setState(s=>{
+      if(s.mentalModeRollDay===today) return s;
+      return {...s,mentalModeRollDay:today,mentalModeAvailable:Math.random()<1/3};
+    });
+  },[today,now,state.mentalModeRollDay]);
+
+
   // Penalite jours manques (une seule fois au montage)
   useEffect(()=>{
     const t=todayStr();
@@ -2535,7 +2547,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const selected=todayMental ? MENTAL_MODES.find(m=>m.id===todayMental.id) : null;
     const completed=!!todayMental?.completedAt;
     const remainingDailyCount=(typeof remainingDaily!=="undefined" ? remainingDaily.length : 0);
-    if(hour<12 || completed) return null;
+    if(hour<12 || completed || state.mentalModeRollDay!==today || !state.mentalModeAvailable) return null;
     const color="#f59e0b";
     return h("div",{class:"card",style:"border-color:"+color+"55;background:linear-gradient(135deg,"+color+"10,rgba(255,255,255,0.025))"},
       h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px"},
@@ -3935,7 +3947,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       ),
       h(Section,{id:"mm",title:"Mode mental",count:MENTAL_MODES.length},
         h(Fragment,null,
-          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Disponible sur l’Accueil après 12h, uniquement s’il reste au moins une quête journalière. 1 validation maximum par jour. Pas de donjon ni de quête urgente : seulement une contre-mesure SMART liée à l’état mental choisi."),
+          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Disponible sur l’Accueil après 12h avec un vrai tirage aléatoire de 33 % par jour. Le résultat du tirage est mémorisé pour la journée afin d’éviter une apparition/disparition à chaque refresh. 1 validation maximum par jour. Pas de donjon ni de quête urgente : seulement une contre-mesure SMART liée à l’état mental choisi."),
           MENTAL_MODES.map(renderMentalModeCodex)
         )
       ),
