@@ -802,189 +802,6 @@ function migrateRuntimeQuestDefinitions(state){
   return state;
 }
 
-function normalizeLegacyStat(stat){
-  if(stat==="Intelligence" || stat==="Concentration") return "Esprit";
-  return stat;
-}
-function activeSpecialQuestMap(){
-  const map={};
-  Object.values(SP).forEach(list=>(list||[]).forEach(q=>{ map[q.id]=q; }));
-  return map;
-}
-function currentEventMap(){
-  const map={};
-  (EVENT_BONUSES||[]).forEach(e=>{ map[e.id]=e; });
-  (EVENT_INVITES||[]).forEach(e=>{ map[e.id]=e; });
-  return map;
-}
-function cleanQuestLogByIds(log,allowedIds){
-  const out={};
-  Object.entries(log||{}).forEach(([day,items])=>{
-    if(!items || typeof items!=="object") return;
-    const row={};
-    Object.entries(items).forEach(([id,val])=>{
-      if(!allowedIds.has(id)) return;
-      const n=Number(val);
-      row[id]=Number.isFinite(n) ? n : val;
-    });
-    if(Object.keys(row).length) out[day]=row;
-  });
-  return out;
-}
-function cleanStatsObject(obj){
-  const out={};
-  STATS.forEach(stat=>{ out[stat]=0; });
-  Object.entries(obj||{}).forEach(([stat,val])=>{
-    const s=normalizeLegacyStat(stat);
-    if(!STATS.includes(s)) return;
-    const n=Number(val)||0;
-    out[s]=(out[s]||0)+n;
-  });
-  return out;
-}
-function cleanStatLevelsFromXp(statXp,existingStats){
-  const sx=cleanStatsObject(statXp||{});
-  const hasXp=Object.values(sx).some(v=>v>0);
-  if(hasXp){
-    const levels={};
-    STATS.forEach(stat=>{ levels[stat]=getLvl(sx[stat]||0); });
-    return {statXp:sx,stats:levels};
-  }
-  const st=cleanStatsObject(existingStats||{});
-  return {statXp:sx,stats:st};
-}
-function cleanSpecialQuestEntry(q,map){
-  if(!q || !q.id || !map[q.id]) return null;
-  const tpl=map[q.id];
-  return {
-    ...tpl,
-    sqid:q.sqid || ("sq_"+(q.startedAt||Date.now())),
-    progress:q.progress==null ? 0 : q.progress,
-    startedAt:q.startedAt || Date.now(),
-    expiresAt:q.expiresAt || next7AM(q.startedAt||Date.now()),
-    completedAt:q.completedAt || null
-  };
-}
-function cleanCompletedSqLogEntry(q,map){
-  if(!q || !q.id || !map[q.id] || !q.completedAt) return null;
-  const tpl=map[q.id];
-  return {
-    sqid:q.sqid || ("sq_"+q.completedAt),
-    id:tpl.id,
-    name:tpl.name,
-    icon:tpl.icon,
-    xp:tpl.xp || 0,
-    stat:normalizeLegacyStat(tpl.stat),
-    completedAt:q.completedAt
-  };
-}
-function cleanDailyEvent(ev){
-  if(!ev || !ev.id) return null;
-  const map=currentEventMap();
-  const tpl=map[ev.id];
-  if(!tpl) return null;
-  return {
-    ...tpl,
-    type:ev.type || (EVENT_BONUSES.find(e=>e.id===ev.id) ? "bonus" : "invite"),
-    day:ev.day || eventDayStr(),
-    startedAt:ev.startedAt || Date.now(),
-    expiresAt:ev.expiresAt || next7AM(),
-    completedAt:ev.completedAt || null,
-    source:ev.source || null
-  };
-}
-function cleanEventHistory(history){
-  const map=currentEventMap();
-  return (history||[])
-    .filter(e=>e && e.id && map[e.id])
-    .map(e=>({day:e.day,id:e.id,type:e.type,source:e.source}))
-    .slice(-12);
-}
-function cleanDailyExtraXp(extra){
-  const allowed=new Set(["eventBonus","event","sq","dungeon","streak"]);
-  const out={};
-  Object.entries(extra||{}).forEach(([day,row])=>{
-    if(!row || typeof row!=="object") return;
-    const clean={};
-    Object.entries(row).forEach(([k,v])=>{
-      if(!allowed.has(k)) return;
-      const n=Number(v)||0;
-      if(n!==0) clean[k]=n;
-    });
-    if(Object.keys(clean).length) out[day]=clean;
-  });
-  return out;
-}
-function cleanDungeonLog(log){
-  const map={};
-  (DUNGEONS||[]).forEach(d=>{ map[d.id]=d; });
-  return (log||[]).filter(e=>e&&e.id&&map[e.id]).map(e=>{
-    const d=map[e.id];
-    return {id:d.id,title:d.title,stat:d.stat,xp:e.xp||0,completedAt:e.completedAt};
-  });
-}
-function cleanDungeonRunWeeks(obj){
-  const out={};
-  Object.entries(obj||{}).forEach(([wk,val])=>{
-    const n=Number(val)||0;
-    if(n>0) out[wk]=n;
-  });
-  return out;
-}
-function cleanSystemState(raw){
-  const data=migrateRuntimeQuestDefinitions(migrateMergedEspritState({...((raw&&typeof raw==="object")?raw:{})}));
-  const dailyIds=new Set(DEFS.filter(o=>o.daily).map(o=>o.id));
-  const weeklyIds=new Set(DEFS.filter(o=>o.weekly).map(o=>o.id));
-  const spMap=activeSpecialQuestMap();
-  const statPack=cleanStatLevelsFromXp(data.statXp,data.stats);
-
-  const specialQuests=(data.specialQuests||[])
-    .map(q=>cleanSpecialQuestEntry(q,spMap))
-    .filter(Boolean);
-
-  const completedSqLog=(data.completedSqLog||[])
-    .map(q=>cleanCompletedSqLogEntry(q,spMap))
-    .filter(Boolean);
-
-  const sqStatCycle=(data.sqStatCycle||[])
-    .map(normalizeLegacyStat)
-    .filter(stat=>STATS.includes(stat));
-
-  return {
-    totalXp:Number(data.totalXp)||0,
-    streak:Number(data.streak)||0,
-    lastActiveDay:data.lastActiveDay||todayStr(),
-    streakBonusDay:data.streakBonusDay||null,
-    weeklyBonusWk:data.weeklyBonusWk||null,
-    lastStreakDay:data.lastStreakDay||null,
-    streakMilestones:Array.isArray(data.streakMilestones)?data.streakMilestones:[],
-    prestige:Number(data.prestige)||0,
-    dailyLog:cleanQuestLogByIds(data.dailyLog,dailyIds),
-    weeklyLog:cleanQuestLogByIds(data.weeklyLog,weeklyIds),
-    stats:statPack.stats,
-    statXp:statPack.statXp,
-    specialQuests,
-    sqCooldownUntil:data.sqCooldownUntil||null,
-    activeDungeon:data.activeDungeon||null,
-    dungeonRunDay:data.dungeonRunDay||null,
-    dungeonSkipDay:data.dungeonSkipDay||null,
-    dungeonRunsByWeek:cleanDungeonRunWeeks(data.dungeonRunsByWeek),
-    dungeonLog:cleanDungeonLog(data.dungeonLog),
-    dailyExtraXp:cleanDailyExtraXp(data.dailyExtraXp),
-    dailyEvent:cleanDailyEvent(data.dailyEvent),
-    eventDay:data.eventDay||null,
-    eventHistory:cleanEventHistory(data.eventHistory),
-    mentalMode:data.mentalMode||null,
-    sqRerollDay:data.sqRerollDay||null,
-    completedSqLog,
-    sqStatCycle
-  };
-}
-function exportSystemState(s){
-  return cleanSystemState(s);
-}
-
-
 
 // Lecture : essaie la clé principale, sinon fallback automatique sur les backups
 const loadState  = () => {
@@ -998,7 +815,7 @@ const loadState  = () => {
         if(key !== "sl_v3"){
           try{ localStorage.setItem("sl_v3",r); }catch{}
         }
-        return cleanSystemState(parsed);
+        return migrateRuntimeQuestDefinitions(migrateMergedEspritState(parsed));
       }
     }catch{}
   }
@@ -1008,8 +825,8 @@ const loadState  = () => {
 // \u00c9criture : rotation des backups + sauvegarde principale
 const saveState  = s  => {
   try{
-    // On n\'enregistre que les éléments encore en vigueur dans l\'app
-    const toSave = exportSystemState(s);
+    // On n'enregistre jamais "objectives" \u2014 les DEFS du code ont toujours priorit\u00e9
+    const {objectives, ...toSave} = s;
     const json = JSON.stringify(toSave);
     // Rotation : backup2 \u2192 backup3, backup1 \u2192 backup2, current \u2192 backup1
     // (uniquement si la valeur courante est valide)
@@ -1155,6 +972,52 @@ function buildState(){
 }
 
 // ─── COMPOSANT PRINCIPAL ───────────────────────────────────────────────────
+
+
+function exportCleanState(s){
+  const activeDailyIds=new Set((DEFS||[]).filter(o=>o.daily).map(o=>o.id));
+  const activeWeeklyIds=new Set((DEFS||[]).filter(o=>o.weekly).map(o=>o.id));
+  const activeSqIds=new Set();
+  Object.values(SP||{}).forEach(list=>(list||[]).forEach(q=>activeSqIds.add(q.id)));
+  const activeEventIds=new Set([...(EVENT_BONUSES||[]),...(EVENT_INVITES||[])].map(e=>e.id));
+  const cleanQuestLog=(log,ids)=>{
+    const out={};
+    Object.entries(log||{}).forEach(([day,row])=>{
+      if(!row||typeof row!=="object") return;
+      const r={};
+      Object.entries(row).forEach(([k,v])=>{ if(ids.has(k)) r[k]=v; });
+      if(Object.keys(r).length) out[day]=r;
+    });
+    return out;
+  };
+  const cleanSq=(list)=>(list||[]).filter(q=>q&&activeSqIds.has(q.id));
+  const cleanEvent=ev=>(ev&&activeEventIds.has(ev.id)?ev:null);
+  const cleanEventHistory=(s.eventHistory||[]).filter(e=>e&&activeEventIds.has(e.id)).slice(-12);
+  const allowedExtra=new Set(["event","eventBonus","sq","dungeon","streak"]);
+  const cleanExtra={};
+  Object.entries(s.dailyExtraXp||{}).forEach(([day,row])=>{
+    const r={};
+    Object.entries(row||{}).forEach(([k,v])=>{ if(allowedExtra.has(k)) r[k]=v; });
+    if(Object.keys(r).length) cleanExtra[day]=r;
+  });
+  const {
+    objectives, penaltyDay, restMode, walkTarget, epreuves, epreuveCooldownUntil,
+    completedEpreuveIds, epStatCycle, capReached, lastPenaltyCheck,
+    regressionWeeklyProcessed, adultPenaltyDays, lastPenaltiesApplied,
+    ...base
+  } = s || {};
+  return {
+    ...base,
+    dailyLog:cleanQuestLog(s.dailyLog,activeDailyIds),
+    weeklyLog:cleanQuestLog(s.weeklyLog,activeWeeklyIds),
+    specialQuests:cleanSq(s.specialQuests),
+    completedSqLog:cleanSq(s.completedSqLog),
+    dailyExtraXp:cleanExtra,
+    dailyEvent:cleanEvent(s.dailyEvent),
+    eventHistory:cleanEventHistory
+  };
+}
+
 
 function App(){
   const [state,setState]   = useState(()=>{
@@ -3268,7 +3131,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{class:"mlbl"},"Sauvegarde / Restauration"),
           h("div",{class:"mrow",style:"margin-bottom:8px"},
             h("button",{class:"mbtn mprim",style:"flex:1",onClick:()=>{
-              const json=JSON.stringify(exportSystemState(state));
+              const json=JSON.stringify(exportCleanState(state));
               navigator.clipboard.writeText(json).then(()=>{
                 setExportValue(json);
                 setExportCopiedModal(true);
@@ -3283,7 +3146,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             }},"Importer")
           ),
           h("button",{class:"mbtn mprim",style:"width:100%",onClick:()=>{
-            const json=JSON.stringify(exportSystemState(state),null,2);
+            const json=JSON.stringify(exportCleanState(state),null,2);
             const blob=new Blob([json],{type:"application/json"});
             const url=URL.createObjectURL(blob);
             const a=document.createElement("a");
@@ -3520,7 +3383,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       if(!json)return;
       try{
         const imported=JSON.parse(json);
-        const cleaned=cleanSystemState(imported);
+        const cleaned=migrateRuntimeQuestDefinitions(migrateMergedEspritState(imported));
         setState(s=>({...s,...cleaned,objectives:DEFS}));
         close();
         setShowSet(false);
@@ -3881,14 +3744,4 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       }[item.id];
       if(tieOverride) return tieOverride;
       const totals=xpTotalsByStat(item);
-      const entries=Object.entries(totals).filter(([stat,xp])=>STATS.includes(stat)&&xp>0);
-      if(entries.length===0) return fallback || item.stat || "Discipline";
-      entries.sort((a,b)=>b[1]-a[1]);
-      if(entries.length>1 && entries[0][1]===entries[1][1]) return fallback || item.stat || entries[0][0];
-      return entries[0][0];
-    }
-
-    function groupByDominantStat(list,render,fallbackStatGetter){
-      const groups=STATS.map(stat=>({stat,list:[]}));
-      list.forEach(item=>{
-        const fallback = fallbackStatGetter ? fallb
+      const entri
