@@ -1218,17 +1218,6 @@ function App(){
   // Persistance
   useEffect(()=>{ saveState(state); },[state]);
 
-  // Mode mental : vrai tirage aléatoire 33 %, une seule fois par journée après 12h
-  useEffect(()=>{
-    const hour=new Date(now).getHours();
-    if(hour<12) return;
-    if(state.mentalModeRollDay===today) return;
-    setState(s=>{
-      if(s.mentalModeRollDay===today) return s;
-      return {...s,mentalModeRollDay:today,mentalModeAvailable:Math.random()<1/3};
-    });
-  },[today,now,state.mentalModeRollDay]);
-
 
   // Penalite jours manques (une seule fois au montage)
   useEffect(()=>{
@@ -1249,6 +1238,17 @@ function App(){
 
   const today = todayStr();
   const wk    = wkStr();
+
+  // Mode mental : vrai tirage aléatoire 33 %, une seule fois par journée après 12h
+  useEffect(()=>{
+    const hour=new Date(Date.now()).getHours();
+    if(hour<12) return;
+    if(state.mentalModeRollDay===today) return;
+    setState(s=>{
+      if(s.mentalModeRollDay===today) return s;
+      return {...s,mentalModeRollDay:today,mentalModeAvailable:Math.random()<1/3};
+    });
+  },[today,state.mentalModeRollDay]);
   const objs  = state.objectives||DEFS;
   const tLog  = state.dailyLog[today]||{};
   const wLog  = state.weeklyLog[wk]||{};
@@ -2542,7 +2542,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   }
 
   function MentalModeCard(){
-    const hour=new Date(now).getHours();
+    const hour=new Date(Date.now()).getHours();
     const todayMental=state.mentalMode&&state.mentalMode.day===today ? state.mentalMode : null;
     const selected=todayMental ? MENTAL_MODES.find(m=>m.id===todayMental.id) : null;
     const completed=!!todayMental?.completedAt;
