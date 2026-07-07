@@ -3909,7 +3909,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const hiddenBonus = objs.filter(o=>o.optional&&!o.weekly&&o.bonusHidden);
     const specialList = STATS.flatMap(stat=>(SP[stat]||[]).map(q=>({...q,stat:q.stat||stat})));
     const eventList = [
-      ...EVENT_BONUSES.map(e=>({...e,type:"bonus"})),
+      ...EVENT_BONUSES.filter(e=>!e.disabled).map(e=>({...e,type:"bonus"})),
       ...EVENT_INVITES.map(e=>({...e,type:"invite"}))
     ];
 
