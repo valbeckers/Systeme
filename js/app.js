@@ -2582,10 +2582,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     return h("div",{class:"card",style:"border-color:"+color+"55;background:linear-gradient(135deg,"+color+"10,rgba(255,255,255,0.025))"},
       h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px"},
         h("div",{style:"min-width:0"},
-          h("div",{class:"ctitle",style:"margin:0;color:"+color},"Mode mental"),
-          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"Disponible après 12h · 1 validation par jour")
-        ),
-        h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap;text-transform:uppercase"},"Reprise")
+          h("div",{class:"ctitle",style:"margin:0;color:"+color},"Mode mental")
+        )
       ),
       !selected&&h(Fragment,null,
         h("div",{style:"font-size:12px;color:var(--tx);font-weight:700;margin-bottom:8px"},"Comment tu te sens maintenant ?"),
