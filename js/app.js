@@ -1,3 +1,4 @@
+
 const { h, render, Fragment } = preact;
 const { useState, useEffect, useRef } = preactHooks;
 
@@ -1182,6 +1183,7 @@ function App(){
   function switchTab(id){ setTab(id); if(scrollRef.current) scrollRef.current.scrollTop=0; }
   const [rankUp,setRankUp] = useState(null);
   const [levelUp,setLevelUp] = useState(null);
+  const [statDecadeUp,setStatDecadeUp] = useState(null);
   const [streakUp,setStreakUp] = useState(null);
   const [recordUp,setRecordUp] = useState(null);
   const [dungeonUp,setDungeonUp] = useState(null);
@@ -1432,6 +1434,32 @@ function App(){
     return d>1?d:0;
   })();
 
+
+  function triggerStatDecadeOverlay(beforeStats,afterStats,delay=650){
+    const hits=[];
+    STATS.forEach(stat=>{
+      const before=Number((beforeStats||{})[stat])||0;
+      const after=Number((afterStats||{})[stat])||0;
+      if(after<10 || after<=before) return;
+      const beforeDecade=Math.floor(before/10);
+      const afterDecade=Math.floor(after/10);
+      if(afterDecade>beforeDecade){
+        hits.push({stat,level:afterDecade*10});
+      }
+    });
+    if(!hits.length) return;
+    hits.forEach((hit,i)=>{
+      const color=STAT_COLOR[hit.stat] || rank.color || "#fbbf24";
+      setTimeout(()=>setStatDecadeUp({
+        stat:hit.stat,
+        label:STAT_LBL[hit.stat] || hit.stat,
+        level:hit.level,
+        color,
+        glow:color+"66"
+      }),delay+i*1300);
+    });
+  }
+
   function triggerProgressOverlay(beforeXp,beforeStats,afterXp,afterStats,delay=300){
     const beforeRank = getRankWithStats(beforeXp,beforeStats);
     const afterRank = getRankWithStats(afterXp,afterStats);
@@ -1439,6 +1467,8 @@ function App(){
     const afterLevel = getGlobalLevelInfo(afterXp).level;
     const rankChanged = afterRank.id !== beforeRank.id;
     const levelChanged = afterLevel !== beforeLevel;
+
+    triggerStatDecadeOverlay(beforeStats,afterStats,rankChanged||levelChanged ? delay+1200 : delay);
 
     if(!rankChanged && !levelChanged) return;
 
@@ -3339,6 +3369,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }),300);
   }
 
+  const GOLD = "#fbbf24";
+  const congratsStyle = "font-family:Orbitron,sans-serif;font-size:clamp(13px,3.6vw,18px);font-weight:900;letter-spacing:3px;text-transform:uppercase;color:"+GOLD+";text-shadow:0 0 14px rgba(251,191,36,0.65);margin-bottom:12px";
+
   function RankUp(){
     if(!rankUp)return null;
     const particles=Array.from({length:40},(_,i)=>({
@@ -3354,6 +3387,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.cyan?"rgba(74,222,128,0.6)":rankUp.color)+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
       )),
       h("div",{class:"rucont"},
+        h("div",{style:congratsStyle},"FÉLICITATIONS !"),
         h("div",{class:"ruevol"},"RANK UP !"),
         h("div",{class:"rurank","data-r":rankUp.id},rankUp.id),
         rankUp.level&&h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:3px"},"LEVEL "+rankUp.level),
@@ -3381,6 +3415,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?"rgba(255,255,255,0.7)":color)+";box-shadow:0 0 8px "+glow+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
       )),
       h("div",{class:"rucont"},
+        h("div",{style:congratsStyle},"FÉLICITATIONS !"),
         h("div",{class:"ruevol"},streakUp.title || "STREAK BONUS !"),
         h("div",{class:"rurank","data-r":String(streakUp.streak||0)},String(streakUp.streak||0)),
         h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:3px"},"JOURS DE STREAK"),
@@ -3401,6 +3436,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+glow},
       h("div",{class:"ruparts"},particles.map(p=>h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?"#ffffff":color)+";box-shadow:0 0 8px "+glow+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"}))),
       h("div",{class:"rucont"},
+        h("div",{style:congratsStyle},"FÉLICITATIONS !"),
         h("div",{class:"ruevol"},"DONJON TERMINÉ"),
         h("div",{class:"rurank",style:"font-size:clamp(48px,16vw,82px);letter-spacing:-1px;white-space:nowrap","data-r":dungeonUp.short},dungeonUp.short),
         h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:3px;max-width:300px;line-height:1.35"},dungeonUp.reward),
@@ -3426,6 +3462,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?(urgentUp.nameColor||color):color)+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
       )),
       h("div",{class:"rucont"},
+        h("div",{style:congratsStyle},"FÉLICITATIONS !"),
         h("div",{class:"ruevol"},urgentUp.title||"QUÊTE URGENTE COMPLÉTÉE"),
         h("div",{class:"rulabel",style:"margin-top:10px;font-size:clamp(18px,4.6vw,28px);letter-spacing:2px;line-height:1.3;color:"+(urgentUp.nameColor||color)+";max-width:320px"},urgentUp.name),
         h("div",{style:"margin-top:14px;display:flex;flex-direction:column;gap:6px;align-items:center"},
@@ -3453,6 +3490,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.gold?"#fbbf24":color)+";box-shadow:0 0 8px "+glow+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
       )),
       h("div",{class:"rucont"},
+        h("div",{style:congratsStyle},"FÉLICITATIONS !"),
         h("div",{class:"ruevol"},recordUp.title||"NOUVEAU RECORD"),
         h("div",{class:"rurank",style:"font-size:clamp(48px,16vw,76px);letter-spacing:-1px;white-space:nowrap","data-r":recordUp.value},recordUp.value),
         h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:3px;max-width:280px;line-height:1.35"},recordUp.name),
@@ -3631,6 +3669,35 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
+
+  function StatDecadeUp(){
+    if(!statDecadeUp)return null;
+    const color = statDecadeUp.color || "#fbbf24";
+    const glow = statDecadeUp.glow || color+"66";
+    const label = String(statDecadeUp.label||statDecadeUp.stat||"STAT").toUpperCase();
+    const particles=Array.from({length:34},(_,i)=>({
+      id:i,
+      left:Math.random()*100,
+      delay:Math.random()*2.4,
+      dur:1.1+Math.random()*1.7,
+      size:2+Math.random()*4,
+      accent:Math.random()>0.6
+    }));
+    return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+glow},
+      h("div",{class:"ruparts"},particles.map(p=>
+        h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?"rgba(255,255,255,0.65)":color)+";box-shadow:0 0 8px "+glow+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
+      )),
+      h("div",{class:"rucont"},
+        h("div",{style:congratsStyle},"FÉLICITATIONS !"),
+        h("div",{class:"rulabel",style:"font-size:clamp(18px,5vw,30px);line-height:1.35;letter-spacing:2px;max-width:340px"},
+          h("span",{style:"color:"+color+";text-shadow:0 0 12px "+glow},label),
+          " passe niveau "+statDecadeUp.level
+        ),
+        h("button",{class:"rudis",onClick:()=>setStatDecadeUp(null)},"Continuer")
+      )
+    );
+  }
+
   function LevelUp(){
     if(!levelUp)return null;
     const color = levelUp.color || rank.color;
@@ -3648,6 +3715,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?"rgba(255,255,255,0.65)":color)+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
       )),
       h("div",{class:"rucont"},
+        h("div",{style:congratsStyle},"FÉLICITATIONS !"),
         h("div",{class:"ruevol"},"LEVEL UP !"),
         h("div",{class:"rurank","data-r":String(levelUp.level)},levelUp.level),
         h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:3px"},"NIVEAU GLOBAL"),
@@ -3667,6 +3735,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h("div",{class:"pustars",style:"pointer-events:none"},stars.map(s=>h("div",{key:s.id,class:"pustar",style:"left:"+s.left+"%;top:"+s.top+"%;animation-delay:"+s.delay+"s;animation-duration:"+s.dur+"s"}))),
       h("div",{class:"puparts",style:"pointer-events:none"},particles.map(p=>h("div",{key:p.id,class:"pupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(Math.random()>.6?"#c084fc":"#a855f7")+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"}))),
       h("div",{class:"pucont"},
+        h("div",{style:congratsStyle},"FÉLICITATIONS !"),
         h("div",{class:"puatom"},"\u269B\uFE0F"),
         h("div",{class:"pubadge"},"Ascension "+ROMAN[prestigeUp-1]),
         h("button",{class:"pudis",onClick:()=>setPrestigeUp(null)},"Continuer")
@@ -4019,6 +4088,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(Settings,null),
       h(RankUp,null),
       h(LevelUp,null),
+      h(StatDecadeUp,null),
       h(StreakUp,null),
       h(RecordUp,null),
       h(DungeonUp,null),
