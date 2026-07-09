@@ -73,7 +73,7 @@ const DEFS = [
   {id:"run",    name:"Running",         iconKey:"run",          unit:"km",    xpPer:200, daily:true, weekly:false,optional:true, stat:"Endurance",      icon:"\uD83C\uDFC3\uD83C\uDFFB",   base:5,  stat2:"Agilite", xpPer2:50},
   {id:"walk",   name:"Marche",          unit:"km",    xpPer:75,  daily:true, weekly:false,optional:true, stat:"Endurance",      icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F", base:5},
   // ─── AGILITÉ ──────────────────────────────────────────────────────────
-    {id:"balance",name:"Équilibre",unit:"min",xpPer:10,daily:true,weekly:false,optional:true,stat:"Agilite", icon:"\uD83E\uDDB6\uD83C\uDFFB", base:10, startDate:"2026-05-15", stat2:"Esprit", xpPer2:10},
+    {id:"balance",name:"Équilibre",unit:"min",xpPer:10,daily:true,weekly:false,optional:true,stat:"Agilite", icon:"\uD83E\uDDB6\uD83C\uDFFB", base:10, fixedBase:true, startDate:"2026-05-15", stat2:"Esprit", xpPer2:10},
   // ─── DISCIPLINE ───────────────────────────────────────────────────────
 ];
 
@@ -409,7 +409,7 @@ function eventQuestTarget(s,o,day){
   const prestige=s.prestige||0;
   const rank=getRankWithStats(s.totalXp||0,s.stats||{});
   const ri=RANKS.findIndex(r=>r.id===rank.id);
-  return o.validateAt != null ? o.validateAt : getRankBase(o.id,ri,prestige);
+  return o.validateAt != null ? o.validateAt : getRankBase(o.id,ri,prestige,s.stats);
 }
 function missedRequiredQuestsForEvent(s,day){
   const log=(s.dailyLog&&s.dailyLog[day])||{};
@@ -534,6 +534,41 @@ const RANK_BASES = {
   grips:   [10, 12, 14,  16,  18,  20],
 };
 
+
+// Progression des objectifs par niveau de stat
+// Les habitudes fixes restent inchangées : Hydratation, Sommeil, Hand grips, Méditation, Équilibre.
+const STAT_LEVEL_BASES = {
+  push:   {stat:"Force",     base:30, step:6,  cap:100},
+  abs:    {stat:"Force",     base:60, step:12, cap:200},
+  squats: {stat:"Force",     base:15, step:3,  cap:50},
+  calves: {stat:"Force",     base:30, step:6,  cap:100},
+  reading:{stat:"Esprit",    base:10, step:2,  cap:30},
+};
+const STAT_LEVEL_TABLES = {
+  run:  {stat:"Endurance", values:[3,4,5,6,6,7,7,8,9,10], cap:10},
+  walk: {stat:"Endurance", values:[3,4,5,6,6,7,7,8,9,10], cap:10},
+};
+function statLevelTier(level){
+  const lvl=Number(level)||1;
+  if(lvl<10) return 0;
+  return Math.floor((lvl-10)/5)+1;
+}
+function getStatLevelTarget(objId, stats){
+  const linear=STAT_LEVEL_BASES[objId];
+  if(linear){
+    const level=Number((stats||{})[linear.stat])||1;
+    const target=linear.base + statLevelTier(level)*linear.step;
+    return Math.min(linear.cap,target);
+  }
+  const table=STAT_LEVEL_TABLES[objId];
+  if(table){
+    const level=Number((stats||{})[table.stat])||1;
+    const idx=Math.min(table.values.length-1,statLevelTier(level));
+    return Math.min(table.cap,table.values[idx]);
+  }
+  return null;
+}
+
 // XP cumulé requis pour atteindre l'Ascension N (1..10)
 // Pattern : base S→Asc1 = 1 152 000, puis ×1.2 à chaque saut
 function getAscensionXpRequired(prestigeLevel){
@@ -548,10 +583,15 @@ function getAscensionXpRequired(prestigeLevel){
   return Math.round(cum);
 }
 
-function getRankBase(objId, rankIdx, prestige){
+function getRankBase(objId, rankIdx, prestige, stats){
   const def = DEFS.find(o=>o.id===objId);
   // Si la quête a un objectif fixe, on ne scale jamais
   if(def?.fixedBase) return def.base;
+
+  const statTarget = getStatLevelTarget(objId, stats);
+  if(statTarget != null) return statTarget;
+
+  // Fallback historique : utilisé uniquement si aucune règle par niveau de stat n'existe.
   const base = RANK_BASES[objId]?.[rankIdx] ?? (def?.base ?? 0);
   if(!prestige||prestige===0)return base;
   const sBase = RANK_BASES[objId]?.[5] ?? base;
@@ -1327,7 +1367,7 @@ function App(){
 
   const todayXp = Object.entries(tLog).reduce((s,[id,a])=>{
     const o=objs.find(x=>x.id===id); if(!o) return s;
-    const b = o.base && !RANK_BASES[o.id] ? o.base : getRankBase(o.id, ri, prestige);
+    const b = o.base && !RANK_BASES[o.id] ? o.base : getRankBase(o.id, ri, prestige, state.stats);
     return s + calcXp(o, a, b);
   },0) + extraTodayXp + legacyStreakTodayXp + legacySqTodayXp + legacyActiveDungeonTodayXp + legacyCompletedDungeonTodayXp;
 
@@ -1348,7 +1388,7 @@ function App(){
     // Important : pour le streak, utiliser l'objectif calculé au rang actuel
     // et non obj.base brut. Sinon Lecture restait à 20 min dans le recalcul
     // historique alors que RANK_BASES peut définir 5/10/15/etc.
-    return getRankBase(obj.id, ri, prestige);
+    return getRankBase(obj.id, ri, prestige, state.stats);
   };
   // Seuil pour considérer une quête comme "faite" (streak/historique)
   // Si validateAt est défini, on l'utilise ; sinon getBaseForDay (= la base)
@@ -1360,7 +1400,7 @@ function App(){
   function getEffectiveTarget(objId, isWeekly=false){
     const obj = objs.find(o=>o.id===objId);
     if(obj && obj.validateAt != null) return obj.validateAt;
-    return getRankBase(objId, ri, prestige);
+    return getRankBase(objId, ri, prestige, state.stats);
   }
 
   const allDailyDone = (()=>{
@@ -1785,7 +1825,7 @@ function App(){
     const cur=(obj.weekly)?(wLog[obj.id]||0):(tLog[obj.id]||0);
     let xp=0;
     let capJustReached_DISABLED=false;
-    const b=getRankBase(obj.id,ri,prestige);
+    const b=getRankBase(obj.id,ri,prestige,state.stats);
     const prev=cur, next=cur+val;
     maybeTriggerQuestRecord(obj,prev,next);
     maybeTriggerWeeklyQuestRecord(obj,prev,next);
@@ -1856,7 +1896,7 @@ function App(){
       } else if(!capJustReached_DISABLED && !alreadyCapped_DISABLED) spawnFloat("0 XP",e);
       return;
     }
-    if(obj.binary){const was=cur>=getRankBase(obj.id,ri,prestige),now2=(cur+val)>=getRankBase(obj.id,ri,prestige); xp=(!was&&now2)?(obj.binaryXp||50):0;}
+    if(obj.binary){const was=cur>=getRankBase(obj.id,ri,prestige,state.stats),now2=(cur+val)>=getRankBase(obj.id,ri,prestige,state.stats); xp=(!was&&now2)?(obj.binaryXp||50):0;}
     else if(alreadyCapped_DISABLED){
       // Aucun cap : on log toujours la valeur
       xp=0;
@@ -2346,7 +2386,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
   function RR({obj,isW}){
     const isWeeklyRow = isW || obj.weekly;
-    const t=obj.base&&!RANK_BASES[obj.id]?obj.base:getRankBase(obj.id,ri,prestige), d=isWeeklyRow?(wLog[obj.id]||0):(tLog[obj.id]||0);
+    const t=obj.base&&!RANK_BASES[obj.id]?obj.base:getRankBase(obj.id,ri,prestige,state.stats), d=isWeeklyRow?(wLog[obj.id]||0):(tLog[obj.id]||0);
     const displayTarget = (obj.target && !obj.binary) ? obj.target : t;
     const pct=Math.min(100,(d/displayTarget)*100), done=d>=displayTarget, over=d>displayTarget;
     const validated=isWeeklyRow?(wLog[obj.id]!==undefined):(tLog[obj.id]!==undefined);
@@ -3046,12 +3086,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
     function weeklyTargetFor(obj){
       if(obj.binary) return 7;
-      const target = obj.weekly ? getRankBase(obj.id,ri,prestige) : ((obj.target&&!obj.binary?obj.target:getRankBase(obj.id,ri,prestige))*7);
+      const target = obj.weekly ? getRankBase(obj.id,ri,prestige,state.stats) : ((obj.target&&!obj.binary?obj.target:getRankBase(obj.id,ri,prestige,state.stats))*7);
       return target;
     }
     function dayTargetFor(obj,day){
       if(obj.binary) return 1;
-      if(obj.weekly) return getRankBase(obj.id,ri,prestige);
+      if(obj.weekly) return getRankBase(obj.id,ri,prestige,state.stats);
       return obj.target&&!obj.binary ? obj.target : getValidateThreshold(obj,day);
     }
     function dayMarkFor(obj,day){
@@ -3796,7 +3836,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const period = isWeekly ? " / semaine" : " / jour";
       if(obj.binary) return "Validation simple";
       if(obj.tiers) return (obj.target||obj.base||1)+" "+unitPlural(obj.unit,obj.target||obj.base||1)+period;
-      const base = getRankBase(obj.id, ri, prestige);
+      const base = getRankBase(obj.id, ri, prestige, state.stats);
       return base+" "+unitPlural(obj.unit,base)+period;
     }
 
