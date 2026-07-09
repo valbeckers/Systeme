@@ -1,4 +1,3 @@
-
 const { h, render, Fragment } = preact;
 const { useState, useEffect, useRef } = preactHooks;
 
