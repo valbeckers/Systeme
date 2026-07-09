@@ -701,7 +701,7 @@ function calcXp(obj,total,baseOverride){
 
 function pickRandomSq(usedIds,statCycle,completedLog){
   const stats=["Sante","Force","Esprit","Endurance","Agilite","Discipline"];
-  const cycle = statCycle||[];
+  const cycle = [...new Set((statCycle||[]).filter(s=>stats.includes(s)))];
   const remaining = stats.filter(s=>!cycle.includes(s));
   const cycleReset = remaining.length===0;
   const pool = cycleReset ? stats : remaining;
@@ -782,7 +782,7 @@ function migrateRuntimeQuestDefinitions(state){
   if(!state || typeof state !== "object") return state;
 
   const specialById = {};
-  Object.values(SP).forEach(list => (list||[]).forEach(q => { specialById[q.id] = q; }));
+  Object.entries(SP).forEach(([stat,list]) => (list||[]).forEach(q => { specialById[q.id] = {...q,stat:q.stat||stat}; }));
   if(Array.isArray(state.specialQuests)){
     state.specialQuests = state.specialQuests
             .map(q => {
@@ -809,7 +809,7 @@ function normalizeLegacyStat(stat){
 }
 function activeSpecialQuestMap(){
   const map={};
-  Object.values(SP).forEach(list=>(list||[]).forEach(q=>{ map[q.id]=q; }));
+  Object.entries(SP).forEach(([stat,list])=>(list||[]).forEach(q=>{ map[q.id]={...q,stat:q.stat||stat}; }));
   return map;
 }
 function currentEventMap(){
@@ -1167,7 +1167,7 @@ function App(){
     const sqCdUntil=base.sqCooldownUntil||0;
     const cooldownOk = now>=sqCdUntil;
     if(!hasActive&&cooldownOk){
-      const result=pickRandomSq(sqs.map(q=>q.id),base.sqStatCycle,base.completedSqLog);
+      const result=pickRandomSq(sqs.filter(q=>!q.completedAt).map(q=>q.id),base.sqStatCycle,base.completedSqLog);
       if(result){
         const {tpl,pickedStat,cycleReset}=result;
         const sq={...tpl,sqid:"sq_"+now,progress:0,startedAt:now,expiresAt:next7AM(now),completedAt:null};
@@ -2000,7 +2000,7 @@ function App(){
     // Comportement standard : XP uniquement à la complétion totale
     if(!wasComplete&&nowComplete){
       const xpPairs = [
-        {xp:sq.xp, stat:sq.stat},
+        {xp:sq.xp, stat:sq.stat||sqMainStat(sq)},
         sq.xp2&&sq.stat2 ? {xp:sq.xp2, stat:sq.stat2} : null,
         sq.xp3&&sq.stat3 ? {xp:sq.xp3, stat:sq.stat3} : null,
       ].filter(Boolean);
@@ -2026,7 +2026,7 @@ function App(){
 
   function launchNewSq(){
     setState(s=>{
-      const result=pickRandomSq(s.specialQuests.map(q=>q.id),s.sqStatCycle,s.completedSqLog);
+      const result=pickRandomSq((s.specialQuests||[]).filter(q=>!q.completedAt).map(q=>q.id),s.sqStatCycle,s.completedSqLog);
       if(!result)return s;
       const {tpl,pickedStat,cycleReset}=result;
       const sq={...tpl,sqid:"sq_"+Date.now(),progress:0,startedAt:Date.now(),expiresAt:next7AM(Date.now()),completedAt:null};
@@ -2049,7 +2049,7 @@ function App(){
         cycleBase.pop();
       }
 
-      const usedIds=(s.specialQuests||[]).map(q=>q.id).filter(Boolean);
+      const usedIds=(s.specialQuests||[]).filter(q=>!q.completedAt).map(q=>q.id).filter(Boolean);
       const result=pickRandomSq(usedIds,cycleBase,s.completedSqLog);
       if(!result) return s;
 
@@ -2392,11 +2392,18 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
+  function sqMainStat(sq){
+    if(sq&&sq.stat) return sq.stat;
+    const map=activeSpecialQuestMap();
+    return (sq&&sq.id&&map[sq.id]&&map[sq.id].stat) || null;
+  }
+
   function rewardLineText(item){
-    const primaryStat = STAT_LBL[item.stat] || item.stat;
+    const safeStat = item.stat || (item.id ? sqMainStat(item) : null);
+    const primaryStat = STAT_LBL[safeStat] || safeStat || "";
     const secondaryStat = item.stat2 ? (STAT_LBL[item.stat2] || item.stat2) : null;
     const thirdStat = item.stat3 ? (STAT_LBL[item.stat3] || item.stat3) : null;
-    let rewardText = (item.xp||0)+" XP "+primaryStat;
+    let rewardText = (item.xp||0)+" XP"+(primaryStat?" "+primaryStat:"");
     if(item.xp2 && item.stat2){
       rewardText += item.xp2===(item.xp||0) ? " + "+secondaryStat : " + "+item.xp2+" XP "+secondaryStat;
     }
@@ -2415,7 +2422,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       }));
     }
     return [
-      sq?.xp ? {key:"xp1", text:rewardLineText({xp:sq.xp, stat:sq.stat})} : null,
+      sq?.xp ? {key:"xp1", text:rewardLineText({id:sq.id,xp:sq.xp, stat:sq.stat||sqMainStat(sq)})} : null,
       sq?.xp2&&sq?.stat2 ? {key:"xp2", text:rewardLineText({xp:sq.xp2, stat:sq.stat2})} : null,
       sq?.xp3&&sq?.stat3 ? {key:"xp3", text:rewardLineText({xp:sq.xp3, stat:sq.stat3})} : null,
     ].filter(Boolean);
