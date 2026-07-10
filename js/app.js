@@ -786,7 +786,7 @@ function pickRandomSq(usedIds,statCycle,completedLog){
   const stat = usable[Math.floor(Math.random()*usable.length)];
   const avail = availableForStat(stat,respectCooldown);
   const chosen = avail[Math.floor(Math.random()*avail.length)];
-  return {tpl:{...chosen,stat}, pickedStat:stat, cycleReset};
+  return {tpl:{...chosen,stat:chosen.stat||stat}, pickedStat:stat, cycleReset};
 }
 
 const IMPORTED_VERSION = "2026-05-11-v4";
@@ -2480,7 +2480,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
     // Helper : liste les paires (xp, stat) actives sur cette quête (1, 2 ou 3)
     const xpPairs = [
-      {xp:sq.xp, stat:sq.stat},
+      {xp:sq.xp, stat:sqMainStat(sq)},
       sq.xp2&&sq.stat2 ? {xp:sq.xp2, stat:sq.stat2} : null,
       sq.xp3&&sq.stat3 ? {xp:sq.xp3, stat:sq.stat3} : null,
     ].filter(Boolean);
