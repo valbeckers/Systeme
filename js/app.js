@@ -942,7 +942,7 @@ function cleanEventHistory(history){
     .slice(-12);
 }
 function cleanDailyExtraXp(extra){
-  const allowed=new Set(["eventBonus","event","sq","dungeon","streak"]);
+  const allowed=new Set(["eventBonus","event","sq","dungeon","streak","debt"]);
   const out={};
   Object.entries(extra||{}).forEach(([day,row])=>{
     if(!row || typeof row!=="object") return;
@@ -1017,6 +1017,9 @@ function cleanSystemState(raw){
     eventHistory:cleanEventHistory(data.eventHistory),
     mentalMode:data.mentalMode||null,
     sqRerollDay:data.sqRerollDay||null,
+    questDebt:data.questDebt||null,
+    debtUsesByWeek:data.debtUsesByWeek||{},
+    debtResolvedDays:data.debtResolvedDays||{},
     completedSqLog,
     sqStatCycle
   };
@@ -1195,6 +1198,34 @@ function buildState(){
   return out;
 }
 
+
+// ─── SYSTÈME DE DETTE DE QUÊTE ───────────────────────────────────────────
+const DEBT_ELIGIBLE_IDS = new Set(["push","abs","squats","calves","reading"]);
+const MAX_DEBTS_PER_WEEK = 3;
+function isDebtEligibleQuest(obj){
+  return !!(obj && obj.daily && !obj.optional && !obj.binary && DEBT_ELIGIBLE_IDS.has(obj.id));
+}
+function debtRewardPairs(obj,current,target){
+  const missing=Math.max(0,(Number(target)||0)-(Number(current)||0));
+  if(missing<=0) return [];
+  let mainXp=0;
+  if(obj.id==="reading"){
+    mainXp=missing*(obj.xpPer||0);
+  }else{
+    const beforeXp=calcXp(obj,current,target);
+    const afterXp=calcXp(obj,target,target);
+    mainXp=Math.max(0,afterXp-beforeXp);
+  }
+  const pairs=[];
+  if(mainXp>0) pairs.push({stat:obj.stat,xp:Math.round(mainXp)});
+  if(obj.stat2){
+    const ratio=(obj.xpPer2||obj.xpPer||0)/(obj.xpPer||1);
+    const xp2=Math.round(mainXp*ratio);
+    if(xp2>0) pairs.push({stat:obj.stat2,xp:xp2});
+  }
+  return pairs;
+}
+
 // ─── COMPOSANT PRINCIPAL ───────────────────────────────────────────────────
 
 function App(){
@@ -1224,6 +1255,8 @@ function App(){
   const [levelUp,setLevelUp] = useState(null);
   const [statDecadeUp,setStatDecadeUp] = useState(null);
   const [statLevelQueue,setStatLevelQueue] = useState([]);
+  const [debtUp,setDebtUp] = useState(null);
+  const [confirmDebt,setConfirmDebt] = useState(null);
   const [streakUp,setStreakUp] = useState(null);
   const [recordUp,setRecordUp] = useState(null);
   const [dungeonUp,setDungeonUp] = useState(null);
@@ -1238,7 +1271,7 @@ function App(){
   const [focusMode,setFocusMode] = useState(false);
   const [dungeonHelpOpen,setDungeonHelpOpen] = useState({});
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
-  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,ev:false,mm:false,dj:false,cs:false});
+  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,ev:false,mm:false,debt:false,dj:false,cs:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
   const [showStatReqDetail,setShowStatReqDetail] = useState(false);
   const [showRankReqStats,setShowRankReqStats] = useState(false);
@@ -1414,24 +1447,39 @@ function App(){
   }
 
   const allDailyDone = (()=>{
+    if(state.questDebt&&state.questDebt.status==="active") return false;
     return reqDailyObjs.every(o=>(tLog[o.id]||0)>=getEffectiveTarget(o.id));
   })();
 
   // 8. Streak : on remonte à partir d'hier (aujourd'hui peut être incomplet sans casser le streak)
   const computedStreak = (()=>{
     let streak=0;
+    const debt=state.questDebt;
+    const resolved=state.debtResolvedDays||{};
+    const isProtectedDebtDay=day=>!!(
+      resolved[day] ||
+      (debt && debt.sourceDay===day && debt.status==="active")
+    );
     const d=new Date(today);
-    d.setDate(d.getDate()-1); // on commence par hier
+    d.setDate(d.getDate()-1);
     for(let i=0;i<365;i++){
       const dk=d.toISOString().slice(0,10);
       const log=state.dailyLog[dk]||{};
-      if(!activeOn(dk).every(o=>(log[o.id]||0)>=getValidateThreshold(o,dk)))break;
-      streak++; d.setDate(d.getDate()-1);
+      const naturallyDone=activeOn(dk).every(o=>(log[o.id]||0)>=getValidateThreshold(o,dk));
+      if(naturallyDone){
+        streak++;
+      }else if(isProtectedDebtDay(dk)){
+        // Dette active : journée gelée, non comptée mais elle ne casse pas le streak.
+        // Dette remboursée : journée restaurée rétroactivement.
+        if(resolved[dk]) streak++;
+      }else{
+        break;
+      }
+      d.setDate(d.getDate()-1);
     }
-    // Si aujourd'hui est complet, on l'ajoute au streak
     const todayLog=state.dailyLog[today]||{};
     const todayDone=activeOn(today).every(o=>(todayLog[o.id]||0)>=getEffectiveTarget(o.id));
-    if(todayDone) streak++;
+    if(todayDone && !(debt&&debt.status==="active")) streak++;
     return streak;
   })();
 
@@ -1629,6 +1677,17 @@ function App(){
     setState(s=>s.activeDungeon && !s.activeDungeon.completedAt && Date.now()>=s.activeDungeon.expiresAt ? {...s,activeDungeon:null} : s);
   },[now,state.activeDungeon?.expiresAt]);
 
+  // Échec automatique d’une dette non remboursée après son jour d’échéance
+  useEffect(()=>{
+    const debt=state.questDebt;
+    if(!debt || debt.status!=="active") return;
+    if(today<=debt.dueDay) return;
+    setState(s=>s.questDebt&&s.questDebt.status==="active"
+      ? {...s,questDebt:{...s.questDebt,status:"failed",failedAt:Date.now()}}
+      : s
+    );
+  },[today,state.questDebt?.status,state.questDebt?.dueDay]);
+
   // Bonus streak + increment streak au moment ou toutes les quetes sont faites
   useEffect(()=>{
     if(!allDailyDone)return;
@@ -1729,10 +1788,10 @@ function App(){
   }
 
   const STAT_LBL2={"Force":"Force","Sante":"Sant\u00e9","Esprit":"Esprit","Endurance":"Endurance","Agilite":"Agilit\u00e9","Discipline":"Discipline"};
-  function addXp(amount,stat,e,silent,showStat){
+  function addXp(amount,stat,e,silent,showStat,skipEventBonus=false){
     setState(s=>{
       const ev=s.dailyEvent;
-      const eventBonus = ev && ev.type==="bonus" && !ev.completedAt && Date.now()<(ev.expiresAt||0) && ev.stat===stat
+      const eventBonus = !skipEventBonus && ev && ev.type==="bonus" && !ev.completedAt && Date.now()<(ev.expiresAt||0) && ev.stat===stat
         ? Math.round((Number(amount)||0)*(ev.bonusPct||0))
         : 0;
       const gain=(Number(amount)||0)+eventBonus;
@@ -1821,12 +1880,82 @@ function App(){
     setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id1&&p.id!==id2)),1700);
   }
 
+
+  function createQuestDebt(obj){
+    if(!obj || !isDebtEligibleQuest(obj)) return;
+    setState(s=>{
+      if(s.questDebt && s.questDebt.status==="active") return s;
+      const uses={...(s.debtUsesByWeek||{})};
+      const week=wkStr();
+      if((uses[week]||0)>=MAX_DEBTS_PER_WEEK) return s;
+      const target=getRankBase(obj.id,ri,prestige,s.stats);
+      const current=(s.dailyLog[today]&&s.dailyLog[today][obj.id])||0;
+      const amount=Math.max(0,target-current);
+      if(amount<=0) return s;
+      uses[week]=(uses[week]||0)+1;
+      return {
+        ...s,
+        questDebt:{
+          id:obj.id,name:obj.name,icon:obj.icon,unit:obj.unit,
+          stat:obj.stat,stat2:obj.stat2||null,
+          amount,paid:0,target,current,
+          sourceDay:today,dueDay:addDaysStr(today,1),
+          createdAt:Date.now(),status:"active",
+          rewards:debtRewardPairs(obj,current,target)
+        },
+        debtUsesByWeek:uses
+      };
+    });
+    setConfirmDebt(null);
+  }
+
+  function repayDebtPortion(obj,val){
+    const debt=state.questDebt;
+    if(!debt || debt.status!=="active" || debt.id!==obj.id || debt.dueDay!==today) return {used:0,remaining:val};
+    const left=Math.max(0,debt.amount-(debt.paid||0));
+    const used=Math.min(left,val);
+    const remaining=Math.max(0,val-used);
+    if(used<=0) return {used:0,remaining:val};
+    const willComplete=(debt.paid||0)+used>=debt.amount;
+    setState(s=>{
+      const current=s.questDebt;
+      if(!current || current.status!=="active") return s;
+      const paid=Math.min(current.amount,(current.paid||0)+used);
+      if(paid<current.amount) return {...s,questDebt:{...current,paid}};
+      const resolved={...(s.debtResolvedDays||{}),[current.sourceDay]:true};
+      const daily={...(s.dailyExtraXp||{})};
+      const dayLog={...(daily[today]||{})};
+      const totalDebtXp=(current.rewards||[]).reduce((sum,r)=>sum+(r.xp||0),0);
+      if(totalDebtXp>0) dayLog.debt=(dayLog.debt||0)+totalDebtXp;
+      daily[today]=dayLog;
+      return {
+        ...s,
+        questDebt:{...current,paid,status:"paid",completedAt:Date.now()},
+        debtResolvedDays:resolved,
+        dailyExtraXp:daily
+      };
+    });
+    if(willComplete){
+      (debt.rewards||[]).forEach(r=>addXp(r.xp,r.stat,null,true,null,true));
+      setTimeout(()=>setDebtUp({
+        name:debt.name,
+        rewards:debt.rewards||[],
+        color:STAT_COLOR[debt.stat]||rank.color,
+        glow:(STAT_COLOR[debt.stat]||rank.color)+"66"
+      }),500);
+    }
+    return {used,remaining};
+  }
+
   function validate(obj,e,forceVal){
     if(e){e.preventDefault();e.stopPropagation();}
     const el=document.getElementById("qi_"+obj.id);
     const raw=(inputs.current[obj.id]||"").toString().replace(",",".");
-    const val=parseFloat(raw); if(!val||val<=0)return;
+    let val=parseFloat(raw); if(!val||val<=0)return;
+    const debtSplit=repayDebtPortion(obj,val);
+    val=debtSplit.remaining;
     inputs.current[obj.id]="";
+    if(val<=0)return;
     if(el){el.value="";setTimeout(()=>{try{el.focus();}catch(_){}},50);}
     const cur=(obj.weekly)?(wLog[obj.id]||0):(tLog[obj.id]||0);
     let xp=0;
@@ -2340,6 +2469,16 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("div",{class:"qxp",style:"white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},fmtNum(d)+"/"+fmtNum(displayTarget)+" "+((d>1||displayTarget>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[obj.unit]||obj.unit))
           )
       ),
+      (!obj.optional&&!obj.weekly&&isDebtEligibleQuest(obj)&&d<effectiveT)&&h("div",{style:"margin-top:8px"},
+        state.questDebt&&state.questDebt.status==="active"&&state.questDebt.id===obj.id
+          ? h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#f59e0b;letter-spacing:.8px;text-transform:uppercase"},"Dette active : "+fmtNum(state.questDebt.paid||0)+"/"+fmtNum(state.questDebt.amount)+" "+state.questDebt.unit)
+          : (!state.questDebt||state.questDebt.status!=="active")&&((state.debtUsesByWeek||{})[wk]||0)<MAX_DEBTS_PER_WEEK
+            ? h("button",{
+                onClick:()=>setConfirmDebt({obj,missing:Math.max(0,effectiveT-d)}),
+                style:"width:100%;padding:8px;border-radius:8px;border:1px solid rgba(245,158,11,.45);background:rgba(245,158,11,.06);color:#f59e0b;font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;cursor:pointer"
+              },"Reporter les "+fmtNum(Math.max(0,effectiveT-d))+" "+obj.unit+" manquants")
+            : null
+      ),
       (()=>{
         // Quête avec tiers (ex: protein x/2) : bouton unique +1 unité
         if(obj.tiers && obj.tiers.length>0){
@@ -2715,6 +2854,28 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
+
+  function DebtCard(){
+    const debt=state.questDebt;
+    if(!debt || debt.status!=="active") return null;
+    const color=STAT_COLOR[debt.stat]||"#f59e0b";
+    const pct=Math.min(100,((debt.paid||0)/Math.max(1,debt.amount))*100);
+    const isDue=debt.dueDay===today;
+    return h("div",{class:"card",style:"border-color:"+color+"66;background:linear-gradient(135deg,"+color+"12,rgba(255,255,255,.025))"},
+      h("div",{class:"ctitle",style:"color:"+color+";margin-bottom:8px"},"Dette active"),
+      h("div",{style:"display:flex;align-items:center;gap:9px"},
+        QuestIcon(debt.id,debt.icon,16,"min-width:24px"),
+        h("div",{style:"flex:1"},
+          h("div",{style:"font-size:14px;font-weight:800;color:var(--tx)"},debt.name),
+          h("div",{style:"font-size:10px;color:var(--td);margin-top:3px"},isDue?"À rembourser aujourd’hui":"Remboursement demain")
+        ),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:"+color},fmtNum(debt.paid||0)+"/"+fmtNum(debt.amount)+" "+debt.unit)
+      ),
+      h("div",{class:"qbar",style:"margin-top:9px"},h("div",{class:"qfill"+(pct>=100?" done":pct>0?" partial":""),style:"width:"+pct+"%"})),
+      h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;margin-top:8px;letter-spacing:.7px;text-transform:uppercase"},"Échéance : "+debt.dueDay+" · priorité avant la quête du jour")
+    );
+  }
+
   function DailyEventCard(){
     const ev=dailyEvent;
     if(!ev) return null;
@@ -2857,6 +3018,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         )
       ),
 
+      h(DebtCard,null),
       dailyEvent&&h(DailyEventCard,null),
 
       h(MentalModeCard,null),
@@ -2944,6 +3106,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         )
       ),
       activeDungeon&&h(DungeonCard,null),
+      h(DebtCard,null),
       h("div",{class:"card"},
         h(SectionHeader,{title:"Quêtes journalières",done:reqDone,total:reqTotal}),
         req.map(o=>h(QI,{key:o.id,obj:o})),
@@ -3607,6 +3770,42 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
+
+  function ConfirmDebtModal(){
+    if(!confirmDebt)return null;
+    const obj=confirmDebt.obj;
+    const color=STAT_COLOR[obj.stat]||"#f59e0b";
+    return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+color+"55;background:rgba(0,0,0,.92)",onClick:e=>{if(e.target===e.currentTarget)setConfirmDebt(null);}},
+      h("div",{class:"rucont",style:"width:min(500px,calc(100vw - 34px));background:rgba(15,15,18,.97);border:1px solid "+color+"88;border-radius:18px;padding:22px"},
+        h("div",{class:"ruevol",style:"color:"+color},"CRÉER UNE DETTE ?"),
+        h("div",{style:"font-size:15px;color:var(--tx);font-weight:800;margin-top:10px;text-align:center"},obj.name+" · "+fmtNum(confirmDebt.missing)+" "+obj.unit),
+        h("div",{style:"font-size:11px;color:var(--td);line-height:1.5;text-align:center;margin-top:10px"},"La quantité manquante sera ajoutée à demain et devra être remboursée avant le reset suivant. Cette dette ne pourra pas être reportée."),
+        h("div",{style:"display:flex;gap:10px;width:100%;margin-top:18px"},
+          h("button",{onClick:()=>setConfirmDebt(null),style:"flex:1;padding:12px;border-radius:9px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--td);font-family:Orbitron,sans-serif;font-size:10px"},"Annuler"),
+          h("button",{onClick:()=>createQuestDebt(obj),style:"flex:1;padding:12px;border-radius:9px;border:1px solid "+color+";background:"+color+"22;color:"+color+";font-family:Orbitron,sans-serif;font-size:10px"},"Confirmer")
+        )
+      )
+    );
+  }
+
+  function DebtUp(){
+    if(!debtUp)return null;
+    const color=debtUp.color||"#f59e0b";
+    const glow=debtUp.glow||color+"66";
+    return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+glow},
+      h("div",{class:"rucont"},
+        h("div",{style:congratsStyle},"FÉLICITATIONS !"),
+        h("div",{class:"ruevol"},"DETTE REMBOURSÉE"),
+        h("div",{class:"rulabel",style:"margin-top:10px;font-size:clamp(18px,5vw,28px);color:"+color},debtUp.name),
+        h("div",{style:"margin-top:12px;display:flex;flex-direction:column;gap:5px"},
+          (debtUp.rewards||[]).map((r,i)=>h("div",{key:i,class:"rulabel",style:"color:"+color},"+"+r.xp+" XP "+(STAT_LBL2[r.stat]||r.stat)))
+        ),
+        h("div",{class:"rulabel",style:"margin-top:10px;color:#4ade80"},"STREAK PRÉSERVÉ"),
+        h("button",{class:"rudis",onClick:()=>setDebtUp(null)},"Continuer")
+      )
+    );
+  }
+
   function ImportModal(){
     if(!importModal)return null;
     const color = rank.color;
@@ -3797,7 +3996,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   // ─── ONGLET CODEX ─────────────────────────────────────────────────────
 
   function Codex(){
-    const toggleC = k => setCodexOpen(o=>({obl:false,bonus:false,reg:false,sq:false,ev:false,mm:false,ep:false,dj:false,cs:false,[k]:!o[k]}));
+    const toggleC = k => setCodexOpen(o=>({obl:false,bonus:false,reg:false,sq:false,ev:false,mm:false,debt:false,ep:false,dj:false,cs:false,[k]:!o[k]}));
     const statLabel = stat => STAT_LBL2[stat] || STAT_LBL[stat] || stat || "";
     const unitPlural = (unit, value) => {
       if(!unit) return "";
@@ -4070,6 +4269,26 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           MENTAL_MODES.map(renderMentalModeCodex)
         )
       ),
+      h(Section,{id:"debt",title:"Système de dette",count:11},
+        h("div",{style:cardStyle},
+          h("div",{style:"font-size:11px;color:var(--tx);font-family:Orbitron,sans-serif;line-height:1.7"},
+            [
+              "Une seule quête obligatoire peut être reportée.",
+              "Seule la quantité manquante devient une dette.",
+              "Une seule dette peut être active.",
+              "Maximum trois dettes par semaine.",
+              "La dette doit être remboursée le lendemain.",
+              "Une dette ne peut jamais être reportée.",
+              "Le streak est gelé jusqu’au remboursement.",
+              "La dette est remplie avant l’objectif du jour.",
+              "Les XP sont conservés, mais sans bonus de dépassement.",
+              "La dette ne compte pas comme record.",
+              "Les quêtes non compensables ne peuvent pas être reportées."
+            ].map((rule,i)=>h("div",{key:i,style:"margin-bottom:5px"},"• "+rule))
+          ),
+          h("div",{style:"font-size:10px;color:var(--td);margin-top:9px;line-height:1.5"},"Quêtes actuellement compensables : Pompes, Abdos, Squats, Mollets et Lecture.")
+        )
+      ),
       h(Section,{id:"dj",title:"Donjons",count:DUNGEONS.length},groupByDominantStat(DUNGEONS,renderDungeonCodex,dg=>dg.stat))
     );
   }
@@ -4143,6 +4362,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(RecordUp,null),
       h(DungeonUp,null),
       h(UrgentUp,null),
+      h(DebtUp,null),
+      h(ConfirmDebtModal,null),
       h(ConfirmDungeonChoice,null),
       h(ConfirmReroll,null),
       h(ImportModal,null),
