@@ -4248,7 +4248,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{class:"ctitle"},"Codex"),
         h("div",{style:"font-size:12px;color:var(--td);line-height:1.45"},"Catalogue complet des quêtes existantes. Les objectifs des quêtes quotidiennes et hebdomadaires sont calculés au rang actuel.")
       ),
-      h(Section,{id:"obl",title:"Quêtes obligatoires",count:required.length},groupByDominantStat(required,renderQuest)),
+      h(Section,{id:"obl",title:"Quêtes journalières",count:required.length},groupByDominantStat(required,renderQuest)),
       h(Section,{id:"bonus",title:"Quêtes bonus",count:bonus.length+hiddenBonus.length},
         h(Fragment,null,
           groupByDominantStat(bonus,renderQuest),
@@ -4257,6 +4257,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         )
       ),
       h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial)),
+      h(Section,{id:"dj",title:"Donjons",count:DUNGEONS.length},groupByDominantStat(DUNGEONS,renderDungeonCodex,dg=>dg.stat)),
       h(Section,{id:"ev",title:"Événements",count:eventList.length},
         h(Fragment,null,
           h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Logique quotidienne : journée précédente complète → Élan choisi selon les XP gagnés hier, avec léger bonus aux stats faibles ; journée précédente incomplète → invitation liée aux quêtes manquées ou à la reprise."),
@@ -4289,7 +4290,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{style:"font-size:10px;color:var(--td);margin-top:9px;line-height:1.5"},"Quêtes actuellement compensables : Pompes, Abdos, Squats, Mollets et Lecture.")
         )
       ),
-      h(Section,{id:"dj",title:"Donjons",count:DUNGEONS.length},groupByDominantStat(DUNGEONS,renderDungeonCodex,dg=>dg.stat))
     );
   }
   // ─── RENDU PRINCIPAL ──────────────────────────────────────────────────
