@@ -1223,6 +1223,7 @@ function App(){
   const [rankUp,setRankUp] = useState(null);
   const [levelUp,setLevelUp] = useState(null);
   const [statDecadeUp,setStatDecadeUp] = useState(null);
+  const [statLevelQueue,setStatLevelQueue] = useState([]);
   const [streakUp,setStreakUp] = useState(null);
   const [recordUp,setRecordUp] = useState(null);
   const [dungeonUp,setDungeonUp] = useState(null);
@@ -1258,6 +1259,15 @@ function App(){
 
   // Persistance
   useEffect(()=>{ saveState(state); },[state]);
+
+  // File d’attente des animations de montée de niveau de stat
+  useEffect(()=>{
+    if(statDecadeUp || !statLevelQueue.length) return;
+    const [next,...rest]=statLevelQueue;
+    setStatLevelQueue(rest);
+    setStatDecadeUp(next);
+  },[statDecadeUp,statLevelQueue]);
+
 
 
   // Penalite jours manques (une seule fois au montage)
@@ -1479,24 +1489,20 @@ function App(){
     STATS.forEach(stat=>{
       const before=Number((beforeStats||{})[stat])||0;
       const after=Number((afterStats||{})[stat])||0;
-      if(after<10 || after<=before) return;
-      const beforeDecade=Math.floor(before/10);
-      const afterDecade=Math.floor(after/10);
-      if(afterDecade>beforeDecade){
-        hits.push({stat,level:afterDecade*10});
+      if(after<=before) return;
+      for(let level=before+1;level<=after;level++){
+        const color=STAT_COLOR[stat] || rank.color || "#fbbf24";
+        hits.push({
+          stat,
+          label:STAT_LBL[stat] || stat,
+          level,
+          color,
+          glow:color+"66"
+        });
       }
     });
     if(!hits.length) return;
-    hits.forEach((hit,i)=>{
-      const color=STAT_COLOR[hit.stat] || rank.color || "#fbbf24";
-      setTimeout(()=>setStatDecadeUp({
-        stat:hit.stat,
-        label:STAT_LBL[hit.stat] || hit.stat,
-        level:hit.level,
-        color,
-        glow:color+"66"
-      }),delay+i*1300);
-    });
+    setTimeout(()=>setStatLevelQueue(q=>[...q,...hits]),delay);
   }
 
   function triggerProgressOverlay(beforeXp,beforeStats,afterXp,afterStats,delay=300){
