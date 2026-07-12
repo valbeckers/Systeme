@@ -962,7 +962,7 @@ function cleanDungeonLog(log){
   (DUNGEONS||[]).forEach(d=>{ map[d.id]=d; });
   return (log||[]).filter(e=>e&&e.id&&map[e.id]).map(e=>{
     const d=map[e.id];
-    return {id:d.id,title:d.title,stat:d.stat,xp:e.xp||0,completedAt:e.completedAt};
+    return {id:d.id,title:d.title,stat:d.stat,xp:e.xp||0,completedAt:e.completedAt,expiresAt:e.expiresAt||((e.completedAt||0)+86400000)};
   });
 }
 function cleanDungeonRunWeeks(obj){
@@ -2332,7 +2332,7 @@ function App(){
       const rewards=dungeonRewardPairs(dungeon);
       const rewardText=rewards.map(r=>"+"+r.xp+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ");
       setTimeout(()=>setDungeonUp({title:dungeon.title,short:dungeon.short,icon:dungeon.icon,color:dungeon.color,reward:rewardText}),200);
-      return {...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:null,dungeonLog:[...(s.dungeonLog||[]),{id:dungeon.id,title:dungeon.title,stat:dungeon.stat,xp:rewards.reduce((a,r)=>a+(r.xp||0),0),completedAt}],lastActiveDay:todayStr()};
+      return {...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:null,dungeonLog:[...(s.dungeonLog||[]),{id:dungeon.id,title:dungeon.title,stat:dungeon.stat,xp:rewards.reduce((a,r)=>a+(r.xp||0),0),completedAt,expiresAt:ad.expiresAt||completedAt+86400000}],lastActiveDay:todayStr()};
     });
   }
 
@@ -2997,7 +2997,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             prefix:completedDungeonParts.prefix,
             accent:completedDungeonParts.name,
             suffix:" a été complété.",
-            accentColor:STAT_COLOR[completedDungeonToday.stat]||"#c084fc"
+            accentColor:STAT_COLOR[completedDungeonToday.stat]||"#c084fc",
+            detail:"Fermeture du donjon dans "+fmtCD(Math.max(0,(completedDungeonToday.expiresAt||((completedDungeonToday.completedAt||now)+86400000))-now))
           }
         : null,
       completedInviteToday
