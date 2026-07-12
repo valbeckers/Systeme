@@ -131,7 +131,7 @@ const DUNGEONS = [
   {id:"alchemist", title:"Donjon de l’Alchimiste", short:"Alchimiste", stat:"Sante", icon:"⚗️", color:"#ef4444", reward:{xp:1500,stat:"Sante",xp2:300,stat2:"Esprit"}, rooms:[
     {name:"Hydratation", desc:"2 verres d’eau d’une traite"},
     {name:"Lumière naturelle", desc:"10 min au soleil"},
-    {name:"Repas propre", desc:"1 repas équilibré, sans sucre transformé ni junk-food"},
+    {name:"Repas propre", desc:"1 repas équilibré, sans sucre transformé ni junk-food ni écran"},
     {name:"Respiration calme", desc:"5 min de cohérence cardiaque ou respiration lente"},
     {name:"Relaxation", desc:"Douche froide 3 min sans interruption"},
   ]},
@@ -139,12 +139,12 @@ const DUNGEONS = [
     {name:"Pompes", desc:"100 reps"},
     {name:"Abdos", desc:"150 reps"},
     {name:"Squats", desc:"50 reps"},
-    {name:"Gainage", desc:"10 min"},
+    {name:"Gainage", desc:"5 min"},
     {name:"Wall sit", desc:"10 min"},
   ]},
   {id:"monk", title:"Donjon du Moine", short:"Moine", stat:"Esprit", icon:"🧘🏻‍♂️", color:"#ec4899", reward:{xp:1500,stat:"Esprit",xp2:300,stat2:"Discipline"}, rooms:[
-    {name:"Lecture profonde", desc:"Lire 20 min sans interruption"},
-    {name:"Apprentissage actif", desc:"30 min d’apprentissage volontaire avec prise de notes minimale"},
+    {name:"Lecture profonde", desc:"Lire 10 min sans interruption"},
+    {name:"Apprentissage actif", desc:"10 min d’apprentissage volontaire avec prise de notes minimale"},
     {name:"Mémoire", desc:"10 min de rappel actif", helpTitle:"Rappel actif", help:"Le rappel actif consiste à récupérer une information de mémoire, sans relire directement la réponse.\n\nIdées concrètes :\n• Rappel actif simple : ferme la source et restitue ce que tu as retenu.\n• Compression mentale : résume une idée en une phrase, puis en 3 mots-clés.\n• Transmission : explique une notion comme à quelqu’un de 12 ans.\n• Carte mentale : idée centrale + 3 à 5 branches, de mémoire.\n• Flash mental : liste 5 éléments liés à un sujet avant de vérifier.\n• Question-réponse : crée 3 questions et réponds sans relire.\n• Mémoire différée : apprends, attends 5 min, puis restitue."},
     {name:"Méditation", desc:"15 min"},
     {name:"Gratitude", desc:"Écrire 3 choses pour lesquelles je suis reconnaissant"},
@@ -161,7 +161,7 @@ const DUNGEONS = [
     {name:"Déplacements", desc:"10 min footwork"},
     {name:"Équilibre sur un pied", desc:"10 min"},
     {name:"Déplacements silencieux", desc:"10 min"},
-    {name:"Souplesse active / Animal flow", desc:"20 min"},
+    {name:"Souplesse active / Animal flow", desc:"30 min"},
   ]},
   {id:"guardian", title:"Donjon du Gardien", short:"Gardien", stat:"Discipline", icon:"🛡️", color:"#c084fc", reward:{xp:1500,stat:"Discipline",xp2:300,stat2:"Esprit"}, rooms:[
     {name:"Capture mentale", desc:"Traiter, planifier ou supprimer 5 éléments de ta charge mentale", helpTitle:"Capture mentale", help:"Note tout ce qui te prend de l’espace mental : petites tâches, démarches, messages, idées, choses à ranger ou décisions à prendre. Pour valider : 5 éléments doivent être traités, planifiés à une date précise, ou supprimés si inutiles."},
