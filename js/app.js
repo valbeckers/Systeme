@@ -2666,8 +2666,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;gap:8px"},
         h("div",{style:"display:flex;align-items:center;gap:8px;min-width:0"},
           QuestIcon(sq.id,sq.icon,14,"line-height:1.1;min-width:24px;text-align:center"),
-          h("div",null,
-            h("div",{style:"font-size:13px;font-weight:700;color:var(--tx);line-height:1.25"},sq.name)
+          h("div",{style:"min-width:0;flex:1"},
+            h("div",{style:"font-size:13px;font-weight:700;color:var(--tx);line-height:1.25"},sq.name),
+            showInput&&sq.desc&&h("div",{style:"font-size:10px;color:var(--td);line-height:1.35;margin-top:3px;white-space:normal"},sq.desc)
           )
         ),
         showInput
@@ -2965,7 +2966,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         ? {key:"dungeon",text:(completedDungeonToday.title||"Le donjon")+" a été complété.",color:STAT_COLOR[completedDungeonToday.stat]||"#c084fc"}
         : null,
       completedInviteToday
-        ? {key:"invite",text:(completedInviteToday.title||"L’invitation")+" a été complétée.",color:"#f59e0b"}
+        ? {key:"invite",text:"L’"+((completedInviteToday.title||"invitation").charAt(0).toLowerCase()+ (completedInviteToday.title||"invitation").slice(1))+" a été complétée.",color:"#f59e0b"}
         : null,
     ].filter(Boolean);
 
