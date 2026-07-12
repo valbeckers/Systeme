@@ -2774,8 +2774,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         : h(QI,{obj:selectedEnduranceQuest});
     }
     const color=STAT_COLOR.Endurance||"#22d3ee";
-    const agility=STAT_COLOR.Agilite||"#4ade80";
-    const buttonStyle="flex:1;min-width:0;padding:11px 8px;border-radius:9px;border:1px solid "+color+"55;background:"+color+"0d;color:"+color+";font-family:Orbitron,sans-serif;cursor:pointer;text-align:center;line-height:1.3";
+    const buttonStyle="flex:1;min-width:0;padding:12px 8px;border-radius:9px;border:1px solid "+color+"55;background:"+color+"0d;color:"+color+";font-family:Orbitron,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;line-height:1.3";
     return h("div",{class:"qi",style:"padding-bottom:2px"},
       h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
         h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:center;gap:8px;line-height:1.25"},
@@ -2784,19 +2783,14 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         ),
         h(QuestBadge,{label:"CHOIX",color})
       ),
-      h("div",{style:"font-size:10px;color:var(--td);line-height:1.45;margin-top:6px"},"Choisis ta sortie du jour. Une fois sélectionnée, la quête s’affichera normalement et l’autre option restera indisponible jusqu’au prochain jour."),
       h("div",{style:"display:flex;gap:8px;margin-top:10px"},
         h("button",{onClick:()=>chooseEnduranceQuest("run"),style:buttonStyle},
-          h("div",{style:"font-size:15px;margin-bottom:4px"},"🏃🏻"),
-          h("div",{style:"font-size:10px;font-weight:800;letter-spacing:.7px"},"RUNNING"),
-          h("div",{style:"font-size:8px;color:var(--td);margin-top:5px"},"200 XP/km Endurance"),
-          h("div",{style:"font-size:8px;color:"+agility+";margin-top:2px"},"+50 XP/km Agilité")
+          h("span",{style:"font-size:15px"},"🏃🏻"),
+          h("span",{style:"font-size:10px;font-weight:800;letter-spacing:.7px"},"Running")
         ),
         h("button",{onClick:()=>chooseEnduranceQuest("walk"),style:buttonStyle},
-          h("div",{style:"font-size:15px;margin-bottom:4px"},"🥾"),
-          h("div",{style:"font-size:10px;font-weight:800;letter-spacing:.7px"},"RANDONNÉE"),
-          h("div",{style:"font-size:8px;color:var(--td);margin-top:5px"},"100 XP/km Endurance"),
-          h("div",{style:"font-size:8px;color:"+agility+";margin-top:2px"},"+25 XP/km Agilité")
+          h("span",{style:"font-size:15px"},"🥾"),
+          h("span",{style:"font-size:10px;font-weight:800;letter-spacing:.7px"},"Randonnée")
         )
       )
     );
