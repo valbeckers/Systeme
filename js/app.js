@@ -2917,7 +2917,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
 
 
-  function CompactCompletedCard({text}){
+  function CompactCompletedCard({text,prefix,accent,suffix,accentColor,detail}){
     const color="#4ade80";
     return h("div",{
       class:"card",
@@ -2925,7 +2925,16 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     },
       h("div",{style:"display:flex;align-items:flex-start;gap:8px"},
         h("div",{style:"width:18px;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:14px;color:"+color+";font-weight:900;line-height:1;text-shadow:0 0 8px "+color+"88;margin-top:0"},"✓"),
-        h("div",{style:"flex:1;min-width:0;font-size:10px;color:var(--tx);font-family:Orbitron,sans-serif;letter-spacing:.55px;line-height:1.35;text-transform:uppercase;padding-top:1px"},text)
+        h("div",{style:"flex:1;min-width:0;padding-top:1px"},
+          h("div",{style:"font-size:10px;color:var(--tx);font-family:Orbitron,sans-serif;letter-spacing:.55px;line-height:1.35;text-transform:uppercase"},
+            text || h(Fragment,null,
+              prefix||"",
+              h("span",{style:"color:"+(accentColor||color)+";font-weight:900;text-shadow:0 0 8px "+(accentColor||color)+"66"},accent||""),
+              suffix||""
+            )
+          ),
+          detail&&h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:.45px;line-height:1.35;margin-top:4px;text-transform:uppercase"},detail)
+        )
       )
     );
   }
@@ -2952,6 +2961,19 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       .find(entry=>entry&&entry.completedAt&&new Date(entry.completedAt).toDateString()===new Date().toDateString()) || null;
     const completedInviteToday = dailyEvent && dailyEvent.type==="invite" && dailyEvent.completedAt ? dailyEvent : null;
 
+    const invitationSubject = title => String(title||"invitation")
+      .replace(/^Invitation\s+(?:à la|à l[’']|au|aux|à|à t[’'])\s*/i,"")
+      .replace(/^Invitation\s+/i,"")
+      .trim();
+
+    const dungeonParts = title => {
+      const raw=String(title||"Donjon");
+      const match=raw.match(/^Donjon\s+(du|de la|de l[’']|des|de)\s+(.+)$/i);
+      if(match) return {prefix:"Le Donjon "+match[1]+" ",name:match[2]};
+      return {prefix:"Le ",name:raw};
+    };
+    const completedDungeonParts = completedDungeonToday ? dungeonParts(completedDungeonToday.title) : null;
+
     const completedHomeCards = [
       dailyObjs.length>0 && remainingDaily.length===0
         ? {key:"daily",text:"Toutes les quêtes journalières ont été complétées.",color:"#4ade80"}
@@ -2960,13 +2982,32 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         ? {key:"bonus",text:"Toutes les quêtes bonus ont été complétées.",color:BONUS_BADGE_COLOR}
         : null,
       completedSq
-        ? {key:"sq",text:"La quête urgente a été complétée.",color:"#ef4444"}
+        ? {
+            key:"sq",
+            prefix:"La Quête urgente ",
+            accent:completedSq.name||"Quête urgente",
+            suffix:" a été complétée.",
+            accentColor:STAT_COLOR[sqMainStat(completedSq)]||"#ef4444",
+            detail:sqCooldownActive ? "Prochaine quête urgente disponible dans "+fmtCD(sqCooldownUntil-now) : null
+          }
         : null,
       completedDungeonToday
-        ? {key:"dungeon",text:(completedDungeonToday.title||"Le donjon")+" a été complété.",color:STAT_COLOR[completedDungeonToday.stat]||"#c084fc"}
+        ? {
+            key:"dungeon",
+            prefix:completedDungeonParts.prefix,
+            accent:completedDungeonParts.name,
+            suffix:" a été complété.",
+            accentColor:STAT_COLOR[completedDungeonToday.stat]||"#c084fc"
+          }
         : null,
       completedInviteToday
-        ? {key:"invite",text:"L’"+((completedInviteToday.title||"invitation").charAt(0).toLowerCase()+ (completedInviteToday.title||"invitation").slice(1))+" a été complétée.",color:"#f59e0b"}
+        ? {
+            key:"invite",
+            prefix:"L’invitation à ",
+            accent:invitationSubject(completedInviteToday.title),
+            suffix:" a été complétée.",
+            accentColor:STAT_COLOR[completedInviteToday.stat]||"#f59e0b"
+          }
         : null,
     ].filter(Boolean);
 
@@ -3080,7 +3121,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             : null
       ),
       completedHomeCards.length>0&&h("div",{style:"margin-top:2px"},
-        completedHomeCards.map(item=>h(CompactCompletedCard,{key:item.key,text:item.text}))
+        completedHomeCards.map(item=>h(CompactCompletedCard,{key:item.key,text:item.text,prefix:item.prefix,accent:item.accent,suffix:item.suffix,accentColor:item.accentColor,detail:item.detail}))
       )
     );
   }
@@ -3122,7 +3163,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
 
     return h("div",{class:"tab"},
-      h("div",{class:"card",style:"border-color:#ef444444"},
+      (!completedSq||activeSq)&&h("div",{class:"card",style:"border-color:#ef444444"},
         h("div",{class:"shdr"},
           h("div",null,
             h("div",{class:"ctitle",style:"margin:0;color:#ef4444"},"Quête urgente"+(activeSq&&activeSq.tier?" · "+(SQ_TIER_LABEL[activeSq.tier]||""):""))
@@ -3130,23 +3171,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         ),
         activeSq
           ? h(SqCard,{sq:activeSq,showInput:true})
-          : completedSq && h("div",{class:"sqcard"},
-          h("div",{style:"display:flex;align-items:center;gap:8px"},
-            QuestIcon(completedSq.id,completedSq.icon,14,"line-height:1.1;min-width:24px;text-align:center"),
-            h("div",{style:"flex:1"},
-              h("div",{style:"font-size:13px;font-weight:700;color:#4ade80"},completedSq.name+" — COMPLÉTÉ ✓"),
-              h("div",{style:"font-size:11px;color:var(--td);margin-top:2px;white-space:normal;line-height:1.25"},sqRewardSummary(completedSq))
+          : (!completedSq&&!sqCooldownActive
+              ? h("div",{style:"font-size:12px;color:var(--td);text-align:center;padding:8px 0"},"Chargement du défi...")
+              : null
             )
-          ),
-          sqCooldownActive&&h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:8px 0 4px;font-family:Orbitron,sans-serif"},"⏳ Prochaine quête dans "+fmtCD(sqCooldownUntil-now))
-        ),
-        !activeSq&&!completedSq&&(sqCooldownActive
-          ? h("div",{class:"card"},
-              h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Quête urgente"),
-              h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:4px 0;font-family:Orbitron,sans-serif"},"⏳ Prochaine quête dans "+fmtCD(sqCooldownUntil-now))
-            )
-          : h("div",{style:"font-size:12px;color:var(--td);text-align:center;padding:8px 0"},"Chargement du défi...")
-        )
       ),
       activeDungeon&&h(DungeonCard,null),
       h(DebtCard,null),
