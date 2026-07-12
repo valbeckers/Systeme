@@ -125,7 +125,7 @@ const SP = {
 };
 
 
-// Donjons volontaires — V1 simple : 1 actif à la fois, 1/jour, 3/semaine, 24h.
+// Donjons volontaires : 1 actif à la fois, 1/jour, 3/semaine, 24h puis Boss de Rupture.
 // Ordre aligné sur les stats : Santé, Force, Esprit, Endurance, Agilité, Discipline.
 const DUNGEONS = [
   {id:"alchemist", title:"Donjon de l’Alchimiste", short:"Alchimiste", stat:"Sante", icon:"⚗️", color:"#ef4444", reward:{xp:1500,stat:"Sante",xp2:300,stat2:"Esprit"}, rooms:[
@@ -170,7 +170,67 @@ const DUNGEONS = [
     {name:"Rangement", desc:"10 objets"},
     {name:"Bloc profond", desc:"45 min sur une tâche choisie, sans interruption volontaire"},
   ]},
+
 ];
+
+// Boss de Rupture — tirage à l’expiration d’un donjon normal.
+// Probabilités : Mineur 50 %, Majeur 30 %, Élite 15 %, Légendaire 5 %.
+const DUNGEON_RUPTURE_RARITIES = {
+  mineur:{label:"Mineur",color:"#4ade80",chance:0.50},
+  majeur:{label:"Majeur",color:"#60a5fa",chance:0.30},
+  elite:{label:"Élite",color:"#c084fc",chance:0.15},
+  legendaire:{label:"Légendaire",color:"#f97316",chance:0.05},
+};
+
+const DUNGEON_RUPTURE_BOSSES = {
+  alchemist:[
+    {id:"alchemist_putride",rarity:"mineur",name:"L’Alchimiste Putride",objective:"2 repas équilibrés consécutifs, sans sucre transformé, junk-food ni écran"},
+    {id:"alchemist_noir",rarity:"majeur",name:"L’Alchimiste Noir",objective:"Journée de purification : 2 L d’eau répartis avant 18 h et 2 repas propres"},
+    {id:"alchemist_dechu",rarity:"elite",name:"L’Alchimiste Déchu",objective:"30 min de lumière naturelle"},
+    {id:"alchemist_corrompu",rarity:"legendaire",name:"L’Alchimiste Corrompu",objective:"30 min de marche en extérieur"},
+  ],
+  warrior:[
+    {id:"warrior_berserker",rarity:"mineur",name:"Le Berserker",objective:"200 pompes réparties dans la journée"},
+    {id:"warrior_colosse",rarity:"majeur",name:"Le Colosse",objective:"100 squats + 100 fentes"},
+    {id:"warrior_gladiateur",rarity:"elite",name:"Le Gladiateur",objective:"30 min de shadow boxing"},
+    {id:"warrior_titan",rarity:"legendaire",name:"Le Titan",objective:"15 min de Wall Sit cumulées"},
+  ],
+  pilgrim:[
+    {id:"pilgrim_nomade",rarity:"mineur",name:"Le Nomade",objective:"30 min de marche cumulées"},
+    {id:"pilgrim_voyageur_perdu",rarity:"majeur",name:"Le Voyageur Perdu",objective:"Atteindre 10 000 pas"},
+    {id:"pilgrim_traqueur",rarity:"elite",name:"Le Traqueur",objective:"30 min d’escaliers"},
+    {id:"pilgrim_messager",rarity:"legendaire",name:"Le Messager",objective:"Courir 7 km"},
+  ],
+  hunter:[
+    {id:"hunter_predateur",rarity:"mineur",name:"Le Prédateur",objective:"15 min de corde à sauter"},
+    {id:"hunter_fauve",rarity:"majeur",name:"Le Fauve",objective:"20 min de footwork"},
+    {id:"hunter_fantome",rarity:"elite",name:"Le Fantôme",objective:"20 min de déplacements silencieux"},
+    {id:"hunter_acrobate",rarity:"legendaire",name:"L’Acrobate",objective:"30 min d’Animal Flow ou de mobilité active continue"},
+  ],
+  monk:[
+    {id:"monk_sage_dechu",rarity:"mineur",name:"Le Sage Déchu",objective:"30 min de lecture profonde sans interruption"},
+    {id:"monk_veilleur",rarity:"majeur",name:"Le Veilleur",objective:"30 min de méditation guidée"},
+    {id:"monk_ombre_interieure",rarity:"elite",name:"L’Ombre Intérieure",objective:"45 min de silence total, sans téléphone, musique, vidéo, podcast ni conversation"},
+    {id:"monk_scribe",rarity:"legendaire",name:"Le Scribe",objective:"Rédiger un résumé de 300 mots d’une lecture ou d’un podcast, sans consulter la source pendant la rédaction"},
+  ],
+  guardian:[
+    {id:"guardian_commandant",rarity:"mineur",name:"Le Commandant",objective:"Terminer entièrement 3 tâches repoussées"},
+    {id:"guardian_sentinelle",rarity:"majeur",name:"La Sentinelle",objective:"Ranger entièrement une pièce"},
+    {id:"guardian_stratege",rarity:"elite",name:"Le Stratège",objective:"Planifier précisément la journée suivante puis commencer immédiatement la première tâche"},
+    {id:"guardian_dechu",rarity:"legendaire",name:"Le Gardien Déchu",objective:"60 min de Deep Work sans interruption volontaire"},
+  ],
+};
+
+function pickDungeonRuptureBoss(dungeonId){
+  const pool=DUNGEON_RUPTURE_BOSSES[dungeonId]||[];
+  if(!pool.length) return null;
+  const roll=Math.random();
+  const rarity=roll<0.50?"mineur":roll<0.80?"majeur":roll<0.95?"elite":"legendaire";
+  const boss=pool.find(b=>b.rarity===rarity)||pool[0];
+  const meta=DUNGEON_RUPTURE_RARITIES[boss.rarity]||DUNGEON_RUPTURE_RARITIES.mineur;
+  return {...boss,rarityLabel:meta.label,rarityColor:meta.color};
+}
+
 // Couleurs et libellés des tiers des quêtes urgentes
 const SQ_TIER_COLOR = {mineure:"#fbbf24", majeure:"#f59e0b", legendaire:"#f97316"};
 const SQ_TIER_LABEL = {mineure:"Mineure", majeure:"Majeure", legendaire:"Légendaire"};
@@ -962,7 +1022,18 @@ function cleanDungeonLog(log){
   (DUNGEONS||[]).forEach(d=>{ map[d.id]=d; });
   return (log||[]).filter(e=>e&&e.id&&map[e.id]).map(e=>{
     const d=map[e.id];
-    return {id:d.id,title:d.title,stat:d.stat,xp:e.xp||0,completedAt:e.completedAt,expiresAt:e.expiresAt||((e.completedAt||0)+86400000)};
+    const rb=e.ruptureBoss&&typeof e.ruptureBoss==="object" ? {
+      id:e.ruptureBoss.id||null,
+      name:e.ruptureBoss.name||"Boss de Rupture",
+      rarity:e.ruptureBoss.rarity||"mineur",
+      rarityLabel:e.ruptureBoss.rarityLabel||null,
+      objective:e.ruptureBoss.objective||""
+    } : null;
+    return {
+      id:d.id,title:d.title,stat:d.stat,xp:e.xp||0,completedAt:e.completedAt,
+      expiresAt:e.expiresAt||((e.completedAt||0)+86400000),
+      rupture:!!e.rupture,ruptureBoss:rb
+    };
   });
 }
 function cleanDungeonRunWeeks(obj){
@@ -1261,6 +1332,7 @@ function App(){
   const [streakUp,setStreakUp] = useState(null);
   const [recordUp,setRecordUp] = useState(null);
   const [dungeonUp,setDungeonUp] = useState(null);
+  const [ruptureUp,setRuptureUp] = useState(null);
   const [urgentUp,setUrgentUp] = useState(null);
   const [confirmRerollSq,setConfirmRerollSq] = useState(null);
   const [confirmDungeonChoice,setConfirmDungeonChoice] = useState(null);
@@ -1517,7 +1589,7 @@ function App(){
   const dungeonDailyUsed = dungeonRunDay===today;
   const dungeonSkipDay = state.dungeonSkipDay||null;
   const dungeonSkippedToday = dungeonSkipDay===today;
-  const dungeonCanStart = !activeDungeon && !dungeonDailyUsed && !dungeonSkippedToday && dungeonWeekCount<3;
+  const dungeonCanStart = !state.activeDungeon && !dungeonDailyUsed && !dungeonSkippedToday && dungeonWeekCount<3;
 
   const dailyEvent = state.dailyEvent && state.dailyEvent.type!=="none" && now < (state.dailyEvent.expiresAt||0)
     ? state.dailyEvent
@@ -1671,12 +1743,41 @@ function App(){
     if(computedStreak!==state.streak)setState(s=>({...s,streak:computedStreak}));
   },[computedStreak]);
 
-  // Expiration des donjons non terminés après 24h
+  // Expiration : le donjon normal se rompt après 24 h ; le Boss de Rupture disparaît après son propre délai.
   useEffect(()=>{
-    if(!state.activeDungeon || state.activeDungeon.completedAt) return;
-    if(now < state.activeDungeon.expiresAt) return;
-    setState(s=>s.activeDungeon && !s.activeDungeon.completedAt && Date.now()>=s.activeDungeon.expiresAt ? {...s,activeDungeon:null} : s);
-  },[now,state.activeDungeon?.expiresAt]);
+    const ad=state.activeDungeon;
+    if(!ad || ad.completedAt || now < (ad.expiresAt||0)) return;
+
+    // Une rupture ne peut pas se reproduire : à la seconde expiration, le donjon se referme.
+    if(ad.ruptureBoss){
+      setState(s=>{
+        const cur=s.activeDungeon;
+        return cur&&cur.ruptureBoss&&Date.now()>=(cur.expiresAt||0) ? {...s,activeDungeon:null} : s;
+      });
+      return;
+    }
+
+    const dungeon=DUNGEONS.find(d=>d.id===ad.id);
+    const boss=dungeon ? pickDungeonRuptureBoss(dungeon.id) : null;
+    if(!dungeon || !boss){
+      setState(s=>s.activeDungeon&&Date.now()>=(s.activeDungeon.expiresAt||0)?{...s,activeDungeon:null}:s);
+      return;
+    }
+
+    // Le nouveau délai commence au moment où l’application détecte et révèle la rupture.
+    const t=Date.now();
+    const ruptureBoss={...boss,startedAt:t,expiresAt:t+86400000};
+    setState(s=>{
+      const cur=s.activeDungeon;
+      if(!cur || cur.ruptureBoss || Date.now()<(cur.expiresAt||0)) return s;
+      return {...s,activeDungeon:{...cur,rupturedAt:t,ruptureBoss,expiresAt:ruptureBoss.expiresAt}};
+    });
+    setRuptureUp({
+      dungeonTitle:dungeon.title,icon:dungeon.icon,
+      name:boss.name,objective:boss.objective,
+      rarityLabel:boss.rarityLabel,rarityColor:boss.rarityColor
+    });
+  },[now,state.activeDungeon?.expiresAt,state.activeDungeon?.ruptureBoss?.id]);
 
   // Échec automatique d’une dette non remboursée après son jour d’échéance
   useEffect(()=>{
@@ -2277,7 +2378,7 @@ function App(){
       const week=wkStr();
       const runs={...(s.dungeonRunsByWeek||{})};
       const current=s.activeDungeon;
-      if(current && !current.completedAt && t<current.expiresAt) return s;
+      if(current && !current.completedAt) return s;
       if(s.dungeonRunDay===day || s.dungeonSkipDay===day || (runs[week]||0)>=3) return s;
       const dungeon=DUNGEONS.find(d=>d.id===id);
       if(!dungeon) return s;
@@ -2297,7 +2398,52 @@ function App(){
       const dungeon=DUNGEONS.find(d=>d.id===ad.id);
       if(!dungeon) return {...s,activeDungeon:null};
       const t=Date.now();
-      if(t>=ad.expiresAt) return {...s,activeDungeon:null};
+      if(t>=ad.expiresAt) return s;
+
+      if(ad.ruptureBoss){
+        const rb=ad.ruptureBoss;
+        const beforeXp=s.totalXp;
+        const beforeStats=s.stats;
+        let totalXp=s.totalXp;
+        const statXp={...s.statXp};
+        const stats={...s.stats};
+        const ruptureRewards=[
+          {xp:900,stat:dungeon.reward.stat||dungeon.stat},
+          dungeon.reward.stat2?{xp:180,stat:dungeon.reward.stat2}:null
+        ].filter(Boolean);
+        ruptureRewards.forEach(r=>{
+          totalXp+=(r.xp||0);
+          statXp[r.stat]=(statXp[r.stat]||0)+(r.xp||0);
+          stats[r.stat]=getLvl(statXp[r.stat]);
+        });
+        const awardedXp=ruptureRewards.reduce((sum,r)=>sum+(r.xp||0),0);
+        const day=todayStr();
+        const daily={...(s.dailyExtraXp||{})};
+        const dayLog={...(daily[day]||{})};
+        dayLog.dungeon=(dayLog.dungeon||0)+awardedXp;
+        daily[day]=dayLog;
+        const priorRoomXp=(ad.completedRooms||[]).reduce((sum,idx)=>sum+sumXpPairs(dungeonRoomRewardPairs(dungeon,idx)),0);
+        const completedAt=t;
+        const rewardText=ruptureRewards.map(r=>"+"+r.xp+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ");
+        triggerProgressOverlay(beforeXp,beforeStats,totalXp,stats,300);
+        setTimeout(()=>setDungeonUp({
+          label:"BOSS DE RUPTURE VAINCU",short:rb.name,icon:"☠️",
+          color:rb.rarityColor||dungeon.color,reward:rewardText,
+          subtitle:(rb.rarityLabel||"Boss")+" · "+dungeon.short,rupture:true
+        }),200);
+        return {
+          ...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:null,
+          dungeonLog:[...(s.dungeonLog||[]),{
+            id:dungeon.id,title:dungeon.title,stat:dungeon.stat,
+            xp:priorRoomXp+awardedXp,completedAt,expiresAt:ad.expiresAt,
+            rupture:true,ruptureBoss:{
+              id:rb.id,name:rb.name,rarity:rb.rarity,rarityLabel:rb.rarityLabel,objective:rb.objective
+            }
+          }],
+          lastActiveDay:day
+        };
+      }
+
       const completed=Array.isArray(ad.completedRooms)?ad.completedRooms:[];
       const nextIdx=completed.length;
       if(nextIdx>=dungeon.rooms.length) return s;
@@ -2724,6 +2870,30 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const nextRoom=d ? d.rooms[completedRooms.length] : null;
     const color=d ? d.color : rank.color;
     if(compact && !d) return null;
+    if(d&&d.ruptureBoss){
+      const rb=d.ruptureBoss;
+      const ruptureColor=rb.rarityColor||DUNGEON_RUPTURE_RARITIES[rb.rarity]?.color||color;
+      const secured=(d.completedRooms||[]).length;
+      return h("div",{class:"card",style:"border-color:"+ruptureColor+"88;background:linear-gradient(135deg,"+ruptureColor+"12,rgba(255,255,255,0.025))"},
+        h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px"},
+          h("div",{style:"min-width:0"},
+            h("div",{class:"ctitle",style:"margin:0;color:"+ruptureColor},"⚠️ RUPTURE — "+d.title),
+            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"Boss de Rupture · "+fmtCD(remaining)+" restants")
+          ),
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+ruptureColor+";border:1px solid "+ruptureColor+"66;border-radius:999px;padding:4px 7px;white-space:nowrap;text-transform:uppercase"},rb.rarityLabel||"Rupture")
+        ),
+        h("div",{style:"padding:12px;border-radius:11px;border:1px solid "+ruptureColor+"55;background:"+ruptureColor+"10"},
+          h("div",{style:"font-size:9px;color:"+ruptureColor+";font-family:Orbitron,sans-serif;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:5px"},"☠️ Boss de Rupture"),
+          h("div",{style:"font-size:15px;color:var(--tx);font-weight:900;line-height:1.2"},rb.name),
+          h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin-top:6px"},rb.objective),
+          h("div",{style:"font-size:9px;color:"+ruptureColor+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:9px"},
+            "+900 XP "+(STAT_LBL[d.reward.stat]||d.reward.stat)+" · +180 XP "+(STAT_LBL[d.reward.stat2]||d.reward.stat2)
+          )
+        ),
+        h("div",{style:"font-size:10px;color:var(--td);margin-top:8px;line-height:1.4"},secured+" salle"+(secured>1?"s":"")+" sécurisée"+(secured>1?"s":"")+" · XP conservés"),
+        h("button",{onClick:validateDungeonRoom,style:"width:100%;margin-top:10px;padding:11px;border-radius:9px;border:1px solid "+ruptureColor+"77;background:"+ruptureColor+"18;color:"+ruptureColor+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"},"Vaincre le Boss de Rupture")
+      );
+    }
     if(d){
       return h("div",{class:"card",style:"border-color:"+color+"66"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
@@ -3722,10 +3892,29 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h("div",{class:"ruparts"},particles.map(p=>h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?"#ffffff":color)+";box-shadow:0 0 8px "+glow+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"}))),
       h("div",{class:"rucont"},
         h("div",{style:congratsStyle},"FÉLICITATIONS !"),
-        h("div",{class:"ruevol"},"DONJON TERMINÉ"),
-        h("div",{class:"rurank",style:"font-size:clamp(48px,16vw,82px);letter-spacing:-1px;white-space:nowrap","data-r":dungeonUp.short},dungeonUp.short),
+        h("div",{class:"ruevol"},dungeonUp.label||"DONJON TERMINÉ"),
+        h("div",{class:"rurank",style:"font-size:"+(dungeonUp.rupture?"clamp(34px,10vw,60px)":"clamp(48px,16vw,82px)")+";letter-spacing:-1px;white-space:"+(dungeonUp.rupture?"normal":"nowrap")+";max-width:350px;line-height:1.05","data-r":dungeonUp.short},dungeonUp.short),
+        dungeonUp.subtitle&&h("div",{class:"rulabel",style:"margin-top:9px;letter-spacing:2px;color:"+color},dungeonUp.subtitle),
         h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:3px;max-width:300px;line-height:1.35"},dungeonUp.reward),
         h("button",{class:"rudis",onClick:()=>setDungeonUp(null)},"Continuer")
+      )
+    );
+  }
+
+  function DungeonRuptureUp(){
+    if(!ruptureUp)return null;
+    const color=ruptureUp.rarityColor||"#f97316";
+    const glow=color+"88";
+    const particles=Array.from({length:52},(_,i)=>({id:i,left:Math.random()*100,delay:Math.random()*2.5,dur:1+Math.random()*1.8,size:2+Math.random()*5,accent:Math.random()>0.48}));
+    return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+glow},
+      h("div",{class:"ruparts"},particles.map(p=>h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?"#ffffff":color)+";box-shadow:0 0 10px "+glow+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"}))),
+      h("div",{class:"rucont"},
+        h("div",{class:"ruevol",style:"color:#ef4444;text-shadow:0 0 18px rgba(239,68,68,.65)"},"⚠️ RUPTURE DE DONJON"),
+        h("div",{class:"rulabel",style:"margin-top:12px;letter-spacing:3px;color:"+color},"BOSS "+String(ruptureUp.rarityLabel||"DE RUPTURE").toUpperCase()+" DÉTECTÉ"),
+        h("div",{class:"rurank",style:"font-size:clamp(34px,10vw,60px);letter-spacing:-1px;white-space:normal;max-width:350px;line-height:1.05;margin-top:10px","data-r":ruptureUp.name},ruptureUp.name),
+        h("div",{style:"margin-top:12px;max-width:320px;padding:11px;border-radius:10px;border:1px solid "+color+"55;background:"+color+"10;font-size:12px;color:var(--tx);line-height:1.45"},ruptureUp.objective),
+        h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:1.5px;color:var(--td);max-width:320px"},"Les salles restantes ont disparu. Nouveau délai : 24 h."),
+        h("button",{class:"rudis",onClick:()=>setRuptureUp(null)},"Affronter")
       )
     );
   }
@@ -4227,6 +4416,16 @@ const BONUS_BADGE_COLOR = "#fbbf24";
                   room.help
                 )
               ))
+            ),
+            h("div",{style:"margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.07)"},
+              h("div",{style:"font-size:9px;color:"+(STAT_COLOR[dg.stat]||dg.color)+";font-family:Orbitron,sans-serif;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:7px"},"Boss de Rupture — +900 / +180 XP"),
+              (DUNGEON_RUPTURE_BOSSES[dg.id]||[]).map(rb=>{
+                const meta=DUNGEON_RUPTURE_RARITIES[rb.rarity]||DUNGEON_RUPTURE_RARITIES.mineur;
+                return h("div",{key:rb.id,style:"margin-bottom:7px;padding:7px 8px;border-radius:8px;border:1px solid "+meta.color+"33;background:"+meta.color+"08"},
+                  h("div",{style:"font-size:10px;color:"+meta.color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase"},meta.label+" — "+rb.name),
+                  h("div",{style:"font-size:10px;color:var(--td);line-height:1.4;margin-top:3px"},rb.objective)
+                );
+              })
             )
           )
         )
@@ -4329,7 +4528,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         )
       ),
       h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial)),
-      h(Section,{id:"dj",title:"Donjons",count:DUNGEONS.length},groupByDominantStat(DUNGEONS,renderDungeonCodex,dg=>dg.stat)),
+      h(Section,{id:"dj",title:"Donjons",count:DUNGEONS.length},
+        h(Fragment,null,
+          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Après 24 h, un donjon inachevé subit une Rupture : les salles déjà validées et leurs XP sont conservés, toutes les étapes restantes sont remplacées par un Boss de Rupture tiré selon sa rareté. Ce boss dispose de 24 h et ne peut pas provoquer une seconde rupture."),
+          groupByDominantStat(DUNGEONS,renderDungeonCodex,dg=>dg.stat)
+        )
+      ),
       h(Section,{id:"ev",title:"Événements",count:eventList.length},
         h(Fragment,null,
           h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Logique quotidienne : journée précédente complète → Élan choisi selon les XP gagnés hier, avec léger bonus aux stats faibles ; journée précédente incomplète → invitation liée aux quêtes manquées ou à la reprise."),
@@ -4433,6 +4637,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(StreakUp,null),
       h(RecordUp,null),
       h(DungeonUp,null),
+      h(DungeonRuptureUp,null),
       h(UrgentUp,null),
       h(DebtUp,null),
       h(ConfirmDebtModal,null),
