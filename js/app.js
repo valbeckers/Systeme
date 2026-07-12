@@ -2916,13 +2916,14 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
 
 
-  function CompactCompletedCard({text,color="#4ade80"}){
+  function CompactCompletedCard({text}){
+    const color="#4ade80";
     return h("div",{
       class:"card",
-      style:"padding:10px 12px;margin-bottom:8px;border-color:"+color+"44;background:linear-gradient(135deg,"+color+"0d,rgba(255,255,255,.018))"
+      style:"padding:10px 12px;margin-bottom:8px;border-color:"+color+"55;background:linear-gradient(135deg,"+color+"12,rgba(255,255,255,.018))"
     },
       h("div",{style:"display:flex;align-items:center;gap:9px"},
-        h("div",{style:"font-size:14px;color:"+color+";font-weight:900;line-height:1"},"✓"),
+        h("div",{style:"font-size:14px;color:"+color+";font-weight:900;line-height:1;text-shadow:0 0 8px "+color+"88"},"✓"),
         h("div",{style:"font-size:10px;color:var(--tx);font-family:Orbitron,sans-serif;letter-spacing:.55px;line-height:1.35;text-transform:uppercase"},text)
       )
     );
@@ -3078,7 +3079,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             : null
       ),
       completedHomeCards.length>0&&h("div",{style:"margin-top:2px"},
-        completedHomeCards.map(item=>h(CompactCompletedCard,{key:item.key,text:item.text,color:item.color}))
+        completedHomeCards.map(item=>h(CompactCompletedCard,{key:item.key,text:item.text}))
       )
     );
   }
