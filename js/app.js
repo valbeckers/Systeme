@@ -2774,7 +2774,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         : h(QI,{obj:selectedEnduranceQuest});
     }
     const color=STAT_COLOR.Endurance||"#22d3ee";
-    const buttonStyle="flex:1;min-width:0;padding:12px 8px;border-radius:9px;border:1px solid "+color+"55;background:"+color+"0d;color:"+color+";font-family:Orbitron,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;line-height:1.3";
+    const buttonStyle="flex:1;min-width:0;min-height:38px;padding:0 8px;border-radius:9px;border:1px solid "+color+"55;background:"+color+"0d;color:"+color+";font-family:Orbitron,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;line-height:1.2";
     return h("div",{class:"qi",style:"padding-bottom:2px"},
       h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
         h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:center;gap:8px;line-height:1.25"},
