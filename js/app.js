@@ -72,7 +72,7 @@ const DEFS = [
   {id:"med",    name:"M\u00e9ditation", unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Esprit",  icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F", base:15, fixedBase:true},
   // ─── ENDURANCE ────────────────────────────────────────────────────────
   {id:"run",    name:"Running",         iconKey:"run",          unit:"km",    xpPer:200, daily:true, weekly:false,optional:true, stat:"Endurance",      icon:"\uD83C\uDFC3\uD83C\uDFFB",   base:5,  stat2:"Agilite", xpPer2:50},
-  {id:"walk",   name:"Marche",          unit:"km",    xpPer:75,  daily:true, weekly:false,optional:true, stat:"Endurance",      icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F", base:5},
+  {id:"walk",   name:"Randonnée",       unit:"km",    xpPer:100, daily:true, weekly:false,optional:true, stat:"Endurance",      icon:"\uD83E\uDD7E",               base:5, stat2:"Agilite", xpPer2:25},
   // ─── AGILITÉ ──────────────────────────────────────────────────────────
     {id:"balance",name:"Équilibre",unit:"min",xpPer:10,daily:true,weekly:false,optional:true,stat:"Agilite", icon:"\uD83E\uDDB6\uD83C\uDFFB", base:10, fixedBase:true, startDate:"2026-05-15", stat2:"Esprit", xpPer2:10},
   // ─── DISCIPLINE ───────────────────────────────────────────────────────
@@ -1044,6 +1044,13 @@ function cleanDungeonRunWeeks(obj){
   });
   return out;
 }
+function cleanEnduranceChoiceByDay(obj){
+  const out={};
+  Object.entries(obj||{}).forEach(([day,id])=>{
+    if((id==="run"||id==="walk") && /^\d{4}-\d{2}-\d{2}$/.test(day)) out[day]=id;
+  });
+  return out;
+}
 function cleanSystemState(raw){
   const data=migrateRuntimeQuestDefinitions(migrateMergedEspritState({...((raw&&typeof raw==="object")?raw:{})}));
   const dailyIds=new Set(DEFS.filter(o=>o.daily).map(o=>o.id));
@@ -1092,6 +1099,7 @@ function cleanSystemState(raw){
     questDebt:data.questDebt||null,
     debtUsesByWeek:data.debtUsesByWeek||{},
     debtResolvedDays:data.debtResolvedDays||{},
+    enduranceChoiceByDay:cleanEnduranceChoiceByDay(data.enduranceChoiceByDay),
     completedSqLog,
     sqStatCycle
   };
@@ -1208,6 +1216,7 @@ const IMPORTED = {
   sqRerollDay:null,
   completedSqLog:[],
   sqStatCycle:[],
+  enduranceChoiceByDay:{},
   objectives:DEFS,
 };
 
@@ -1247,6 +1256,7 @@ function buildState(){
     eventDay:saved.eventDay||IMPORTED.eventDay||null,
     eventHistory:saved.eventHistory||IMPORTED.eventHistory||[],
     mentalMode:saved.mentalMode||IMPORTED.mentalMode||null,
+    enduranceChoiceByDay:saved.enduranceChoiceByDay||{},
     completedSqLog:saved.completedSqLog||[],
     sqStatCycle:saved.sqStatCycle||[],
     stats:saved.stats||IMPORTED.stats,
@@ -1411,6 +1421,39 @@ function App(){
   const wLog  = state.weeklyLog[wk]||{};
   const prestige = state.prestige||0;
 
+  // Une seule sortie bonus par jour : Running ou Randonnée.
+  const runQuestObj = objs.find(o=>o.id==="run") || DEFS.find(o=>o.id==="run");
+  const hikeQuestObj = objs.find(o=>o.id==="walk") || DEFS.find(o=>o.id==="walk");
+  const savedEnduranceChoice = (state.enduranceChoiceByDay||{})[today];
+  const inferredEnduranceChoice = (Number(tLog.run)||0)>0 && (Number(tLog.walk)||0)>0
+    ? ((Number(tLog.run)||0)>=(Number(tLog.walk)||0) ? "run" : "walk")
+    : ((Number(tLog.run)||0)>0 ? "run" : ((Number(tLog.walk)||0)>0 ? "walk" : null));
+  const enduranceChoiceId = savedEnduranceChoice==="run"||savedEnduranceChoice==="walk"
+    ? savedEnduranceChoice
+    : inferredEnduranceChoice;
+  const selectedEnduranceQuest = enduranceChoiceId==="run" ? runQuestObj : enduranceChoiceId==="walk" ? hikeQuestObj : null;
+  const enduranceChoicePlaceholder = {
+    id:"endurance_choice",name:"Running ou Randonnée",icon:"🏃🏻 / 🥾",unit:"choix",
+    daily:true,weekly:false,optional:true,stat:"Endurance",base:1,isEnduranceChoice:true
+  };
+
+  function chooseEnduranceQuest(id){
+    if(id!=="run"&&id!=="walk") return;
+    setState(s=>{
+      const choices={...(s.enduranceChoiceByDay||{})};
+      if(choices[today]==="run"||choices[today]==="walk") return s;
+      const row=((s.dailyLog||{})[today])||{};
+      const inferred=(Number(row.run)||0)>0 ? "run" : ((Number(row.walk)||0)>0 ? "walk" : null);
+      choices[today]=inferred||id;
+      return {...s,enduranceChoiceByDay:choices,lastActiveDay:todayStr()};
+    });
+  }
+
+  function dailyBonusQuestObjects(){
+    const others=objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden&&o.id!=="run"&&o.id!=="walk");
+    return sortStat([...others,selectedEnduranceQuest||enduranceChoicePlaceholder]);
+  }
+
   const effectiveXp = state.totalXp;
   const rank     = getRankWithStats(effectiveXp, state.stats);
   const naturalRank = getRank(effectiveXp); // rang qu'on aurait sans les conditions de stats
@@ -1556,7 +1599,7 @@ function App(){
     return streak;
   })();
 
-  // 9. Bonus hebdo supprimé : Running et Marche sont désormais des quêtes bonus.
+  // 9. Bonus hebdo supprimé : Running et Randonnée sont désormais des quêtes bonus.
   const weeklyDone = false;
 
   // 10. Quete speciale
@@ -2724,6 +2767,41 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
+  function EnduranceChoiceItem({mode="quest"}={}){
+    if(selectedEnduranceQuest){
+      return mode==="home"
+        ? h(RR,{obj:selectedEnduranceQuest,isW:false})
+        : h(QI,{obj:selectedEnduranceQuest});
+    }
+    const color=STAT_COLOR.Endurance||"#22d3ee";
+    const agility=STAT_COLOR.Agilite||"#4ade80";
+    const buttonStyle="flex:1;min-width:0;padding:11px 8px;border-radius:9px;border:1px solid "+color+"55;background:"+color+"0d;color:"+color+";font-family:Orbitron,sans-serif;cursor:pointer;text-align:center;line-height:1.3";
+    return h("div",{class:"qi",style:"padding-bottom:2px"},
+      h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
+        h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:center;gap:8px;line-height:1.25"},
+          QuestIcon("endurance_choice","🏃🏻",14,"width:18px;height:18px"),
+          h("span",null,"Running ou Randonnée")
+        ),
+        h(QuestBadge,{label:"CHOIX",color})
+      ),
+      h("div",{style:"font-size:10px;color:var(--td);line-height:1.45;margin-top:6px"},"Choisis ta sortie du jour. Une fois sélectionnée, la quête s’affichera normalement et l’autre option restera indisponible jusqu’au prochain jour."),
+      h("div",{style:"display:flex;gap:8px;margin-top:10px"},
+        h("button",{onClick:()=>chooseEnduranceQuest("run"),style:buttonStyle},
+          h("div",{style:"font-size:15px;margin-bottom:4px"},"🏃🏻"),
+          h("div",{style:"font-size:10px;font-weight:800;letter-spacing:.7px"},"RUNNING"),
+          h("div",{style:"font-size:8px;color:var(--td);margin-top:5px"},"200 XP/km Endurance"),
+          h("div",{style:"font-size:8px;color:"+agility+";margin-top:2px"},"+50 XP/km Agilité")
+        ),
+        h("button",{onClick:()=>chooseEnduranceQuest("walk"),style:buttonStyle},
+          h("div",{style:"font-size:15px;margin-bottom:4px"},"🥾"),
+          h("div",{style:"font-size:10px;font-weight:800;letter-spacing:.7px"},"RANDONNÉE"),
+          h("div",{style:"font-size:8px;color:var(--td);margin-top:5px"},"100 XP/km Endurance"),
+          h("div",{style:"font-size:8px;color:"+agility+";margin-top:2px"},"+25 XP/km Agilité")
+        )
+      )
+    );
+  }
+
   function sqMainStat(sq){
     if(sq&&sq.stat) return sq.stat;
     const map=activeSpecialQuestMap();
@@ -3112,9 +3190,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function Home(){
     const dailyObjs = sortStat(objs.filter(o=>o.daily&&!o.optional));
     const weeklyObjs = sortStat(objs.filter(o=>o.weekly));
-    const bonusObjs = sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden));
+    const bonusObjs = dailyBonusQuestObjects();
 
     const isDone=(obj,isWeeklyRow)=>{
+      if(obj.isEnduranceChoice) return false;
       const isW = isWeeklyRow || obj.weekly;
       const target = obj.target && !obj.binary ? obj.target : getEffectiveTarget(obj.id,isW);
       const doneVal = isW ? (wLog[obj.id]||0) : (tLog[obj.id]||0);
@@ -3240,7 +3319,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         prestigeAvailable&&h("button",{
           onClick:()=>{
             const newPrestige=(state.prestige||0)+1;
-            setState(s=>({...s,streak:0,streakBonusDay:null,weeklyBonusWk:null,streakMilestones:[],dailyLog:{},weeklyLog:{},specialQuests:[],sqStatCycle:[],sqCooldownUntil:null,sqRerollDay:null,activeDungeon:null,dungeonRunDay:null,dungeonRunsByWeek:{},dungeonLog:[],prestige:newPrestige}));
+            setState(s=>({...s,streak:0,streakBonusDay:null,weeklyBonusWk:null,streakMilestones:[],dailyLog:{},weeklyLog:{},specialQuests:[],sqStatCycle:[],sqCooldownUntil:null,sqRerollDay:null,activeDungeon:null,dungeonRunDay:null,dungeonRunsByWeek:{},dungeonLog:[],enduranceChoiceByDay:{},prestige:newPrestige}));
             setPrestigeUp(newPrestige);
           },
           style:"width:100%;margin-top:12px;padding:12px;background:rgba(168,85,247,0.1);border:1px solid #a855f7;border-radius:10px;color:#a855f7;font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:3px;cursor:pointer;text-transform:uppercase;text-shadow:0 0 12px #a855f7"
@@ -3283,7 +3362,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
       secs.map(({lb,ob,iw,empty})=>
         ob.length>0
-          ? h("div",{key:lb,class:"card"},h("div",{class:"ctitle"},lb),ob.map(o=>h(RR,{key:o.id,obj:o,isW:iw})))
+          ? h("div",{key:lb,class:"card"},h("div",{class:"ctitle"},lb),ob.map(o=>o.isEnduranceChoice?h(EnduranceChoiceItem,{key:o.id,mode:"home"}):h(RR,{key:o.id,obj:o,isW:iw})))
           : empty
             ? h("div",{key:lb,class:"card",style:"border-color:#4ade8044"},
                 h("div",{class:"ctitle",style:"color:#4ade80"},lb),
@@ -3301,10 +3380,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
   function Quests(){
     const reqBase=sortStat(objs.filter(o=>o.daily&&!o.optional));
-    const bonBase=sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden));
+    const bonBase=dailyBonusQuestObjects();
     const wkBase=sortStat(objs.filter(o=>o.weekly));
 
     const isQuestDone=(obj)=>{
+      if(obj.isEnduranceChoice) return false;
       const isWeekly = obj.weekly;
       const t = getEffectiveTarget(obj.id, isWeekly);
       const effectiveT = t;
@@ -3359,7 +3439,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       ),
       bon.length>0&&h("div",{class:"card"},
         h(SectionHeader,{title:"Quêtes bonus",done:bonDone,total:bonTotal}),
-        bon.map(o=>h(QI,{key:o.id,obj:o}))
+        bon.map(o=>o.isEnduranceChoice?h(EnduranceChoiceItem,{key:o.id,mode:"quest"}):h(QI,{key:o.id,obj:o}))
       )
     );
   }
@@ -3545,7 +3625,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         if(!records[id]||val>records[id].val)records[id]={val,date};
       });
     });
-    // Running et Marche sont désormais quotidiens : ne plus utiliser weeklyLog pour les records
+    // Running et Randonnée sont désormais quotidiens : ne plus utiliser weeklyLog pour les records
 
     // ── Records hebdomadaires (meilleur total sur une semaine ISO) ──
     const weeklyRecordTotals={};
