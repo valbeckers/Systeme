@@ -2922,9 +2922,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       class:"card",
       style:"padding:10px 12px;margin-bottom:8px;border-color:"+color+"55;background:linear-gradient(135deg,"+color+"12,rgba(255,255,255,.018))"
     },
-      h("div",{style:"display:flex;align-items:center;gap:9px"},
-        h("div",{style:"font-size:14px;color:"+color+";font-weight:900;line-height:1;text-shadow:0 0 8px "+color+"88"},"✓"),
-        h("div",{style:"font-size:10px;color:var(--tx);font-family:Orbitron,sans-serif;letter-spacing:.55px;line-height:1.35;text-transform:uppercase"},text)
+      h("div",{style:"display:flex;align-items:flex-start;gap:8px"},
+        h("div",{style:"width:18px;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:14px;color:"+color+";font-weight:900;line-height:1;text-shadow:0 0 8px "+color+"88;margin-top:0"},"✓"),
+        h("div",{style:"flex:1;min-width:0;font-size:10px;color:var(--tx);font-family:Orbitron,sans-serif;letter-spacing:.55px;line-height:1.35;text-transform:uppercase;padding-top:1px"},text)
       )
     );
   }
