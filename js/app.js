@@ -1,3 +1,4 @@
+
 const { h, render, Fragment } = preact;
 const { useState, useEffect, useRef } = preactHooks;
 
@@ -2884,6 +2885,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const expired = now >= (ev.expiresAt||0);
     const done = !!ev.completedAt;
     const isBonus = ev.type==="bonus";
+    if(!isBonus && done) return null;
     if(isBonus){
       return h("div",{class:"card",style:"border-color:"+color+"66;background:linear-gradient(135deg,"+color+"14,rgba(255,255,255,0.025))"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:10px"},
@@ -2913,6 +2915,19 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   // ─── ONGLET ACCUEIL ───────────────────────────────────────────────────
 
 
+
+  function CompactCompletedCard({text,color="#4ade80"}){
+    return h("div",{
+      class:"card",
+      style:"padding:10px 12px;margin-bottom:8px;border-color:"+color+"44;background:linear-gradient(135deg,"+color+"0d,rgba(255,255,255,.018))"
+    },
+      h("div",{style:"display:flex;align-items:center;gap:9px"},
+        h("div",{style:"font-size:14px;color:"+color+";font-weight:900;line-height:1"},"✓"),
+        h("div",{style:"font-size:10px;color:var(--tx);font-family:Orbitron,sans-serif;letter-spacing:.55px;line-height:1.35;text-transform:uppercase"},text)
+      )
+    );
+  }
+
   function Home(){
     const dailyObjs = sortStat(objs.filter(o=>o.daily&&!o.optional));
     const weeklyObjs = sortStat(objs.filter(o=>o.weekly));
@@ -2929,6 +2944,29 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const remainingWeekly = weeklyObjs.filter(o=>!isDone(o,true));
     const remainingBonus = bonusObjs.filter(o=>!isDone(o,false));
     const reqRemaining = remainingDaily.length;
+
+    const completedDungeonToday = [...(state.dungeonLog||[])]
+      .reverse()
+      .find(entry=>entry&&entry.completedAt&&new Date(entry.completedAt).toDateString()===new Date().toDateString()) || null;
+    const completedInviteToday = dailyEvent && dailyEvent.type==="invite" && dailyEvent.completedAt ? dailyEvent : null;
+
+    const completedHomeCards = [
+      dailyObjs.length>0 && remainingDaily.length===0
+        ? {key:"daily",text:"Toutes les quêtes journalières ont été complétées.",color:"#4ade80"}
+        : null,
+      bonusObjs.length>0 && remainingBonus.length===0
+        ? {key:"bonus",text:"Toutes les quêtes bonus ont été complétées.",color:BONUS_BADGE_COLOR}
+        : null,
+      completedSq
+        ? {key:"sq",text:"La quête urgente a été complétée.",color:"#ef4444"}
+        : null,
+      completedDungeonToday
+        ? {key:"dungeon",text:(completedDungeonToday.title||"Le donjon")+" a été complété.",color:STAT_COLOR[completedDungeonToday.stat]||"#c084fc"}
+        : null,
+      completedInviteToday
+        ? {key:"invite",text:(completedInviteToday.title||"L’invitation")+" a été complétée.",color:"#f59e0b"}
+        : null,
+    ].filter(Boolean);
 
     const secs=[
       {lb:"Quêtes journalières restantes",ob:remainingDaily,iw:false,empty:null},
@@ -3038,6 +3076,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
                 h("div",{style:"text-align:center;padding:14px 0;color:#4ade80;font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:1px"},empty)
               )
             : null
+      ),
+      completedHomeCards.length>0&&h("div",{style:"margin-top:2px"},
+        completedHomeCards.map(item=>h(CompactCompletedCard,{key:item.key,text:item.text,color:item.color}))
       )
     );
   }
