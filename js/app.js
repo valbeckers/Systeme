@@ -1235,10 +1235,22 @@ function migrateGripsToMin(dailyLog){
   return out;
 }
 
+function resetInvalidRunningRecord(dailyLog){
+  const out={};
+  for(const [day,log] of Object.entries(dailyLog||{})){
+    const row={...(log||{})};
+    const run=Number(row.run);
+    // Ancienne valeur erronée qui alimentait le record journalier Running.
+    if(Number.isFinite(run) && Math.abs(run-15.1)<0.001) delete row.run;
+    out[day]=row;
+  }
+  return out;
+}
+
 function buildState(){
   const saved=loadState();
-  if(!saved)return IMPORTED;
-  const migratedLog=migrateGripsToMin(saved.dailyLog||IMPORTED.dailyLog);
+  if(!saved)return {...IMPORTED,dailyLog:resetInvalidRunningRecord(IMPORTED.dailyLog)};
+  const migratedLog=resetInvalidRunningRecord(migrateGripsToMin(saved.dailyLog||IMPORTED.dailyLog));
   const out={
     ...IMPORTED,
     ...saved,
