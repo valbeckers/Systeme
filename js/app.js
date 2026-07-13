@@ -1728,7 +1728,7 @@ function App(){
   }
 
   function maybeTriggerQuestRecord(obj,prevVal,nextVal,delay=850){
-    if(!obj || obj.id==="run" || obj.binary || obj.weekly) return;
+    if(!obj || obj.binary || obj.weekly) return;
     const nextNumber=Number(nextVal)||0;
     if(nextNumber<=0) return;
 
@@ -3642,7 +3642,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const records={};
     Object.entries(state.dailyLog).forEach(([date,log])=>{
       Object.entries(log).forEach(([id,val])=>{
-        if(id==="run") return;
         if(!records[id]||val>records[id].val)records[id]={val,date};
       });
     });
