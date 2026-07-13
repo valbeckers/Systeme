@@ -1751,7 +1751,9 @@ function App(){
       icon:obj.icon,
       value:label,
       color,
-      glow:color+"55"
+      glow:color+"55",
+      rankColor:rank.color,
+      rankGlow:rank.glow
     }),delay);
   }
 
@@ -1791,7 +1793,9 @@ function App(){
       icon:obj.icon,
       value:label,
       color,
-      glow:color+"55"
+      glow:color+"55",
+      rankColor:rank.color,
+      rankGlow:rank.glow
     }),delay);
   }
 
@@ -3948,9 +3952,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       )),
       h("div",{class:"rucont"},
         h("div",{style:congratsStyle},"FÉLICITATIONS !"),
-        h("div",{class:"ruevol"},"RANK UP !"),
-        h("div",{class:"rurank","data-r":rankUp.id},rankUp.id),
-        rankUp.level&&h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:3px"},"LEVEL "+rankUp.level),
+        h("div",{class:"ruevol",style:"color:"+rankUp.color+";text-shadow:0 0 14px "+rankUp.glow},"ÉVOLUTION DE RANG"),
+        h("div",{class:"rurank",style:"color:"+rankUp.color+";text-shadow:0 0 18px "+rankUp.glow,"data-r":"RANG "+rankUp.id},"RANG "+rankUp.id),
         h("button",{class:"rudis",onClick:()=>setRankUp(null)},"Continuer")
       )
     );
@@ -4008,18 +4011,18 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
   function DungeonRuptureUp(){
     if(!ruptureUp)return null;
-    const color=ruptureUp.rarityColor||"#f97316";
-    const glow=color+"88";
+    const rarityColor=ruptureUp.rarityColor||"#f97316";
+    const rankColor=rank.color||"#fbbf24";
+    const rankGlow=rank.glow||rankColor+"55";
+    const red="#ef4444";
     const particles=Array.from({length:52},(_,i)=>({id:i,left:Math.random()*100,delay:Math.random()*2.5,dur:1+Math.random()*1.8,size:2+Math.random()*5,accent:Math.random()>0.48}));
-    return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+glow},
-      h("div",{class:"ruparts"},particles.map(p=>h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?"#ffffff":color)+";box-shadow:0 0 10px "+glow+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"}))),
+    return h("div",{class:"ruov",style:"--rc:"+rankColor+";--rg:"+rankGlow},
+      h("div",{class:"ruparts"},particles.map(p=>h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?"#ffffff":rarityColor)+";box-shadow:0 0 10px "+rarityColor+"88;animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"}))),
       h("div",{class:"rucont"},
-        h("div",{class:"ruevol",style:"color:#ef4444;text-shadow:0 0 18px rgba(239,68,68,.65)"},"⚠️ RUPTURE DE DONJON"),
-        h("div",{class:"rulabel",style:"margin-top:12px;letter-spacing:3px;color:"+color},"BOSS "+String(ruptureUp.rarityLabel||"DE RUPTURE").toUpperCase()+" DÉTECTÉ"),
-        h("div",{class:"rurank",style:"font-size:clamp(34px,10vw,60px);letter-spacing:-1px;white-space:normal;max-width:350px;line-height:1.05;margin-top:10px","data-r":ruptureUp.name},ruptureUp.name),
-        h("div",{style:"margin-top:12px;max-width:320px;padding:11px;border-radius:10px;border:1px solid "+color+"55;background:"+color+"10;font-size:12px;color:var(--tx);line-height:1.45"},ruptureUp.objective),
-        h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:1.5px;color:var(--td);max-width:320px"},"Les salles restantes ont disparu. Nouveau délai : 24 h."),
-        h("button",{class:"rudis",onClick:()=>setRuptureUp(null)},"Affronter")
+        h("div",{class:"ruevol",style:"color:"+red+";text-shadow:0 0 18px rgba(239,68,68,.65)"},"⚠️ RUPTURE DE DONJON"),
+        h("div",{class:"rurank",style:"--rc:"+red+";--rg:rgba(239,68,68,.75);color:"+red+";text-shadow:0 0 20px rgba(239,68,68,.75);font-size:clamp(34px,10vw,60px);letter-spacing:-1px;white-space:normal;max-width:350px;line-height:1.05;margin-top:10px","data-r":"☠️ "+ruptureUp.name},"☠️ "+ruptureUp.name),
+        h("div",{class:"rulabel",style:"margin-top:12px;letter-spacing:3px;color:"+rarityColor},"BOSS "+String(ruptureUp.rarityLabel||"DE RUPTURE").toUpperCase()),
+        h("button",{class:"rudis",style:"--rc:#ef4444;--rg:rgba(239,68,68,.65)",onClick:()=>setRuptureUp(null)},"Continuer")
       )
     );
   }
@@ -4042,20 +4045,25 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       )),
       h("div",{class:"rucont"},
         h("div",{style:congratsStyle},"FÉLICITATIONS !"),
-        h("div",{class:"ruevol"},urgentUp.title||"QUÊTE URGENTE COMPLÉTÉE"),
-        h("div",{class:"rulabel",style:"margin-top:10px;font-size:clamp(18px,4.6vw,28px);letter-spacing:2px;line-height:1.3;color:"+(urgentUp.nameColor||color)+";max-width:320px"},urgentUp.name),
+        h("div",{class:"ruevol",style:"color:#ef4444;text-shadow:0 0 16px rgba(239,68,68,.7)"},"QUÊTE URGENTE COMPLÉTÉE !"),
+        h("div",{class:"rurank",style:"--rc:"+(urgentUp.nameColor||color)+";--rg:"+(urgentUp.nameColor||color)+"66;color:"+(urgentUp.nameColor||color)+";text-shadow:0 0 18px "+(urgentUp.nameColor||color)+"66;font-size:clamp(36px,10vw,62px);letter-spacing:-1px;white-space:normal;max-width:340px;line-height:1.05","data-r":urgentUp.name},urgentUp.name),
         h("div",{style:"margin-top:14px;display:flex;flex-direction:column;gap:6px;align-items:center"},
-          (urgentUp.rewards||[]).map((r,i)=>h("div",{key:i,style:"font-family:Orbitron,sans-serif;font-size:clamp(14px,3.8vw,20px);letter-spacing:1.5px;line-height:1.3;color:"+color+";text-transform:uppercase;text-align:center"},("+"+r.xp+" XP "+r.label).trim()))
+          (urgentUp.rewards||[]).map((r,i)=>{
+            const rewardColor=STAT_COLOR[r.stat]||color;
+            return h("div",{key:i,style:"font-family:Orbitron,sans-serif;font-size:clamp(14px,3.8vw,20px);letter-spacing:1.5px;line-height:1.3;color:"+rewardColor+";text-transform:uppercase;text-align:center"},("+"+r.xp+" XP "+r.label).trim());
+          })
         ),
-        h("button",{class:"rudis",onClick:()=>setUrgentUp(null)},"Continuer")
+        h("button",{class:"rudis",style:"--rc:#ef4444;--rg:rgba(239,68,68,.65)",onClick:()=>setUrgentUp(null)},"Continuer")
       )
     );
   }
 
   function RecordUp(){
     if(!recordUp)return null;
-    const color=recordUp.color||"#fbbf24";
-    const glow=recordUp.glow||"#fbbf2455";
+    const statColor=recordUp.color||"#fbbf24";
+    const statGlow=recordUp.glow||statColor+"55";
+    const color=recordUp.rankColor||rank.color||"#fbbf24";
+    const glow=recordUp.rankGlow||rank.glow||color+"55";
     const particles=Array.from({length:42},(_,i)=>({
       id:i,
       left:Math.random()*100,
@@ -4070,9 +4078,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       )),
       h("div",{class:"rucont"},
         h("div",{style:congratsStyle},"FÉLICITATIONS !"),
-        h("div",{class:"ruevol"},recordUp.title||"NOUVEAU RECORD"),
-        h("div",{class:"rurank",style:"font-size:clamp(48px,16vw,76px);letter-spacing:-1px;white-space:nowrap","data-r":recordUp.value},recordUp.value),
-        h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:3px;max-width:280px;line-height:1.35"},recordUp.name),
+        h("div",{class:"ruevol",style:"color:"+color+";text-shadow:0 0 14px "+glow},(recordUp.title||"NOUVEAU RECORD")+" !"),
+        h("div",{class:"rurank",style:"--rc:"+statColor+";--rg:"+statGlow+";color:"+statColor+";text-shadow:0 0 18px "+statGlow+";font-size:clamp(38px,11vw,64px);letter-spacing:-1px;white-space:normal;max-width:340px;line-height:1.05","data-r":recordUp.name},recordUp.name),
+        h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:3px;color:"+color+";font-size:clamp(18px,5vw,28px)"},recordUp.value),
         h("button",{class:"rudis",onClick:()=>setRecordUp(null)},"Continuer")
       )
     );
@@ -4304,14 +4312,14 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       )),
       h("div",{class:"rucont"},
         h("div",{style:congratsStyle},"FÉLICITATIONS !"),
-        h("div",{class:"ruevol"},"LEVEL UP !"),
+        h("div",{class:"ruevol",style:"color:"+rank.color+";text-shadow:0 0 14px "+rank.glow},"STAT LEVEL UP !"),
         h("div",{
           class:"rurank",
-          style:"font-size:clamp(38px,12vw,68px);letter-spacing:-1px;white-space:normal;max-width:350px;line-height:1.05",
+          style:"--rc:"+color+";--rg:"+glow+";color:"+color+";text-shadow:0 0 18px "+glow+";font-size:clamp(38px,12vw,68px);letter-spacing:-1px;white-space:normal;max-width:350px;line-height:1.05",
           "data-r":label
         },label),
-        h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:3px;color:"+color},"NIVEAU "+statDecadeUp.level),
-        h("button",{class:"rudis",onClick:()=>setStatDecadeUp(null)},"Continuer")
+        h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:3px;color:"+rank.color},"NIVEAU "+statDecadeUp.level),
+        h("button",{class:"rudis",style:"--rc:"+rank.color+";--rg:"+rank.glow,onClick:()=>setStatDecadeUp(null)},"Continuer")
       )
     );
   }
@@ -4334,9 +4342,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       )),
       h("div",{class:"rucont"},
         h("div",{style:congratsStyle},"FÉLICITATIONS !"),
-        h("div",{class:"ruevol"},"LEVEL UP !"),
-        h("div",{class:"rurank","data-r":String(levelUp.level)},levelUp.level),
-        h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:3px"},"NIVEAU GLOBAL"),
+        h("div",{class:"ruevol",style:"color:"+color+";text-shadow:0 0 14px "+glow},"LEVEL UP !"),
+        h("div",{class:"rurank",style:"color:"+color+";text-shadow:0 0 18px "+glow,"data-r":"NIVEAU "+levelUp.level},"NIVEAU "+levelUp.level),
         h("button",{class:"rudis",onClick:()=>setLevelUp(null)},"Continuer")
       )
     );
