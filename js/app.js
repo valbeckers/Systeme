@@ -1,4 +1,3 @@
-
 const { h, render, Fragment } = preact;
 const { useState, useEffect, useRef } = preactHooks;
 
@@ -3224,7 +3223,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       bonusObjs.length>0 && remainingBonus.length===0
         ? {key:"bonus",text:"Toutes les quêtes bonus ont été complétées.",color:BONUS_BADGE_COLOR}
         : null,
-      completedSq
+      completedSq && !activeSq
         ? {
             key:"sq",
             prefix:"La Quête urgente ",
@@ -4665,64 +4664,4 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
   return h(Fragment,null,
     h("div",{id:"app"},
-      h("div",{class:"particles"},parts.map(p=>h("div",{key:p.id,class:"particle",style:"width:"+p.s+"px;height:"+p.s+"px;left:"+p.l+"%;bottom:-10px;background:"+rank.color+";box-shadow:0 0 4px "+rank.glow+";animation-duration:"+p.dur+"s;animation-delay:"+p.del+"s"}))),
-      h("div",{class:"hdr-wrap"},
-        h("div",{class:"hdr"},
-          h("div",{class:"hdr-top",style:"position:relative"},
-            h("div",null,
-              h("div",{class:"pname"},"VAL,"),
-              h("div",{style:"margin-top:6px;width:min(340px,calc(100vw - 112px));min-height:26px;font-size:9.5px;line-height:1.3;color:"+mantraColor+";font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-transform:uppercase;display:block;opacity:.96;white-space:normal;overflow:hidden"},dailyMantra)
-            ),
-            prestige>0&&h("div",{class:"prestige-badge"},"\u269B\uFE0F Ascension "+ROMAN[prestige-1]),
-            h("button",{class:"gbtn",style:"display:flex;align-items:center;justify-content:center",onClick:()=>setShowSet(true)},"⚙️")
-          )
-        )
-      ),
-      h("div",{class:"scroll-area",ref:scrollRef},
-        h("div",{style:"height:26px;flex:0 0 auto"}),
-        tab==="home"    &&h(Home,null),
-        tab==="quests"  &&h(Quests,null),
-        tab==="stats"   &&h(Stats,null),
-        tab==="history" && History(),
-        tab==="codex"   && h(Codex,null),
-        floats.map(f=>h("div",{key:f.id,class:"xpfloat",style:"top:"+(f.y||"40%")+(typeof f.y==="number"?"px":"")+";left:50%;transform:translateX(-50%);white-space:pre-line;text-align:center"},f.txt))
-      ),
-      h("nav",{class:"nav"},
-        h("button",{class:"nbtn "+(tab==="home"?"on":""),onClick:()=>switchTab("home")},
-          h("span",null,"Accueil")
-        ),
-        h("button",{class:"nbtn "+(tab==="quests"?"on":""),onClick:()=>switchTab("quests")},
-          h("span",null,"Quêtes")
-        ),
-        h("button",{class:"nbtn "+(tab==="stats"?"on":""),onClick:()=>switchTab("stats")},
-          h("span",null,"Stats")
-        ),
-        h("button",{class:"nbtn "+(tab==="history"?"on":""),onClick:()=>switchTab("history")},
-          h("span",null,"Historique")
-        ),
-        h("button",{class:"nbtn "+(tab==="codex"?"on":""),onClick:()=>switchTab("codex")},
-          h("span",null,"Codex")
-        )
-      ),
-      h(Settings,null),
-      h(RankUp,null),
-      h(LevelUp,null),
-      h(StatDecadeUp,null),
-      h(StreakUp,null),
-      h(RecordUp,null),
-      h(DungeonUp,null),
-      h(DungeonRuptureUp,null),
-      h(UrgentUp,null),
-      h(DebtUp,null),
-      h(ConfirmDebtModal,null),
-      h(ConfirmDungeonChoice,null),
-      h(ConfirmReroll,null),
-      h(ImportModal,null),
-      h(ExportCopiedModal,null),
-      h(ExportManualModal,null),
-      h(PrestigeUp,null),
-    )
-  );
-}
-
-render(h(App,null),document.getElementById("app"));
+      h("div",{class:"particles"},parts.map(p=>h("div",{key:p.id,class:"particle",style:"width:"+p.s+"px;height:"+p.s+"px;left:"+p.l+"%;bottom:-10px;bac
