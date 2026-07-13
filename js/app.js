@@ -1310,6 +1310,7 @@ function buildState(){
 // ─── SYSTÈME DE DETTE DE QUÊTE ───────────────────────────────────────────
 const DEBT_ELIGIBLE_IDS = new Set(["push","abs","squats","calves","reading"]);
 const MAX_DEBTS_PER_WEEK = 3;
+const RUN_RECORD_RESET_DAY = "2026-07-13";
 function isDebtEligibleQuest(obj){
   return !!(obj && obj.daily && !obj.optional && !obj.binary && DEBT_ELIGIBLE_IDS.has(obj.id));
 }
@@ -1734,6 +1735,7 @@ function App(){
 
     let best=0;
     Object.entries(state.dailyLog||{}).forEach(([day,log])=>{
+      if(obj.id==="run" && day<RUN_RECORD_RESET_DAY) return;
       const v=Number(log&&log[obj.id]);
       if(Number.isFinite(v) && v>best) best=v;
     });
@@ -1754,7 +1756,7 @@ function App(){
   }
 
   function maybeTriggerWeeklyQuestRecord(obj,prevVal,nextVal,delay=1450){
-    if(!obj || obj.id==="run" || obj.binary || obj.weekly) return;
+    if(!obj || obj.binary || obj.weekly) return;
     const prevNumber=Number(prevVal)||0;
     const nextNumber=Number(nextVal)||0;
     if(nextNumber<=prevNumber) return;
@@ -1764,6 +1766,7 @@ function App(){
     const previousWeekTotals={};
 
     Object.entries(state.dailyLog||{}).forEach(([day,log])=>{
+      if(obj.id==="run" && day<RUN_RECORD_RESET_DAY) return;
       const v=Number(log&&log[obj.id]);
       if(!Number.isFinite(v) || v<=0) return;
       const weekKey=wkStr(new Date(day));
@@ -3642,6 +3645,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const records={};
     Object.entries(state.dailyLog).forEach(([date,log])=>{
       Object.entries(log).forEach(([id,val])=>{
+        if(id==="run" && date<RUN_RECORD_RESET_DAY) return;
         if(!records[id]||val>records[id].val)records[id]={val,date};
       });
     });
@@ -3652,7 +3656,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     Object.entries(state.dailyLog).forEach(([date,log])=>{
       const key=wkStr(new Date(date));
       Object.entries(log).forEach(([id,val])=>{
-        if(id==="run") return;
+        if(id==="run" && date<RUN_RECORD_RESET_DAY) return;
         const n=Number(val)||0;
         if(n<=0) return;
         weeklyRecordTotals[id]=weeklyRecordTotals[id]||{};
