@@ -1243,7 +1243,8 @@ function resetInvalidRunningRecord(dailyLog){
     // Ancienne valeur erronée qui alimentait le record journalier Running.
     if(Number.isFinite(run) && (
       Math.abs(run-15.1)<0.001 ||
-      Math.abs(run-15.09)<0.001
+      Math.abs(run-15.09)<0.001 ||
+      Math.abs(run-10.12)<0.001
     )) delete row.run;
     out[day]=row;
   }
