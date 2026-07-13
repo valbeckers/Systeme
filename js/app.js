@@ -1293,6 +1293,16 @@ function buildState(){
     // Pour une quête active, expiresAt = prochain 7h après startedAt
     return {...q, expiresAt: next7AM(q.startedAt||Date.now())};
   });
+  if(out.activeDungeon && !out.activeDungeon.completedAt){
+    const ad=out.activeDungeon;
+    const start=(ad.ruptureBoss&&ad.ruptureBoss.startedAt)||ad.rupturedAt||ad.startedAt||Date.now();
+    const expiresAt=next7AM(start);
+    out.activeDungeon={
+      ...ad,
+      expiresAt,
+      ruptureBoss:ad.ruptureBoss?{...ad.ruptureBoss,expiresAt}:ad.ruptureBoss
+    };
+  }
   return out;
 }
 
@@ -1823,9 +1833,9 @@ function App(){
       return;
     }
 
-    // Le nouveau délai commence au moment où l’application détecte et révèle la rupture.
+    // Le Boss de Rupture se referme au prochain passage de 7 h, comme les quêtes urgentes et les donjons.
     const t=Date.now();
-    const ruptureBoss={...boss,startedAt:t,expiresAt:t+86400000};
+    const ruptureBoss={...boss,startedAt:t,expiresAt:next7AM(t)};
     setState(s=>{
       const cur=s.activeDungeon;
       if(!cur || cur.ruptureBoss || Date.now()<(cur.expiresAt||0)) return s;
@@ -2442,7 +2452,7 @@ function App(){
       const dungeon=DUNGEONS.find(d=>d.id===id);
       if(!dungeon) return s;
       runs[week]=(runs[week]||0)+1;
-      return {...s,activeDungeon:{id,runId:"dg_"+t,startedAt:t,expiresAt:t+86400000,completedRooms:[],completedAt:null},dungeonRunDay:day,dungeonRunsByWeek:runs,lastActiveDay:day};
+      return {...s,activeDungeon:{id,runId:"dg_"+t,startedAt:t,expiresAt:next7AM(t),completedRooms:[],completedAt:null},dungeonRunDay:day,dungeonRunsByWeek:runs,lastActiveDay:day};
     });
   }
 
