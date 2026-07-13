@@ -1,3 +1,4 @@
+
 const { h, render, Fragment } = preact;
 const { useState, useEffect, useRef } = preactHooks;
 
@@ -4272,10 +4273,13 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       )),
       h("div",{class:"rucont"},
         h("div",{style:congratsStyle},"FÉLICITATIONS !"),
-        h("div",{class:"rulabel",style:"font-size:clamp(18px,5vw,30px);line-height:1.35;letter-spacing:2px;max-width:340px"},
-          h("span",{style:"color:"+color+";text-shadow:0 0 12px "+glow},label),
-          " passe niveau "+statDecadeUp.level
-        ),
+        h("div",{class:"ruevol"},"LEVEL UP !"),
+        h("div",{
+          class:"rurank",
+          style:"font-size:clamp(38px,12vw,68px);letter-spacing:-1px;white-space:normal;max-width:350px;line-height:1.05",
+          "data-r":label
+        },label),
+        h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:3px;color:"+color},"NIVEAU "+statDecadeUp.level),
         h("button",{class:"rudis",onClick:()=>setStatDecadeUp(null)},"Continuer")
       )
     );
