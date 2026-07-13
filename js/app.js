@@ -1324,7 +1324,7 @@ function App(){
         const {tpl,pickedStat,cycleReset}=result;
         const sq={...tpl,sqid:"sq_"+now,progress:0,startedAt:now,expiresAt:next7AM(now),completedAt:null};
         const newCycle = cycleReset ? [pickedStat] : [...(base.sqStatCycle||[]),pickedStat];
-        return {...base,specialQuests:[...sqs.filter(q=>q.completedAt),sq],sqStatCycle:newCycle,sqCooldownUntil:next7AM(now)};
+        return {...base,specialQuests:[sq],sqStatCycle:newCycle,sqCooldownUntil:next7AM(now)};
       }
     }
     return base;
@@ -1907,7 +1907,7 @@ function App(){
       const t = Date.now();
       const sq={...tpl,sqid:"sq_"+t,progress:0,startedAt:t,expiresAt:next7AM(t),completedAt:null};
       const newCycle = cycleReset ? [pickedStat] : [...(s.sqStatCycle||[]),pickedStat];
-      return {...s,specialQuests:[...sqsNow.filter(q=>q.completedAt),sq],sqStatCycle:newCycle,sqCooldownUntil:next7AM(t)};
+      return {...s,specialQuests:[sq],sqStatCycle:newCycle,sqCooldownUntil:next7AM(t)};
     });
   },[sqReady]);
 
@@ -3223,7 +3223,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       bonusObjs.length>0 && remainingBonus.length===0
         ? {key:"bonus",text:"Toutes les quêtes bonus ont été complétées.",color:BONUS_BADGE_COLOR}
         : null,
-      completedSq && !activeSq
+      completedSq
         ? {
             key:"sq",
             prefix:"La Quête urgente ",
@@ -4559,163 +4559,4 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const entries=Object.entries(totals).filter(([stat,xp])=>STATS.includes(stat)&&xp>0);
       if(entries.length===0) return fallback || item.stat || "Discipline";
       entries.sort((a,b)=>b[1]-a[1]);
-      if(entries.length>1 && entries[0][1]===entries[1][1]) return fallback || item.stat || entries[0][0];
-      return entries[0][0];
-    }
-
-    function groupByDominantStat(list,render,fallbackStatGetter){
-      const groups=STATS.map(stat=>({stat,list:[]}));
-      list.forEach(item=>{
-        const fallback = fallbackStatGetter ? fallbackStatGetter(item) : item.stat;
-        const stat = dominantStat(item,fallback);
-        const group = groups.find(g=>g.stat===stat) || groups[groups.length-1];
-        group.list.push(item);
-      });
-      return groups.filter(g=>g.list.length>0).map(group=>h("div",{key:group.stat,style:"margin-bottom:13px"},
-        h("div",{style:"font-size:11px;color:"+(STAT_COLOR[group.stat]||"var(--rc)")+";font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin:2px 0 7px"},statLabel(group.stat)),
-        group.list.map(render)
-      ));
-    }
-
-    const required = objs.filter(o=>o.daily&&!o.optional);
-    const weeklyCodex = objs.filter(o=>o.weekly);
-    const bonus = objs.filter(o=>o.optional&&!o.weekly&&!o.bonusHidden);
-    const hiddenBonus = objs.filter(o=>o.optional&&!o.weekly&&o.bonusHidden);
-    const specialList = STATS.flatMap(stat=>(SP[stat]||[]).map(q=>({...q,stat:q.stat||stat})));
-    const eventList = [
-      ...EVENT_BONUSES.filter(e=>!e.disabled).map(e=>({...e,type:"bonus"})),
-      ...EVENT_INVITES.map(e=>({...e,type:"invite"}))
-    ];
-
-    return h("div",{class:"tab"},
-      h("div",{class:"card"},
-        h("div",{class:"ctitle"},"Codex"),
-        h("div",{style:"font-size:12px;color:var(--td);line-height:1.45"},"Catalogue complet des quêtes existantes. Les objectifs des quêtes quotidiennes et hebdomadaires sont calculés au rang actuel.")
-      ),
-      h(Section,{id:"obl",title:"Quêtes journalières",count:required.length},groupByDominantStat(required,renderQuest)),
-      h(Section,{id:"bonus",title:"Quêtes bonus",count:bonus.length+hiddenBonus.length},
-        h(Fragment,null,
-          groupByDominantStat(bonus,renderQuest),
-          hiddenBonus.length>0&&h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin:10px 0 8px"},"BONUS MASQUÉS / CONTEXTUELS"),
-          hiddenBonus.length>0&&groupByDominantStat(hiddenBonus,renderQuest)
-        )
-      ),
-      h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial)),
-      h(Section,{id:"dj",title:"Donjons",count:DUNGEONS.length},
-        h(Fragment,null,
-          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Après 24 h, un donjon inachevé subit une Rupture : les salles déjà validées et leurs XP sont conservés, toutes les étapes restantes sont remplacées par un Boss de Rupture tiré selon sa rareté. Ce boss dispose de 24 h et ne peut pas provoquer une seconde rupture."),
-          groupByDominantStat(DUNGEONS,renderDungeonCodex,dg=>dg.stat)
-        )
-      ),
-      h(Section,{id:"ev",title:"Événements",count:eventList.length},
-        h(Fragment,null,
-          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Logique quotidienne : journée précédente complète → Élan choisi selon les XP gagnés hier, avec léger bonus aux stats faibles ; journée précédente incomplète → invitation liée aux quêtes manquées ou à la reprise."),
-          eventList.map(renderEventCodex)
-        )
-      ),
-      h(Section,{id:"mm",title:"Mode mental",count:MENTAL_MODES.length},
-        h(Fragment,null,
-          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Disponible sur l’Accueil après 12h avec un vrai tirage aléatoire de 33 % par jour. Le résultat du tirage est mémorisé pour la journée afin d’éviter une apparition/disparition à chaque refresh. 1 validation maximum par jour. Pas de donjon ni de quête urgente : seulement une contre-mesure SMART liée à l’état mental choisi."),
-          MENTAL_MODES.map(renderMentalModeCodex)
-        )
-      ),
-      h(Section,{id:"debt",title:"Système de dette",count:11},
-        h("div",{style:cardStyle},
-          h("div",{style:"font-size:11px;color:var(--tx);font-family:Orbitron,sans-serif;line-height:1.7"},
-            [
-              "Une seule quête obligatoire peut être reportée.",
-              "Seule la quantité manquante devient une dette.",
-              "Une seule dette peut être active.",
-              "Maximum trois dettes par semaine.",
-              "La dette doit être remboursée le lendemain.",
-              "Une dette ne peut jamais être reportée.",
-              "Le streak est gelé jusqu’au remboursement.",
-              "La dette est remplie avant l’objectif du jour.",
-              "Les XP sont conservés, mais sans bonus de dépassement.",
-              "La dette ne compte pas comme record.",
-              "Les quêtes non compensables ne peuvent pas être reportées."
-            ].map((rule,i)=>h("div",{key:i,style:"margin-bottom:5px"},"• "+rule))
-          ),
-          h("div",{style:"font-size:10px;color:var(--td);margin-top:9px;line-height:1.5"},"Quêtes actuellement compensables : Pompes, Abdos, Squats, Mollets et Lecture.")
-        )
-      ),
-    );
-  }
-  // ─── RENDU PRINCIPAL ──────────────────────────────────────────────────
-
-  const parts=Array.from({length:15},(_,i)=>({id:i,s:Math.random()*3+1,l:Math.random()*100,dur:Math.random()*10+8,del:Math.random()*10}));
-
-  const DAILY_MANTRAS = [
-    "Accepte ce que tu ne peux contrôler.",
-    "Mets de l'ordre dans ce que tu maîtrises.",
-    "Fais toujours de ton mieux.",
-    "N'en fais jamais une histoire personnelle.",
-    "Observe, vérifie, puis agis.",
-    "Agis pour toi-même, pas pour la reconnaissance d'autrui.",
-    "Concentre-toi sur l'essentiel.",
-    "Aie toujours une parole impeccable.",
-    "Tiens-toi droit.",
-    "Assume tes responsabilités.",
-    "Apprécie les choses simples de la vie."
-  ];
-  const mantraDayIndex = Math.floor(new Date(today).getTime()/86400000);
-  const dailyMantra = DAILY_MANTRAS[Math.abs(mantraDayIndex)%DAILY_MANTRAS.length];
-  const mantraColor = STAT_COLOR.Force || "#fb923c";
-
-  return h(Fragment,null,
-    h("div",{id:"app"},
-      h("div",{class:"particles"},parts.map(p=>h("div",{key:p.id,class:"particle",style:"width:"+p.s+"px;height:"+p.s+"px;left:"+p.l+"%;bottom:-10px;background:"+rank.color+";box-shadow:0 0 4px "+rank.glow+";animation-duration:"+p.dur+"s;animation-delay:"+p.del+"s"}))),
-      h("div",{class:"hdr-wrap"},
-        h("div",{class:"hdr"},
-          h("div",{class:"hdr-top",style:"position:relative"},
-            h("div",null,
-              h("div",{class:"pname"},"VAL,"),
-              h("div",{style:"margin-top:6px;width:min(340px,calc(100vw - 112px));min-height:26px;font-size:9.5px;line-height:1.3;color:"+mantraColor+";font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-transform:uppercase;display:block;opacity:.96;white-space:normal;overflow:hidden"},dailyMantra)
-            ),
-            prestige>0&&h("div",{class:"prestige-badge"},"\u269B\uFE0F Ascension "+ROMAN[prestige-1]),
-            h("button",{class:"gbtn",style:"display:flex;align-items:center;justify-content:center",onClick:()=>setShowSet(true)},"⚙️")
-          )
-        )
-      ),
-      h("div",{class:"scroll-area",ref:scrollRef},
-        h("div",{style:"height:26px;flex:0 0 auto"}),
-        tab==="home"    &&h(Home,null),
-        tab==="quests"  &&h(Quests,null),
-        tab==="stats"   &&h(Stats,null),
-        tab==="history" && History(),
-        tab==="codex"   && h(Codex,null),
-        floats.map(f=>h("div",{key:f.id,class:"xpfloat",style:"top:"+(f.y||"40%")+(typeof f.y==="number"?"px":"")+";left:50%;transform:translateX(-50%);white-space:pre-line;text-align:center"},f.txt))
-      ),
-      h("nav",{class:"nav"},
-        h("button",{class:"nbtn "+(tab==="home"?"on":""),onClick:()=>switchTab("home")},
-          h("span",null,"Accueil")
-        ),
-        h("button",{class:"nbtn "+(tab==="quests"?"on":""),onClick:()=>switchTab("quests")},
-          h("span",null,"Quêtes")
-        ),
-        h("button",{class:"nbtn "+(tab==="stats"?"on":""),onClick:()=>switchTab("stats")},
-          h("span",null,"Stats")
-        ),
-        h("button",{class:"nbtn "+(tab==="history"?"on":""),onClick:()=>switchTab("history")},
-          h("span",null,"Historique")
-        ),
-        h("button",{class:"nbtn "+(tab==="codex"?"on":""),onClick:()=>switchTab("codex")},
-          h("span",null,"Codex")
-        )
-      ),
-      h(Settings,null),
-      h(RankUp,null),
-      h(LevelUp,null),
-      h(StatDecadeUp,null),
-      h(StreakUp,null),
-      h(RecordUp,null),
-      h(DungeonUp,null),
-      h(DungeonRuptureUp,null),
-      h(UrgentUp,null),
-      h(DebtUp,null),
-      h(ConfirmDebtModal,null),
-      h(ConfirmDungeonChoice,null),
-      h(ConfirmReroll,null),
-      h(ImportModal,null),
-      h(ExportCopiedModal,null),
      
