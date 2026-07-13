@@ -1100,6 +1100,8 @@ function cleanSystemState(raw){
     debtUsesByWeek:data.debtUsesByWeek||{},
     debtResolvedDays:data.debtResolvedDays||{},
     enduranceChoiceByDay:cleanEnduranceChoiceByDay(data.enduranceChoiceByDay),
+    dailyCompletionAnimDay:data.dailyCompletionAnimDay||null,
+    bonusCompletionAnimDay:data.bonusCompletionAnimDay||null,
     completedSqLog,
     sqStatCycle
   };
@@ -1217,6 +1219,8 @@ const IMPORTED = {
   completedSqLog:[],
   sqStatCycle:[],
   enduranceChoiceByDay:{},
+  dailyCompletionAnimDay:null,
+  bonusCompletionAnimDay:null,
   objectives:DEFS,
 };
 
@@ -1367,6 +1371,8 @@ function App(){
   const [debtUp,setDebtUp] = useState(null);
   const [confirmDebt,setConfirmDebt] = useState(null);
   const [streakUp,setStreakUp] = useState(null);
+  const [completionUp,setCompletionUp] = useState(null);
+  const [completionQueue,setCompletionQueue] = useState([]);
   const [recordUp,setRecordUp] = useState(null);
   const [dungeonUp,setDungeonUp] = useState(null);
   const [ruptureUp,setRuptureUp] = useState(null);
@@ -1410,6 +1416,13 @@ function App(){
     setStatLevelQueue(rest);
     setStatDecadeUp(next);
   },[statDecadeUp,statLevelQueue]);
+
+  useEffect(()=>{
+    if(completionUp || !completionQueue.length) return;
+    const [next,...rest]=completionQueue;
+    setCompletionQueue(rest);
+    setCompletionUp(next);
+  },[completionUp,completionQueue]);
 
 
 
@@ -1593,6 +1606,14 @@ function App(){
     if(state.questDebt&&state.questDebt.status==="active") return false;
     return reqDailyObjs.every(o=>(tLog[o.id]||0)>=getEffectiveTarget(o.id));
   })();
+
+  const bonusQuestObjsForCompletion = dailyBonusQuestObjects();
+  const allBonusDone = bonusQuestObjsForCompletion.length>0 && bonusQuestObjsForCompletion.every(o=>{
+    if(o.isEnduranceChoice) return false;
+    const target=(o.target&&!o.binary)?o.target:getEffectiveTarget(o.id);
+    const value=tLog[o.id]||0;
+    return o.binary ? value>=1 : value>=target;
+  });
 
   // 8. Streak : on remonte à partir d'hier (aujourd'hui peut être incomplet sans casser le streak)
   const computedStreak = (()=>{
@@ -1865,6 +1886,25 @@ function App(){
       : s
     );
   },[today,state.questDebt?.status,state.questDebt?.dueDay]);
+
+  // Animations de complétion des groupes de quêtes — une seule fois par jour.
+  useEffect(()=>{
+    if(!allDailyDone || state.dailyCompletionAnimDay===today) return;
+    setState(s=>s.dailyCompletionAnimDay===today?s:{...s,dailyCompletionAnimDay:today});
+    setCompletionQueue(q=>[...q,{
+      type:"daily",
+      text:"Toutes les quêtes journalières ont été complétées"
+    }]);
+  },[allDailyDone,today,state.dailyCompletionAnimDay]);
+
+  useEffect(()=>{
+    if(!allBonusDone || state.bonusCompletionAnimDay===today) return;
+    setState(s=>s.bonusCompletionAnimDay===today?s:{...s,bonusCompletionAnimDay:today});
+    setCompletionQueue(q=>[...q,{
+      type:"bonus",
+      text:"Toutes les quêtes bonus ont été complétées"
+    }]);
+  },[allBonusDone,today,state.bonusCompletionAnimDay]);
 
   // Bonus streak + increment streak au moment ou toutes les quetes sont faites
   useEffect(()=>{
@@ -3959,6 +3999,30 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
+  // ─── ANIMATION COMPLÉTION DES QUÊTES ──────────────────────────────────
+
+  function CompletionUp(){
+    if(!completionUp)return null;
+    const color=rank.color||"#fbbf24";
+    const glow=rank.glow||color+"55";
+    const green="#4ade80";
+    const particles=Array.from({length:40},(_,i)=>({
+      id:i,left:Math.random()*100,delay:Math.random()*2.5,
+      dur:1.1+Math.random()*1.8,size:2+Math.random()*4,
+      accent:Math.random()>0.55
+    }));
+    return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+glow},
+      h("div",{class:"ruparts"},particles.map(p=>
+        h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?"rgba(255,255,255,.75)":green)+";box-shadow:0 0 9px rgba(74,222,128,.55);animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
+      )),
+      h("div",{class:"rucont"},
+        h("div",{style:congratsStyle},"FÉLICITATIONS !"),
+        h("div",{class:"rulabel",style:"font-size:clamp(20px,5.5vw,32px);line-height:1.35;letter-spacing:2px;max-width:350px;color:"+green+";text-shadow:0 0 14px rgba(74,222,128,.55)"},completionUp.text),
+        h("button",{class:"rudis",onClick:()=>setCompletionUp(null)},"Continuer")
+      )
+    );
+  }
+
   // ─── ANIMATION STREAK BONUS ───────────────────────────────────────────
 
   function StreakUp(){
@@ -4749,6 +4813,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(RankUp,null),
       h(LevelUp,null),
       h(StatDecadeUp,null),
+      h(CompletionUp,null),
       h(StreakUp,null),
       h(RecordUp,null),
       h(DungeonUp,null),
