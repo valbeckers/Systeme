@@ -1,3 +1,4 @@
+
 const { h, render, Fragment } = preact;
 const { useState, useEffect, useRef } = preactHooks;
 
@@ -59,10 +60,10 @@ const DEFS = [
   {id:"water",  name:"Hydratation",     unit:"verre", xpPer:10,  daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDCA7",               base:10, baseHistory:[{until:"2026-04-29",base:8}]},
   {id:"sleep",  name:"Dormir 8h",   unit:"nuit",  xpPer:0,   daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDECF\uFE0F",         base:1,  binary:true, binaryXp:150},
     // ─── FORCE ────────────────────────────────────────────────────────────
-  {id:"push",   name:"Pompes",          unit:"rep",   xpPer:3,   daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDBE",               base:30},
-  {id:"abs",    name:"Abdos",      unit:"rep",   xpPer:1.5, daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDCE\uD83C\uDFFB\u200D\u2642\uFE0F", base:60},
-  {id:"squats", name:"Squats",          unit:"rep",   xpPer:3,   daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDBF",               base:15, stat2:"Agilite", xpPer2:3},
-  {id:"calves", name:"Mollets",unit:"rep", xpPer:1.5, daily:true, weekly:false,optional:false,stat:"Force",         icon:"\uD83E\uDDBF",               base:30, stat2:"Agilite", xpPer2:1},
+  {id:"push",   name:"Pecs & Triceps", unit:"rep", xpPer:3, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦾", base:30},
+  {id:"abs",    name:"Abdominaux", unit:"rep", xpPer:1.5, daily:true, weekly:false,optional:false,stat:"Force", icon:"🧱", base:60},
+  {id:"squats", name:"Jambes", unit:"rep", xpPer:3, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦿", base:15, stat2:"Agilite", xpPer2:3},
+  {id:"calves", name:"Mollets",unit:"rep", xpPer:1.5, daily:false, weekly:false,optional:false,legacyRotation:true,stat:"Force", icon:"🦵🏻", base:30, stat2:"Agilite", xpPer2:1},
   {id:"grips",  name:"Hand grips",      unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Force",         icon:"\u270A\uD83C\uDFFB",         base:10, fixedBase:true},
   // ─── ESPRIT ───────────────────────────────────────────────────────────
   {id:"reading",name:"Lecture",unit:"min",xpPer:15,daily:true,weekly:false,optional:false,stat:"Esprit",icon:"📚",base:20,startDate:"2026-05-21"},
@@ -90,9 +91,6 @@ const SP = {
   Force:[
     {id:"sp_pull",    name:"Tractions",        icon:"\u270A\uD83C\uDFFB",                                   unit:"rep",  target:30,  xp:500, days:1, desc:"30 tractions"},
     {id:"sp_dips",    name:"Dips",            icon:"\uD83D\uDC4A\uD83C\uDFFB",                             unit:"rep",  target:100, xp:500, days:1, desc:"100 dips"},
-    {id:"sp_lunge",   name:"Fentes",          icon:"\uD83E\uDDBF",                                         unit:"rep",  target:100, xp:500, xp2:250, stat2:"Endurance", days:1, desc:"100 fentes marchées"},
-    {id:"sp_plank",   name:"Gainage",    icon:"\uD83E\uDDCE\uD83C\uDFFB\u200D\u2642\uFE0F",           unit:"min",  target:10,  xp:500, xp2:250, stat2:"Endurance", days:1, desc:"10 min de gainage"},
-    {id:"sp_deadhang",name:"Dead hang",  icon:"\u270A\uD83C\uDFFB",                                   unit:"min",  target:10,  xp:500, xp2:250, stat2:"Endurance", days:1, desc:"10 min de dead hang"},
     {id:"sp_wallsit", name:"Wall sit",     icon:"\uD83E\uDE91",                                         unit:"min",  target:10,  xp:1000, xp2:500, stat2:"Endurance", days:1, desc:"10 min de wall sit"},
   ],
   Esprit:[
@@ -1099,6 +1097,7 @@ function cleanSystemState(raw){
     debtUsesByWeek:data.debtUsesByWeek||{},
     debtResolvedDays:data.debtResolvedDays||{},
     enduranceChoiceByDay:cleanEnduranceChoiceByDay(data.enduranceChoiceByDay),
+    exerciseRotationByDay:cleanExerciseRotationByDay(data.exerciseRotationByDay),
     dailyCompletionAnimDay:data.dailyCompletionAnimDay||null,
     bonusCompletionAnimDay:data.bonusCompletionAnimDay||null,
     completedSqLog,
@@ -1218,6 +1217,7 @@ const IMPORTED = {
   completedSqLog:[],
   sqStatCycle:[],
   enduranceChoiceByDay:{},
+  exerciseRotationByDay:{},
   dailyCompletionAnimDay:null,
   bonusCompletionAnimDay:null,
   objectives:DEFS,
@@ -1276,6 +1276,7 @@ function buildState(){
     eventHistory:saved.eventHistory||IMPORTED.eventHistory||[],
     mentalMode:saved.mentalMode||IMPORTED.mentalMode||null,
     enduranceChoiceByDay:saved.enduranceChoiceByDay||{},
+    exerciseRotationByDay:saved.exerciseRotationByDay||{},
     completedSqLog:saved.completedSqLog||[],
     sqStatCycle:saved.sqStatCycle||[],
     stats:saved.stats||IMPORTED.stats,
@@ -1314,6 +1315,94 @@ function buildState(){
 const DEBT_ELIGIBLE_IDS = new Set(["push","abs","squats","calves","reading"]);
 const MAX_DEBTS_PER_WEEK = 3;
 const RUN_RECORD_RESET_DAY = "2026-07-13";
+
+const EXERCISE_ROTATIONS = {
+  push:[
+    {id:"pushups",label:"Pompes",icon:"💪🏼"},
+    {id:"dips",label:"Dips",icon:"💪🏼"},
+  ],
+  abs:[
+    {id:"crunches",label:"Crunches",icon:"🧎🏻"},
+    {id:"leg_raises",label:"Levées de jambes",icon:"🦵🏻"},
+    {id:"plank",label:"Gainage",icon:"⏱️"},
+    {id:"side_plank",label:"Gainage obliques",icon:"↔️"},
+    {id:"reverse_plank",label:"Gainage inversé",icon:"↩️"},
+  ],
+  legs:[
+    {id:"squats",label:"Squats",icon:"🦵🏻"},
+    {id:"calves",label:"Mollets",icon:"🦵🏻"},
+    {id:"lunges",label:"Fentes",icon:"🦵🏻"},
+  ],
+};
+function weightedExercisePick(options,lastId){
+  if(!Array.isArray(options)||!options.length) return null;
+  if(!lastId || !options.some(o=>o.id===lastId)) return options[Math.floor(Math.random()*options.length)];
+  const n=options.length;
+  const repeatWeight=n===2?.30:n===3?.20:.10;
+  const otherWeight=(1-repeatWeight)/(n-1);
+  let roll=Math.random();
+  for(const option of options){
+    roll-=option.id===lastId?repeatWeight:otherWeight;
+    if(roll<=0) return option;
+  }
+  return options[options.length-1];
+}
+function previousRotationChoice(history,day,family){
+  const days=Object.keys(history||{}).filter(d=>d<day).sort().reverse();
+  for(const d of days){
+    const id=history[d]&&history[d][family];
+    if(id) return id;
+  }
+  return null;
+}
+function ensureExerciseRotationForDay(state,day){
+  const history={...(state.exerciseRotationByDay||{})};
+  if(history[day]) return state;
+  history[day]={};
+  for(const [family,options] of Object.entries(EXERCISE_ROTATIONS)){
+    const last=previousRotationChoice(history,day,family);
+    const picked=weightedExercisePick(options,last);
+    history[day][family]=picked&&picked.id;
+  }
+  return {...state,exerciseRotationByDay:history};
+}
+function cleanExerciseRotationByDay(raw){
+  const out={};
+  Object.entries(raw||{}).forEach(([day,row])=>{
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(day)||!row||typeof row!=="object") return;
+    const clean={};
+    Object.entries(EXERCISE_ROTATIONS).forEach(([family,options])=>{
+      if(options.some(o=>o.id===row[family])) clean[family]=row[family];
+    });
+    if(Object.keys(clean).length) out[day]=clean;
+  });
+  return out;
+}
+function rotatedQuestObjects(baseObjs,rotation,stats){
+  const force=Math.max(1,Number((stats||{}).Force)||1);
+  const tier=statLevelTier(force);
+  const byId=(family,id)=>EXERCISE_ROTATIONS[family].find(o=>o.id===id)||EXERCISE_ROTATIONS[family][0];
+  const chest=byId("push",rotation&&rotation.push);
+  const abs=byId("abs",rotation&&rotation.abs);
+  const legs=byId("legs",rotation&&rotation.legs);
+  return (baseObjs||[]).map(obj=>{
+    if(obj.id==="push") return {...obj,name:"Pecs & Triceps — "+chest.label,icon:"🦾",exerciseIcon:chest.icon,rotationExercise:chest.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3,stat2:null,xpPer2:null};
+    if(obj.id==="abs"){
+      if(abs.id==="crunches") return {...obj,name:"Abdominaux — Crunches",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:getStatLevelTarget("abs",stats),unit:"rep",xpPer:1.5};
+      if(abs.id==="leg_raises") return {...obj,name:"Abdominaux — Levées de jambes",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:Math.min(160,48+tier*10),unit:"rep",xpPer:3};
+      if(abs.id==="side_plank") return {...obj,name:"Abdominaux — Gainage obliques",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:Math.min(60,24+tier*2),unit:"rep",xpPer:6};
+      const reverse=abs.id==="reverse_plank";
+      return {...obj,name:"Abdominaux — "+(reverse?"Gainage inversé":"Gainage"),icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:Math.max(1,Math.ceil(force/10)),unit:"min",xpPer:50};
+    }
+    if(obj.id==="squats"){
+      if(legs.id==="calves") return {...obj,name:"Jambes — Mollets",icon:"🦿",exerciseIcon:legs.icon,rotationExercise:legs.label,target:getStatLevelTarget("calves",stats),unit:"rep",xpPer:1.5,stat2:"Agilite",xpPer2:1};
+      if(legs.id==="lunges") return {...obj,name:"Jambes — Fentes",icon:"🦿",exerciseIcon:legs.icon,rotationExercise:legs.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3,stat2:null,xpPer2:null};
+      return {...obj,name:"Jambes — Squats",icon:"🦿",exerciseIcon:legs.icon,rotationExercise:legs.label,target:getStatLevelTarget("squats",stats),unit:"rep",xpPer:3,stat2:"Agilite",xpPer2:3};
+    }
+    return obj;
+  });
+}
+
 function isDebtEligibleQuest(obj){
   return !!(obj && obj.daily && !obj.optional && !obj.binary && DEBT_ELIGIBLE_IDS.has(obj.id));
 }
@@ -1343,7 +1432,8 @@ function debtRewardPairs(obj,current,target){
 function App(){
   const [state,setState]   = useState(()=>{
     const now=Date.now();
-    const base=applyDailyEventReset(buildState(),now);
+    let base=applyDailyEventReset(buildState(),now);
+    base=ensureExerciseRotationForDay(base,todayStr());
     // Auto-init quete speciale si aucune active
     const sqs=base.specialQuests||[];
     const hasActive=sqs.find(q=>!q.completedAt&&now<q.expiresAt);
@@ -1408,6 +1498,7 @@ function App(){
   // Persistance
   useEffect(()=>{ saveState(state); },[state]);
 
+
   // File d’attente des animations de montée de niveau de stat
   useEffect(()=>{
     if(statDecadeUp || !statLevelQueue.length) return;
@@ -1445,6 +1536,11 @@ function App(){
   const today = todayStr();
   const wk    = wkStr();
 
+  useEffect(()=>{
+    if((state.exerciseRotationByDay||{})[today]) return;
+    setState(s=>ensureExerciseRotationForDay(s,today));
+  },[today,state.exerciseRotationByDay]);
+
   // Mode mental : vrai tirage aléatoire 33 %, une seule fois par journée après 12h
   useEffect(()=>{
     const hour=new Date(Date.now()).getHours();
@@ -1455,7 +1551,9 @@ function App(){
       return {...s,mentalModeRollDay:today,mentalModeAvailable:Math.random()<1/3};
     });
   },[today,state.mentalModeRollDay]);
-  const objs  = state.objectives||DEFS;
+  const baseObjs = state.objectives||DEFS;
+  const todayExerciseRotation=(state.exerciseRotationByDay||{})[today]||{};
+  const objs = rotatedQuestObjects(baseObjs,todayExerciseRotation,state.stats);
   const tLog  = state.dailyLog[today]||{};
   const wLog  = state.weeklyLog[wk]||{};
   const prestige = state.prestige||0;
@@ -1598,6 +1696,7 @@ function App(){
   function getEffectiveTarget(objId, isWeekly=false){
     const obj = objs.find(o=>o.id===objId);
     if(obj && obj.validateAt != null) return obj.validateAt;
+    if(obj && Number.isFinite(Number(obj.target))) return Number(obj.target);
     return getRankBase(objId, ri, prestige, state.stats);
   }
 
@@ -2761,8 +2860,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           );
         }
         const QUICK_IDS=["push","abs","squats","calves","reading","flex","balance","grips","med","water","mob"];
-        const unitLabel={push:"rep",abs:"rep",squats:"rep",calves:"rep",reading:"min",flex:"min",balance:"min",grips:"min",med:"min",water:"verre",mob:"min"};
-        const unitLabelPlural={push:"reps",abs:"reps",squats:"reps",calves:"reps",reading:"min",flex:"min",balance:"min",grips:"min",med:"min",water:"verres",mob:"min"};
+        const unitLabel={push:obj.unit,abs:obj.unit,squats:obj.unit,calves:obj.unit,reading:"min",flex:"min",balance:"min",grips:"min",med:"min",water:"verre",mob:"min"};
+        const unitLabelPlural={push:obj.unit==="rep"?"reps":obj.unit,abs:obj.unit==="rep"?"reps":obj.unit,squats:obj.unit==="rep"?"reps":obj.unit,calves:"reps",reading:"min",flex:"min",balance:"min",grips:"min",med:"min",water:"verres",mob:"min"};
         if(QUICK_IDS.includes(obj.id)){
           const lbl=unitLabel[obj.id]||obj.unit;
           const lblPl=unitLabelPlural[obj.id]||obj.unit;
