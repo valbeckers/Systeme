@@ -553,6 +553,12 @@ function next7AM(from){
   result.setDate(result.getDate()+1);
   return result.getTime();
 }
+function current7AMStart(from){
+  const d=new Date(from||Date.now());
+  const result=new Date(d.getFullYear(),d.getMonth(),d.getDate(),7,0,0,0);
+  if(d.getHours()<7) result.setDate(result.getDate()-1);
+  return result.getTime();
+}
 
 const getRank    = xp => { for(let i=RANKS.length-1;i>=0;i--)if(xp>=RANKS[i].xpRequired)return RANKS[i]; return RANKS[0]; };
 const getNext    = id => { const i=RANKS.findIndex(r=>r.id===id); return i<RANKS.length-1?RANKS[i+1]:null; };
@@ -1474,16 +1480,20 @@ function App(){
     base=ensureExerciseRotationForDay(base,todayStr());
     // Auto-init quete speciale si aucune active
     const sqs=base.specialQuests||[];
-    const hasActive=sqs.find(q=>!q.completedAt&&now<q.expiresAt);
+    const hasActive=sqs.find(q=>!q.completedAt&&now<(q.expiresAt||0));
+    const resetStart=current7AMStart(now);
+    const resetEnd=next7AM(resetStart);
+    const hasCompletedThisWindow=sqs.some(q=>q.completedAt&&q.completedAt>=resetStart&&q.completedAt<resetEnd);
     const sqCdUntil=base.sqCooldownUntil||0;
-    const cooldownOk = now>=sqCdUntil;
-    if(!hasActive&&cooldownOk){
+    const cooldownOk=now>=sqCdUntil;
+    const staleCooldownWithoutQuest=!hasActive&&!hasCompletedThisWindow&&sqCdUntil>now;
+    if(!hasActive&&!hasCompletedThisWindow&&(cooldownOk||staleCooldownWithoutQuest)){
       const result=pickRandomSq(sqs.filter(q=>!q.completedAt).map(q=>q.id),base.sqStatCycle,base.completedSqLog);
       if(result){
         const {tpl,pickedStat,cycleReset}=result;
         const sq={...tpl,sqid:"sq_"+now,progress:0,startedAt:now,expiresAt:next7AM(now),completedAt:null};
         const newCycle = cycleReset ? [pickedStat] : [...(base.sqStatCycle||[]),pickedStat];
-        return {...base,specialQuests:[...sqs.filter(q=>q.completedAt),sq],sqStatCycle:newCycle,sqCooldownUntil:next7AM(now)};
+        return {...base,specialQuests:[...sqs.filter(q=>q.completedAt),sq],sqStatCycle:newCycle,sqCooldownUntil:next7AM(now),sqRerollDay:null};
       }
     }
     return base;
@@ -1805,6 +1815,43 @@ function App(){
   const sqCooldownActive = sqCooldownUntil && now < sqCooldownUntil;
   const sqReady = !activeSq && !sqCooldownActive;
   const sqRerollUsed = state.sqRerollDay===today;
+
+  // Réparation immédiate d'une carte urgente vide :
+  // aucune quête active ni complétée depuis le dernier reset de 7 h.
+  useEffect(()=>{
+    const resetStart=current7AMStart(now);
+    const resetEnd=next7AM(resetStart);
+    const list=state.specialQuests||[];
+    const hasValidActive=list.some(q=>!q.completedAt&&now<(q.expiresAt||0));
+    const hasCompletedCurrentWindow=list.some(q=>q.completedAt&&q.completedAt>=resetStart&&q.completedAt<resetEnd);
+    if(hasValidActive||hasCompletedCurrentWindow) return;
+    setState(s=>{
+      const t=Date.now();
+      const start=current7AMStart(t);
+      const end=next7AM(start);
+      const current=s.specialQuests||[];
+      const stillActive=current.some(q=>!q.completedAt&&t<(q.expiresAt||0));
+      const alreadyCompleted=current.some(q=>q.completedAt&&q.completedAt>=start&&q.completedAt<end);
+      if(stillActive||alreadyCompleted) return s;
+      const result=pickRandomSq(
+        current.filter(q=>!q.completedAt).map(q=>q.id).filter(Boolean),
+        s.sqStatCycle,
+        s.completedSqLog
+      );
+      if(!result) return s;
+      const {tpl,pickedStat,cycleReset}=result;
+      const sq={...tpl,sqid:"sq_"+t,progress:0,startedAt:t,expiresAt:next7AM(t),completedAt:null};
+      const newCycle=cycleReset?[pickedStat]:[...(s.sqStatCycle||[]),pickedStat];
+      return {
+        ...s,
+        specialQuests:[...current.filter(q=>q.completedAt),sq],
+        sqStatCycle:newCycle,
+        sqCooldownUntil:next7AM(t),
+        sqRerollDay:null,
+        lastActiveDay:todayStr()
+      };
+    });
+  },[now,state.specialQuests,state.sqCooldownUntil]);
 
   const activeDungeonTpl = state.activeDungeon ? DUNGEONS.find(d=>d.id===state.activeDungeon.id) : null;
   const activeDungeon = state.activeDungeon && activeDungeonTpl && !state.activeDungeon.completedAt && now < state.activeDungeon.expiresAt
