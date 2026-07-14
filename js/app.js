@@ -2874,7 +2874,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
   function RR({obj,isW}){
     const isWeeklyRow = isW || obj.weekly;
-    const t=getEffectiveTarget(obj), d=isWeeklyRow?(wLog[obj.id]||0):(tLog[obj.id]||0);
+    const t=getEffectiveTarget(obj.id), d=isWeeklyRow?(wLog[obj.id]||0):(tLog[obj.id]||0);
     const displayTarget = (obj.target && !obj.binary) ? obj.target : t;
     const pct=Math.min(100,(d/displayTarget)*100), done=d>=displayTarget, over=d>displayTarget;
     const validated=isWeeklyRow?(wLog[obj.id]!==undefined):(tLog[obj.id]!==undefined);
