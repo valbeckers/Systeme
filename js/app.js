@@ -3904,10 +3904,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       // Activité de la semaine : tableau quotidien L M M J V S D
       h("div",{class:"card"},
         h("div",{class:"ctitle"},"Activité de la semaine"),
-        h("div",{style:"display:grid;grid-template-columns:minmax(0,1fr) repeat(7,22px) minmax(78px,auto);gap:5px;align-items:center;margin-top:10px;margin-bottom:8px;font-family:Orbitron,sans-serif;font-size:9px;color:#fff;letter-spacing:1px;text-transform:uppercase"},
+        h("div",{style:"display:grid;grid-template-columns:minmax(0,1fr) repeat(7,22px);gap:5px;align-items:center;margin-top:10px;margin-bottom:8px;font-family:Orbitron,sans-serif;font-size:9px;color:#fff;letter-spacing:1px;text-transform:uppercase"},
           h("div",null,"Quête"),
-          weekLbls.map((lbl,i)=>h("div",{key:"h"+i,style:"text-align:center;color:#fff"},lbl)),
-          h("div",{style:"text-align:right"},"Total")
+          weekLbls.map((lbl,i)=>h("div",{key:"h"+i,style:"text-align:center;color:#fff"},lbl))
         ),
         h("div",{style:"display:flex;flex-direction:column;gap:7px"},
           ordered.map(obj=>{
@@ -3921,15 +3920,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             const wt=isFamily?7:weeklyTargetFor(obj);
             const displayName=exerciseFamilyLabel(obj.id,obj.name);
             const displayIcon=exerciseFamilyIcon(obj.id,obj.icon);
-            return h("div",{key:obj.id,style:"display:grid;grid-template-columns:minmax(0,1fr) repeat(7,22px) minmax(78px,auto);gap:5px;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,0.04)"},
+            return h("div",{key:obj.id,style:"display:grid;grid-template-columns:minmax(0,1fr) repeat(7,22px);gap:5px;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,0.04)"},
               h("div",{style:"display:flex;align-items:center;gap:6px;min-width:0;color:var(--tx);font-size:12px"},
                 QuestIcon(obj.id,displayIcon,14),
                 h("span",{style:"overflow:hidden;text-overflow:ellipsis;white-space:nowrap"},displayName)
               ),
-              marks.map((m,i)=>h("div",{key:obj.id+"_d"+i,style:"text-align:center;font-family:Orbitron,sans-serif;font-size:12px;font-weight:700;color:"+m.color+";opacity:"+m.opacity},m.txt)),
-              h("div",{style:"text-align:right;font-family:Orbitron,sans-serif;font-size:9px;color:var(--td);white-space:nowrap"},
-                isFamily ? (val+"/7 jours") : totalLabelFor(obj,val,wt)
-              )
+              marks.map((m,i)=>h("div",{key:obj.id+"_d"+i,style:"text-align:center;font-family:Orbitron,sans-serif;font-size:12px;font-weight:700;color:"+m.color+";opacity:"+m.opacity},m.txt))
             );
           }),
           ordered.every(o=>!(tots[o.id]>0))&&h("div",{style:"text-align:center;font-size:13px;color:var(--td);padding:16px 0"},"Aucune activité cette semaine")
