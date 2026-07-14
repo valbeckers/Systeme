@@ -3536,23 +3536,23 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{style:"display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr) 1px minmax(0,1fr);align-items:center;justify-items:stretch;margin-top:12px;padding-top:16px;padding-bottom:0px;border-top:1px solid rgba(255,255,255,0.06)"},
           h("div",{style:"width:100%;display:flex;align-items:center;justify-content:center;gap:5px;padding:0"},
             h("div",{style:"display:flex;flex-direction:column;align-items:center;justify-content:center"},
-              h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:var(--rc);line-height:0.9"},state.streak),
-              h("div",{style:"font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px"},"STREAK"),
+              h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:#fff;line-height:0.9"},state.streak),
+              h("div",{style:"font-size:11px;color:#fff;text-transform:uppercase;letter-spacing:1px;margin-top:3px"},"STREAK"),
               bonusGiven&&h("div",{style:"font-size:10px;color:#c084fc;font-family:Orbitron,sans-serif;margin-top:3px"},"+250 XP ✓")
             )
           ),
           h("div",{style:"width:1px;height:38px;background:rgba(255,255,255,0.06);justify-self:center"}),
           h("div",{style:"width:100%;display:flex;align-items:center;justify-content:center;gap:5px;padding:0"},
             h("div",{style:"display:flex;flex-direction:column;align-items:center;justify-content:center"},
-              h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:var(--rc);line-height:0.9"},todayXp.toFixed(0)),
-              h("div",{style:"font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px"},"XP DU JOUR")
+              h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:#fff;line-height:0.9"},todayXp.toFixed(0)),
+              h("div",{style:"font-size:11px;color:#fff;text-transform:uppercase;letter-spacing:1px;margin-top:3px"},"XP DU JOUR")
             )
           ),
           h("div",{style:"width:1px;height:38px;background:rgba(255,255,255,0.06);justify-self:center"}),
           h("div",{style:"width:100%;display:flex;align-items:center;justify-content:center;gap:5px;padding:0"},
             h("div",{style:"display:flex;flex-direction:column;align-items:center;justify-content:center"},
-              h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:"+(reqRemaining===0?"#4ade80":"var(--rc)")+";line-height:0.9"},reqRemaining),
-              h("div",{style:"font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:3px"},"RESTANTES")
+              h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:#fff;line-height:0.9"},reqRemaining),
+              h("div",{style:"font-size:11px;color:#fff;text-transform:uppercase;letter-spacing:1px;margin-top:3px"},"RESTANTES")
             )
           )
         )
@@ -3733,8 +3733,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{class:"ctitle"},"Niveau global"),
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:6px"},
           h("div",null,
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;font-weight:800;letter-spacing:1px;color:"+rank.color+";line-height:1;text-shadow:0 0 10px "+rank.glow},"Niveau "+globalLevel.level),
-            h("div",{style:"font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:4px"},globalLevel.maxed?"Progression maximale":"Vers niveau "+globalLevel.nextLevel)
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;font-weight:800;letter-spacing:1px;color:#fff;line-height:1;text-shadow:none"},"Niveau "+globalLevel.level),
+            h("div",{style:"font-size:10px;color:#fff;text-transform:uppercase;letter-spacing:1px;margin-top:4px"},globalLevel.maxed?"Progression maximale":"Vers niveau "+globalLevel.nextLevel)
           ),
           h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;text-align:right"},
             globalLevel.maxed?"MAX":Math.round(globalLevel.inLevel).toLocaleString("fr-FR")+" / "+Math.round(globalLevel.need).toLocaleString("fr-FR")+" XP"
@@ -3904,9 +3904,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       // Activité de la semaine : tableau quotidien L M M J V S D
       h("div",{class:"card"},
         h("div",{class:"ctitle"},"Activité de la semaine"),
-        h("div",{style:"display:grid;grid-template-columns:minmax(0,1fr) repeat(7,22px) minmax(78px,auto);gap:5px;align-items:center;margin-top:10px;margin-bottom:8px;font-family:Orbitron,sans-serif;font-size:9px;color:var(--td);letter-spacing:1px;text-transform:uppercase"},
+        h("div",{style:"display:grid;grid-template-columns:minmax(0,1fr) repeat(7,22px) minmax(78px,auto);gap:5px;align-items:center;margin-top:10px;margin-bottom:8px;font-family:Orbitron,sans-serif;font-size:9px;color:#fff;letter-spacing:1px;text-transform:uppercase"},
           h("div",null,"Quête"),
-          weekLbls.map((lbl,i)=>h("div",{key:"h"+i,style:"text-align:center;color:var(--rc)"},lbl)),
+          weekLbls.map((lbl,i)=>h("div",{key:"h"+i,style:"text-align:center;color:#fff"},lbl)),
           h("div",{style:"text-align:right"},"Total")
         ),
         h("div",{style:"display:flex;flex-direction:column;gap:7px"},
