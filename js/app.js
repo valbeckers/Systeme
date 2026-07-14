@@ -4072,7 +4072,14 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   }
 
   const GOLD = "#fbbf24";
-  const congratsStyle = "font-family:Orbitron,sans-serif;font-size:clamp(13px,3.6vw,18px);font-weight:900;letter-spacing:3px;text-transform:uppercase;color:#ffffff;text-shadow:none;margin-bottom:12px";
+  const congratsStyle = "font-family:Orbitron,sans-serif;font-size:clamp(20px,5.4vw,27px);font-weight:900;letter-spacing:3px;text-transform:uppercase;color:#ffffff;text-shadow:none";
+  function NotificationHeader(){
+    return h("div",{style:"display:grid;grid-template-columns:34px auto 34px;align-items:center;justify-content:center;margin-bottom:14px;width:100%"},
+      h("span",{style:"font-family:Orbitron,sans-serif;font-size:clamp(21px,5.6vw,28px);font-weight:900;color:#ffffff;text-align:center;line-height:1"},"❕"),
+      h("span",{style:congratsStyle},"NOTIFICATION"),
+      h("span",{style:"width:34px"})
+    );
+  }
 
   function RankUp(){
     if(!rankUp)return null;
@@ -4089,7 +4096,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.cyan?"rgba(74,222,128,0.6)":rankUp.color)+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
       )),
       h("div",{class:"rucont"},
-        h("div",{style:congratsStyle},"❕ NOTIFICATION"),
+        h(NotificationHeader,null),
         h("div",{class:"ruevol",style:"color:"+rankUp.color+";text-shadow:0 0 14px "+rankUp.glow},"ÉVOLUTION DE RANG"),
         h("div",{class:"rurank",style:"color:"+rankUp.color+";text-shadow:0 0 18px "+rankUp.glow,"data-r":"RANG "+rankUp.id},"RANG "+rankUp.id),
         h("button",{class:"rudis",onClick:()=>setRankUp(null)},"Continuer")
@@ -4114,7 +4121,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?"rgba(255,255,255,.75)":green)+";box-shadow:0 0 9px rgba(74,222,128,.55);animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
       )),
       h("div",{class:"rucont"},
-        h("div",{style:congratsStyle},"❕ NOTIFICATION"),
+        h(NotificationHeader,null),
         h("div",{class:"rulabel",style:"font-size:clamp(20px,5.5vw,32px);line-height:1.35;letter-spacing:2px;max-width:350px;color:"+green+";text-shadow:0 0 14px rgba(74,222,128,.55)"},completionUp.text),
         h("button",{class:"rudis",onClick:()=>setCompletionUp(null)},"Continuer")
       )
@@ -4140,7 +4147,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?"rgba(255,255,255,0.7)":color)+";box-shadow:0 0 8px "+glow+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
       )),
       h("div",{class:"rucont"},
-        h("div",{style:congratsStyle},"❕ NOTIFICATION"),
+        h(NotificationHeader,null),
         h("div",{class:"ruevol"},streakUp.title || "STREAK BONUS !"),
         h("div",{class:"rurank","data-r":String(streakUp.streak||0)},String(streakUp.streak||0)),
         h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:3px"},"JOURS DE STREAK"),
@@ -4161,7 +4168,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+glow},
       h("div",{class:"ruparts"},particles.map(p=>h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?"#ffffff":color)+";box-shadow:0 0 8px "+glow+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"}))),
       h("div",{class:"rucont"},
-        h("div",{style:congratsStyle},"❕ NOTIFICATION"),
+        h(NotificationHeader,null),
         h("div",{class:"ruevol"},dungeonUp.label||"DONJON TERMINÉ"),
         h("div",{class:"rurank",style:"font-size:"+(dungeonUp.rupture?"clamp(34px,10vw,60px)":"clamp(48px,16vw,82px)")+";letter-spacing:-1px;white-space:"+(dungeonUp.rupture?"normal":"nowrap")+";max-width:350px;line-height:1.05","data-r":dungeonUp.short},dungeonUp.short),
         dungeonUp.subtitle&&h("div",{class:"rulabel",style:"margin-top:9px;letter-spacing:2px;color:"+color},dungeonUp.subtitle),
@@ -4206,7 +4213,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?(urgentUp.nameColor||color):color)+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
       )),
       h("div",{class:"rucont"},
-        h("div",{style:congratsStyle},"❕ NOTIFICATION"),
+        h(NotificationHeader,null),
         h("div",{class:"ruevol",style:"color:#ef4444;text-shadow:0 0 16px rgba(239,68,68,.7)"},"QUÊTE URGENTE COMPLÉTÉE !"),
         h("div",{class:"rurank",style:"--rc:"+(urgentUp.nameColor||color)+";--rg:"+(urgentUp.nameColor||color)+"66;color:"+(urgentUp.nameColor||color)+";text-shadow:0 0 18px "+(urgentUp.nameColor||color)+"66;font-size:clamp(36px,10vw,62px);letter-spacing:-1px;white-space:normal;max-width:340px;line-height:1.05","data-r":urgentUp.name},urgentUp.name),
         h("div",{style:"margin-top:14px;display:flex;flex-direction:column;gap:6px;align-items:center"},
@@ -4239,7 +4246,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.gold?"#fbbf24":color)+";box-shadow:0 0 8px "+glow+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
       )),
       h("div",{class:"rucont"},
-        h("div",{style:congratsStyle},"❕ NOTIFICATION"),
+        h(NotificationHeader,null),
         h("div",{class:"ruevol",style:"color:"+color+";text-shadow:0 0 14px "+glow},(recordUp.title||"NOUVEAU RECORD")+" !"),
         h("div",{class:"rurank",style:"--rc:"+statColor+";--rg:"+statGlow+";color:"+statColor+";text-shadow:0 0 18px "+statGlow+";font-size:clamp(38px,11vw,64px);letter-spacing:-1px;white-space:normal;max-width:340px;line-height:1.05","data-r":recordUp.name},recordUp.name),
         h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:3px;color:"+color+";font-size:clamp(18px,5vw,28px)"},recordUp.value),
@@ -4330,7 +4337,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const glow=debtUp.glow||color+"66";
     return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+glow},
       h("div",{class:"rucont"},
-        h("div",{style:congratsStyle},"❕ NOTIFICATION"),
+        h(NotificationHeader,null),
         h("div",{class:"ruevol"},"DETTE REMBOURSÉE"),
         h("div",{class:"rulabel",style:"margin-top:10px;font-size:clamp(18px,5vw,28px);color:"+color},debtUp.name),
         h("div",{style:"margin-top:12px;display:flex;flex-direction:column;gap:5px"},
@@ -4473,7 +4480,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?"rgba(255,255,255,0.65)":color)+";box-shadow:0 0 8px "+glow+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
       )),
       h("div",{class:"rucont"},
-        h("div",{style:congratsStyle},"❕ NOTIFICATION"),
+        h(NotificationHeader,null),
         h("div",{class:"ruevol",style:"color:"+rank.color+";text-shadow:0 0 14px "+rank.glow},"STAT LEVEL UP !"),
         h("div",{
           class:"rurank",
@@ -4503,9 +4510,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?"rgba(255,255,255,0.65)":color)+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
       )),
       h("div",{class:"rucont"},
-        h("div",{style:congratsStyle},"❕ NOTIFICATION"),
+        h(NotificationHeader,null),
         h("div",{class:"ruevol",style:"color:"+color+";text-shadow:0 0 14px "+glow},"LEVEL UP !"),
-        h("div",{class:"rurank",style:"color:"+color+";text-shadow:0 0 18px "+glow,"data-r":"NIVEAU "+levelUp.level},"NIVEAU "+levelUp.level),
+        h("div",{class:"rurank",style:"color:"+color+";text-shadow:0 0 18px "+glow+";font-size:clamp(34px,10vw,58px);letter-spacing:-1px;white-space:nowrap;max-width:calc(100vw - 52px);line-height:1.05","data-r":"NIVEAU "+levelUp.level},"NIVEAU "+levelUp.level),
         h("button",{class:"rudis",onClick:()=>setLevelUp(null)},"Continuer")
       )
     );
@@ -4522,7 +4529,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h("div",{class:"pustars",style:"pointer-events:none"},stars.map(s=>h("div",{key:s.id,class:"pustar",style:"left:"+s.left+"%;top:"+s.top+"%;animation-delay:"+s.delay+"s;animation-duration:"+s.dur+"s"}))),
       h("div",{class:"puparts",style:"pointer-events:none"},particles.map(p=>h("div",{key:p.id,class:"pupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(Math.random()>.6?"#c084fc":"#a855f7")+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"}))),
       h("div",{class:"pucont"},
-        h("div",{style:congratsStyle},"❕ NOTIFICATION"),
+        h(NotificationHeader,null),
         h("div",{class:"puatom"},"\u269B\uFE0F"),
         h("div",{class:"pubadge"},"Ascension "+ROMAN[prestigeUp-1]),
         h("button",{class:"pudis",onClick:()=>setPrestigeUp(null)},"Continuer")
@@ -4581,6 +4588,40 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       if(obj.tiers) return (obj.target||obj.base||1)+" "+unitPlural(obj.unit,obj.target||obj.base||1)+period;
       const base = getRankBase(obj.id, ri, prestige, state.stats);
       return base+" "+unitPlural(obj.unit,base)+period;
+    }
+
+    function renderExerciseRotationsCodex(){
+      const familyStyle="padding:11px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(255,255,255,.025);margin-bottom:8px";
+      const exerciseStyle="padding:8px 0;border-top:1px solid rgba(255,255,255,.06)";
+      const ExerciseRow=({icon,name,objective,xp})=>h("div",{style:exerciseStyle},
+        h("div",{style:"display:flex;align-items:center;gap:7px;font-size:12px;color:var(--tx);font-weight:800"},h("span",{style:"font-size:15px"},icon),name),
+        h("div",{style:"font-size:10px;color:var(--td);line-height:1.4;margin-top:4px"},"▸ Objectif : "+objective),
+        h("div",{style:"font-size:10px;color:"+STAT_COLOR.Force+";line-height:1.4;margin-top:2px"},"▸ "+xp)
+      );
+      return h("div",{style:"margin-bottom:10px"},
+        h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:9px"},
+          "Chaque jour, un exercice est tiré dans chaque famille. L’exercice de la veille peut revenir, mais avec une probabilité réduite."
+        ),
+        h("div",{style:familyStyle},
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px;margin-bottom:4px"},"🦾 PECS & TRICEPS"),
+          h(ExerciseRow,{icon:"💪🏼",name:"Pompes",objective:"objectif actuel lié au niveau de Force",xp:"3 XP Force / rep"}),
+          h(ExerciseRow,{icon:"💪🏼",name:"Dips",objective:"même objectif que les Pompes",xp:"3 XP Force / rep"})
+        ),
+        h("div",{style:familyStyle},
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px;margin-bottom:4px"},"🧱 ABDOMINAUX"),
+          h(ExerciseRow,{icon:"🧎🏻",name:"Crunches",objective:"objectif actuel des Abdos",xp:"1,5 XP Force / rep"}),
+          h(ExerciseRow,{icon:"🦵🏻",name:"Levées de jambes",objective:"48 reps de base, progression liée au niveau de Force",xp:"3 XP Force / rep"}),
+          h(ExerciseRow,{icon:"⏱️",name:"Gainage",objective:"1 min par tranche de 10 niveaux de Force",xp:"50 XP Force / min"}),
+          h(ExerciseRow,{icon:"↔️",name:"Gainage obliques",objective:"24 reps de base, puis +2 reps par palier",xp:"6 XP Force / rep"}),
+          h(ExerciseRow,{icon:"↩️",name:"Gainage inversé",objective:"même objectif que le Gainage",xp:"50 XP Force / min"})
+        ),
+        h("div",{style:familyStyle},
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px;margin-bottom:4px"},"🦿 JAMBES"),
+          h(ExerciseRow,{icon:"🦵🏻",name:"Squats",objective:"objectif actuel des Squats",xp:"XP actuels des Squats"}),
+          h(ExerciseRow,{icon:"🦵🏻",name:"Mollets",objective:"objectif actuel des Mollets",xp:"XP actuels des Mollets"}),
+          h(ExerciseRow,{icon:"🦵🏻",name:"Fentes",objective:"même objectif que les Pompes",xp:"3 XP Force / rep"})
+        )
+      );
     }
 
     function renderQuest(obj){
@@ -4796,7 +4837,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{class:"ctitle"},"Codex"),
         h("div",{style:"font-size:12px;color:var(--td);line-height:1.45"},"Catalogue complet des quêtes existantes. Les objectifs des quêtes quotidiennes et hebdomadaires sont calculés au rang actuel.")
       ),
-      h(Section,{id:"obl",title:"Quêtes journalières",count:required.length},groupByDominantStat(required,renderQuest)),
+      h(Section,{id:"obl",title:"Quêtes journalières",count:required.length},
+        h(Fragment,null,
+          renderExerciseRotationsCodex(),
+          groupByDominantStat(required,renderQuest)
+        )
+      ),
       h(Section,{id:"bonus",title:"Quêtes bonus",count:bonus.length+hiddenBonus.length},
         h(Fragment,null,
           groupByDominantStat(bonus,renderQuest),
