@@ -60,11 +60,12 @@ const DEFS = [
   {id:"water",  name:"Hydratation",     unit:"verre", xpPer:10,  daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDCA7",               base:10, baseHistory:[{until:"2026-04-29",base:8}]},
   {id:"sleep",  name:"Dormir 8h",   unit:"nuit",  xpPer:0,   daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDECF\uFE0F",         base:1,  binary:true, binaryXp:150},
     // ─── FORCE ────────────────────────────────────────────────────────────
-  {id:"push",   name:"Pecs & Triceps", unit:"rep", xpPer:3, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦾", base:30},
+  {id:"push",   name:"Pecs", unit:"rep", xpPer:3, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦾", base:30},
   {id:"abs",    name:"Abdos", unit:"rep", xpPer:1.5, daily:true, weekly:false,optional:false,stat:"Force", icon:"🧱", base:60},
   {id:"squats", name:"Jambes", unit:"rep", xpPer:3, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦿", base:15, stat2:"Agilite", xpPer2:3},
+  {id:"negative_pullups", name:"Tractions négatives", unit:"rep", xpPer:12, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦾", base:8, startDate:"2026-07-14"},
   {id:"calves", name:"Mollets",unit:"rep", xpPer:1.5, daily:false, weekly:false,optional:false,legacyRotation:true,stat:"Force", icon:"🦵🏻", base:30, stat2:"Agilite", xpPer2:1},
-  {id:"grips",  name:"Hand grips",      unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Force",         icon:"\u270A\uD83C\uDFFB",         base:10, fixedBase:true},
+  {id:"grips",  name:"Grip",      unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Force",         icon:"\u270A\uD83C\uDFFB",         base:10, fixedBase:true},
   // ─── ESPRIT ───────────────────────────────────────────────────────────
   {id:"reading",name:"Lecture",unit:"min",xpPer:15,daily:true,weekly:false,optional:false,stat:"Esprit",icon:"📚",base:20,startDate:"2026-05-21"},
   // ─── ESPRIT ───────────────────────────────────────────────────────────
@@ -72,7 +73,7 @@ const DEFS = [
   {id:"med",    name:"M\u00e9ditation", unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Esprit",  icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F", base:15, fixedBase:true},
   // ─── ENDURANCE ────────────────────────────────────────────────────────
   {id:"run",    name:"Running",         iconKey:"run",          unit:"km",    xpPer:200, daily:true, weekly:false,optional:true, stat:"Endurance",      icon:"\uD83C\uDFC3\uD83C\uDFFB",   base:5,  stat2:"Agilite", xpPer2:50},
-  {id:"walk",   name:"Randonnée",       unit:"km",    xpPer:100, daily:true, weekly:false,optional:true, stat:"Endurance",      icon:"\uD83E\uDD7E",               base:5, stat2:"Agilite", xpPer2:25},
+  {id:"walk",   name:"Rando",       unit:"km",    xpPer:100, daily:true, weekly:false,optional:true, stat:"Endurance",      icon:"\uD83E\uDD7E",               base:5, stat2:"Agilite", xpPer2:25},
   // ─── AGILITÉ ──────────────────────────────────────────────────────────
     {id:"balance",name:"Équilibre",unit:"min",xpPer:10,daily:true,weekly:false,optional:true,stat:"Agilite", icon:"\uD83E\uDDB6\uD83C\uDFFB", base:10, fixedBase:true, startDate:"2026-05-15", stat2:"Esprit", xpPer2:10},
   // ─── DISCIPLINE ───────────────────────────────────────────────────────
@@ -594,7 +595,7 @@ const RANK_BASES = {
 
 
 // Progression des objectifs par niveau de stat
-// Les habitudes fixes restent inchangées : Hydratation, Sommeil, Hand grips, Méditation, Équilibre.
+// Les habitudes fixes restent inchangées : Hydratation, Sommeil, Grip, Méditation, Équilibre.
 const STAT_LEVEL_BASES = {
   push:   {stat:"Force",     base:30, step:6,  cap:100},
   abs:    {stat:"Force",     base:60, step:12, cap:200},
@@ -612,6 +613,10 @@ function statLevelTier(level){
   return Math.floor((lvl-10)/5)+1;
 }
 function getStatLevelTarget(objId, stats){
+  if(objId==="negative_pullups"){
+    const squatTarget=getStatLevelTarget("squats",stats);
+    return Math.max(1,Math.ceil((Number(squatTarget)||0)/2));
+  }
   const linear=STAT_LEVEL_BASES[objId];
   if(linear){
     const level=Number((stats||{})[linear.stat])||1;
@@ -1312,7 +1317,7 @@ function buildState(){
 
 
 // ─── SYSTÈME DE DETTE DE QUÊTE ───────────────────────────────────────────
-const DEBT_ELIGIBLE_IDS = new Set(["push","abs","squats","calves","reading"]);
+const DEBT_ELIGIBLE_IDS = new Set(["push","abs","squats","negative_pullups","calves","reading"]);
 const MAX_DEBTS_PER_WEEK = 3;
 const RUN_RECORD_RESET_DAY = "2026-07-13";
 
@@ -1324,9 +1329,9 @@ const EXERCISE_ROTATIONS = {
   abs:[
     {id:"crunches",label:"Crunches",icon:"🧎🏻"},
     {id:"leg_raises",label:"Levées de jambes",icon:"🦵🏻"},
-    {id:"plank",label:"Gainage",icon:"⏱️"},
-    {id:"side_plank",label:"Gainage obliques",icon:"↔️"},
-    {id:"reverse_plank",label:"Gainage inversé",icon:"↩️"},
+    {id:"plank",label:"Gainage",icon:"🫳🏼"},
+    {id:"side_plank",label:"Gainage obliques",icon:"🧎🏻‍♂️‍➡️"},
+    {id:"reverse_plank",label:"Gainage inversé",icon:"🫴🏼"},
   ],
   legs:[
     {id:"squats",label:"Squats",icon:"🦵🏻"},
@@ -1334,7 +1339,7 @@ const EXERCISE_ROTATIONS = {
     {id:"lunges",label:"Fentes",icon:"🦵🏻"},
   ],
 };
-const EXERCISE_FAMILY_LABELS={push:"Pecs & Triceps",abs:"Abdos",squats:"Jambes"};
+const EXERCISE_FAMILY_LABELS={push:"Pecs",abs:"Abdos",squats:"Jambes"};
 const EXERCISE_FAMILY_ICONS={push:"🦾",abs:"🧱",squats:"🦿"};
 const LEGACY_EXERCISE_DEFAULTS={push:"pushups",abs:"crunches",legs:"squats"};
 function isExerciseFamilyQuestId(id){ return id==="push"||id==="abs"||id==="squats"; }
@@ -1393,7 +1398,7 @@ function rotatedQuestObjects(baseObjs,rotation,stats){
   const abs=byId("abs",rotation&&rotation.abs);
   const legs=byId("legs",rotation&&rotation.legs);
   return (baseObjs||[]).map(obj=>{
-    if(obj.id==="push") return {...obj,name:"Pecs & Triceps - "+chest.label,icon:"🦾",exerciseIcon:chest.icon,rotationExercise:chest.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3,stat2:null,xpPer2:null};
+    if(obj.id==="push") return {...obj,name:"Pecs - "+chest.label,icon:"🦾",exerciseIcon:chest.icon,rotationExercise:chest.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3,stat2:null,xpPer2:null};
     if(obj.id==="abs"){
       if(abs.id==="crunches") return {...obj,name:"Abdos - Crunches",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:getStatLevelTarget("abs",stats),unit:"rep",xpPer:1.5};
       if(abs.id==="leg_raises") return {...obj,name:"Abdos - Levées de jambes",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:Math.min(160,48+tier*10),unit:"rep",xpPer:3};
@@ -1565,7 +1570,7 @@ function App(){
   const wLog  = state.weeklyLog[wk]||{};
   const prestige = state.prestige||0;
 
-  // Une seule sortie bonus par jour : Running ou Randonnée.
+  // Une seule sortie bonus par jour : Running ou Rando.
   const runQuestObj = objs.find(o=>o.id==="run") || DEFS.find(o=>o.id==="run");
   const hikeQuestObj = objs.find(o=>o.id==="walk") || DEFS.find(o=>o.id==="walk");
   const savedEnduranceChoice = (state.enduranceChoiceByDay||{})[today];
@@ -1577,7 +1582,7 @@ function App(){
     : inferredEnduranceChoice;
   const selectedEnduranceQuest = enduranceChoiceId==="run" ? runQuestObj : enduranceChoiceId==="walk" ? hikeQuestObj : null;
   const enduranceChoicePlaceholder = {
-    id:"endurance_choice",name:"Running ou Randonnée",icon:"🏃🏻 / 🥾",unit:"choix",
+    id:"endurance_choice",name:"Running ou Rando",icon:"🏃🏻 / 🥾",unit:"choix",
     daily:true,weekly:false,optional:true,stat:"Endurance",base:1,isEnduranceChoice:true
   };
 
@@ -1752,7 +1757,7 @@ function App(){
     return streak;
   })();
 
-  // 9. Bonus hebdo supprimé : Running et Randonnée sont désormais des quêtes bonus.
+  // 9. Bonus hebdo supprimé : Running et Rando sont désormais des quêtes bonus.
   const weeklyDone = false;
 
   // 10. Quete speciale
@@ -2957,7 +2962,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
         h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:center;gap:8px;line-height:1.25"},
           QuestIcon("endurance_choice","🏃🏻",14,"width:18px;height:18px"),
-          h("span",null,"Running ou Randonnée")
+          h("span",null,"Running ou Rando")
         ),
         h(QuestBadge,{label:"CHOIX",color})
       ),
@@ -2968,7 +2973,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         ),
         h("button",{onClick:()=>chooseEnduranceQuest("walk"),style:buttonStyle},
           h("span",{style:"font-size:15px"},"🥾"),
-          h("span",{style:"font-size:10px;font-weight:800;letter-spacing:.7px"},"Randonnée")
+          h("span",{style:"font-size:10px;font-weight:800;letter-spacing:.7px"},"Rando")
         )
       )
     );
@@ -3749,9 +3754,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       {id:"ex_dips",name:"Dips",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"push",family:"push",rotationId:"dips"},
       {id:"ex_crunches",name:"Crunches",icon:"🧎🏻",unit:"rep",stat:"Force",sourceId:"abs",family:"abs",rotationId:"crunches"},
       {id:"ex_leg_raises",name:"Levées de jambes",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"abs",family:"abs",rotationId:"leg_raises"},
-      {id:"ex_plank",name:"Gainage",icon:"⏱️",unit:"min",stat:"Force",sourceId:"abs",family:"abs",rotationId:"plank"},
-      {id:"ex_side_plank",name:"Gainage obliques",icon:"↔️",unit:"rep",stat:"Force",sourceId:"abs",family:"abs",rotationId:"side_plank"},
-      {id:"ex_reverse_plank",name:"Gainage inversé",icon:"↩️",unit:"min",stat:"Force",sourceId:"abs",family:"abs",rotationId:"reverse_plank"},
+      {id:"ex_plank",name:"Gainage",icon:"🫳🏼",unit:"min",stat:"Force",sourceId:"abs",family:"abs",rotationId:"plank"},
+      {id:"ex_side_plank",name:"Gainage obliques",icon:"🧎🏻‍♂️‍➡️",unit:"rep",stat:"Force",sourceId:"abs",family:"abs",rotationId:"side_plank"},
+      {id:"ex_reverse_plank",name:"Gainage inversé",icon:"🫴🏼",unit:"min",stat:"Force",sourceId:"abs",family:"abs",rotationId:"reverse_plank"},
       {id:"ex_squats",name:"Squats",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"squats",family:"legs",rotationId:"squats"},
       {id:"ex_calves",name:"Mollets",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"squats",family:"legs",rotationId:"calves",legacySourceId:"calves"},
       {id:"ex_lunges",name:"Fentes",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"squats",family:"legs",rotationId:"lunges"},
@@ -3851,7 +3856,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         if(val>0 && (!records[def.id]||val>records[def.id].val)) records[def.id]={val,date};
       });
     });
-    // Running et Randonnée sont désormais quotidiens : ne plus utiliser weeklyLog pour les records
+    // Running et Rando sont désormais quotidiens : ne plus utiliser weeklyLog pour les records
 
     // ── Records hebdomadaires (meilleur total sur une semaine ISO) ──
     const weeklyRecordTotals={};
@@ -4672,7 +4677,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     function renderExerciseFamiliesCodex(){
       const force=Math.max(1,Number((state.stats||{}).Force)||1);
       const tier=statLevelTier(force);
-      const familyStyle="padding:10px;border:1px solid "+STAT_COLOR.Force+"44;border-radius:10px;background:"+STAT_COLOR.Force+"08;margin-bottom:9px";
+      const familyStyle="padding:10px;border:1px solid rgba(255,255,255,.07);border-radius:10px;background:rgba(255,255,255,.025);margin-bottom:9px";
       const subStyle="padding:9px;border:1px solid rgba(255,255,255,.07);border-radius:8px;background:rgba(255,255,255,.025);margin-top:7px";
       const objective=(value,unit)=>fmtNum(value)+" "+unit+" / jour";
       function Reward({stat,xp}){
@@ -4702,9 +4707,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px"},"🧱 ABDOS"),
           h(Exercise,{icon:"🧎🏻",name:"Crunches",target:absTarget,unit:"reps",rewards:[{stat:"Force",xp:"1,5/rep"}]}),
           h(Exercise,{icon:"🦵🏻",name:"Levées de jambes",target:legRaiseTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
-          h(Exercise,{icon:"⏱️",name:"Gainage",target:plankTarget,unit:"min",rewards:[{stat:"Force",xp:"50/min"}]}),
-          h(Exercise,{icon:"↔️",name:"Gainage obliques",target:sideTarget,unit:"reps",rewards:[{stat:"Force",xp:"6/rep"}]}),
-          h(Exercise,{icon:"↩️",name:"Gainage inversé",target:plankTarget,unit:"min",rewards:[{stat:"Force",xp:"50/min"}]})
+          h(Exercise,{icon:"🫳🏼",name:"Gainage",target:plankTarget,unit:"min",rewards:[{stat:"Force",xp:"50/min"}]}),
+          h(Exercise,{icon:"🧎🏻‍♂️‍➡️",name:"Gainage obliques",target:sideTarget,unit:"reps",rewards:[{stat:"Force",xp:"6/rep"}]}),
+          h(Exercise,{icon:"🫴🏼",name:"Gainage inversé",target:plankTarget,unit:"min",rewards:[{stat:"Force",xp:"50/min"}]})
         ),
         h("div",{style:familyStyle},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px"},"🦿 JAMBES"),
@@ -4991,7 +4996,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               "Les quêtes non compensables ne peuvent pas être reportées."
             ].map((rule,i)=>h("div",{key:i,style:"margin-bottom:5px"},"• "+rule))
           ),
-          h("div",{style:"font-size:10px;color:var(--td);margin-top:9px;line-height:1.5"},"Quêtes actuellement compensables : Pecs & Triceps, Abdos, Jambes et Lecture.")
+          h("div",{style:"font-size:10px;color:var(--td);margin-top:9px;line-height:1.5"},"Quêtes actuellement compensables : Pecs, Abdos, Jambes, Tractions négatives et Lecture.")
         )
       ),
     );
