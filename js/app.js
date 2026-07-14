@@ -1888,47 +1888,7 @@ function App(){
     }),delay);
   }
 
-  function maybeTriggerWeeklyQuestRecord(obj,prevVal,nextVal,delay=1450){
-    if(!obj || obj.binary || obj.weekly) return;
-    const prevNumber=Number(prevVal)||0;
-    const nextNumber=Number(nextVal)||0;
-    if(nextNumber<=prevNumber) return;
 
-    let currentBefore=prevNumber;
-    let currentAfter=nextNumber;
-    const previousWeekTotals={};
-
-    Object.entries(state.dailyLog||{}).forEach(([day,log])=>{
-      if(obj.id==="run" && day<RUN_RECORD_RESET_DAY) return;
-      const v=Number(log&&log[obj.id]);
-      if(!Number.isFinite(v) || v<=0) return;
-      const weekKey=wkStr(new Date(day));
-      if(weekKey===wk){
-        if(day!==today){
-          currentBefore+=v;
-          currentAfter+=v;
-        }
-      } else {
-        previousWeekTotals[weekKey]=(previousWeekTotals[weekKey]||0)+v;
-      }
-    });
-
-    const bestPreviousWeek=Math.max(0,...Object.values(previousWeekTotals));
-    if(bestPreviousWeek<=0 || currentBefore>bestPreviousWeek || currentAfter<=bestPreviousWeek) return;
-
-    const color=STAT_COLOR[obj.stat] || rank.color || "#fbbf24";
-    const label=fmtNum(currentAfter)+" "+questRecordUnit(obj.unit,currentAfter);
-    setTimeout(()=>setRecordUp({
-      title:"NOUVEAU RECORD SEMAINE",
-      name:obj.name,
-      icon:obj.icon,
-      value:label,
-      color,
-      glow:color+"55",
-      rankColor:rank.color,
-      rankGlow:rank.glow
-    }),delay);
-  }
 
 
   // ─── EFFECTS ──────────────────────────────────────────────────────────
@@ -2291,7 +2251,6 @@ function App(){
     const b=getRankBase(obj.id,ri,prestige,state.stats);
     const prev=cur, next=cur+val;
     maybeTriggerQuestRecord(obj,prev,next);
-    maybeTriggerWeeklyQuestRecord(obj,prev,next);
     const alreadyCapped_DISABLED = false;
     const effectiveNext = next;
     const effectiveVal = val;
@@ -3788,12 +3747,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       ...sortStat(objs.filter(o=>o.weekly&&!o.binary&&!rotatingSourceIds.has(o.id))),
       ...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden&&!rotatingSourceIds.has(o.id)))
     ];
-    const standardWeeklyRecordObjs=[
-      ...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary&&!rotatingSourceIds.has(o.id))),
-      ...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden&&!rotatingSourceIds.has(o.id)))
-    ];
     const recordDisplayObjs=[...exerciseHistoryDefs,...standardDailyRecordObjs];
-    const weeklyRecordDisplayObjs=[...exerciseHistoryDefs,...standardWeeklyRecordObjs];
 
     // ── Labels jours de la semaine (lun → dim) ──
     const weekLbls=["L","M","M","J","V","S","D"];
@@ -3858,33 +3812,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     });
     // Running et Rando sont désormais quotidiens : ne plus utiliser weeklyLog pour les records
 
-    // ── Records hebdomadaires (meilleur total sur une semaine ISO) ──
-    const weeklyRecordTotals={};
-    Object.entries(state.dailyLog).forEach(([date,log])=>{
-      const key=wkStr(new Date(date));
-      Object.entries(log).forEach(([id,val])=>{
-        if(id==="run" && date<RUN_RECORD_RESET_DAY) return;
-        const n=Number(val)||0;
-        if(n<=0) return;
-        weeklyRecordTotals[id]=weeklyRecordTotals[id]||{};
-        weeklyRecordTotals[id][key]=(weeklyRecordTotals[id][key]||0)+n;
-      });
-    });
-    exerciseHistoryDefs.forEach(def=>{
-      Object.entries(state.dailyLog||{}).forEach(([date,log])=>{
-        const val=exerciseValueForDay(def,date,log);
-        if(val<=0) return;
-        const key=wkStr(new Date(date));
-        weeklyRecordTotals[def.id]=weeklyRecordTotals[def.id]||{};
-        weeklyRecordTotals[def.id][key]=(weeklyRecordTotals[def.id][key]||0)+val;
-      });
-    });
-    const weeklyRecords={};
-    Object.entries(weeklyRecordTotals).forEach(([id,weeks])=>{
-      Object.entries(weeks).forEach(([week,val])=>{
-        if(!weeklyRecords[id]||val>weeklyRecords[id].val) weeklyRecords[id]={val,week};
-      });
-    });
+
 
 
     return h("div",{class:"tab"},
@@ -3970,34 +3898,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               fmtNum(rec.val)+" "+((rec.val>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",contact:"contacts",action:"actions"}[o.unit]||o.unit))
           );
         }),
-          h("div",{style:"height:1px;background:rgba(255,255,255,0.06);margin:12px 0"}),
-          h("div",{class:"ctitle",style:"font-size:10px;margin-bottom:10px;color:var(--td)"},"Records hebdomadaires"),
-          weeklyRecordDisplayObjs.map(o=>{
-            const rec=weeklyRecords[o.id];
-            if(!rec)return h("div",{key:o.id+"_wkrec",style:"display:flex;align-items:center;gap:8px;margin-bottom:8px;opacity:.35"},
-              QuestIcon(o.id,o.icon,14),
-              h("div",{style:"flex:1"},
-                h("div",{style:"font-size:12px;color:var(--td);display:flex;align-items:center;gap:5px"},
-                  o.name,
-                  o.optional&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR})
-                )
-              ),
-              h("span",{style:"font-size:11px;color:var(--td)"},"—")
-            );
-            const wkLabel=rec.week.replace("-W","-S");
-            return h("div",{key:o.id+"_wkrec",style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
-              QuestIcon(o.id,o.icon,14),
-              h("div",{style:"flex:1"},
-                h("div",{style:"font-size:12px;color:var(--tx);display:flex;align-items:center;gap:5px"},
-                  o.name,
-                  o.optional&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR})
-                ),
-                h("div",{style:"font-size:10px;color:var(--td);margin-top:1px"},wkLabel)
-              ),
-              h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--tx)"},
-                fmtNum(rec.val)+" "+questRecordUnit(o.unit,rec.val))
-            );
-          })
+
         )// end Fragment
       ),
       // Totaux depuis le début
