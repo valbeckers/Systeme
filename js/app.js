@@ -1296,16 +1296,31 @@ function buildState(){
   // Migration: re-aligner expiresAt des SQ actives sur le prochain 7h
   // et des épreuves actives sur le prochain lundi 7h
   const removedSpecialQuestIds=new Set(["sp_lunge","sp_plank","sp_deadhang","sp_pull","sp_dips"]);
-  const hadRemovedActive=(out.specialQuests||[]).some(q=>removedSpecialQuestIds.has(q.id)&&!q.completedAt);
+  const validSpecialQuestIds=new Set(
+    Object.values(SP).flat().map(q=>q.id).filter(Boolean)
+  );
+  const isRemovedOrOrphanedSpecialQuest=q=>!!(
+    q && (
+      removedSpecialQuestIds.has(q.id) ||
+      !validSpecialQuestIds.has(q.id)
+    )
+  );
+  const hadRemovedActive=(out.specialQuests||[]).some(q=>isRemovedOrOrphanedSpecialQuest(q)&&!q.completedAt);
   out.specialQuests = (out.specialQuests||[])
-    .filter(q=>!removedSpecialQuestIds.has(q.id))
+    .filter(q=>!isRemovedOrOrphanedSpecialQuest(q))
     .map(q=>{
       if(q.completedAt) return q;
       // Pour une quête active, expiresAt = prochain 7h après startedAt
       return {...q, expiresAt: next7AM(q.startedAt||Date.now())};
     });
-  out.completedSqLog=(out.completedSqLog||[]).filter(q=>!removedSpecialQuestIds.has(typeof q==="string"?q:q&&q.id));
-  if(hadRemovedActive) out.sqCooldownUntil=null;
+  out.completedSqLog=(out.completedSqLog||[]).filter(entry=>{
+    const id=typeof entry==="string"?entry:entry&&entry.id;
+    return !id || validSpecialQuestIds.has(id);
+  });
+  if(hadRemovedActive) {
+    out.sqCooldownUntil=null;
+    out.sqRerollDay=null;
+  }
   if(out.activeDungeon && !out.activeDungeon.completedAt){
     const ad=out.activeDungeon;
     const start=(ad.ruptureBoss&&ad.ruptureBoss.startedAt)||ad.rupturedAt||ad.startedAt||Date.now();
