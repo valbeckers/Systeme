@@ -61,7 +61,7 @@ const DEFS = [
   {id:"sleep",  name:"Dormir 8h",   unit:"nuit",  xpPer:0,   daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDECF\uFE0F",         base:1,  binary:true, binaryXp:150},
     // ─── FORCE ────────────────────────────────────────────────────────────
   {id:"push",   name:"Pecs & Triceps", unit:"rep", xpPer:3, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦾", base:30},
-  {id:"abs",    name:"Abdominaux", unit:"rep", xpPer:1.5, daily:true, weekly:false,optional:false,stat:"Force", icon:"🧱", base:60},
+  {id:"abs",    name:"Abdos", unit:"rep", xpPer:1.5, daily:true, weekly:false,optional:false,stat:"Force", icon:"🧱", base:60},
   {id:"squats", name:"Jambes", unit:"rep", xpPer:3, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦿", base:15, stat2:"Agilite", xpPer2:3},
   {id:"calves", name:"Mollets",unit:"rep", xpPer:1.5, daily:false, weekly:false,optional:false,legacyRotation:true,stat:"Force", icon:"🦵🏻", base:30, stat2:"Agilite", xpPer2:1},
   {id:"grips",  name:"Hand grips",      unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Force",         icon:"\u270A\uD83C\uDFFB",         base:10, fixedBase:true},
@@ -1334,6 +1334,13 @@ const EXERCISE_ROTATIONS = {
     {id:"lunges",label:"Fentes",icon:"🦵🏻"},
   ],
 };
+const EXERCISE_FAMILY_LABELS={push:"Pecs & Triceps",abs:"Abdos",squats:"Jambes"};
+const EXERCISE_FAMILY_ICONS={push:"🦾",abs:"🧱",squats:"🦿"};
+const LEGACY_EXERCISE_DEFAULTS={push:"pushups",abs:"crunches",legs:"squats"};
+function isExerciseFamilyQuestId(id){ return id==="push"||id==="abs"||id==="squats"; }
+function exerciseFamilyLabel(id,fallback){ return EXERCISE_FAMILY_LABELS[id]||fallback||id; }
+function exerciseFamilyIcon(id,fallback){ return EXERCISE_FAMILY_ICONS[id]||fallback||"•"; }
+
 function weightedExercisePick(options,lastId){
   if(!Array.isArray(options)||!options.length) return null;
   if(!lastId || !options.some(o=>o.id===lastId)) return options[Math.floor(Math.random()*options.length)];
@@ -1386,18 +1393,18 @@ function rotatedQuestObjects(baseObjs,rotation,stats){
   const abs=byId("abs",rotation&&rotation.abs);
   const legs=byId("legs",rotation&&rotation.legs);
   return (baseObjs||[]).map(obj=>{
-    if(obj.id==="push") return {...obj,name:"Pecs & Triceps — "+chest.label,icon:"🦾",exerciseIcon:chest.icon,rotationExercise:chest.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3,stat2:null,xpPer2:null};
+    if(obj.id==="push") return {...obj,name:"Pecs & Triceps - "+chest.label,icon:"🦾",exerciseIcon:chest.icon,rotationExercise:chest.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3,stat2:null,xpPer2:null};
     if(obj.id==="abs"){
-      if(abs.id==="crunches") return {...obj,name:"Abdominaux — Crunches",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:getStatLevelTarget("abs",stats),unit:"rep",xpPer:1.5};
-      if(abs.id==="leg_raises") return {...obj,name:"Abdominaux — Levées de jambes",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:Math.min(160,48+tier*10),unit:"rep",xpPer:3};
-      if(abs.id==="side_plank") return {...obj,name:"Abdominaux — Gainage obliques",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:Math.min(60,24+tier*2),unit:"rep",xpPer:6};
+      if(abs.id==="crunches") return {...obj,name:"Abdos - Crunches",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:getStatLevelTarget("abs",stats),unit:"rep",xpPer:1.5};
+      if(abs.id==="leg_raises") return {...obj,name:"Abdos - Levées de jambes",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:Math.min(160,48+tier*10),unit:"rep",xpPer:3};
+      if(abs.id==="side_plank") return {...obj,name:"Abdos - Gainage obliques",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:Math.min(60,24+tier*2),unit:"rep",xpPer:6};
       const reverse=abs.id==="reverse_plank";
-      return {...obj,name:"Abdominaux — "+(reverse?"Gainage inversé":"Gainage"),icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:Math.max(1,Math.ceil(force/10)),unit:"min",xpPer:50};
+      return {...obj,name:"Abdos - "+(reverse?"Gainage inversé":"Gainage"),icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:Math.max(1,Math.ceil(force/10)),unit:"min",xpPer:50};
     }
     if(obj.id==="squats"){
-      if(legs.id==="calves") return {...obj,name:"Jambes — Mollets",icon:"🦿",exerciseIcon:legs.icon,rotationExercise:legs.label,target:getStatLevelTarget("calves",stats),unit:"rep",xpPer:1.5,stat2:"Agilite",xpPer2:1};
-      if(legs.id==="lunges") return {...obj,name:"Jambes — Fentes",icon:"🦿",exerciseIcon:legs.icon,rotationExercise:legs.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3,stat2:null,xpPer2:null};
-      return {...obj,name:"Jambes — Squats",icon:"🦿",exerciseIcon:legs.icon,rotationExercise:legs.label,target:getStatLevelTarget("squats",stats),unit:"rep",xpPer:3,stat2:"Agilite",xpPer2:3};
+      if(legs.id==="calves") return {...obj,name:"Jambes - Mollets",icon:"🦿",exerciseIcon:legs.icon,rotationExercise:legs.label,target:getStatLevelTarget("calves",stats),unit:"rep",xpPer:1.5,stat2:"Agilite",xpPer2:1};
+      if(legs.id==="lunges") return {...obj,name:"Jambes - Fentes",icon:"🦿",exerciseIcon:legs.icon,rotationExercise:legs.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3,stat2:null,xpPer2:null};
+      return {...obj,name:"Jambes - Squats",icon:"🦿",exerciseIcon:legs.icon,rotationExercise:legs.label,target:getStatLevelTarget("squats",stats),unit:"rep",xpPer:3,stat2:"Agilite",xpPer2:3};
     }
     return obj;
   });
@@ -3737,6 +3744,52 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const lbl=wkOff===0?"Cette semaine":wkOff===1?"Semaine derni\u00e8re":fmt(ws)+" \u2013 "+fmt(we);
     const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional)),...sortStat(objs.filter(o=>o.weekly)),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden))];
 
+    const exerciseHistoryDefs=[
+      {id:"ex_pushups",name:"Pompes",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"push",family:"push",rotationId:"pushups"},
+      {id:"ex_dips",name:"Dips",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"push",family:"push",rotationId:"dips"},
+      {id:"ex_crunches",name:"Crunches",icon:"🧎🏻",unit:"rep",stat:"Force",sourceId:"abs",family:"abs",rotationId:"crunches"},
+      {id:"ex_leg_raises",name:"Levées de jambes",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"abs",family:"abs",rotationId:"leg_raises"},
+      {id:"ex_plank",name:"Gainage",icon:"⏱️",unit:"min",stat:"Force",sourceId:"abs",family:"abs",rotationId:"plank"},
+      {id:"ex_side_plank",name:"Gainage obliques",icon:"↔️",unit:"rep",stat:"Force",sourceId:"abs",family:"abs",rotationId:"side_plank"},
+      {id:"ex_reverse_plank",name:"Gainage inversé",icon:"↩️",unit:"min",stat:"Force",sourceId:"abs",family:"abs",rotationId:"reverse_plank"},
+      {id:"ex_squats",name:"Squats",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"squats",family:"legs",rotationId:"squats"},
+      {id:"ex_calves",name:"Mollets",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"squats",family:"legs",rotationId:"calves",legacySourceId:"calves"},
+      {id:"ex_lunges",name:"Fentes",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"squats",family:"legs",rotationId:"lunges"},
+    ];
+    const rotatingSourceIds=new Set(["push","abs","squats","calves"]);
+    function exerciseRotationIdForDay(day,family){
+      return ((state.exerciseRotationByDay||{})[day]||{})[family] || LEGACY_EXERCISE_DEFAULTS[family];
+    }
+    function exerciseValueForDay(def,day,log){
+      const row=log||{};
+      let value=0;
+      if(exerciseRotationIdForDay(day,def.family)===def.rotationId){
+        value+=Number(row[def.sourceId])||0;
+      }
+      if(def.legacySourceId) value+=Number(row[def.legacySourceId])||0;
+      return value;
+    }
+    function dailyQuestForHistoryDay(obj,day){
+      if(!isExerciseFamilyQuestId(obj.id)) return obj;
+      const rotation=(state.exerciseRotationByDay||{})[day]||{
+        push:LEGACY_EXERCISE_DEFAULTS.push,
+        abs:LEGACY_EXERCISE_DEFAULTS.abs,
+        legs:LEGACY_EXERCISE_DEFAULTS.legs
+      };
+      return rotatedQuestObjects(baseObjs,rotation,state.stats).find(q=>q.id===obj.id)||obj;
+    }
+    const standardDailyRecordObjs=[
+      ...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary&&!rotatingSourceIds.has(o.id))),
+      ...sortStat(objs.filter(o=>o.weekly&&!o.binary&&!rotatingSourceIds.has(o.id))),
+      ...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden&&!rotatingSourceIds.has(o.id)))
+    ];
+    const standardWeeklyRecordObjs=[
+      ...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary&&!rotatingSourceIds.has(o.id))),
+      ...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden&&!rotatingSourceIds.has(o.id)))
+    ];
+    const recordDisplayObjs=[...exerciseHistoryDefs,...standardDailyRecordObjs];
+    const weeklyRecordDisplayObjs=[...exerciseHistoryDefs,...standardWeeklyRecordObjs];
+
     // ── Labels jours de la semaine (lun → dim) ──
     const weekLbls=["L","M","M","J","V","S","D"];
 
@@ -3752,9 +3805,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }
     function dayMarkFor(obj,day){
   const log=state.dailyLog[day]||{};
+  const dayObj=dailyQuestForHistoryDay(obj,day);
   const value=log[obj.id]||0;
 
-  const target=dayTargetFor(obj,day);
+  const target=dayTargetFor(dayObj,day);
 
   const validationTarget =
     obj.optional
@@ -3791,6 +3845,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         if(!records[id]||val>records[id].val)records[id]={val,date};
       });
     });
+    exerciseHistoryDefs.forEach(def=>{
+      Object.entries(state.dailyLog||{}).forEach(([date,log])=>{
+        const val=exerciseValueForDay(def,date,log);
+        if(val>0 && (!records[def.id]||val>records[def.id].val)) records[def.id]={val,date};
+      });
+    });
     // Running et Randonnée sont désormais quotidiens : ne plus utiliser weeklyLog pour les records
 
     // ── Records hebdomadaires (meilleur total sur une semaine ISO) ──
@@ -3803,6 +3863,15 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         if(n<=0) return;
         weeklyRecordTotals[id]=weeklyRecordTotals[id]||{};
         weeklyRecordTotals[id][key]=(weeklyRecordTotals[id][key]||0)+n;
+      });
+    });
+    exerciseHistoryDefs.forEach(def=>{
+      Object.entries(state.dailyLog||{}).forEach(([date,log])=>{
+        const val=exerciseValueForDay(def,date,log);
+        if(val<=0) return;
+        const key=wkStr(new Date(date));
+        weeklyRecordTotals[def.id]=weeklyRecordTotals[def.id]||{};
+        weeklyRecordTotals[def.id][key]=(weeklyRecordTotals[def.id][key]||0)+val;
       });
     });
     const weeklyRecords={};
@@ -3836,18 +3905,25 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         ),
         h("div",{style:"display:flex;flex-direction:column;gap:7px"},
           ordered.map(obj=>{
-            const val=obj.binary
-              ? weekDays.filter(d=>d<=today && (state.dailyLog[d]?.[obj.id]||0)>=1).length
-              : (tots[obj.id]||0);
-            const wt=weeklyTargetFor(obj);
             const marks=weekDays.map(d=>dayMarkFor(obj,d));
+            const isFamily=isExerciseFamilyQuestId(obj.id);
+            const val=isFamily
+              ? marks.filter((m,i)=>weekDays[i]<=today&&m.txt==="✓").length
+              : (obj.binary
+                  ? weekDays.filter(d=>d<=today && (state.dailyLog[d]?.[obj.id]||0)>=1).length
+                  : (tots[obj.id]||0));
+            const wt=isFamily?7:weeklyTargetFor(obj);
+            const displayName=exerciseFamilyLabel(obj.id,obj.name);
+            const displayIcon=exerciseFamilyIcon(obj.id,obj.icon);
             return h("div",{key:obj.id,style:"display:grid;grid-template-columns:minmax(0,1fr) repeat(7,22px) minmax(78px,auto);gap:5px;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,0.04)"},
               h("div",{style:"display:flex;align-items:center;gap:6px;min-width:0;color:var(--tx);font-size:12px"},
-                QuestIcon(obj.id,obj.icon,14),
-                h("span",{style:"overflow:hidden;text-overflow:ellipsis;white-space:nowrap"},obj.name)
+                QuestIcon(obj.id,displayIcon,14),
+                h("span",{style:"overflow:hidden;text-overflow:ellipsis;white-space:nowrap"},displayName)
               ),
               marks.map((m,i)=>h("div",{key:obj.id+"_d"+i,style:"text-align:center;font-family:Orbitron,sans-serif;font-size:12px;font-weight:700;color:"+m.color+";opacity:"+m.opacity},m.txt)),
-              h("div",{style:"text-align:right;font-family:Orbitron,sans-serif;font-size:9px;color:var(--td);white-space:nowrap"},totalLabelFor(obj,val,wt))
+              h("div",{style:"text-align:right;font-family:Orbitron,sans-serif;font-size:9px;color:var(--td);white-space:nowrap"},
+                isFamily ? (val+"/7 jours") : totalLabelFor(obj,val,wt)
+              )
             );
           }),
           ordered.every(o=>!(tots[o.id]>0))&&h("div",{style:"text-align:center;font-size:13px;color:var(--td);padding:16px 0"},"Aucune activité cette semaine")
@@ -3861,7 +3937,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         ),
         open.records&&h(Fragment,null,
           h("div",{style:"margin-top:12px"}),
-          [...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary)),...sortStat(objs.filter(o=>o.weekly&&!o.binary)),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden))].map(o=>{
+          recordDisplayObjs.map(o=>{
           const rec=records[o.id];
           if(!rec)return h("div",{key:o.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px;opacity:.35"},
             QuestIcon(o.id,o.icon,14),
@@ -3891,7 +3967,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         }),
           h("div",{style:"height:1px;background:rgba(255,255,255,0.06);margin:12px 0"}),
           h("div",{class:"ctitle",style:"font-size:10px;margin-bottom:10px;color:var(--td)"},"Records hebdomadaires"),
-          [...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary)),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden))].map(o=>{
+          weeklyRecordDisplayObjs.map(o=>{
             const rec=weeklyRecords[o.id];
             if(!rec)return h("div",{key:o.id+"_wkrec",style:"display:flex;align-items:center;gap:8px;margin-bottom:8px;opacity:.35"},
               QuestIcon(o.id,o.icon,14),
@@ -3934,7 +4010,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         Object.values(state.weeklyLog).forEach(log=>{
           Object.entries(log).forEach(([id,val])=>{totals[id]=(totals[id]||0)+val;});
         });
-        const displayObjs=[...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary)),...sortStat(objs.filter(o=>o.weekly&&!o.binary)),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden))];
+        exerciseHistoryDefs.forEach(def=>{
+          totals[def.id]=Object.entries(state.dailyLog||{}).reduce((sum,[day,log])=>sum+exerciseValueForDay(def,day,log),0);
+        });
+        const displayObjs=recordDisplayObjs;
         return h("div",{class:"card"},
           h("div",{style:"display:flex;align-items:center;justify-content:space-between;cursor:pointer",onClick:()=>toggle("totals")},
             h("div",{class:"ctitle",style:"margin:0"},"Totaux depuis le d\u00e9but"+(firstDay?" \u2014 "+fmtFirst(firstDay):"")),
@@ -4001,7 +4080,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             const cur=(obj.weekly)?(wLog[obj.id]||0):(tLog[obj.id]||0);
             return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
               QuestIcon(obj.id,obj.icon,14,"min-width:24px"),
-              h("span",{style:"flex:1;font-size:13px"},obj.name),
+              h("span",{style:"flex:1;font-size:13px"},exerciseFamilyLabel(obj.id,obj.name)),
               h("input",{id:"cd_"+obj.id,class:"min",type:"text",inputMode:"decimal",defaultValue:String(cur),style:"width:80px;margin:0;text-align:center"}),
               h("span",{style:"font-size:11px;color:var(--td);min-width:28px"},obj.unit)
             );
@@ -4590,36 +4669,48 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       return base+" "+unitPlural(obj.unit,base)+period;
     }
 
-    function renderExerciseRotationsCodex(){
-      const familyStyle="padding:11px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(255,255,255,.025);margin-bottom:8px";
-      const exerciseStyle="padding:8px 0;border-top:1px solid rgba(255,255,255,.06)";
-      const ExerciseRow=({icon,name,objective,xp})=>h("div",{style:exerciseStyle},
-        h("div",{style:"display:flex;align-items:center;gap:7px;font-size:12px;color:var(--tx);font-weight:800"},h("span",{style:"font-size:15px"},icon),name),
-        h("div",{style:"font-size:10px;color:var(--td);line-height:1.4;margin-top:4px"},"▸ Objectif : "+objective),
-        h("div",{style:"font-size:10px;color:"+STAT_COLOR.Force+";line-height:1.4;margin-top:2px"},"▸ "+xp)
-      );
-      return h("div",{style:"margin-bottom:10px"},
-        h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:9px"},
-          "Chaque jour, un exercice est tiré dans chaque famille. L’exercice de la veille peut revenir, mais avec une probabilité réduite."
+    function renderExerciseFamiliesCodex(){
+      const force=Math.max(1,Number((state.stats||{}).Force)||1);
+      const tier=statLevelTier(force);
+      const familyStyle="padding:10px;border:1px solid "+STAT_COLOR.Force+"44;border-radius:10px;background:"+STAT_COLOR.Force+"08;margin-bottom:9px";
+      const subStyle="padding:9px;border:1px solid rgba(255,255,255,.07);border-radius:8px;background:rgba(255,255,255,.025);margin-top:7px";
+      const objective=(value,unit)=>fmtNum(value)+" "+unit+" / jour";
+      function Reward({stat,xp}){
+        return h("span",{style:"display:inline-block;border:1px solid "+(STAT_COLOR[stat]||"var(--rc)")+"55;color:"+(STAT_COLOR[stat]||"var(--rc)")+";border-radius:999px;padding:2px 7px;margin:2px 4px 2px 0;font-size:10px;font-family:Orbitron,sans-serif;background:"+(STAT_COLOR[stat]||"var(--rc)")+"11"},"+"+xp+" XP "+statLabel(stat));
+      }
+      function Exercise({icon,name,target,unit,rewards}){
+        return h("div",{style:subStyle},
+          h("div",{style:"display:flex;align-items:center;gap:7px;font-size:12px;color:var(--tx);font-weight:800"},h("span",{style:"font-size:15px"},icon),name),
+          h("div",{style:"margin-top:5px"},(rewards||[]).map((r,i)=>h(Reward,{key:i,stat:r.stat,xp:r.xp}))),
+          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-top:4px"},"▸ Objectif : "+objective(target,unit))
+        );
+      }
+      const pushTarget=getStatLevelTarget("push",state.stats);
+      const absTarget=getStatLevelTarget("abs",state.stats);
+      const legRaiseTarget=Math.min(160,48+tier*10);
+      const plankTarget=Math.max(1,Math.ceil(force/10));
+      const sideTarget=Math.min(60,24+tier*2);
+      const squatTarget=getStatLevelTarget("squats",state.stats);
+      const calvesTarget=getStatLevelTarget("calves",state.stats);
+      return h(Fragment,null,
+        h("div",{style:familyStyle},
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px"},"🦾 PECS & TRICEPS"),
+          h(Exercise,{icon:"💪🏼",name:"Pompes",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
+          h(Exercise,{icon:"💪🏼",name:"Dips",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]})
         ),
         h("div",{style:familyStyle},
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px;margin-bottom:4px"},"🦾 PECS & TRICEPS"),
-          h(ExerciseRow,{icon:"💪🏼",name:"Pompes",objective:"objectif actuel lié au niveau de Force",xp:"3 XP Force / rep"}),
-          h(ExerciseRow,{icon:"💪🏼",name:"Dips",objective:"même objectif que les Pompes",xp:"3 XP Force / rep"})
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px"},"🧱 ABDOS"),
+          h(Exercise,{icon:"🧎🏻",name:"Crunches",target:absTarget,unit:"reps",rewards:[{stat:"Force",xp:"1,5/rep"}]}),
+          h(Exercise,{icon:"🦵🏻",name:"Levées de jambes",target:legRaiseTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
+          h(Exercise,{icon:"⏱️",name:"Gainage",target:plankTarget,unit:"min",rewards:[{stat:"Force",xp:"50/min"}]}),
+          h(Exercise,{icon:"↔️",name:"Gainage obliques",target:sideTarget,unit:"reps",rewards:[{stat:"Force",xp:"6/rep"}]}),
+          h(Exercise,{icon:"↩️",name:"Gainage inversé",target:plankTarget,unit:"min",rewards:[{stat:"Force",xp:"50/min"}]})
         ),
         h("div",{style:familyStyle},
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px;margin-bottom:4px"},"🧱 ABDOMINAUX"),
-          h(ExerciseRow,{icon:"🧎🏻",name:"Crunches",objective:"objectif actuel des Abdos",xp:"1,5 XP Force / rep"}),
-          h(ExerciseRow,{icon:"🦵🏻",name:"Levées de jambes",objective:"48 reps de base, progression liée au niveau de Force",xp:"3 XP Force / rep"}),
-          h(ExerciseRow,{icon:"⏱️",name:"Gainage",objective:"1 min par tranche de 10 niveaux de Force",xp:"50 XP Force / min"}),
-          h(ExerciseRow,{icon:"↔️",name:"Gainage obliques",objective:"24 reps de base, puis +2 reps par palier",xp:"6 XP Force / rep"}),
-          h(ExerciseRow,{icon:"↩️",name:"Gainage inversé",objective:"même objectif que le Gainage",xp:"50 XP Force / min"})
-        ),
-        h("div",{style:familyStyle},
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px;margin-bottom:4px"},"🦿 JAMBES"),
-          h(ExerciseRow,{icon:"🦵🏻",name:"Squats",objective:"objectif actuel des Squats",xp:"XP actuels des Squats"}),
-          h(ExerciseRow,{icon:"🦵🏻",name:"Mollets",objective:"objectif actuel des Mollets",xp:"XP actuels des Mollets"}),
-          h(ExerciseRow,{icon:"🦵🏻",name:"Fentes",objective:"même objectif que les Pompes",xp:"3 XP Force / rep"})
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px"},"🦿 JAMBES"),
+          h(Exercise,{icon:"🦵🏻",name:"Squats",target:squatTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"},{stat:"Agilite",xp:"3/rep"}]}),
+          h(Exercise,{icon:"🦵🏻",name:"Mollets",target:calvesTarget,unit:"reps",rewards:[{stat:"Force",xp:"1,5/rep"},{stat:"Agilite",xp:"1/rep"}]}),
+          h(Exercise,{icon:"🦵🏻",name:"Fentes",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]})
         )
       );
     }
@@ -4822,6 +4913,25 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       ));
     }
 
+    function renderRequiredCodex(){
+      const rotatingIds=new Set(["push","abs","squats","calves"]);
+      const staticRequired=objs.filter(o=>o.daily&&!o.optional&&!rotatingIds.has(o.id));
+      const groups=STATS.map(stat=>({stat,list:[]}));
+      staticRequired.forEach(item=>{
+        const stat=dominantStat(item,item.stat);
+        (groups.find(g=>g.stat===stat)||groups[groups.length-1]).list.push(item);
+      });
+      return groups.map(group=>{
+        const hasExerciseFamilies=group.stat==="Force";
+        if(!hasExerciseFamilies&&group.list.length===0) return null;
+        return h("div",{key:group.stat,style:"margin-bottom:13px"},
+          h("div",{style:"font-size:11px;color:"+(STAT_COLOR[group.stat]||"var(--rc)")+";font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin:2px 0 7px"},statLabel(group.stat)),
+          hasExerciseFamilies&&renderExerciseFamiliesCodex(),
+          group.list.map(renderQuest)
+        );
+      }).filter(Boolean);
+    }
+
     const required = objs.filter(o=>o.daily&&!o.optional);
     const weeklyCodex = objs.filter(o=>o.weekly);
     const bonus = objs.filter(o=>o.optional&&!o.weekly&&!o.bonusHidden);
@@ -4837,12 +4947,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{class:"ctitle"},"Codex"),
         h("div",{style:"font-size:12px;color:var(--td);line-height:1.45"},"Catalogue complet des quêtes existantes. Les objectifs des quêtes quotidiennes et hebdomadaires sont calculés au rang actuel.")
       ),
-      h(Section,{id:"obl",title:"Quêtes journalières",count:required.length},
-        h(Fragment,null,
-          renderExerciseRotationsCodex(),
-          groupByDominantStat(required,renderQuest)
-        )
-      ),
+      h(Section,{id:"obl",title:"Quêtes journalières",count:required.length},renderRequiredCodex()),
       h(Section,{id:"bonus",title:"Quêtes bonus",count:bonus.length+hiddenBonus.length},
         h(Fragment,null,
           groupByDominantStat(bonus,renderQuest),
@@ -4886,7 +4991,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               "Les quêtes non compensables ne peuvent pas être reportées."
             ].map((rule,i)=>h("div",{key:i,style:"margin-bottom:5px"},"• "+rule))
           ),
-          h("div",{style:"font-size:10px;color:var(--td);margin-top:9px;line-height:1.5"},"Quêtes actuellement compensables : Pompes, Abdos, Squats, Mollets et Lecture.")
+          h("div",{style:"font-size:10px;color:var(--td);margin-top:9px;line-height:1.5"},"Quêtes actuellement compensables : Pecs & Triceps, Abdos, Jambes et Lecture.")
         )
       ),
     );
