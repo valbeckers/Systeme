@@ -79,7 +79,7 @@ const DEFS = [
   // ─── DISCIPLINE ───────────────────────────────────────────────────────
 ];
 
-// Quetes speciales — par stat (25 au total)
+// Quetes speciales — par stat (23 au total)
 const SP = {
   Sante:[
     {id:"sp_sun",     name:"Séance de lumière naturelle", icon:"\u2600\uFE0F",                              unit:"min",  target:10,  xp:500, xp2:250, stat2:"Esprit", days:1, binary:true, desc:"10 min de lumière naturelle"},
@@ -90,8 +90,6 @@ const SP = {
     {id:"sp_no_sugar", name:"Aucun sucre transformé", icon:"\uD83C\uDF6C", unit:"jour", target:1, xp:500, days:1, binary:true, desc:"Aucun sucre transformé"},
     {id:"sp_mealnostim", name:"Repas sans stimulation", icon:"🧠", unit:"repas", target:2, xp:1000, days:1, tiers:[{at:1,xp:250,stat:"Sante"},{at:2,xp:500,stat:"Sante",xp2:250,stat2:"Discipline"}], desc:"2 repas sans stimulation (palier à 1 repas)"},  ],
   Force:[
-    {id:"sp_pull",    name:"Tractions",        icon:"\u270A\uD83C\uDFFB",                                   unit:"rep",  target:30,  xp:500, days:1, desc:"30 tractions"},
-    {id:"sp_dips",    name:"Dips",            icon:"\uD83D\uDC4A\uD83C\uDFFB",                             unit:"rep",  target:100, xp:500, days:1, desc:"100 dips"},
     {id:"sp_wallsit", name:"Wall sit",     icon:"\uD83E\uDE91",                                         unit:"min",  target:10,  xp:1000, xp2:500, stat2:"Endurance", days:1, desc:"10 min de wall sit"},
   ],
   Esprit:[
@@ -111,7 +109,7 @@ const SP = {
     {id:"sp_flow20",  name:"Animal flow", icon:"\uD83D\uDC0A",                                         unit:"min",  target:30, xp:1500, days:1, tiers:[{at:15,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"},{at:30,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"}], desc:"30 min d'animal flow (palier à 15 min)"},
     {id:"sp_fluide",  name:"Flow martial", icon:"\uD83C\uDF0A",                              unit:"min",  target:30, xp:1500, days:1, tiers:[{at:15,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"},{at:30,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"}], desc:"30 min de flow martial / mouvement continu sans rupture"},
 
-    {id:"sp_flex30",  name:"Souplesse longue", icon:"\uD83E\uDD38\uD83C\uDFFB",                              unit:"min",  target:30, xp:1500, days:1, tiers:[{at:15,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"},{at:30,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"}], desc:"30 min de souplesse (palier à 15 min)"},    {id:"sp_silent",  name:"Déplacements silencieux", icon:"\uD83D\uDC08",                          unit:"min",  target:10, xp:500, days:1, desc:"Marcher sans bruit (escaliers, pièces)"},
+    {id:"sp_flex30",  name:"Souplesse", icon:"\uD83E\uDD38\uD83C\uDFFB",                              unit:"min",  target:30, xp:1500, days:1, tiers:[{at:15,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"},{at:30,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"}], desc:"30 min de souplesse (palier à 15 min)"},    {id:"sp_silent",  name:"Déplacements silencieux", icon:"\uD83D\uDC08",                          unit:"min",  target:10, xp:500, days:1, desc:"Marcher sans bruit (escaliers, pièces)"},
         {id:"sp_footwork", name:"Footwork rapide", icon:"\u26A1",                                            unit:"min",  target:10, xp:500, step:5, days:1, desc:"Footwork rapide (carrelage, devant/derrière/côtés)"},
   ],
   Discipline:[
@@ -155,8 +153,8 @@ const DUNGEONS = [
     {name:"Running", desc:"30 min sans s’arrêter"},
   ]},
   {id:"hunter", title:"Donjon du Chasseur", short:"Chasseur", stat:"Agilite", icon:"🏹", color:"#4ade80", reward:{xp:1500,stat:"Agilite",xp2:300,stat2:"Endurance"}, rooms:[
-    {name:"Éveil corporel", desc:"10 min mobilité douce"},
-    {name:"Déplacements", desc:"10 min footwork"},
+    {name:"Éveil corporel", desc:"5 min de mobilité douce"},
+    {name:"Footwork rapide", desc:"10 min"},
     {name:"Équilibre sur un pied", desc:"10 min"},
     {name:"Déplacements silencieux", desc:"10 min"},
     {name:"Souplesse active / Animal flow", desc:"30 min"},
@@ -196,13 +194,13 @@ const DUNGEON_RUPTURE_BOSSES = {
   pilgrim:[
     {id:"pilgrim_nomade",rarity:"mineur",name:"Le Nomade",objective:"30 min de marche cumulées"},
     {id:"pilgrim_voyageur_perdu",rarity:"majeur",name:"Le Voyageur Perdu",objective:"Atteindre 10 000 pas"},
-    {id:"pilgrim_traqueur",rarity:"elite",name:"Le Traqueur",objective:"30 min d’escaliers"},
+    {id:"pilgrim_predateur",rarity:"elite",name:"Le Prédateur",objective:"20 min de corde à sauter"},
     {id:"pilgrim_messager",rarity:"legendaire",name:"Le Messager",objective:"Courir 7 km"},
   ],
   hunter:[
-    {id:"hunter_predateur",rarity:"mineur",name:"Le Prédateur",objective:"15 min de corde à sauter"},
+    {id:"hunter_rodeur",rarity:"mineur",name:"Le Rôdeur",objective:"10 min de déplacements latéraux rapides"},
     {id:"hunter_fauve",rarity:"majeur",name:"Le Fauve",objective:"20 min de footwork"},
-    {id:"hunter_fantome",rarity:"elite",name:"Le Fantôme",objective:"20 min de déplacements silencieux"},
+    {id:"hunter_traqueur",rarity:"elite",name:"Le Traqueur",objective:"30 allers-retours d’escaliers"},
     {id:"hunter_acrobate",rarity:"legendaire",name:"L’Acrobate",objective:"30 min d’Animal Flow ou de mobilité active continue"},
   ],
   monk:[
@@ -1297,19 +1295,32 @@ function buildState(){
   out.stats=recomputed;
   // Migration: re-aligner expiresAt des SQ actives sur le prochain 7h
   // et des épreuves actives sur le prochain lundi 7h
-  out.specialQuests = (out.specialQuests||[]).map(q=>{
-    if(q.completedAt) return q;
-    // Pour une quête active, expiresAt = prochain 7h après startedAt
-    return {...q, expiresAt: next7AM(q.startedAt||Date.now())};
-  });
+  const removedSpecialQuestIds=new Set(["sp_pull","sp_dips"]);
+  const hadRemovedActive=(out.specialQuests||[]).some(q=>removedSpecialQuestIds.has(q.id)&&!q.completedAt);
+  out.specialQuests = (out.specialQuests||[])
+    .filter(q=>!removedSpecialQuestIds.has(q.id))
+    .map(q=>{
+      if(q.completedAt) return q;
+      // Pour une quête active, expiresAt = prochain 7h après startedAt
+      return {...q, expiresAt: next7AM(q.startedAt||Date.now())};
+    });
+  out.completedSqLog=(out.completedSqLog||[]).filter(q=>!removedSpecialQuestIds.has(typeof q==="string"?q:q&&q.id));
+  if(hadRemovedActive) out.sqCooldownUntil=null;
   if(out.activeDungeon && !out.activeDungeon.completedAt){
     const ad=out.activeDungeon;
     const start=(ad.ruptureBoss&&ad.ruptureBoss.startedAt)||ad.rupturedAt||ad.startedAt||Date.now();
     const expiresAt=next7AM(start);
+    let ruptureBoss=ad.ruptureBoss;
+    if(ruptureBoss){
+      const updated=(DUNGEON_RUPTURE_BOSSES[ad.id]||[]).find(b=>b.rarity===ruptureBoss.rarity);
+      ruptureBoss=updated
+        ? {...ruptureBoss,...updated,startedAt:ruptureBoss.startedAt||start,expiresAt}
+        : {...ruptureBoss,expiresAt};
+    }
     out.activeDungeon={
       ...ad,
       expiresAt,
-      ruptureBoss:ad.ruptureBoss?{...ad.ruptureBoss,expiresAt}:ad.ruptureBoss
+      ruptureBoss
     };
   }
   return out;
@@ -2830,9 +2841,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             },"+10 "+unitPlur)
           );
         }
-        const QUICK_IDS=["push","abs","squats","calves","reading","flex","balance","grips","med","water","mob"];
-        const unitLabel={push:obj.unit,abs:obj.unit,squats:obj.unit,calves:obj.unit,reading:"min",flex:"min",balance:"min",grips:"min",med:"min",water:"verre",mob:"min"};
-        const unitLabelPlural={push:obj.unit==="rep"?"reps":obj.unit,abs:obj.unit==="rep"?"reps":obj.unit,squats:obj.unit==="rep"?"reps":obj.unit,calves:"reps",reading:"min",flex:"min",balance:"min",grips:"min",med:"min",water:"verres",mob:"min"};
+        const QUICK_IDS=["push","abs","squats","negative_pullups","calves","reading","flex","balance","grips","med","water","mob"];
+        const unitLabel={push:obj.unit,abs:obj.unit,squats:obj.unit,negative_pullups:"rep",calves:obj.unit,reading:"min",flex:"min",balance:"min",grips:"min",med:"min",water:"verre",mob:"min"};
+        const unitLabelPlural={push:obj.unit==="rep"?"reps":obj.unit,abs:obj.unit==="rep"?"reps":obj.unit,squats:obj.unit==="rep"?"reps":obj.unit,negative_pullups:"reps",calves:"reps",reading:"min",flex:"min",balance:"min",grips:"min",med:"min",water:"verres",mob:"min"};
         if(QUICK_IDS.includes(obj.id)){
           const lbl=unitLabel[obj.id]||obj.unit;
           const lblPl=unitLabelPlural[obj.id]||obj.unit;
