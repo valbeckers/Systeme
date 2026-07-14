@@ -1295,7 +1295,7 @@ function buildState(){
   out.stats=recomputed;
   // Migration: re-aligner expiresAt des SQ actives sur le prochain 7h
   // et des épreuves actives sur le prochain lundi 7h
-  const removedSpecialQuestIds=new Set(["sp_pull","sp_dips"]);
+  const removedSpecialQuestIds=new Set(["sp_lunge","sp_plank","sp_deadhang","sp_pull","sp_dips"]);
   const hadRemovedActive=(out.specialQuests||[]).some(q=>removedSpecialQuestIds.has(q.id)&&!q.completedAt);
   out.specialQuests = (out.specialQuests||[])
     .filter(q=>!removedSpecialQuestIds.has(q.id))
