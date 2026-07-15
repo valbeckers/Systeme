@@ -4443,13 +4443,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("div",{style:"font-size:10px;color:var(--td);margin-top:5px;line-height:1.35"},ev.desc),
             h("div",{style:"margin-top:7px"},
               h("span",{style:"display:inline-block;border:1px solid "+color+"55;color:"+color+";border-radius:999px;padding:2px 7px;margin:2px 4px 2px 0;font-size:10px;font-family:Orbitron,sans-serif;background:"+color+"11"},"+15% XP "+statLabel(ev.stat))
-            ),
-            h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:6px"},
-              h("div",{style:detailStyle},"▸ Déclenchement : le lendemain d’un donjon normal complété"),
-              h("div",{style:detailStyle},"▸ Sélection : une stat aléatoire parmi Santé / Force / Esprit / Endurance / Agilité, pondérée selon les XP gagnés la veille"),
-              h("div",{style:detailStyle},"▸ Exclusion : la Discipline ne peut pas être tirée"),
-              h("div",{style:detailStyle},"▸ Durée : jusqu’au reset de 7h"),
-              h("div",{style:detailStyle},"▸ Effet : bonus automatique sur les gains de la stat concernée")
             )
           )
         )
@@ -4609,7 +4602,14 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       ),
       h(Section,{id:"elan",title:"Élans",count:elanList.length},
         h(Fragment,null,
-          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Bonus automatiques de +15 % XP accordés le lendemain d’un donjon complété et appliqués aux gains de la stat concernée."),
+          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:7px"},"Bonus automatiques de +15 % XP accordés le lendemain d’un donjon complété et appliqués aux gains de la stat concernée."),
+          h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-bottom:10px"},
+            h("div",{style:detailStyle},"▸ Déclenchement : le lendemain d’un donjon normal complété"),
+            h("div",{style:detailStyle},"▸ Sélection : une stat aléatoire parmi Santé / Force / Esprit / Endurance / Agilité, pondérée selon les XP gagnés la veille"),
+            h("div",{style:detailStyle},"▸ Exclusion : la Discipline ne peut pas être tirée"),
+            h("div",{style:detailStyle},"▸ Durée : jusqu’au reset de 7h"),
+            h("div",{style:detailStyle},"▸ Effet : bonus automatique sur les gains de la stat concernée")
+          ),
           elanList.map(renderElanCodex)
         )
       ),
