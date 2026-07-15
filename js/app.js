@@ -231,7 +231,7 @@ function pickDungeonRuptureBoss(dungeonId){
 const SQ_TIER_COLOR = {mineure:"#fbbf24", majeure:"#f59e0b", legendaire:"#f97316"};
 const SQ_TIER_LABEL = {mineure:"Mineure", majeure:"Majeure", legendaire:"Légendaire"};
 
-// Événements aléatoires — V1 : 1 tirage/jour au reset de 7h, sans pénalité.
+// Élans — V2 : récompense différée après complétion d’un donjon normal.
 const EVENT_BONUSES = [
   {id:"ev_force",title:"Élan de Force",desc:"Les gains Force sont augmentés de 15% aujourd’hui.",stat:"Force",bonusPct:0.15},
   {id:"ev_sante",title:"Élan de Vitalité",desc:"Les gains Santé sont augmentés de 15% aujourd’hui.",stat:"Sante",bonusPct:0.15},
@@ -372,6 +372,12 @@ function wasDayCompleteForEvent(s,day){
   if(required.length===0) return false;
   return missedRequiredQuestsForEvent(s,day).length===0;
 }
+function completedNormalDungeonForEvent(s,day){
+  return [...(s.dungeonLog||[])].some(entry=>{
+    if(!entry || entry.rupture || !entry.completedAt) return false;
+    return eventDayStr(entry.completedAt)===day;
+  });
+}
 function buildBonusEvent(s,now=Date.now()){
   const day=eventDayStr(now);
   const prev=addDaysStr(day,-1);
@@ -387,13 +393,12 @@ function buildBonusEvent(s,now=Date.now()){
     return {event:e,score:Math.max(1,score),xp:xpByStat[e.stat]||0};
   });
   const e=weightedPickElan(scored);
-  return {...e,type:"bonus",day,startedAt:now,expiresAt:next7AM(now),source:"previous_day_complete_weighted"};
+  return {...e,type:"bonus",day,startedAt:now,expiresAt:next7AM(now),source:"dungeon_completion_reward"};
 }
 function buildDailyEvent(s,now=Date.now()){
   const day=eventDayStr(now);
   const prev=addDaysStr(day,-1);
-  const hasHistory=!!(s.dailyLog&&s.dailyLog[prev]);
-  if(hasHistory && wasDayCompleteForEvent(s,prev)) return buildBonusEvent(s,now);
+  if(completedNormalDungeonForEvent(s,prev)) return buildBonusEvent(s,now);
   return null;
 }
 function applyDailyEventReset(s,now=Date.now()){
@@ -4440,8 +4445,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               h("span",{style:"display:inline-block;border:1px solid "+color+"55;color:"+color+";border-radius:999px;padding:2px 7px;margin:2px 4px 2px 0;font-size:10px;font-family:Orbitron,sans-serif;background:"+color+"11"},"+15% XP "+statLabel(ev.stat))
             ),
             h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:6px"},
-              h("div",{style:detailStyle},"▸ Déclenchement actuel : si la journée précédente est complète"),
-              h("div",{style:detailStyle},"▸ Sélection : favorise une stat à renforcer selon les XP gagnés la veille"),
+              h("div",{style:detailStyle},"▸ Déclenchement : le lendemain d’un donjon normal complété"),
+              h("div",{style:detailStyle},"▸ Sélection : une stat aléatoire parmi Santé / Force / Esprit / Endurance / Agilité, pondérée selon les XP gagnés la veille"),
+              h("div",{style:detailStyle},"▸ Exclusion : la Discipline ne peut pas être tirée"),
               h("div",{style:detailStyle},"▸ Durée : jusqu’au reset de 7h"),
               h("div",{style:detailStyle},"▸ Effet : bonus automatique sur les gains de la stat concernée")
             )
@@ -4603,7 +4609,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       ),
       h(Section,{id:"elan",title:"Élans",count:elanList.length},
         h(Fragment,null,
-          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Bonus automatiques de +15 % XP appliqués aux gains de la stat concernée."),
+          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Bonus automatiques de +15 % XP accordés le lendemain d’un donjon complété et appliqués aux gains de la stat concernée."),
           elanList.map(renderElanCodex)
         )
       ),
