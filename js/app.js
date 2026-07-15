@@ -276,57 +276,6 @@ const EVENT_INVITES = [
   {id:"ev_mental_capture",title:"Invitation à agir",desc:"Note 5 choses qui encombrent ton esprit, puis traite ou planifie au moins 1 élément.",stat:"Discipline",reward:[{stat:"Discipline",xp:70},{stat:"Esprit",xp:30}]},
 ];
 
-const MENTAL_MODES = [
-  {
-    id:"energy_low",
-    label:"Énergie basse",
-    enemy:"Le Mode Économie",
-    enemyDesc:"Il réduit ton initiative et te pousse à l’inertie.",
-    actionTitle:"Eau + lumière 5 min",
-    desc:"Bois 2 verres d’eau, puis passe 5 min dehors ou devant une source de lumière naturelle. Chronomètre obligatoire.",
-    reward:[{stat:"Sante",xp:75},{stat:"Discipline",xp:25}]
-  },
-  {
-    id:"scattered",
-    label:"Mental dispersé",
-    enemy:"Le Brouillard",
-    enemyDesc:"Il te pousse à passer d’une chose à l’autre sans finir.",
-    actionTitle:"Synthèse écrite 10 min",
-    desc:"Pendant 10 min sans interruption, écris 5 lignes minimum pour clarifier une idée, une décision ou un problème précis.",
-    reward:[{stat:"Esprit",xp:75},{stat:"Discipline",xp:25}]
-  },
-  {
-    id:"stress",
-    label:"Stress / tension",
-    enemy:"L’Alarme",
-    enemyDesc:"Elle te fait confondre urgence ressentie et urgence réelle.",
-    actionTitle:"Respiration lente 5 min",
-    desc:"Pendant 5 min chrono, fais une respiration lente : inspire 4 secondes, expire 6 secondes, sans écran.",
-    reward:[{stat:"Sante",xp:75},{stat:"Esprit",xp:75}]
-  },
-  {
-    id:"avoidance",
-    label:"Flemme / évitement",
-    enemy:"Le Négociateur",
-    enemyDesc:"Il transforme “maintenant” en “plus tard”.",
-    actionTitle:"Tâche repoussée 5 min",
-    desc:"Choisis une tâche précise que tu repousses et travaille dessus pendant 5 min chrono, sans changer de sujet.",
-    reward:[{stat:"Discipline",xp:100}]
-  },
-  {
-    id:"momentum",
-    label:"Bonne dynamique",
-    enemy:"La Dispersion Positive",
-    enemyDesc:"Tu as de l’énergie, mais tu risques de t’éparpiller.",
-    actionTitle:"Quête restante ciblée 10 min",
-    desc:"Choisis une seule quête restante sur l’accueil et avance dessus pendant 10 min chrono, sans passer à autre chose.",
-    reward:[{stat:"Discipline",xp:50}]
-  }
-];
-
-function mentalModeRewardText(mode){
-  return (mode?.reward||[]).map(r=>"+"+r.xp+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ");
-}
 
 function eventDayStr(from=Date.now()){
   const d=new Date(from);
@@ -1100,7 +1049,6 @@ function cleanSystemState(raw){
     dailyEvent:cleanDailyEvent(data.dailyEvent),
     eventDay:data.eventDay||null,
     eventHistory:cleanEventHistory(data.eventHistory),
-    mentalMode:data.mentalMode||null,
     sqRerollDay:data.sqRerollDay||null,
     questDebt:data.questDebt||null,
     debtUsesByWeek:data.debtUsesByWeek||{},
@@ -1221,7 +1169,6 @@ const IMPORTED = {
   dailyEvent:null,
   eventDay:null,
   eventHistory:[],
-  mentalMode:null,
   sqRerollDay:null,
   completedSqLog:[],
   sqStatCycle:[],
@@ -1283,7 +1230,6 @@ function buildState(){
     dailyEvent:saved.dailyEvent||IMPORTED.dailyEvent||null,
     eventDay:saved.eventDay||IMPORTED.eventDay||null,
     eventHistory:saved.eventHistory||IMPORTED.eventHistory||[],
-    mentalMode:saved.mentalMode||IMPORTED.mentalMode||null,
     enduranceChoiceByDay:saved.enduranceChoiceByDay||{},
     exerciseRotationByDay:saved.exerciseRotationByDay||{},
     completedSqLog:saved.completedSqLog||[],
@@ -1363,7 +1309,6 @@ const EXERCISE_ROTATIONS = {
     {id:"leg_raises",label:"Levées de jambes",icon:"🦵🏻"},
     {id:"plank",label:"Gainage",icon:"🫳🏼"},
     {id:"side_plank",label:"Gainage obliques",icon:"🧎🏻‍♂️‍➡️"},
-    {id:"reverse_plank",label:"Gainage inversé",icon:"🫴🏼"},
   ],
   legs:[
     {id:"squats",label:"Squats",icon:"🦵🏻"},
@@ -1418,6 +1363,8 @@ function cleanExerciseRotationByDay(raw){
     Object.entries(EXERCISE_ROTATIONS).forEach(([family,options])=>{
       if(options.some(o=>o.id===row[family])) clean[family]=row[family];
     });
+    // Migration d'une ancienne variante supprimée.
+    if(row.abs==="reverse_plank" && !clean.abs) clean.abs="plank";
     if(Object.keys(clean).length) out[day]=clean;
   });
   return out;
@@ -1435,8 +1382,7 @@ function rotatedQuestObjects(baseObjs,rotation,stats){
       if(abs.id==="crunches") return {...obj,name:"Abdos - Crunches",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:getStatLevelTarget("abs",stats),unit:"rep",xpPer:1.5};
       if(abs.id==="leg_raises") return {...obj,name:"Abdos - Levées de jambes",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:Math.min(160,48+tier*10),unit:"rep",xpPer:3};
       if(abs.id==="side_plank") return {...obj,name:"Abdos - Gainage obliques",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:Math.min(60,24+tier*2),unit:"rep",xpPer:6};
-      const reverse=abs.id==="reverse_plank";
-      return {...obj,name:"Abdos - "+(reverse?"Gainage inversé":"Gainage"),icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:Math.max(1,Math.ceil(force/10)),unit:"min",xpPer:50};
+      return {...obj,name:"Abdos - Gainage",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:Math.max(1,Math.ceil(force/10)),unit:"min",xpPer:50};
     }
     if(obj.id==="squats"){
       if(legs.id==="calves") return {...obj,name:"Jambes - Mollets",icon:"🦿",exerciseIcon:legs.icon,rotationExercise:legs.label,target:getStatLevelTarget("calves",stats),unit:"rep",xpPer:1.5,stat2:"Agilite",xpPer2:1};
@@ -1524,7 +1470,7 @@ function App(){
   const [focusMode,setFocusMode] = useState(false);
   const [dungeonHelpOpen,setDungeonHelpOpen] = useState({});
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
-  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,ev:false,mm:false,debt:false,dj:false,cs:false});
+  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,ev:false,debt:false,dj:false,cs:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
   const [showStatReqDetail,setShowStatReqDetail] = useState(false);
   const [showRankReqStats,setShowRankReqStats] = useState(false);
@@ -1589,16 +1535,6 @@ function App(){
     setState(s=>ensureExerciseRotationForDay(s,today));
   },[today,state.exerciseRotationByDay]);
 
-  // Mode mental : vrai tirage aléatoire 33 %, une seule fois par journée après 12h
-  useEffect(()=>{
-    const hour=new Date(Date.now()).getHours();
-    if(hour<12) return;
-    if(state.mentalModeRollDay===today) return;
-    setState(s=>{
-      if(s.mentalModeRollDay===today) return s;
-      return {...s,mentalModeRollDay:today,mentalModeAvailable:Math.random()<1/3};
-    });
-  },[today,state.mentalModeRollDay]);
   const baseObjs = state.objectives||DEFS;
   const todayExerciseRotation=(state.exerciseRotationByDay||{})[today]||{};
   const objs = rotatedQuestObjects(baseObjs,todayExerciseRotation,state.stats);
@@ -2175,42 +2111,7 @@ function App(){
     }
   }
 
-  function chooseMentalMode(id){
-    const mode=MENTAL_MODES.find(m=>m.id===id);
-    if(!mode) return;
-    setState(s=>({...s,mentalMode:{day:todayStr(),id:mode.id,completedAt:null}}));
-  }
 
-  function completeMentalMode(mode,e){
-    if(e){e.preventDefault();e.stopPropagation();}
-    if(!mode) return;
-    const current=state.mentalMode;
-    if(!current || current.day!==todayStr() || current.completedAt) return;
-    const rewards=mode.reward||[];
-    const totalReward=rewards.reduce((sum,r)=>sum+(r.xp||0),0);
-    setState(s=>{
-      const beforeXp=s.totalXp;
-      const beforeStats=s.stats;
-      let totalXp=s.totalXp;
-      const statXp={...s.statXp};
-      const stats={...s.stats};
-      rewards.forEach(r=>{
-        totalXp+=(r.xp||0);
-        statXp[r.stat]=(statXp[r.stat]||0)+(r.xp||0);
-        stats[r.stat]=getLvl(statXp[r.stat]);
-      });
-      const day=todayStr();
-      const daily={...(s.dailyExtraXp||{})};
-      const dayLog={...(daily[day]||{})};
-      dayLog.mental=(dayLog.mental||0)+totalReward;
-      daily[day]=dayLog;
-      triggerProgressOverlay(beforeXp,beforeStats,totalXp,stats,300);
-      return {...s,totalXp,statXp,stats,dailyExtraXp:daily,mentalMode:{...current,completedAt:Date.now()},lastActiveDay:day};
-    });
-    const id1=Date.now()+Math.random(),id2=id1+0.1;
-    setFloats(f=>[...f,{id:id1,y:"35%",txt:"MODE MENTAL VALIDÉ !"},{id:id2,y:"40%",txt:mentalModeRewardText(mode)}]);
-    setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id1&&p.id!==id2)),1700);
-  }
 
   function completeDailyEvent(ev,e){
     if(e){e.preventDefault();e.stopPropagation();}
@@ -3221,53 +3122,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
-  function MentalModeCard(){
-    const hour=new Date(Date.now()).getHours();
-    const todayMental=state.mentalMode&&state.mentalMode.day===today ? state.mentalMode : null;
-    const selected=todayMental ? MENTAL_MODES.find(m=>m.id===todayMental.id) : null;
-    const completed=!!todayMental?.completedAt;
-    const remainingDailyCount=(typeof remainingDaily!=="undefined" ? remainingDaily.length : 0);
-    if(hour<12 || completed || state.mentalModeRollDay!==today || !state.mentalModeAvailable) return null;
-    const color="#f59e0b";
-    return h("div",{class:"card",style:"border-color:"+color+"55;background:linear-gradient(135deg,"+color+"10,rgba(255,255,255,0.025))"},
-      h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px"},
-        h("div",{style:"min-width:0"},
-          h("div",{class:"ctitle",style:"margin:0;color:"+color},"Mode mental")
-        )
-      ),
-      !selected&&h(Fragment,null,
-        h("div",{style:"font-size:12px;color:var(--tx);font-weight:700;margin-bottom:8px"},"Comment tu te sens maintenant ?"),
-        h("div",{style:"display:grid;grid-template-columns:1fr;gap:7px"},MENTAL_MODES.map(m=>h("button",{
-          key:m.id,
-          onClick:()=>chooseMentalMode(m.id),
-          style:"width:100%;text-align:left;padding:10px;border-radius:9px;border:1px solid rgba(245,158,11,0.28);background:rgba(255,255,255,0.025);color:var(--tx);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:.8px;text-transform:uppercase;cursor:pointer"
-        },m.label)))
-      ),
-      selected&&h(Fragment,null,
-        h("div",{style:"padding:10px;border-radius:10px;border:1px solid "+color+"44;background:"+color+"10"},
-          h("div",{style:"font-size:9px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px"},"Ennemi identifié"),
-          h("div",{style:"font-size:14px;color:var(--tx);font-weight:800;line-height:1.25"},selected.enemy),
-          h("div",{style:"font-size:11px;color:var(--td);line-height:1.4;margin-top:4px"},selected.enemyDesc)
-        ),
-        h("div",{style:"margin-top:10px;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.025)"},
-          h("div",{style:"font-size:9px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px"},"Contre-mesure SMART"),
-          h("div",{style:"font-size:13px;color:var(--tx);font-weight:800;line-height:1.25"},selected.actionTitle),
-          h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin-top:5px"},selected.desc),
-          h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:8px"},mentalModeRewardText(selected))
-        ),
-        h("div",{style:"display:flex;gap:8px;margin-top:10px"},
-          h("button",{
-            onClick:()=>setState(s=>({...s,mentalMode:null})),
-            style:"flex:1;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.025);color:var(--td);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer"
-          },"Changer"),
-          h("button",{
-            onClick:e=>completeMentalMode(selected,e),
-            style:"flex:1.4;padding:10px;border-radius:9px;border:1px solid "+color+"66;background:"+color+"12;color:"+color+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer"
-          },"Valider")
-        )
-      )
-    );
-  }
+
 
   function DungeonConsultCard(){
     const d=activeDungeon;
@@ -3561,8 +3416,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(DebtCard,null),
       dailyEvent&&h(DailyEventCard,null),
 
-      h(MentalModeCard,null),
-
       activeSq&&h("div",{class:"card",style:"border-color:#ef444444"},
         h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Quête urgente"+(activeSq.tier?" · "+(SQ_TIER_LABEL[activeSq.tier]||""):"")),
         h(SqCard,{sq:activeSq,showInput:false})
@@ -3788,7 +3641,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       {id:"ex_leg_raises",name:"Levées de jambes",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"abs",family:"abs",rotationId:"leg_raises"},
       {id:"ex_plank",name:"Gainage",icon:"🫳🏼",unit:"min",stat:"Force",sourceId:"abs",family:"abs",rotationId:"plank"},
       {id:"ex_side_plank",name:"Gainage obliques",icon:"🧎🏻‍♂️‍➡️",unit:"rep",stat:"Force",sourceId:"abs",family:"abs",rotationId:"side_plank"},
-      {id:"ex_reverse_plank",name:"Gainage inversé",icon:"🫴🏼",unit:"min",stat:"Force",sourceId:"abs",family:"abs",rotationId:"reverse_plank"},
       {id:"ex_squats",name:"Squats",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"squats",family:"legs",rotationId:"squats"},
       {id:"ex_calves",name:"Mollets",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"squats",family:"legs",rotationId:"calves",legacySourceId:"calves"},
       {id:"ex_lunges",name:"Fentes",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"squats",family:"legs",rotationId:"lunges"},
@@ -4679,7 +4531,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h(Exercise,{icon:"🦵🏻",name:"Levées de jambes",target:legRaiseTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
           h(Exercise,{icon:"🫳🏼",name:"Gainage",target:plankTarget,unit:"min",rewards:[{stat:"Force",xp:"50/min"}]}),
           h(Exercise,{icon:"🧎🏻‍♂️‍➡️",name:"Gainage obliques",target:sideTarget,unit:"reps",rewards:[{stat:"Force",xp:"6/rep"}]}),
-          h(Exercise,{icon:"🫴🏼",name:"Gainage inversé",target:plankTarget,unit:"min",rewards:[{stat:"Force",xp:"50/min"}]})
         ),
         h("div",{style:familyStyle},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px"},"🦿 JAMBES"),
@@ -4763,25 +4614,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       );
     }
 
-    function renderMentalModeCodex(mode){
-      const color="#f59e0b";
-      return h("div",{key:mode.id,style:cardStyle},
-        h("div",{style:"display:flex;align-items:flex-start;gap:8px"},
-          h("div",{style:"font-size:16px;line-height:1;min-width:24px;text-align:center"},"◈"),
-          h("div",{style:"flex:1;min-width:0"},
-            h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},mode.label),
-            h("div",{style:"font-size:9px;color:"+color+";margin-top:3px;font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase"},"Mode mental · "+mode.enemy),
-            h("div",{style:"font-size:10px;color:var(--td);margin-top:5px;line-height:1.35"},mode.enemyDesc),
-            h("div",{style:"margin-top:7px;padding:8px;border-radius:9px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.025)"},
-              h("div",{style:"font-size:9px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px"},"Contre-mesure SMART"),
-              h("div",{style:"font-size:12px;color:var(--tx);font-weight:700;line-height:1.25"},mode.actionTitle),
-              h("div",{style:"font-size:10px;color:var(--td);margin-top:4px;line-height:1.35"},mode.desc)
-            ),
-            h("div",{style:"margin-top:7px"},(mode.reward||[]).map((r,i)=>h(StatPill,{key:i,stat:r.stat,xp:r.xp})))
-          )
-        )
-      );
-    }
 
     function renderDungeonCodex(dg){
       const rewards=dungeonRewardPairs(dg);
@@ -4941,12 +4773,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h(Fragment,null,
           h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Logique quotidienne : journée précédente complète → Élan choisi selon les XP gagnés hier, avec léger bonus aux stats faibles ; journée précédente incomplète → invitation liée aux quêtes manquées ou à la reprise."),
           eventList.map(renderEventCodex)
-        )
-      ),
-      h(Section,{id:"mm",title:"Mode mental",count:MENTAL_MODES.length},
-        h(Fragment,null,
-          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Disponible sur l’Accueil après 12h avec un vrai tirage aléatoire de 33 % par jour. Le résultat du tirage est mémorisé pour la journée afin d’éviter une apparition/disparition à chaque refresh. 1 validation maximum par jour. Pas de donjon ni de quête urgente : seulement une contre-mesure SMART liée à l’état mental choisi."),
-          MENTAL_MODES.map(renderMentalModeCodex)
         )
       ),
       h(Section,{id:"debt",title:"Système de dette",count:11},
