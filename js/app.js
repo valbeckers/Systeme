@@ -4311,8 +4311,13 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
     function StatPill({stat,xp}){
       const color=STAT_COLOR[stat]||"var(--rc)";
+      const raw=String(xp);
+      const slashIndex=raw.indexOf("/");
+      const value=slashIndex>=0 ? raw.slice(0,slashIndex) : raw;
+      const perUnit=slashIndex>=0 ? raw.slice(slashIndex+1) : "";
+      const label="+"+value+" XP "+statLabel(stat)+(perUnit?"/"+perUnit:"");
       return h("span",{style:"display:inline-block;border:1px solid "+color+"55;color:"+color+";border-radius:999px;padding:2px 7px;margin:2px 4px 2px 0;font-size:10px;font-family:Orbitron,sans-serif;background:"+color+"11"},
-        "+"+xp+" XP "+statLabel(stat)
+        label
       );
     }
 
@@ -4488,7 +4493,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{onClick:()=>toggleC(id),style:"cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 "+(open?"12px":"0")+" 0"},
           h("div",null,
             h("div",{class:"ctitle",style:"margin:0"+(id==="reg"?";color:#ef4444":"")},title),
-            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;margin-top:3px"},count+" entrées")
+            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;margin-top:3px"},count+" entrée"+(count>1?"s":""))
           ),
           h(ChevronC,{k:id})
         ),
@@ -4613,24 +4618,18 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           elanList.map(renderElanCodex)
         )
       ),
-      h(Section,{id:"debt",title:"Système de dette",count:11},
-        h("div",{style:cardStyle},
-          h("div",{style:"font-size:11px;color:var(--tx);font-family:Orbitron,sans-serif;line-height:1.7"},
-            [
-              "Une seule quête obligatoire peut être reportée.",
-              "Seule la quantité manquante devient une dette.",
-              "Une seule dette peut être active.",
-              "Maximum trois dettes par semaine.",
-              "La dette doit être remboursée le lendemain.",
-              "Une dette ne peut jamais être reportée.",
-              "Le streak est gelé jusqu’au remboursement.",
-              "La dette est remplie avant l’objectif du jour.",
-              "Les XP sont conservés, mais sans bonus de dépassement.",
-              "La dette ne compte pas comme record.",
-              "Les quêtes non compensables ne peuvent pas être reportées."
-            ].map((rule,i)=>h("div",{key:i,style:"margin-bottom:5px"},"• "+rule))
-          ),
-          h("div",{style:"font-size:10px;color:var(--td);margin-top:9px;line-height:1.5"},"Quêtes actuellement compensables : Pecs, Abdos, Jambes, Tractions négatives et Lecture.")
+      h(Section,{id:"debt",title:"Système de dette",count:1},
+        h(Fragment,null,
+          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:7px"},"Le système de dette permet de reporter uniquement la quantité manquante d’une quête obligatoire compensable, afin de préserver le streak sous condition de remboursement."),
+          h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-bottom:2px"},
+            h("div",{style:detailStyle},"▸ Déclenchement : lorsqu’une quête obligatoire compensable n’est pas terminée"),
+            h("div",{style:detailStyle},"▸ Report : seule la quantité manquante devient une dette"),
+            h("div",{style:detailStyle},"▸ Limites : une seule dette active et maximum trois dettes par semaine"),
+            h("div",{style:detailStyle},"▸ Remboursement : le lendemain, avant l’objectif du jour ; une dette ne peut jamais être reportée"),
+            h("div",{style:detailStyle},"▸ Streak : gelé jusqu’au remboursement, puis préservé si la dette est soldée"),
+            h("div",{style:detailStyle},"▸ XP et records : XP conservés, sans bonus de dépassement et sans record"),
+            h("div",{style:detailStyle},"▸ Quêtes compensables : Pecs, Abdos, Jambes, Tractions négatives et Lecture")
+          )
         )
       ),
     );
