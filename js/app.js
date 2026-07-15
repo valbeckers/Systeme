@@ -241,42 +241,6 @@ const EVENT_BONUSES = [
   {id:"ev_discipline",title:"Élan de Discipline",desc:"Les gains Discipline sont augmentés de 15% aujourd’hui.",stat:"Discipline",bonusPct:0.15,disabled:true},
 ];
 
-const EVENT_INVITES = [
-  // Santé
-  {id:"ev_outside",title:"Invitation à sortir",desc:"Passe 10 min dehors, idéalement à la lumière naturelle.",stat:"Sante",reward:[{stat:"Sante",xp:100}]},
-  {id:"ev_water_mindful",title:"Invitation à t’hydrater",desc:"Bois 2 verres d’eau lentement, sans écran.",stat:"Sante",reward:[{stat:"Sante",xp:70},{stat:"Discipline",xp:30}]},
-  {id:"ev_breath_health",title:"Invitation au calme",desc:"Fais 5 min de respiration lente.",stat:"Sante",reward:[{stat:"Sante",xp:50},{stat:"Esprit",xp:50}]},
-  {id:"ev_clean_meal",title:"Invitation à manger sainement",desc:"Fais un repas simple et propre, sans junk-food.",stat:"Sante",reward:[{stat:"Sante",xp:100}]},
-
-  // Force
-  {id:"ev_muscle_activation",title:"Invitation à t’exercer",desc:"Fais 50 squats ou 50 pompes cumulées.",stat:"Force",reward:[{stat:"Force",xp:100}]},
-  {id:"ev_micro_session",title:"Invitation à t’exercer",desc:"Fais 5 min d’exercice au choix : pompes, squats, abdos ou gainage.",stat:"Force",reward:[{stat:"Force",xp:70},{stat:"Discipline",xp:30}]},
-  {id:"ev_plank_short",title:"Invitation à t’exercer",desc:"Fais 2 min de gainage cumulé.",stat:"Force",reward:[{stat:"Force",xp:70},{stat:"Discipline",xp:30}]},
-
-  // Esprit
-  {id:"ev_calm",title:"Invitation au calme",desc:"Reste 5 min sans téléphone, juste assis ou debout au calme.",stat:"Esprit",reward:[{stat:"Esprit",xp:100}]},
-  {id:"ev_page",title:"Invitation à lire",desc:"Lis 5 min ou 3 pages.",stat:"Esprit",reward:[{stat:"Esprit",xp:100}]},
-  {id:"ev_recall",title:"Invitation à te souvenir",desc:"Restitue de mémoire une idée apprise récemment.",stat:"Esprit",reward:[{stat:"Esprit",xp:70},{stat:"Discipline",xp:30}]},
-  {id:"ev_gratitude",title:"Invitation à remercier",desc:"Note une chose positive ou utile dans ta journée.",stat:"Esprit",reward:[{stat:"Esprit",xp:70},{stat:"Sante",xp:30}]},
-  {id:"ev_writing_block",title:"Invitation à écrire",desc:"Pendant 10 min sans interruption, écris 5 lignes minimum pour clarifier une idée, une décision ou un problème précis.",stat:"Esprit",reward:[{stat:"Esprit",xp:70},{stat:"Discipline",xp:30}]},
-
-  // Endurance
-  {id:"ev_walk_restart",title:"Invitation à sortir",desc:"Fais 10 min de marche.",stat:"Endurance",reward:[{stat:"Endurance",xp:100}]},
-  {id:"ev_stairs_short",title:"Invitation à grimper",desc:"Fais 5 allers-retours d’escaliers.",stat:"Endurance",reward:[{stat:"Endurance",xp:70},{stat:"Force",xp:30}]},
-  {id:"ev_cardio_activation",title:"Invitation à bouger",desc:"Fais 50 jumping jacks ou 5 min de stepper.",stat:"Endurance",reward:[{stat:"Endurance",xp:100}]},
-
-  // Agilité
-  {id:"ev_mobility_fast",title:"Invitation à la mobilité",desc:"Fais 5 min de mobilité douce.",stat:"Agilite",reward:[{stat:"Agilite",xp:100}]},
-  {id:"ev_body_unlock",title:"Invitation à la mobilité",desc:"Mobilité nuque, hanches et chevilles pendant 5 min.",stat:"Agilite",reward:[{stat:"Agilite",xp:70},{stat:"Sante",xp:30}]},
-  {id:"ev_balance_express",title:"Invitation à la mobilité",desc:"Fais 3 min d’équilibre sur un pied, en alternant.",stat:"Agilite",reward:[{stat:"Agilite",xp:70},{stat:"Discipline",xp:30}]},
-
-  // Discipline
-  {id:"ev_space_reset",title:"Invitation à ranger",desc:"Range ou traite 10 objets autour de toi.",stat:"Discipline",reward:[{stat:"Discipline",xp:100}]},
-  {id:"ev_task_5",title:"Invitation à agir",desc:"Choisis une tâche précise que tu repousses et travaille dessus pendant 5 min chrono, sans changer de sujet.",stat:"Discipline",reward:[{stat:"Discipline",xp:100}]},
-  {id:"ev_mental_capture",title:"Invitation à agir",desc:"Note 5 choses qui encombrent ton esprit, puis traite ou planifie au moins 1 élément.",stat:"Discipline",reward:[{stat:"Discipline",xp:70},{stat:"Esprit",xp:30}]},
-];
-
-
 function eventDayStr(from=Date.now()){
   const d=new Date(from);
   if(d.getHours()<7) d.setDate(d.getDate()-1);
@@ -289,25 +253,7 @@ function addDaysStr(day,delta){
   const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),dd=String(d.getDate()).padStart(2,"0");
   return y+"-"+m+"-"+dd;
 }
-function eventRewardText(ev){
-  return (ev?.reward||[]).map(r=>"+"+r.xp+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ");
-}
 function pickFrom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-function recentEventIds(s,limit=5){
-  return ((s&&s.eventHistory)||[]).slice(-limit).map(e=>e.id).filter(Boolean);
-}
-function pickAvoidingRecent(list,recentIds){
-  const pool=(list||[]).filter(e=>!recentIds.includes(e.id));
-  return pickFrom(pool.length?pool:list);
-}
-function lowestStatFromState(s){
-  const stats=s?.stats||{};
-  let best=STATS[0];
-  STATS.forEach(stat=>{
-    if((stats[stat]||0)<(stats[best]||0)) best=stat;
-  });
-  return best;
-}
 function twoWeakestStatsFromState(s){
   const stats=s?.stats||{};
   return [...STATS].sort((a,b)=>(stats[a]||0)-(stats[b]||0)).slice(0,2);
@@ -426,21 +372,6 @@ function wasDayCompleteForEvent(s,day){
   if(required.length===0) return false;
   return missedRequiredQuestsForEvent(s,day).length===0;
 }
-const MISSED_QUEST_INVITES = {
-  water:["ev_water_mindful","ev_outside","ev_breath_health"],
-  sleep:["ev_calm","ev_breath_health","ev_gratitude"],
-  push:["ev_muscle_activation","ev_micro_session"],
-  abs:["ev_micro_session","ev_plank_short"],
-  squats:["ev_muscle_activation","ev_stairs_short","ev_cardio_activation"],
-  calves:["ev_micro_session","ev_mobility_fast"],
-  reading:["ev_page","ev_writing_block","ev_recall"],
-};
-function invitePoolForMissedQuests(missed){
-  const ids=[];
-  (missed||[]).forEach(q=>(MISSED_QUEST_INVITES[q.id]||[]).forEach(id=>ids.push(id)));
-  const unique=[...new Set(ids)];
-  return unique.map(id=>EVENT_INVITES.find(e=>e.id===id)).filter(Boolean);
-}
 function buildBonusEvent(s,now=Date.now()){
   const day=eventDayStr(now);
   const prev=addDaysStr(day,-1);
@@ -458,35 +389,16 @@ function buildBonusEvent(s,now=Date.now()){
   const e=weightedPickElan(scored);
   return {...e,type:"bonus",day,startedAt:now,expiresAt:next7AM(now),source:"previous_day_complete_weighted"};
 }
-function buildInviteEvent(s,now=Date.now(),missed=[]){
-  const day=eventDayStr(now);
-  const recent=recentEventIds(s);
-  const lowest=lowestStatFromState(s);
-  const missedPool=invitePoolForMissedQuests(missed);
-  const discipline=EVENT_INVITES.filter(e=>e.stat==="Discipline");
-  const recovery=EVENT_INVITES.filter(e=>e.stat==="Sante"||e.stat==="Esprit");
-  const weak=EVENT_INVITES.filter(e=>e.stat===lowest);
-  const roll=Math.random();
-  const pool = missedPool.length && roll<0.55
-    ? missedPool
-    : (roll<0.75 ? discipline : (roll<0.90 ? recovery : weak));
-  const e=pickAvoidingRecent(pool.length?pool:EVENT_INVITES,recent);
-  return {...e,type:"invite",day,startedAt:now,expiresAt:next7AM(now),completedAt:null,source:missedPool.length?"missed_quest":"previous_day_incomplete"};
-}
 function buildDailyEvent(s,now=Date.now()){
   const day=eventDayStr(now);
   const prev=addDaysStr(day,-1);
   const hasHistory=!!(s.dailyLog&&s.dailyLog[prev]);
-  if(hasHistory){
-    const missed=missedRequiredQuestsForEvent(s,prev);
-    if(missed.length===0) return buildBonusEvent(s,now);
-    return buildInviteEvent(s,now,missed);
-  }
-  return buildInviteEvent(s,now,[]);
+  if(hasHistory && wasDayCompleteForEvent(s,prev)) return buildBonusEvent(s,now);
+  return null;
 }
 function applyDailyEventReset(s,now=Date.now()){
   const day=eventDayStr(now);
-  if(s.eventDay===day && s.dailyEvent) return s;
+  if(s.eventDay===day) return s;
   const ev=buildDailyEvent(s,now);
   const oldHistory=s.eventHistory||[];
   const eventHistory=ev ? [...oldHistory,{day,id:ev.id,type:ev.type,source:ev.source}].slice(-12) : oldHistory.slice(-12);
@@ -871,7 +783,6 @@ function activeSpecialQuestMap(){
 function currentEventMap(){
   const map={};
   (EVENT_BONUSES||[]).forEach(e=>{ map[e.id]=e; });
-  (EVENT_INVITES||[]).forEach(e=>{ map[e.id]=e; });
   return map;
 }
 function cleanQuestLogByIds(log,allowedIds){
@@ -939,14 +850,13 @@ function cleanDailyEvent(ev){
   if(!ev || !ev.id) return null;
   const map=currentEventMap();
   const tpl=map[ev.id];
-  if(!tpl) return null;
+  if(!tpl || tpl.disabled) return null;
   return {
     ...tpl,
-    type:ev.type || (EVENT_BONUSES.find(e=>e.id===ev.id) ? "bonus" : "invite"),
+    type:"bonus",
     day:ev.day || eventDayStr(),
     startedAt:ev.startedAt || Date.now(),
     expiresAt:ev.expiresAt || next7AM(),
-    completedAt:ev.completedAt || null,
     source:ev.source || null
   };
 }
@@ -954,11 +864,11 @@ function cleanEventHistory(history){
   const map=currentEventMap();
   return (history||[])
     .filter(e=>e && e.id && map[e.id])
-    .map(e=>({day:e.day,id:e.id,type:e.type,source:e.source}))
+    .map(e=>({day:e.day,id:e.id,type:"bonus",source:e.source}))
     .slice(-12);
 }
 function cleanDailyExtraXp(extra){
-  const allowed=new Set(["eventBonus","event","sq","dungeon","streak","debt"]);
+  const allowed=new Set(["eventBonus","sq","dungeon","streak","debt"]);
   const out={};
   Object.entries(extra||{}).forEach(([day,row])=>{
     if(!row || typeof row!=="object") return;
@@ -1467,10 +1377,9 @@ function App(){
   const [exportCopiedModal,setExportCopiedModal] = useState(false);
   const [exportManualModal,setExportManualModal] = useState(false);
   const [exportValue,setExportValue] = useState("");
-  const [focusMode,setFocusMode] = useState(false);
   const [dungeonHelpOpen,setDungeonHelpOpen] = useState({});
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
-  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,ev:false,debt:false,dj:false,cs:false});
+  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,elan:false,debt:false,dj:false,cs:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
   const [showStatReqDetail,setShowStatReqDetail] = useState(false);
   const [showRankReqStats,setShowRankReqStats] = useState(false);
@@ -2111,36 +2020,6 @@ function App(){
     }
   }
 
-
-
-  function completeDailyEvent(ev,e){
-    if(e){e.preventDefault();e.stopPropagation();}
-    if(!ev || ev.completedAt || now>=(ev.expiresAt||0) || !(ev.reward||[]).length) return;
-    const rewards=ev.reward||[];
-    const totalReward=rewards.reduce((s,r)=>s+(r.xp||0),0);
-    setState(s=>{
-      const beforeXp=s.totalXp;
-      const beforeStats=s.stats;
-      let totalXp=s.totalXp;
-      const statXp={...s.statXp};
-      const stats={...s.stats};
-      rewards.forEach(r=>{
-        totalXp+=(r.xp||0);
-        statXp[r.stat]=(statXp[r.stat]||0)+(r.xp||0);
-        stats[r.stat]=getLvl(statXp[r.stat]);
-      });
-      const day=todayStr();
-      const daily={...(s.dailyExtraXp||{})};
-      const dayLog={...(daily[day]||{})};
-      dayLog.event=(dayLog.event||0)+totalReward;
-      daily[day]=dayLog;
-      triggerProgressOverlay(beforeXp,beforeStats,totalXp,stats,300);
-      return {...s,totalXp,statXp,stats,dailyExtraXp:daily,dailyEvent:{...s.dailyEvent,completedAt:Date.now()},lastActiveDay:day};
-    });
-    const id1=Date.now()+Math.random(),id2=id1+0.1;
-    setFloats(f=>[...f,{id:id1,y:"35%",txt:"ÉVÉNEMENT VALIDÉ !"},{id:id2,y:"40%",txt:eventRewardText(ev)}]);
-    setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id1&&p.id!==id2)),1700);
-  }
 
 
   function createQuestDebt(obj){
@@ -3192,36 +3071,13 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
   function DailyEventCard(){
     const ev=dailyEvent;
-    if(!ev) return null;
-    const color = ev.type==="bonus" ? (STAT_COLOR[ev.stat]||rank.color) : "#f59e0b";
-    const label = ev.type==="bonus" ? "ÉLAN DU JOUR" : "INVITATION DE REPRISE";
-    const expired = now >= (ev.expiresAt||0);
-    const done = !!ev.completedAt;
-    const isBonus = ev.type==="bonus";
-    if(!isBonus && done) return null;
-    if(isBonus){
-      return h("div",{class:"card",style:"border-color:"+color+"66;background:linear-gradient(135deg,"+color+"14,rgba(255,255,255,0.025))"},
-        h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:10px"},
-          h("div",{class:"ctitle",style:"margin:0;color:"+color},label),
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap;text-transform:uppercase"},"+15% XP "+(STAT_LBL[ev.stat]||ev.stat))
-        )
-      );
-    }
+    if(!ev || ev.type!=="bonus") return null;
+    const color=STAT_COLOR[ev.stat]||rank.color;
     return h("div",{class:"card",style:"border-color:"+color+"66;background:linear-gradient(135deg,"+color+"14,rgba(255,255,255,0.025))"},
-      h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
-        h("div",{style:"min-width:0;flex:1"},
-          h("div",{class:"ctitle",style:"margin:0;color:"+color},label),
-          h("div",{style:"font-size:14px;color:var(--tx);font-weight:800;line-height:1.25;margin-top:4px"},ev.title),
-          h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin-top:5px"},ev.desc)
-        ),
-        h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap;text-transform:uppercase"},done ? "validé" : fmtCD((ev.expiresAt||0)-now))
-      ),
-      h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:8px"},eventRewardText(ev)),
-      !done&&!expired&&h("button",{
-        onClick:e=>completeDailyEvent(ev,e),
-        style:"width:100%;margin-top:10px;padding:10px;border-radius:9px;border:1px solid "+color+"66;background:rgba(255,255,255,0.035);color:"+color+";font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer"
-      },"Valider l’invitation"),
-      done&&h("div",{style:"margin-top:10px;text-align:center;color:#4ade80;font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase"},"Invitation complétée ✓")
+      h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:10px"},
+        h("div",{class:"ctitle",style:"margin:0;color:"+color},"ÉLAN DU JOUR"),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap;text-transform:uppercase"},"+15% XP "+(STAT_LBL[ev.stat]||ev.stat))
+      )
     );
   }
 
@@ -3272,12 +3128,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const completedDungeonToday = [...(state.dungeonLog||[])]
       .reverse()
       .find(entry=>entry&&entry.completedAt&&new Date(entry.completedAt).toDateString()===new Date().toDateString()) || null;
-    const completedInviteToday = dailyEvent && dailyEvent.type==="invite" && dailyEvent.completedAt ? dailyEvent : null;
-
-    const invitationSubject = title => String(title||"invitation")
-      .replace(/^Invitation\s+(?:à la|à l[’']|au|aux|à|à t[’'])\s*/i,"")
-      .replace(/^Invitation\s+/i,"")
-      .trim();
 
     const dungeonParts = title => {
       const raw=String(title||"Donjon");
@@ -3314,15 +3164,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             detail:"Fermeture du donjon dans "+fmtCD(Math.max(0,(completedDungeonToday.expiresAt||((completedDungeonToday.completedAt||now)+86400000))-now))
           }
         : null,
-      completedInviteToday
-        ? {
-            key:"invite",
-            prefix:"L’invitation à ",
-            accent:invitationSubject(completedInviteToday.title),
-            suffix:" a été complétée.",
-            accentColor:STAT_COLOR[completedInviteToday.stat]||"#f59e0b"
-          }
-        : null,
+
     ].filter(Boolean);
 
     const secs=[
@@ -4585,35 +4427,28 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       );
     }
 
-    function renderEventCodex(ev){
-      const color = ev.type==="bonus" ? (STAT_COLOR[ev.stat]||"var(--rc)") : "#f59e0b";
-      const family = ev.type==="bonus" ? "Bonus de stat" : "Invitation de reprise";
+    function renderElanCodex(ev){
+      const color=STAT_COLOR[ev.stat]||"var(--rc)";
       return h("div",{key:ev.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:flex-start;gap:8px"},
-          h("div",{style:"font-size:16px;line-height:1;min-width:24px;text-align:center"},ev.type==="bonus"?"✦":"◇"),
+          h("div",{style:"font-size:16px;line-height:1;min-width:24px;text-align:center"},"✦"),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},ev.title),
-            h("div",{style:"font-size:9px;color:"+color+";margin-top:3px;font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase"},family),
+            h("div",{style:"font-size:9px;color:"+color+";margin-top:3px;font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase"},"Bonus de stat"),
             h("div",{style:"font-size:10px;color:var(--td);margin-top:5px;line-height:1.35"},ev.desc),
-            ev.type==="bonus"&&h("div",{style:"margin-top:7px"},
+            h("div",{style:"margin-top:7px"},
               h("span",{style:"display:inline-block;border:1px solid "+color+"55;color:"+color+";border-radius:999px;padding:2px 7px;margin:2px 4px 2px 0;font-size:10px;font-family:Orbitron,sans-serif;background:"+color+"11"},"+15% XP "+statLabel(ev.stat))
             ),
-            ev.type!=="bonus"&&h("div",{style:"margin-top:7px"},(ev.reward||[]).map((r,i)=>h(StatPill,{key:i,stat:r.stat,xp:r.xp}))),
             h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:6px"},
-              ev.type==="bonus"&&h("div",{style:detailStyle},"▸ Déclenchement : si la journée précédente est complète"),
-              ev.type==="bonus"&&h("div",{style:detailStyle},"▸ Sélection : favorise une stat à renforcer selon les XP gagnés hier, avec léger bonus aux stats faibles"),
-              ev.type==="invite"&&h("div",{style:detailStyle},"▸ Déclenchement : si la journée précédente est incomplète"),
-              ev.type==="invite"&&h("div",{style:detailStyle},"▸ Sélection : favorise les quêtes manquées, puis reprise Discipline/Santé/Esprit/stat faible"),
-              h("div",{style:detailStyle},"▸ Reset : 7h"),
-              h("div",{style:detailStyle},"▸ Pénalité : aucune si ignoré"),
-              ev.type==="bonus"&&h("div",{style:detailStyle},"▸ Effet : bonus automatique sur les gains de la stat concernée"),
-              ev.type==="invite"&&h("div",{style:detailStyle},"▸ Validation : manuelle depuis la carte événement")
+              h("div",{style:detailStyle},"▸ Déclenchement actuel : si la journée précédente est complète"),
+              h("div",{style:detailStyle},"▸ Sélection : favorise une stat à renforcer selon les XP gagnés la veille"),
+              h("div",{style:detailStyle},"▸ Durée : jusqu’au reset de 7h"),
+              h("div",{style:detailStyle},"▸ Effet : bonus automatique sur les gains de la stat concernée")
             )
           )
         )
       );
     }
-
 
     function renderDungeonCodex(dg){
       const rewards=dungeonRewardPairs(dg);
@@ -4744,10 +4579,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const bonus = objs.filter(o=>o.optional&&!o.weekly&&!o.bonusHidden);
     const hiddenBonus = objs.filter(o=>o.optional&&!o.weekly&&o.bonusHidden);
     const specialList = STATS.flatMap(stat=>(SP[stat]||[]).map(q=>({...q,stat:q.stat||stat})));
-    const eventList = [
-      ...EVENT_BONUSES.filter(e=>!e.disabled).map(e=>({...e,type:"bonus"})),
-      ...EVENT_INVITES.map(e=>({...e,type:"invite"}))
-    ];
+    const elanList=EVENT_BONUSES.filter(e=>!e.disabled).map(e=>({...e,type:"bonus"}));
 
     return h("div",{class:"tab"},
       h("div",{class:"card"},
@@ -4769,10 +4601,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           groupByDominantStat(DUNGEONS,renderDungeonCodex,dg=>dg.stat)
         )
       ),
-      h(Section,{id:"ev",title:"Événements",count:eventList.length},
+      h(Section,{id:"elan",title:"Élans",count:elanList.length},
         h(Fragment,null,
-          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Logique quotidienne : journée précédente complète → Élan choisi selon les XP gagnés hier, avec léger bonus aux stats faibles ; journée précédente incomplète → invitation liée aux quêtes manquées ou à la reprise."),
-          eventList.map(renderEventCodex)
+          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:10px"},"Bonus automatiques de +15 % XP appliqués aux gains de la stat concernée."),
+          elanList.map(renderElanCodex)
         )
       ),
       h(Section,{id:"debt",title:"Système de dette",count:11},
