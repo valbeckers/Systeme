@@ -1,4 +1,3 @@
-
 const { h, render, Fragment } = preact;
 const { useState, useEffect, useRef } = preactHooks;
 
@@ -481,6 +480,11 @@ function statLevelTier(level){
   const lvl=Number(level)||1;
   if(lvl<10) return 0;
   return Math.floor((lvl-10)/5)+1;
+}
+function legRaiseTargetForForceLevel(level){
+  const lvl=Math.max(1,Number(level)||1);
+  const target=lvl<10 ? 30 : 30+(Math.floor((lvl-10)/5)+1)*6;
+  return Math.min(100,target);
 }
 function getStatLevelTarget(objId, stats){
   if(objId==="negative_pullups"){
@@ -1284,7 +1288,7 @@ function cleanExerciseRotationByDay(raw){
   });
   return out;
 }
-function rotatedQuestObjects(baseObjs,rotation,stats){
+function rotatedQuestObjects(baseObjs,rotation,stats,totalXp){
   const force=Math.max(1,Number((stats||{}).Force)||1);
   const tier=statLevelTier(force);
   const byId=(family,id)=>EXERCISE_ROTATIONS[family].find(o=>o.id===id)||EXERCISE_ROTATIONS[family][0];
@@ -1295,7 +1299,7 @@ function rotatedQuestObjects(baseObjs,rotation,stats){
     if(obj.id==="push") return {...obj,name:"Pecs - "+chest.label,icon:"🦾",exerciseIcon:chest.icon,rotationExercise:chest.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3,stat2:null,xpPer2:null};
     if(obj.id==="abs"){
       if(abs.id==="crunches") return {...obj,name:"Abdos - Crunches",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:getStatLevelTarget("abs",stats),unit:"rep",xpPer:1.5};
-      if(abs.id==="leg_raises") return {...obj,name:"Abdos - Levées de jambes",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:Math.min(160,48+tier*10),unit:"rep",xpPer:3};
+      if(abs.id==="leg_raises") return {...obj,name:"Abdos - Levées de jambes",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:legRaiseTargetForForceLevel(force),unit:"rep",xpPer:3};
       if(abs.id==="side_plank") return {...obj,name:"Abdos - Gainage obliques",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:Math.min(60,24+tier*2),unit:"rep",xpPer:6};
       return {...obj,name:"Abdos - Gainage",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:Math.max(1,Math.ceil(force/10)),unit:"min",xpPer:50};
     }
@@ -1451,7 +1455,7 @@ function App(){
 
   const baseObjs = state.objectives||DEFS;
   const todayExerciseRotation=(state.exerciseRotationByDay||{})[today]||{};
-  const objs = rotatedQuestObjects(baseObjs,todayExerciseRotation,state.stats);
+  const objs = rotatedQuestObjects(baseObjs,todayExerciseRotation,state.stats,state.totalXp);
   const tLog  = state.dailyLog[today]||{};
   const wLog  = state.weeklyLog[wk]||{};
   const prestige = state.prestige||0;
@@ -3512,7 +3516,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         abs:LEGACY_EXERCISE_DEFAULTS.abs,
         legs:LEGACY_EXERCISE_DEFAULTS.legs
       };
-      return rotatedQuestObjects(baseObjs,rotation,state.stats).find(q=>q.id===obj.id)||obj;
+      return rotatedQuestObjects(baseObjs,rotation,state.stats,state.totalXp).find(q=>q.id===obj.id)||obj;
     }
     const standardDailyRecordObjs=[
       ...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary&&!rotatingSourceIds.has(o.id))),
@@ -4366,7 +4370,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       }
       const pushTarget=getStatLevelTarget("push",state.stats);
       const absTarget=getStatLevelTarget("abs",state.stats);
-      const legRaiseTarget=Math.min(160,48+tier*10);
+      const legRaiseTarget=legRaiseTargetForForceLevel(force);
       const plankTarget=Math.max(1,Math.ceil(force/10));
       const sideTarget=Math.min(60,24+tier*2);
       const squatTarget=getStatLevelTarget("squats",state.stats);
