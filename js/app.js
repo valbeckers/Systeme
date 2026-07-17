@@ -1747,6 +1747,8 @@ function App(){
   const dungeonRunsByWeek = state.dungeonRunsByWeek||{};
   const dungeonWeekCount = dungeonRunsByWeek[wk]||0;
   const dungeonDailyUsed = dungeonRunDay===today;
+  const dungeonSkipDay = state.dungeonSkipDay||null;
+  const dungeonSkippedToday = dungeonSkipDay===today;
   const dungeonCanStart = !state.activeDungeon && !dungeonDailyUsed && dungeonWeekCount<3;
 
   const dailyEvent = state.dailyEvent && state.dailyEvent.type!=="none" && now < (state.dailyEvent.expiresAt||0)
@@ -2468,6 +2470,9 @@ function App(){
     });
   }
 
+  function skipDungeonToday(){
+    setState(s=>({...s,dungeonSkipDay:todayStr()}));
+  }
 
   function validateDungeonRoom(){
     setState(s=>{
@@ -4047,17 +4052,34 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
   function ConfirmDungeonChoice(){
     if(!confirmDungeonChoice)return null;
-    const color=confirmDungeonChoice.color||"var(--rc)";
+    const isSkip=confirmDungeonChoice.type==="skip";
+    const color=isSkip ? "#f59e0b" : (confirmDungeonChoice.color||"var(--rc)");
+    const title=isSkip ? "Ne pas faire de donjon aujourd’hui ?" : "Activer ce donjon ?";
+    const main=isSkip ? "Passer les donjons" : ((confirmDungeonChoice.icon||"")+" "+(confirmDungeonChoice.title||"Donjon"));
+    const desc=isSkip
+      ? "La carte de choix disparaîtra de l’accueil jusqu’au prochain reset de 7h."
+      : "Ce choix consommera ton lancement de donjon du jour et comptera dans la limite hebdomadaire.";
     return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+color+"55;background:rgba(0,0,0,0.92)"},
       h("div",{class:"rucont",style:"width:min(330px,calc(100vw - 38px));background:rgba(15,15,18,0.96);border:1px solid "+color+"66;border-radius:18px;padding:20px;box-shadow:0 0 30px "+color+"22"},
         h("div",{class:"ruevol",style:"margin-bottom:10px;color:"+color},"CONFIRMATION"),
-        h("div",{style:"font-family:Orbitron,sans-serif;font-size:17px;font-weight:900;color:"+color+";letter-spacing:1px;text-transform:uppercase;text-align:center;line-height:1.25"},"Activer ce donjon ?"),
-        h("div",{style:"font-size:14px;color:var(--tx);font-weight:800;text-align:center;margin-top:10px;line-height:1.35"},(confirmDungeonChoice.icon||"")+" "+(confirmDungeonChoice.title||"Donjon")),
-        h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;text-align:center;margin-top:6px;letter-spacing:1px;text-transform:uppercase"},STAT_LBL[confirmDungeonChoice.stat]||confirmDungeonChoice.stat),
-        h("div",{style:"font-size:12px;color:var(--td);line-height:1.5;text-align:center;margin-top:12px"},"Ce choix consommera ton lancement de donjon du jour et comptera dans la limite hebdomadaire."),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:17px;font-weight:900;color:"+color+";letter-spacing:1px;text-transform:uppercase;text-align:center;line-height:1.25"},title),
+        h("div",{style:"font-size:14px;color:var(--tx);font-weight:800;text-align:center;margin-top:10px;line-height:1.35"},main),
+        !isSkip&&h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;text-align:center;margin-top:6px;letter-spacing:1px;text-transform:uppercase"},STAT_LBL[confirmDungeonChoice.stat]||confirmDungeonChoice.stat),
+        h("div",{style:"font-size:12px;color:var(--td);line-height:1.5;text-align:center;margin-top:12px"},desc),
         h("div",{style:"display:flex;gap:10px;width:100%;margin-top:18px"},
-          h("button",{onClick:()=>setConfirmDungeonChoice(null),style:"flex:1;padding:11px;border-radius:9px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);color:var(--td);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"},"Annuler"),
-          h("button",{onClick:()=>{const choice=confirmDungeonChoice;setConfirmDungeonChoice(null);startDungeon(choice.id);},style:"flex:1;padding:11px;border-radius:9px;border:1px solid "+color+";background:"+color+"1a;color:"+color+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"},"Activer")
+          h("button",{
+            onClick:()=>setConfirmDungeonChoice(null),
+            style:"flex:1;padding:11px;border-radius:9px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);color:var(--td);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"
+          },"Annuler"),
+          h("button",{
+            onClick:()=>{
+              const choice=confirmDungeonChoice;
+              setConfirmDungeonChoice(null);
+              if(choice.type==="skip") skipDungeonToday();
+              else startDungeon(choice.id);
+            },
+            style:"flex:1;padding:11px;border-radius:9px;border:1px solid "+color+";background:"+color+"1a;color:"+color+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"
+          },isSkip?"Passer":"Activer")
         )
       )
     );
@@ -4580,4 +4602,162 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }
 
     function renderRequiredCodex(){
-      const rotatingIds=new Set([
+      const rotatingIds=new Set(["push","abs","squats","calves"]);
+      const staticRequired=objs.filter(o=>o.daily&&!o.optional&&!rotatingIds.has(o.id));
+      const groups=STATS.map(stat=>({stat,list:[]}));
+      staticRequired.forEach(item=>{
+        const stat=dominantStat(item,item.stat);
+        (groups.find(g=>g.stat===stat)||groups[groups.length-1]).list.push(item);
+      });
+      return groups.map(group=>{
+        const hasExerciseFamilies=group.stat==="Force";
+        if(!hasExerciseFamilies&&group.list.length===0) return null;
+        return h("div",{key:group.stat,style:"margin-bottom:13px"},
+          h("div",{style:"font-size:11px;color:"+(STAT_COLOR[group.stat]||"var(--rc)")+";font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin:2px 0 7px"},statLabel(group.stat)),
+          hasExerciseFamilies&&renderExerciseFamiliesCodex(),
+          group.list.map(renderQuest)
+        );
+      }).filter(Boolean);
+    }
+
+    const required = objs.filter(o=>o.daily&&!o.optional);
+    const weeklyCodex = objs.filter(o=>o.weekly);
+    const bonus = objs.filter(o=>o.optional&&!o.weekly&&!o.bonusHidden);
+    const hiddenBonus = objs.filter(o=>o.optional&&!o.weekly&&o.bonusHidden);
+    const specialList = STATS.flatMap(stat=>(SP[stat]||[]).map(q=>({...q,stat:q.stat||stat})));
+    const elanList=EVENT_BONUSES.filter(e=>!e.disabled).map(e=>({...e,type:"bonus"}));
+
+    return h("div",{class:"tab"},
+      h("div",{class:"card"},
+        h("div",{class:"ctitle"},"Codex"),
+        h("div",{style:"font-size:12px;color:var(--td);line-height:1.45"},"Catalogue complet des quêtes existantes. Les objectifs des quêtes quotidiennes et hebdomadaires sont calculés au rang actuel.")
+      ),
+      h(Section,{id:"obl",title:"Quêtes journalières",count:required.length},renderRequiredCodex()),
+      h(Section,{id:"bonus",title:"Quêtes bonus",count:bonus.length+hiddenBonus.length},
+        h(Fragment,null,
+          groupByDominantStat(bonus,renderQuest),
+          hiddenBonus.length>0&&h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin:10px 0 8px"},"BONUS MASQUÉS / CONTEXTUELS"),
+          hiddenBonus.length>0&&groupByDominantStat(hiddenBonus,renderQuest)
+        )
+      ),
+      h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial)),
+      h(Section,{id:"dj",title:"Donjons",count:DUNGEONS.length},
+        h(Fragment,null,
+          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Après 24 h, un donjon inachevé subit une Rupture : les salles déjà validées et leurs XP sont conservés, toutes les étapes restantes sont remplacées par un Boss de Rupture tiré selon sa rareté. Ce boss dispose de 24 h et ne peut pas provoquer une seconde rupture."),
+          groupByDominantStat(DUNGEONS,renderDungeonCodex,dg=>dg.stat)
+        )
+      ),
+      h(Section,{id:"elan",title:"Élans",count:elanList.length},
+        h(Fragment,null,
+          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:7px"},"Bonus automatiques de +15 % XP accordés le lendemain d’un donjon complété et appliqués aux gains de la stat concernée."),
+          h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-bottom:10px"},
+            h("div",{style:detailStyle},"▸ Déclenchement : le lendemain d’un donjon normal complété"),
+            h("div",{style:detailStyle},"▸ Sélection : une stat aléatoire parmi Santé / Force / Esprit / Endurance / Agilité, pondérée selon les XP gagnés la veille"),
+            h("div",{style:detailStyle},"▸ Exclusion : la Discipline ne peut pas être tirée"),
+            h("div",{style:detailStyle},"▸ Durée : jusqu’au reset de 7h"),
+            h("div",{style:detailStyle},"▸ Effet : bonus automatique sur les gains de la stat concernée")
+          ),
+          elanList.map(renderElanCodex)
+        )
+      ),
+      h(Section,{id:"debt",title:"Système de dette",count:1},
+        h(Fragment,null,
+          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:7px"},"Le système de dette permet de reporter uniquement la quantité manquante d’une quête obligatoire compensable, afin de préserver le streak sous condition de remboursement."),
+          h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-bottom:2px"},
+            h("div",{style:detailStyle},"▸ Déclenchement : lorsqu’une quête obligatoire compensable n’est pas terminée"),
+            h("div",{style:detailStyle},"▸ Report : seule la quantité manquante devient une dette"),
+            h("div",{style:detailStyle},"▸ Limites : une seule dette active et maximum trois dettes par semaine"),
+            h("div",{style:detailStyle},"▸ Remboursement : le lendemain, avant l’objectif du jour ; une dette ne peut jamais être reportée"),
+            h("div",{style:detailStyle},"▸ Streak : gelé jusqu’au remboursement, puis préservé si la dette est soldée"),
+            h("div",{style:detailStyle},"▸ XP et records : XP conservés, sans bonus de dépassement et sans record"),
+            h("div",{style:detailStyle},"▸ Quêtes compensables : Pecs, Abdos, Jambes, Tractions négatives et Lecture")
+          )
+        )
+      ),
+    );
+  }
+  // ─── RENDU PRINCIPAL ──────────────────────────────────────────────────
+
+  const parts=Array.from({length:15},(_,i)=>({id:i,s:Math.random()*3+1,l:Math.random()*100,dur:Math.random()*10+8,del:Math.random()*10}));
+
+  const DAILY_MANTRAS = [
+    "Accepte ce que tu ne peux contrôler.",
+    "Mets de l'ordre dans ce que tu maîtrises.",
+    "Fais toujours de ton mieux.",
+    "N'en fais jamais une histoire personnelle.",
+    "Observe, vérifie, puis agis.",
+    "Agis pour toi-même, pas pour la reconnaissance d'autrui.",
+    "Concentre-toi sur l'essentiel.",
+    "Aie toujours une parole impeccable.",
+    "Tiens-toi droit.",
+    "Assume tes responsabilités.",
+    "Apprécie les choses simples de la vie."
+  ];
+  const mantraDayIndex = Math.floor(new Date(today).getTime()/86400000);
+  const dailyMantra = DAILY_MANTRAS[Math.abs(mantraDayIndex)%DAILY_MANTRAS.length];
+  const mantraColor = STAT_COLOR.Force || "#fb923c";
+
+  return h(Fragment,null,
+    h("div",{id:"app"},
+      h("div",{class:"particles"},parts.map(p=>h("div",{key:p.id,class:"particle",style:"width:"+p.s+"px;height:"+p.s+"px;left:"+p.l+"%;bottom:-10px;background:"+rank.color+";box-shadow:0 0 4px "+rank.glow+";animation-duration:"+p.dur+"s;animation-delay:"+p.del+"s"}))),
+      h("div",{class:"hdr-wrap"},
+        h("div",{class:"hdr"},
+          h("div",{class:"hdr-top",style:"position:relative"},
+            h("div",null,
+              h("div",{class:"pname"},"VAL,"),
+              h("div",{style:"margin-top:6px;width:min(340px,calc(100vw - 112px));min-height:26px;font-size:9.5px;line-height:1.3;color:"+mantraColor+";font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-transform:uppercase;display:block;opacity:.96;white-space:normal;overflow:hidden"},dailyMantra)
+            ),
+            prestige>0&&h("div",{class:"prestige-badge"},"\u269B\uFE0F Ascension "+ROMAN[prestige-1]),
+            h("button",{class:"gbtn",style:"display:flex;align-items:center;justify-content:center",onClick:()=>setShowSet(true)},"⚙️")
+          )
+        )
+      ),
+      h("div",{class:"scroll-area",ref:scrollRef},
+        h("div",{style:"height:26px;flex:0 0 auto"}),
+        tab==="home"    &&h(Home,null),
+        tab==="quests"  &&h(Quests,null),
+        tab==="stats"   &&h(Stats,null),
+        tab==="history" && History(),
+        tab==="codex"   && h(Codex,null),
+        floats.map(f=>h("div",{key:f.id,class:"xpfloat",style:"top:"+(f.y||"40%")+(typeof f.y==="number"?"px":"")+";left:50%;transform:translateX(-50%);white-space:pre-line;text-align:center"},f.txt))
+      ),
+      h("nav",{class:"nav"},
+        h("button",{class:"nbtn "+(tab==="home"?"on":""),onClick:()=>switchTab("home")},
+          h("span",null,"Accueil")
+        ),
+        h("button",{class:"nbtn "+(tab==="quests"?"on":""),onClick:()=>switchTab("quests")},
+          h("span",null,"Quêtes")
+        ),
+        h("button",{class:"nbtn "+(tab==="stats"?"on":""),onClick:()=>switchTab("stats")},
+          h("span",null,"Stats")
+        ),
+        h("button",{class:"nbtn "+(tab==="history"?"on":""),onClick:()=>switchTab("history")},
+          h("span",null,"Historique")
+        ),
+        h("button",{class:"nbtn "+(tab==="codex"?"on":""),onClick:()=>switchTab("codex")},
+          h("span",null,"Codex")
+        )
+      ),
+      h(Settings,null),
+      h(RankUp,null),
+      h(LevelUp,null),
+      h(StatDecadeUp,null),
+      h(CompletionUp,null),
+      h(StreakUp,null),
+      h(RecordUp,null),
+      h(DungeonUp,null),
+      h(DungeonRuptureUp,null),
+      h(UrgentUp,null),
+      h(DebtUp,null),
+      h(ConfirmDebtModal,null),
+      h(ConfirmDungeonChoice,null),
+      h(ConfirmReroll,null),
+      h(ImportModal,null),
+      h(ExportCopiedModal,null),
+      h(ExportManualModal,null),
+      h(PrestigeUp,null),
+    )
+  );
+}
+
+render(h(App,null),document.getElementById("app"));
