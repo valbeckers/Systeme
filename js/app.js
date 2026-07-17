@@ -1565,7 +1565,9 @@ function App(){
 
   const todayXp = Object.entries(tLog).reduce((s,[id,a])=>{
     const o=objs.find(x=>x.id===id); if(!o) return s;
-    const b = o.base && !RANK_BASES[o.id] ? o.base : getRankBase(o.id, ri, prestige, state.stats);
+    const b = o.validateAt != null
+      ? Number(o.validateAt)
+      : (Number.isFinite(Number(o.target)) ? Number(o.target) : (o.base && !RANK_BASES[o.id] ? o.base : getRankBase(o.id, ri, prestige, state.stats)));
     return s + calcXp(o, a, b);
   },0) + extraTodayXp + legacyStreakTodayXp + legacySqTodayXp + legacyActiveDungeonTodayXp + legacyCompletedDungeonTodayXp;
 
@@ -1573,20 +1575,29 @@ function App(){
   const reqDailyObjs  = objs.filter(o=>!o.optional&&o.daily);
   // Quêtes actives pour un jour donné (exclut les quêtes ajoutées après ce jour)
   const activeOn = (day) => reqDailyObjs.filter(o=>!o.startDate||o.startDate<=day);
-  // Base applicable pour un jour donné (gère baseHistory pour les changements rétroactifs)
+  // Variante et objectif réellement applicables pour un jour donné.
+  const questForDay = (obj,day) => {
+    if(!obj || !isExerciseFamilyQuestId(obj.id)) return obj;
+    const saved=(state.exerciseRotationByDay||{})[day]||{};
+    const rotation={
+      push:saved.push||LEGACY_EXERCISE_DEFAULTS.push,
+      abs:saved.abs||LEGACY_EXERCISE_DEFAULTS.abs,
+      legs:saved.legs||LEGACY_EXERCISE_DEFAULTS.legs
+    };
+    return rotatedQuestObjects(baseObjs,rotation,state.stats,state.totalXp).find(q=>q.id===obj.id)||obj;
+  };
+  // Base applicable pour un jour donné (gère les rotations et baseHistory).
   const getBaseForDay = (obj,day) => {
     if(!obj) return 0;
-    // On conserve l'historique explicite quand il existe (ex : ancien objectif Eau).
-    if(obj.baseHistory&&day){
-      // On cherche le premier "until" >= day (l'historique est trié par date croissante)
-      for(const h of obj.baseHistory){
+    const dayObj=questForDay(obj,day);
+    if(dayObj.validateAt != null) return Number(dayObj.validateAt);
+    if(Number.isFinite(Number(dayObj.target))) return Number(dayObj.target);
+    if(dayObj.baseHistory&&day){
+      for(const h of dayObj.baseHistory){
         if(day<=h.until) return h.base;
       }
     }
-    // Important : pour le streak, utiliser l'objectif calculé au rang actuel
-    // et non obj.base brut. Sinon Lecture restait à 20 min dans le recalcul
-    // historique alors que RANK_BASES peut définir 5/10/15/etc.
-    return getRankBase(obj.id, ri, prestige, state.stats);
+    return getRankBase(dayObj.id, ri, prestige, state.stats);
   };
   // Seuil pour considérer une quête comme "faite" (streak/historique)
   // Si validateAt est défini, on l'utilise ; sinon getBaseForDay (= la base)
@@ -2038,7 +2049,9 @@ function App(){
       const uses={...(s.debtUsesByWeek||{})};
       const week=wkStr();
       if((uses[week]||0)>=MAX_DEBTS_PER_WEEK) return s;
-      const target=getRankBase(obj.id,ri,prestige,s.stats);
+      const target=obj.validateAt != null
+        ? Number(obj.validateAt)
+        : (Number.isFinite(Number(obj.target)) ? Number(obj.target) : getRankBase(obj.id,ri,prestige,s.stats));
       const current=(s.dailyLog[today]&&s.dailyLog[today][obj.id])||0;
       const amount=Math.max(0,target-current);
       if(amount<=0) return s;
@@ -2110,7 +2123,9 @@ function App(){
     const cur=(obj.weekly)?(wLog[obj.id]||0):(tLog[obj.id]||0);
     let xp=0;
     let capJustReached_DISABLED=false;
-    const b=getRankBase(obj.id,ri,prestige,state.stats);
+    const b=obj.validateAt != null
+      ? Number(obj.validateAt)
+      : (Number.isFinite(Number(obj.target)) ? Number(obj.target) : getRankBase(obj.id,ri,prestige,state.stats));
     const prev=cur, next=cur+val;
     maybeTriggerQuestRecord(obj,prev,next);
     const alreadyCapped_DISABLED = false;
@@ -2180,7 +2195,7 @@ function App(){
       } else if(!capJustReached_DISABLED && !alreadyCapped_DISABLED) spawnFloat("0 XP",e);
       return;
     }
-    if(obj.binary){const was=cur>=getRankBase(obj.id,ri,prestige,state.stats),now2=(cur+val)>=getRankBase(obj.id,ri,prestige,state.stats); xp=(!was&&now2)?(obj.binaryXp||50):0;}
+    if(obj.binary){const was=cur>=b,now2=(cur+val)>=b; xp=(!was&&now2)?(obj.binaryXp||50):0;}
     else if(alreadyCapped_DISABLED){
       // Aucun cap : on log toujours la valeur
       xp=0;
