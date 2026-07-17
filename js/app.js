@@ -1,3 +1,4 @@
+
 const { h, render, Fragment } = preact;
 const { useState, useEffect, useRef } = preactHooks;
 
@@ -3075,10 +3076,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
   function DungeonChoiceCard(){
     if(activeDungeon) return null;
-    return h("div",{class:"card",style:"border-color:var(--rc)44"},
+    const dungeonGold="#f59e0b";
+    return h("div",{class:"card",style:"border:1px solid rgba(245,158,11,0.55);background:rgba(245,158,11,0.025)"},
       h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px"},
         h("div",null,
-          h("div",{class:"ctitle",style:"margin:0;color:var(--rc)"},"Lancer un donjon"),
+          h("div",{class:"ctitle",style:"margin:0;color:"+dungeonGold},"Lancer un donjon"),
           h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"1 par jour · "+dungeonWeekCount+"/3 cette semaine")
         ),
         h("div",{style:"font-size:10px;color:"+(dungeonCanStart?"#4ade80":"var(--td)")+";font-family:Orbitron,sans-serif;text-transform:uppercase;white-space:nowrap"},dungeonCanStart?"Disponible":(dungeonDailyUsed?"Déjà lancé":"Limite hebdo"))
