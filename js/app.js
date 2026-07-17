@@ -676,6 +676,27 @@ function calcXp(obj,total,baseOverride){
   }
 }
 
+// XP global réellement produit par une quête, toutes stats confondues.
+// calcXp() calcule la ligne principale (ou tous les paliers pour les quêtes à paliers).
+function calcQuestTotalXp(obj,total,baseOverride){
+  const primary=calcXp(obj,total,baseOverride);
+  if(!obj || primary<=0) return 0;
+  // Les quêtes à paliers sont déjà entièrement additionnées dans calcXp().
+  if(obj.tiers && obj.tiers.length>0) return primary;
+  let sum=primary;
+  if(obj.stat2){
+    if(obj.xpPer2 && obj.xpPer) sum+=Math.round(primary*(obj.xpPer2/obj.xpPer));
+    else if(obj.xp2) sum+=Number(obj.xp2)||0;
+    else sum+=primary;
+  }
+  if(obj.stat3){
+    if(obj.xpPer3 && obj.xpPer) sum+=Math.round(primary*(obj.xpPer3/obj.xpPer));
+    else if(obj.xp3) sum+=Number(obj.xp3)||0;
+    else sum+=primary;
+  }
+  return sum;
+}
+
 function pickRandomSq(usedIds,statCycle,completedLog){
   const stats=["Sante","Force","Esprit","Endurance","Agilite","Discipline"];
   const cycle = [...new Set((statCycle||[]).filter(s=>stats.includes(s)))];
@@ -1568,7 +1589,7 @@ function App(){
     const b = o.validateAt != null
       ? Number(o.validateAt)
       : (Number.isFinite(Number(o.target)) ? Number(o.target) : (o.base && !RANK_BASES[o.id] ? o.base : getRankBase(o.id, ri, prestige, state.stats)));
-    return s + calcXp(o, a, b);
+    return s + calcQuestTotalXp(o, a, b);
   },0) + extraTodayXp + legacyStreakTodayXp + legacySqTodayXp + legacyActiveDungeonTodayXp + legacyCompletedDungeonTodayXp;
 
   // 7. Quetes journalieres obligatoires toutes faites ?
