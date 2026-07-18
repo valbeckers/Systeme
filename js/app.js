@@ -1,4 +1,3 @@
-
 const { h, render, Fragment } = preact;
 const { useState, useEffect, useRef } = preactHooks;
 
@@ -1403,6 +1402,7 @@ function App(){
   const [urgentUp,setUrgentUp] = useState(null);
   const [confirmRerollSq,setConfirmRerollSq] = useState(null);
   const [confirmDungeonChoice,setConfirmDungeonChoice] = useState(null);
+  const [dungeonChoiceOpen,setDungeonChoiceOpen] = useState(false);
   const [importModal,setImportModal] = useState(false);
   const [importValue,setImportValue] = useState("");
   const [exportCopiedModal,setExportCopiedModal] = useState(false);
@@ -3077,21 +3077,25 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function DungeonChoiceCard(){
     if(activeDungeon) return null;
     const dungeonGold="#f59e0b";
+    const subtitle="1 par jour · "+dungeonWeekCount+"/3 cette semaine";
+
+    if(dungeonChoiceOpen && dungeonCanStart){
+      return h("div",{class:"card",style:"border:1px solid rgba(245,158,11,0.55);background:rgba(245,158,11,0.025)"},
+        h("div",{class:"ctitle",style:"margin:0 0 10px;color:"+dungeonGold},"CHOIX DU DONJON"),
+        h("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:8px"},DUNGEONS.map(dg=>h("button",{key:dg.id,onClick:()=>setConfirmDungeonChoice({type:"start",id:dg.id,title:dg.title,short:dg.short,icon:dg.icon,color:dg.color,stat:dg.stat}),style:"padding:10px 8px;border-radius:10px;border:1px solid "+dg.color+"55;background:"+dg.color+"0f;color:"+dg.color+";font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:.7px;text-transform:uppercase;cursor:pointer;text-align:center;line-height:1.25"},
+          h("div",{style:"font-size:16px;margin-bottom:4px"},dg.icon),
+          h("div",null,dg.short),
+          h("div",{style:"font-size:8px;color:var(--td);margin-top:3px"},STAT_LBL[dg.stat]||dg.stat)
+        )))
+      );
+    }
+
     return h("div",{class:"card",style:"border:1px solid rgba(245,158,11,0.55);background:rgba(245,158,11,0.025)"},
-      h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px"},
-        h("div",null,
-          h("div",{class:"ctitle",style:"margin:0;color:"+dungeonGold},"Lancer un donjon"),
-          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"1 par jour · "+dungeonWeekCount+"/3 cette semaine")
-        ),
-        h("div",{style:"font-size:10px;color:"+(dungeonCanStart?"#4ade80":"var(--td)")+";font-family:Orbitron,sans-serif;text-transform:uppercase;white-space:nowrap"},dungeonCanStart?"Disponible":(dungeonDailyUsed?"Déjà lancé":"Limite hebdo"))
-      ),
+      h("div",{class:"ctitle",style:"margin:0;color:"+dungeonGold},"DONJON"),
+      h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},subtitle),
       dungeonCanStart
-        ? h("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:8px"},DUNGEONS.map(dg=>h("button",{key:dg.id,onClick:()=>setConfirmDungeonChoice({type:"start",id:dg.id,title:dg.title,short:dg.short,icon:dg.icon,color:dg.color,stat:dg.stat}),style:"padding:10px 8px;border-radius:10px;border:1px solid "+dg.color+"55;background:"+dg.color+"0f;color:"+dg.color+";font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:.7px;text-transform:uppercase;cursor:pointer;text-align:center;line-height:1.25"},
-            h("div",{style:"font-size:16px;margin-bottom:4px"},dg.icon),
-            h("div",null,dg.short),
-            h("div",{style:"font-size:8px;color:var(--td);margin-top:3px"},STAT_LBL[dg.stat]||dg.stat)
-          )))
-        : h("div",{style:"text-align:center;padding:10px 0;color:var(--td);font-size:11px;line-height:1.45"},dungeonDailyUsed?"Tu as déjà lancé un donjon aujourd’hui. Prochain lancement disponible demain.":"Limite hebdomadaire atteinte. Prochain lancement disponible la semaine prochaine.")
+        ? h("button",{onClick:()=>setConfirmDungeonChoice({type:"enter",color:dungeonGold}),style:"width:100%;margin-top:12px;padding:11px;border-radius:9px;border:1px solid "+dungeonGold+"88;background:"+dungeonGold+"12;color:"+dungeonGold+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.35px;text-transform:uppercase;cursor:pointer"},"ENTRER DANS UN DONJON")
+        : h("div",{style:"text-align:center;padding:10px 0 2px;color:var(--td);font-size:11px;line-height:1.45"},dungeonDailyUsed?"Tu as déjà lancé un donjon aujourd’hui. Prochain lancement disponible demain.":"Limite hebdomadaire atteinte. Prochain lancement disponible la semaine prochaine.")
     );
   }
 
@@ -4054,38 +4058,39 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
   function ConfirmDungeonChoice(){
     if(!confirmDungeonChoice)return null;
-    const isSkip=confirmDungeonChoice.type==="skip";
-    const color=isSkip ? "#f59e0b" : (confirmDungeonChoice.color||"var(--rc)");
-    const title=isSkip ? "Ne pas faire de donjon aujourd’hui ?" : "Activer ce donjon ?";
-    const main=isSkip ? "Passer les donjons" : ((confirmDungeonChoice.icon||"")+" "+(confirmDungeonChoice.title||"Donjon"));
-    const desc=isSkip
-      ? "La carte de choix disparaîtra de l’accueil jusqu’au prochain reset de 7h."
+    const isEnter=confirmDungeonChoice.type==="enter";
+    const color=isEnter ? "#f59e0b" : (confirmDungeonChoice.color||"var(--rc)");
+    const title=isEnter ? "ENTRER DANS UN DONJON ?" : "ACTIVER CE DONJON ?";
+    const main=isEnter ? null : ((confirmDungeonChoice.icon||"")+" "+(confirmDungeonChoice.title||"Donjon"));
+    const desc=isEnter
+      ? "Vous vous retrouverez devant la porte d’un donjon, êtes-vous certain de vouloir y entrer ?"
       : "Ce choix consommera ton lancement de donjon du jour et comptera dans la limite hebdomadaire.";
     return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+color+"55;background:rgba(0,0,0,0.92)"},
       h("div",{class:"rucont",style:"width:min(330px,calc(100vw - 38px));background:rgba(15,15,18,0.96);border:1px solid "+color+"66;border-radius:18px;padding:20px;box-shadow:0 0 30px "+color+"22"},
         h("div",{class:"ruevol",style:"margin-bottom:10px;color:"+color},"CONFIRMATION"),
         h("div",{style:"font-family:Orbitron,sans-serif;font-size:17px;font-weight:900;color:"+color+";letter-spacing:1px;text-transform:uppercase;text-align:center;line-height:1.25"},title),
-        h("div",{style:"font-size:14px;color:var(--tx);font-weight:800;text-align:center;margin-top:10px;line-height:1.35"},main),
-        !isSkip&&h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;text-align:center;margin-top:6px;letter-spacing:1px;text-transform:uppercase"},STAT_LBL[confirmDungeonChoice.stat]||confirmDungeonChoice.stat),
+        main&&h("div",{style:"font-size:14px;color:var(--tx);font-weight:800;text-align:center;margin-top:10px;line-height:1.35"},main),
+        !isEnter&&h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;text-align:center;margin-top:6px;letter-spacing:1px;text-transform:uppercase"},STAT_LBL[confirmDungeonChoice.stat]||confirmDungeonChoice.stat),
         h("div",{style:"font-size:12px;color:var(--td);line-height:1.5;text-align:center;margin-top:12px"},desc),
         h("div",{style:"display:flex;gap:10px;width:100%;margin-top:18px"},
           h("button",{
             onClick:()=>setConfirmDungeonChoice(null),
             style:"flex:1;padding:11px;border-radius:9px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);color:var(--td);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"
-          },"Annuler"),
+          },isEnter?"Non":"Annuler"),
           h("button",{
             onClick:()=>{
               const choice=confirmDungeonChoice;
               setConfirmDungeonChoice(null);
-              if(choice.type==="skip") skipDungeonToday();
-              else startDungeon(choice.id);
+              if(choice.type==="enter") setDungeonChoiceOpen(true);
+              else { setDungeonChoiceOpen(false); startDungeon(choice.id); }
             },
             style:"flex:1;padding:11px;border-radius:9px;border:1px solid "+color+";background:"+color+"1a;color:"+color+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"
-          },isSkip?"Passer":"Activer")
+          },isEnter?"Oui":"Activer")
         )
       )
     );
   }
+
 
   function ConfirmReroll(){
     if(!confirmRerollSq)return null;
