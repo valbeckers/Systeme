@@ -2536,10 +2536,10 @@ function App(){
         let totalXp=s.totalXp;
         const statXp={...s.statXp};
         const stats={...s.stats};
-        const ruptureRewards=[
-          {xp:1350,stat:dungeon.reward.stat||dungeon.stat},
-          dungeon.reward.stat2?{xp:270,stat:dungeon.reward.stat2}:null
-        ].filter(Boolean);
+        const ruptureRewards=dungeonRoomRewardPairs(
+          dungeon,
+          Math.max(0,(dungeon.rooms||[]).length-1)
+        );
         ruptureRewards.forEach(r=>{
           totalXp+=(r.xp||0);
           statXp[r.stat]=(statXp[r.stat]||0)+(r.xp||0);
@@ -4656,5 +4656,4 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         const stat = dominantStat(item,fallback);
         const group = groups.find(g=>g.stat===stat) || groups[groups.length-1];
         group.list.push(item);
-      });
      
