@@ -1,4 +1,3 @@
-
 const { h, render, Fragment } = preact;
 const { useState, useEffect, useRef } = preactHooks;
 
@@ -997,6 +996,10 @@ function cleanSystemState(raw){
     dungeonRunDay:data.dungeonRunDay||null,
     dungeonSkipDay:data.dungeonSkipDay||null,
     dungeonRunsByWeek:cleanDungeonRunWeeks(data.dungeonRunsByWeek),
+    dungeonKeyRollDay:data.dungeonKeyRollDay||null,
+    dungeonKeys:Math.max(0,Math.floor(Number(data.dungeonKeys) || ((data.dungeonKeyRollWon===true && data.dungeonKeyDay)?1:0))),
+    dungeonKeyDay:data.dungeonKeyDay||null,
+    dungeonKeyRollWon:data.dungeonKeyRollWon===true,
     dungeonLog:cleanDungeonLog(data.dungeonLog),
     dailyExtraXp:cleanDailyExtraXp(data.dailyExtraXp),
     dailyEvent:cleanDailyEvent(data.dailyEvent),
@@ -1763,7 +1766,17 @@ function App(){
   const dungeonDailyUsed = dungeonRunDay===today;
   const dungeonSkipDay = state.dungeonSkipDay||null;
   const dungeonSkippedToday = dungeonSkipDay===today;
-  const dungeonCanStart = !state.activeDungeon && !dungeonDailyUsed && dungeonWeekCount<3;
+  const dungeonKeyRollDone = state.dungeonKeyRollDay===today;
+  const dungeonKeys = Math.max(0,Math.floor(Number(state.dungeonKeys)||0));
+  const dungeonKeyAvailable = dungeonKeys>0;
+  const urgentDoneToday = (state.specialQuests||[]).some(q=>{
+    if(!q || !q.completedAt) return false;
+    const d=new Date(q.completedAt);
+    const day=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+    return day===today;
+  });
+  const dungeonLootConditionsMet = allDailyDone && urgentDoneToday;
+  const dungeonCanStart = !state.activeDungeon && !dungeonDailyUsed && dungeonWeekCount<3 && dungeonKeyAvailable;
 
   const dailyEvent = state.dailyEvent && state.dailyEvent.type!=="none" && now < (state.dailyEvent.expiresAt||0)
     ? state.dailyEvent
@@ -1931,6 +1944,23 @@ function App(){
   },[today,state.questDebt?.status,state.questDebt?.dueDay]);
 
   // Animations de complétion des groupes de quêtes — une seule fois par jour.
+  // Clé de donjon : un seul tirage quotidien, à 1 chance sur 3,
+  // lorsque toutes les journalières et la quête urgente sont terminées.
+  useEffect(()=>{
+    if(!dungeonLootConditionsMet || dungeonKeyRollDone) return;
+    setState(s=>{
+      if(s.dungeonKeyRollDay===today) return s;
+      const won=Math.floor(Math.random()*3)===0;
+      return {
+        ...s,
+        dungeonKeyRollDay:today,
+        dungeonKeyRollWon:won,
+        dungeonKeyDay:won?today:null,
+        dungeonKeys:Math.max(0,Math.floor(Number(s.dungeonKeys)||0))+(won?1:0)
+      };
+    });
+  },[dungeonLootConditionsMet,dungeonKeyRollDone,today]);
+
   useEffect(()=>{
     if(!allDailyDone || state.dailyCompletionAnimDay===today) return;
     setState(s=>s.dailyCompletionAnimDay===today?s:{...s,dailyCompletionAnimDay:today});
@@ -2477,10 +2507,12 @@ function App(){
       const current=s.activeDungeon;
       if(current && !current.completedAt) return s;
       if(s.dungeonRunDay===day || (runs[week]||0)>=3) return s;
+      const keys=Math.max(0,Math.floor(Number(s.dungeonKeys)||0));
+      if(keys<1) return s;
       const dungeon=DUNGEONS.find(d=>d.id===id);
       if(!dungeon) return s;
       runs[week]=(runs[week]||0)+1;
-      return {...s,activeDungeon:{id,runId:"dg_"+t,startedAt:t,expiresAt:next7AM(t),completedRooms:[],completedAt:null},dungeonRunDay:day,dungeonRunsByWeek:runs,lastActiveDay:day};
+      return {...s,activeDungeon:{id,runId:"dg_"+t,startedAt:t,expiresAt:next7AM(t),completedRooms:[],completedAt:null},dungeonRunDay:day,dungeonRunsByWeek:runs,dungeonKeys:keys-1,dungeonKeyDay:null,dungeonKeyRollWon:false,lastActiveDay:day};
     });
   }
 
@@ -3105,10 +3137,22 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
     return h("div",{class:"card",style:"border:1px solid rgba(245,158,11,0.55);background:rgba(245,158,11,0.025)"},
       h("div",{class:"ctitle",style:"margin:0;color:"+dungeonGold},"DONJON"),
-      h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},subtitle),
+      h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},subtitle+" · 🗝️ "+dungeonKeys),
       dungeonCanStart
         ? h("button",{onClick:()=>setConfirmDungeonChoice({type:"enter",color:dungeonGold}),style:"width:100%;margin-top:12px;padding:11px;border-radius:9px;border:1px solid "+dungeonGold+"88;background:"+dungeonGold+"12;color:"+dungeonGold+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.35px;text-transform:uppercase;cursor:pointer"},"ENTRER DANS UN DONJON")
-        : h("div",{style:"text-align:center;padding:10px 0 2px;color:var(--td);font-size:11px;line-height:1.45"},dungeonDailyUsed?"Tu as déjà lancé un donjon aujourd’hui. Prochain lancement disponible demain.":"Limite hebdomadaire atteinte. Prochain lancement disponible la semaine prochaine.")
+        : h("div",{style:"text-align:center;padding:10px 0 2px;color:var(--td);font-size:11px;line-height:1.45"},
+            dungeonDailyUsed
+              ? "Tu as déjà lancé un donjon aujourd’hui. Prochain lancement disponible demain."
+              : dungeonWeekCount>=3
+                ? "Limite hebdomadaire atteinte. Prochain lancement disponible la semaine prochaine."
+                : !dungeonKeyAvailable && !dungeonLootConditionsMet
+                  ? "Aucune clé disponible. Complète toutes les quêtes journalières et la quête urgente pour tenter d’en obtenir une."
+                  : !dungeonKeyAvailable && dungeonKeyRollDone
+                    ? "Aucune clé trouvée aujourd’hui. Une nouvelle tentative sera disponible demain."
+                    : !dungeonKeyAvailable
+                      ? "Le tirage de la clé est en cours…"
+                      : "Une clé est disponible, mais le donjon ne peut pas être lancé actuellement."
+          )
     );
   }
 
@@ -3290,7 +3334,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         prestigeAvailable&&h("button",{
           onClick:()=>{
             const newPrestige=(state.prestige||0)+1;
-            setState(s=>({...s,streak:0,streakBonusDay:null,weeklyBonusWk:null,streakMilestones:[],dailyLog:{},weeklyLog:{},specialQuests:[],sqStatCycle:[],sqCooldownUntil:null,sqRerollDay:null,activeDungeon:null,dungeonRunDay:null,dungeonRunsByWeek:{},dungeonLog:[],enduranceChoiceByDay:{},prestige:newPrestige}));
+            setState(s=>({...s,streak:0,streakBonusDay:null,weeklyBonusWk:null,streakMilestones:[],dailyLog:{},weeklyLog:{},specialQuests:[],sqStatCycle:[],sqCooldownUntil:null,sqRerollDay:null,activeDungeon:null,dungeonRunDay:null,dungeonRunsByWeek:{},dungeonKeyRollDay:null,dungeonKeys:0,dungeonKeyDay:null,dungeonKeyRollWon:false,dungeonLog:[],enduranceChoiceByDay:{},prestige:newPrestige}));
             setPrestigeUp(newPrestige);
           },
           style:"width:100%;margin-top:12px;padding:12px;background:rgba(168,85,247,0.1);border:1px solid #a855f7;border-radius:10px;color:#a855f7;font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:3px;cursor:pointer;text-transform:uppercase;text-shadow:0 0 12px #a855f7"
