@@ -1,3 +1,4 @@
+
 const { h, render, Fragment } = preact;
 const { useState, useEffect, useRef } = preactHooks;
 
@@ -165,6 +166,12 @@ const DUNGEONS = [
     {name:"Rangement", desc:"10 objets"},
     {name:"Bloc profond", desc:"45 min sur une tâche choisie, sans interruption volontaire"},
   ]},
+  {id:"steward", title:"Donjon de l’Intendant", short:"Intendant", stat:"Discipline", icon:"🧹", color:"#f59e0b", reward:{xp:1350,stat:"Discipline",xp2:270,stat2:"Sante"}, rooms:[
+    {name:"Rangement", desc:"15 min"},
+    {name:"Poussière", desc:"15 min"},
+    {name:"Aspirer", desc:"20 min"},
+    {name:"Salle immaculée", desc:"Récurer 30 min"},
+  ]},
 
 ];
 
@@ -213,6 +220,12 @@ const DUNGEON_RUPTURE_BOSSES = {
     {id:"guardian_sentinelle",rarity:"majeur",name:"La Sentinelle",objective:"Ranger entièrement une pièce"},
     {id:"guardian_stratege",rarity:"elite",name:"Le Stratège",objective:"Planifier précisément la journée suivante puis commencer immédiatement la première tâche"},
     {id:"guardian_dechu",rarity:"legendaire",name:"Le Gardien Déchu",objective:"60 min de Deep Work sans interruption volontaire"},
+  ],
+  steward:[
+    {id:"steward_negligent",rarity:"mineur",name:"Le Négligent",objective:"Ranger 20 objets"},
+    {id:"steward_poussiere",rarity:"majeur",name:"Le Seigneur de la Poussière",objective:"Faire la poussière pendant 30 min"},
+    {id:"steward_encombreur",rarity:"elite",name:"L’Encombreur",objective:"Ranger entièrement une pièce"},
+    {id:"steward_crasse",rarity:"legendaire",name:"Le Maître de la Crasse",objective:"60 min de nettoyage domestique continu"},
   ],
 };
 
