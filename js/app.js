@@ -120,7 +120,7 @@ const SP = {
 };
 
 
-// Donjons volontaires : 1 actif à la fois, 1/jour, 3/semaine, 24h puis Boss de Rupture.
+// Donjons volontaires : 1 actif à la fois, 1/jour, accès limité naturellement par les clés, 24h puis Boss de Rupture.
 // Ordre aligné sur les stats : Santé, Force, Esprit, Endurance, Agilité, Discipline.
 const DUNGEONS = [
   {id:"alchemist", title:"Donjon de l’Alchimiste", short:"Alchimiste", stat:"Sante", icon:"⚗️", color:"#ef4444", reward:{xp:1500,stat:"Sante",xp2:300,stat2:"Esprit"}, rooms:[
@@ -1761,8 +1761,6 @@ function App(){
     ? {...activeDungeonTpl,...state.activeDungeon,tpl:activeDungeonTpl}
     : null;
   const dungeonRunDay = state.dungeonRunDay||null;
-  const dungeonRunsByWeek = state.dungeonRunsByWeek||{};
-  const dungeonWeekCount = dungeonRunsByWeek[wk]||0;
   const dungeonDailyUsed = dungeonRunDay===today;
   const dungeonSkipDay = state.dungeonSkipDay||null;
   const dungeonSkippedToday = dungeonSkipDay===today;
@@ -1776,7 +1774,7 @@ function App(){
     return day===today;
   });
   const dungeonLootConditionsMet = allDailyDone && urgentDoneToday;
-  const dungeonCanStart = !state.activeDungeon && !dungeonDailyUsed && dungeonWeekCount<3 && dungeonKeyAvailable;
+  const dungeonCanStart = !state.activeDungeon && !dungeonDailyUsed && dungeonKeyAvailable;
 
   const dailyEvent = state.dailyEvent && state.dailyEvent.type!=="none" && now < (state.dailyEvent.expiresAt||0)
     ? state.dailyEvent
@@ -2502,17 +2500,14 @@ function App(){
     setState(s=>{
       const t=Date.now();
       const day=todayStr();
-      const week=wkStr();
-      const runs={...(s.dungeonRunsByWeek||{})};
       const current=s.activeDungeon;
       if(current && !current.completedAt) return s;
-      if(s.dungeonRunDay===day || (runs[week]||0)>=3) return s;
+      if(s.dungeonRunDay===day) return s;
       const keys=Math.max(0,Math.floor(Number(s.dungeonKeys)||0));
       if(keys<1) return s;
       const dungeon=DUNGEONS.find(d=>d.id===id);
       if(!dungeon) return s;
-      runs[week]=(runs[week]||0)+1;
-      return {...s,activeDungeon:{id,runId:"dg_"+t,startedAt:t,expiresAt:next7AM(t),completedRooms:[],completedAt:null},dungeonRunDay:day,dungeonRunsByWeek:runs,dungeonKeys:keys-1,dungeonKeyDay:null,dungeonKeyRollWon:false,lastActiveDay:day};
+      return {...s,activeDungeon:{id,runId:"dg_"+t,startedAt:t,expiresAt:next7AM(t),completedRooms:[],completedAt:null},dungeonRunDay:day,dungeonKeys:keys-1,dungeonKeyDay:null,dungeonKeyRollWon:false,lastActiveDay:day};
     });
   }
 
@@ -3083,12 +3078,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }
     return h("div",{class:"card",style:"border-color:var(--rc)44"},
       h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px"},
-        h("div",null,h("div",{class:"ctitle",style:"margin:0;color:var(--rc)"},"Donjons"),h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"1/jour · "+dungeonWeekCount+"/3 cette semaine")),
-        h("div",{style:"font-size:10px;color:"+(dungeonCanStart?"#4ade80":"var(--td)")+";font-family:Orbitron,sans-serif;text-transform:uppercase;white-space:nowrap"},dungeonCanStart?"Disponible":(dungeonDailyUsed?"Déjà lancé":"Limite hebdo"))
+        h("div",null,h("div",{class:"ctitle",style:"margin:0;color:var(--rc)"},"Donjons"),h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"1 par jour · Accès par clé")),
+        h("div",{style:"font-size:10px;color:"+(dungeonCanStart?"#4ade80":"var(--td)")+";font-family:Orbitron,sans-serif;text-transform:uppercase;white-space:nowrap"},dungeonCanStart?"Disponible":(dungeonDailyUsed?"Déjà lancé":"Verrouillé"))
       ),
       dungeonCanStart
         ? h("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:8px"},DUNGEONS.map(dg=>h("button",{key:dg.id,onClick:()=>startDungeon(dg.id),style:"padding:10px 8px;border-radius:10px;border:1px solid "+dg.color+"55;background:"+dg.color+"0f;color:"+dg.color+";font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:.7px;text-transform:uppercase;cursor:pointer;text-align:center;line-height:1.25"},h("div",{style:"font-size:16px;margin-bottom:4px"},dg.icon),h("div",null,dg.short),h("div",{style:"font-size:8px;color:var(--td);margin-top:3px"},STAT_LBL[dg.stat]||dg.stat))))
-        : h("div",{style:"text-align:center;padding:10px 0;color:var(--td);font-size:11px;line-height:1.45"},dungeonDailyUsed?"Tu as déjà lancé un donjon aujourd'hui. Prochain lancement disponible demain.":"Limite hebdomadaire atteinte. Prochain lancement disponible la semaine prochaine.")
+        : h("div",{style:"text-align:center;padding:10px 0;color:var(--td);font-size:11px;line-height:1.45"},dungeonDailyUsed?"Tu as déjà lancé un donjon aujourd'hui. Prochain lancement disponible demain.":"Aucune clé disponible.")
     );
   }
 
@@ -3122,7 +3117,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function DungeonChoiceCard(){
     if(activeDungeon) return null;
     const dungeonGold="#f59e0b";
-    const subtitle="1 par jour · "+dungeonWeekCount+"/3 cette semaine";
+    const subtitle="1 par jour";
 
     if(dungeonChoiceOpen && dungeonCanStart){
       return h("div",{class:"card",style:"border:1px solid rgba(245,158,11,0.55);background:rgba(245,158,11,0.025)"},
@@ -3143,9 +3138,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         : h("div",{style:"text-align:center;padding:10px 0 2px;color:var(--td);font-size:11px;line-height:1.45"},
             dungeonDailyUsed
               ? "Tu as déjà lancé un donjon aujourd’hui. Prochain lancement disponible demain."
-              : dungeonWeekCount>=3
-                ? "Limite hebdomadaire atteinte. Prochain lancement disponible la semaine prochaine."
-                : !dungeonKeyAvailable && !dungeonLootConditionsMet
+              : !dungeonKeyAvailable && !dungeonLootConditionsMet
                   ? "Aucune clé disponible. Complète toutes les quêtes journalières et la quête urgente pour tenter d’en obtenir une."
                   : !dungeonKeyAvailable && dungeonKeyRollDone
                     ? "Aucune clé trouvée aujourd’hui. Une nouvelle tentative sera disponible demain."
