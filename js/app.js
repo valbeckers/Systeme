@@ -3561,7 +3561,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function Inventory(){
     const ids=["dungeonKey","majorElixir","minorElixir"];
     return h("div",{class:"tab"},
-      h("div",{class:"ctitle",style:"margin-bottom:12px"},"INVENTAIRE"),
       h("div",{style:"display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px"},ids.map(id=>{
         const it=INVENTORY_ITEMS[id], qty=itemQty(id), grey=id!=="dungeonKey"&&!!activeElixir;
         return h("button",{key:id,onClick:()=>setInventoryItem(id),style:"position:relative;aspect-ratio:1/1;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.025);padding:8px;color:var(--tx);cursor:pointer;opacity:"+(grey?".48":"1")+";display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px"},
@@ -3591,8 +3590,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{style:"font-size:58px;text-align:center;margin:14px 0 8px"},it.emoji),
         h("div",{style:"text-align:center;font-family:Orbitron,sans-serif;font-size:10px;color:var(--td);margin-bottom:16px"},"QUANTITÉ : "+qty),
         h("div",{style:"font-size:12px;line-height:1.6;color:var(--tx);margin-bottom:14px"},it.desc),
-        h("details",{style:"margin-bottom:16px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);padding:10px 0"},
-          h("summary",{style:"cursor:pointer;font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1px"},"OBTENTION"),
+        h("div",{style:"margin-bottom:16px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);padding:10px 0"},
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1px"},"OBTENTION"),
           h("div",{style:"margin-top:9px;display:flex;flex-direction:column;gap:7px"},it.obtain.map((x,i)=>h("div",{key:i,style:"font-size:10px;color:var(--td);line-height:1.5"},"• "+x)))
         ),
         reason&&h("div",{style:"font-size:10px;color:var(--td);text-align:center;margin-bottom:8px"},reason),
@@ -5004,15 +5003,15 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h("div",{class:"particles"},parts.map(p=>h("div",{key:p.id,class:"particle",style:"width:"+p.s+"px;height:"+p.s+"px;left:"+p.l+"%;bottom:-10px;background:"+rank.color+";box-shadow:0 0 4px "+rank.glow+";animation-duration:"+p.dur+"s;animation-delay:"+p.del+"s"}))),
       h("div",{class:"hdr-wrap"},
         h("div",{class:"hdr"},
-          h("div",{class:"hdr-top",style:"position:relative"},
-            h("div",null,
+          h("div",{class:"hdr-top",style:"position:relative;display:flex;align-items:center;gap:8px"},
+            h("div",{style:"flex:1;min-width:0;padding-right:4px"},
               h("div",{class:"pname"},"VAL,"),
-              h("div",{style:"margin-top:6px;width:min(340px,calc(100vw - 112px));min-height:26px;font-size:9.5px;line-height:1.3;color:"+mantraColor+";font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-transform:uppercase;display:block;opacity:.96;white-space:normal;overflow:hidden"},dailyMantra)
+              h("div",{style:"margin-top:6px;width:100%;min-height:26px;font-size:9.5px;line-height:1.3;color:"+mantraColor+";font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-transform:uppercase;display:block;opacity:.96;white-space:normal;overflow:hidden"},dailyMantra)
             ),
             prestige>0&&h("div",{class:"prestige-badge"},"\u269B\uFE0F Ascension "+ROMAN[prestige-1]),
-            h("div",{style:"display:flex;gap:7px"},
-              h("button",{class:"gbtn",style:"display:flex;align-items:center;justify-content:center",onClick:()=>switchTab("codex")},"📜"),
-              h("button",{class:"gbtn",style:"display:flex;align-items:center;justify-content:center",onClick:()=>setShowSet(true)},"⚙️")
+            h("div",{style:"display:flex;align-items:center;gap:2px;flex:0 0 auto;transform:translateY(-2px)"},
+              h("button",{class:"gbtn",title:"Codex","aria-label":"Ouvrir le Codex",style:"display:flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;font-size:23px;line-height:1",onClick:()=>switchTab("codex")},"📜"),
+              h("button",{class:"gbtn",title:"Réglages","aria-label":"Ouvrir les réglages",style:"display:flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;font-size:24px;line-height:1",onClick:()=>setShowSet(true)},"⚙️")
             )
           )
         )
