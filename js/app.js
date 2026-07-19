@@ -1,3 +1,4 @@
+
 const { h, render, Fragment } = preact;
 const { useState, useEffect, useRef } = preactHooks;
 
@@ -1414,6 +1415,8 @@ function App(){
   const [completionUp,setCompletionUp] = useState(null);
   const [completionQueue,setCompletionQueue] = useState([]);
   const [recordUp,setRecordUp] = useState(null);
+  const [keyLootUp,setKeyLootUp] = useState(null);
+  const [keyLootQueue,setKeyLootQueue] = useState([]);
   const [dungeonUp,setDungeonUp] = useState(null);
   const [ruptureUp,setRuptureUp] = useState(null);
   const [urgentUp,setUrgentUp] = useState(null);
@@ -1437,6 +1440,23 @@ function App(){
   const [confirmReset,setConfirmReset] = useState(false);
   const [wkOff,setWkOff]  = useState(0);
   const inputs = useRef({});
+
+  function enqueueDungeonKeyLoot(kind){
+    setKeyLootQueue(q=>[...q,{kind:kind==="rare"?"rare":"guaranteed",id:Date.now()+Math.random()}]);
+  }
+
+  function awardDungeonKey(kind){
+    setState(s=>({...s,dungeonKeys:Math.max(0,Math.floor(Number(s.dungeonKeys)||0))+1}));
+    enqueueDungeonKeyLoot(kind);
+  }
+
+  function tryRareDungeonKeyDrop(){
+    if(Math.random()<0.05){
+      awardDungeonKey("rare");
+      return true;
+    }
+    return false;
+  }
 
   // Migration grips sec→min sur le state en mémoire (au cas où localStorage non migré)
   useEffect(()=>{
@@ -1871,16 +1891,19 @@ function App(){
 
     const color=STAT_COLOR[obj.stat] || rank.color || "#fbbf24";
     const label=fmtNum(nextNumber)+" "+questRecordUnit(obj.unit,nextNumber);
-    setTimeout(()=>setRecordUp({
-      title:"NOUVEAU RECORD",
-      name:obj.name,
-      icon:obj.icon,
-      value:label,
-      color,
-      glow:color+"55",
-      rankColor:rank.color,
-      rankGlow:rank.glow
-    }),delay);
+    setTimeout(()=>{
+      setRecordUp({
+        title:"NOUVEAU RECORD",
+        name:obj.name,
+        icon:obj.icon,
+        value:label,
+        color,
+        glow:color+"55",
+        rankColor:rank.color,
+        rankGlow:rank.glow
+      });
+      tryRareDungeonKeyDrop();
+    },delay);
   }
 
 
@@ -1967,7 +1990,16 @@ function App(){
         dungeonKeys:Math.max(0,Math.floor(Number(s.dungeonKeys)||0))+1
       };
     });
+    enqueueDungeonKeyLoot("guaranteed");
   },[dungeonLootConditionsMet,dungeonKeyRollDone,today]);
+
+  useEffect(()=>{
+    if(keyLootUp || !keyLootQueue.length) return;
+    if(rankUp || levelUp || statDecadeUp || completionUp || streakUp || recordUp || dungeonUp || ruptureUp || urgentUp || debtUp || prestigeUp) return;
+    const [next,...rest]=keyLootQueue;
+    setKeyLootQueue(rest);
+    setKeyLootUp(next);
+  },[keyLootQueue,keyLootUp,rankUp,levelUp,statDecadeUp,completionUp,streakUp,recordUp,dungeonUp,ruptureUp,urgentUp,debtUp,prestigeUp]);
 
   useEffect(()=>{
     if(!allDailyDone || state.dailyCompletionAnimDay===today) return;
@@ -2380,6 +2412,7 @@ function App(){
         const rewardPairs = Object.entries(xpByStat).map(([stat,xp])=>({stat,xp}));
         if(nowComplete){
           triggerUrgentUp(sq,rewardPairs);
+          tryRareDungeonKeyDrop();
         }else{
           const id1=Date.now()+Math.random();
           const id2=id1+0.1;
@@ -2418,6 +2451,7 @@ function App(){
       ].filter(Boolean);
       xpPairs.forEach(p=>addXp(p.xp,p.stat,null,true));
       triggerUrgentUp(sq,xpPairs);
+      tryRareDungeonKeyDrop();
     }
     const awardedXp = (!wasComplete&&nowComplete) ? [
       {xp:sq.xp, stat:sq.stat},
@@ -2954,6 +2988,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       if(nowComplete){
         triggerUrgentUp(sq,xpPairs);
         xpPairs.forEach(p=>addXp(p.xp,p.stat,null,true));
+        tryRareDungeonKeyDrop();
       }
       setState(s=>{
         const day=todayStr();
@@ -4095,6 +4130,34 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
+  function DungeonKeyLootUp(){
+    if(!keyLootUp)return null;
+    const rare=keyLootUp.kind==="rare";
+    const color=rank.color||"#fbbf24";
+    const glow=rank.glow||color+"66";
+    const gold="#fbbf24";
+    const headingColor=rare?gold:color;
+    const particles=Array.from({length:48},(_,i)=>({
+      id:i,
+      left:Math.random()*100,
+      delay:Math.random()*2.5,
+      dur:1.05+Math.random()*1.9,
+      size:2+Math.random()*5,
+      gold:Math.random()>0.38
+    }));
+    return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+glow},
+      h("div",{class:"ruparts"},particles.map(p=>
+        h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.gold?gold:"#ffffff")+";box-shadow:0 0 10px "+(p.gold?gold+"99":glow)+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
+      )),
+      h("div",{class:"rucont"},
+        h(NotificationHeader,null),
+        h("div",{class:"ruevol",style:"color:"+headingColor+";text-shadow:0 0 16px "+(rare?gold+"99":glow)},rare?"DROP RARE OBTENU !":"OBJET OBTENU !"),
+        h("div",{class:"rurank",style:"--rc:"+gold+";--rg:"+gold+"88;color:"+gold+";text-shadow:0 0 20px "+gold+"99;font-size:clamp(38px,11vw,64px);letter-spacing:-1px;white-space:normal;max-width:350px;line-height:1.05","data-r":"CLÉ DU DONJON"},"CLÉ DU DONJON"),
+        h("button",{class:"rudis",style:"--rc:"+color+";--rg:"+glow,onClick:()=>setKeyLootUp(null)},"Continuer")
+      )
+    );
+  }
+
   function RecordUp(){
     if(!recordUp)return null;
     const statColor=recordUp.color||"#fbbf24";
@@ -4819,6 +4882,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(CompletionUp,null),
       h(StreakUp,null),
       h(RecordUp,null),
+      h(DungeonKeyLootUp,null),
       h(DungeonUp,null),
       h(DungeonRuptureUp,null),
       h(UrgentUp,null),
