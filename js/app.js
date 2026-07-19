@@ -2549,8 +2549,8 @@ function App(){
         const statXp={...s.statXp};
         const stats={...s.stats};
         const ruptureRewards=[
-          {xp:900,stat:dungeon.reward.stat||dungeon.stat},
-          dungeon.reward.stat2?{xp:180,stat:dungeon.reward.stat2}:null
+          {xp:1350,stat:dungeon.reward.stat||dungeon.stat},
+          dungeon.reward.stat2?{xp:270,stat:dungeon.reward.stat2}:null
         ].filter(Boolean);
         ruptureRewards.forEach(r=>{
           totalXp+=(r.xp||0);
@@ -4589,7 +4589,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               ))
             ),
             h("div",{style:"margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.07)"},
-              h("div",{style:"font-size:9px;color:"+(STAT_COLOR[dg.stat]||dg.color)+";font-family:Orbitron,sans-serif;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:7px"},"Boss de Rupture — +900 / +180 XP"),
+              h("div",{style:"font-size:9px;color:"+(STAT_COLOR[dg.stat]||dg.color)+";font-family:Orbitron,sans-serif;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:7px"},"Boss de Rupture — +1350 / +270 XP"),
               (DUNGEON_RUPTURE_BOSSES[dg.id]||[]).map(rb=>{
                 const meta=DUNGEON_RUPTURE_RARITIES[rb.rarity]||DUNGEON_RUPTURE_RARITIES.mineur;
                 return h("div",{key:rb.id,style:"margin-bottom:7px;padding:7px 8px;border-radius:8px;border:1px solid "+meta.color+"33;background:"+meta.color+"08"},
