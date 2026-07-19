@@ -1697,6 +1697,15 @@ function App(){
     return getRankBase(objId, ri, prestige, state.stats);
   }
 
+  // Une journée ayant déjà accordé le bonus de streak est définitivement validée.
+  // Cela empêche une hausse ultérieure des objectifs (notamment les rotations
+  // d'exercices dépendantes du niveau de Force) d'invalider rétroactivement
+  // l'Historique ou la série.
+  const hadValidatedDailyCompletion = day => !!(
+    state.streakBonusDay===day ||
+    (Number(((state.dailyExtraXp||{})[day]||{}).streak)||0)>0
+  );
+
   const allDailyDone = (()=>{
     if(state.questDebt&&state.questDebt.status==="active") return false;
     return reqDailyObjs.every(o=>(tLog[o.id]||0)>=getEffectiveTarget(o.id));
@@ -1724,7 +1733,8 @@ function App(){
     for(let i=0;i<365;i++){
       const dk=d.toISOString().slice(0,10);
       const log=state.dailyLog[dk]||{};
-      const naturallyDone=activeOn(dk).every(o=>(log[o.id]||0)>=getValidateThreshold(o,dk));
+      const naturallyDone = hadValidatedDailyCompletion(dk) ||
+        activeOn(dk).every(o=>(log[o.id]||0)>=getValidateThreshold(o,dk));
       if(naturallyDone){
         streak++;
       }else if(isProtectedDebtDay(dk)){
@@ -3836,7 +3846,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       ? Math.ceil(target * 0.5)
       : target;
 
-  const ok = value >= validationTarget;
+  // Pour une quête journalière obligatoire d'une journée passée, le bonus
+  // de streak déjà attribué constitue la preuve que la quête avait atteint
+  // son objectif ce jour-là. On évite ainsi les croix rétroactives lorsque
+  // le niveau actuel augmente le seuil d'une rotation (ex. gainage 2 -> 3 min).
+  const previouslyValidated = day<today && !!obj.daily && !obj.optional && hadValidatedDailyCompletion(day);
+  const ok = previouslyValidated || value >= validationTarget;
 
   if(ok){
     return {txt:"✓",color:"#4ade80",opacity:1};
