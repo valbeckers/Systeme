@@ -1000,6 +1000,12 @@ function cleanSystemState(raw){
     dungeonRunsByWeek:cleanDungeonRunWeeks(data.dungeonRunsByWeek),
     dungeonKeyRollDay:data.dungeonKeyRollDay||null,
     dungeonKeys:Math.max(0,Math.floor(Number(data.dungeonKeys) || ((data.dungeonKeyRollWon===true && data.dungeonKeyDay)?1:0))),
+    inventory:{
+      majorElixir:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.majorElixir)||0)),
+      minorElixir:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.minorElixir)||0))
+    },
+    dungeonAccessOpen:data.dungeonAccessOpen===true,
+    activeElixir:(data.activeElixir&&Number(data.activeElixir.expiresAt)>Date.now()&&["Force","Sante","Esprit","Endurance","Agilite"].includes(data.activeElixir.stat))?data.activeElixir:null,
     dungeonKeyDay:data.dungeonKeyDay||null,
     dungeonKeyRollWon:data.dungeonKeyRollWon===true,
     dungeonLog:cleanDungeonLog(data.dungeonLog),
@@ -1184,6 +1190,9 @@ function buildState(){
     dungeonSkipDay:saved.dungeonSkipDay||null,
     dungeonRunsByWeek:saved.dungeonRunsByWeek||{},
     dungeonLog:saved.dungeonLog||[],
+    inventory:saved.inventory||{majorElixir:0,minorElixir:0},
+    dungeonAccessOpen:saved.dungeonAccessOpen===true,
+    activeElixir:saved.activeElixir||null,
     dailyExtraXp:saved.dailyExtraXp||IMPORTED.dailyExtraXp||{},
     dailyEvent:saved.dailyEvent||IMPORTED.dailyEvent||null,
     eventDay:saved.eventDay||IMPORTED.eventDay||null,
@@ -1417,6 +1426,13 @@ function App(){
   const [recordUp,setRecordUp] = useState(null);
   const [keyLootUp,setKeyLootUp] = useState(null);
   const [keyLootQueue,setKeyLootQueue] = useState([]);
+  const [itemLootUp,setItemLootUp] = useState(null);
+  const [itemLootQueue,setItemLootQueue] = useState([]);
+  const [itemUseUp,setItemUseUp] = useState(null);
+  const [inventoryItem,setInventoryItem] = useState(null);
+  const [confirmItemUse,setConfirmItemUse] = useState(null);
+  const [elixirStatChoice,setElixirStatChoice] = useState(null);
+  const [confirmElixirUse,setConfirmElixirUse] = useState(null);
   const [dungeonUp,setDungeonUp] = useState(null);
   const [ruptureUp,setRuptureUp] = useState(null);
   const [urgentUp,setUrgentUp] = useState(null);
@@ -1450,12 +1466,21 @@ function App(){
     enqueueDungeonKeyLoot(kind);
   }
 
+  function enqueueItemLoot(item,kind="rare"){
+    setItemLootQueue(q=>[...q,{item,kind,id:Date.now()+Math.random()}]);
+  }
+
+  function awardElixir(kind,source="rare"){
+    setState(s=>({...s,inventory:{...(s.inventory||{}),[kind]:Math.max(0,Math.floor(Number(s.inventory&&s.inventory[kind])||0))+1}}));
+    enqueueItemLoot(kind,source);
+  }
+
   function tryRareDungeonKeyDrop(){
-    if(Math.random()<0.05){
-      awardDungeonKey("rare");
-      return true;
-    }
-    return false;
+    const keyWon=Math.random()<0.05;
+    const elixirWon=Math.random()<0.05;
+    if(keyWon) awardDungeonKey("rare");
+    if(elixirWon) awardElixir("minorElixir","rare");
+    return keyWon||elixirWon;
   }
 
   // Migration grips sec→min sur le state en mémoire (au cas où localStorage non migré)
@@ -1798,6 +1823,8 @@ function App(){
   const dungeonKeyRollDone = state.dungeonKeyRollDay===today;
   const dungeonKeys = Math.max(0,Math.floor(Number(state.dungeonKeys)||0));
   const dungeonKeyAvailable = dungeonKeys>0;
+  const dungeonAccessOpen = state.dungeonAccessOpen===true;
+  const activeElixir = state.activeElixir && now<(state.activeElixir.expiresAt||0) ? state.activeElixir : null;
   const urgentDoneToday = (state.specialQuests||[]).some(q=>{
     if(!q || !q.completedAt) return false;
     const d=new Date(q.completedAt);
@@ -1805,7 +1832,7 @@ function App(){
     return day===today;
   });
   const dungeonLootConditionsMet = allDailyDone && allBonusDone && urgentDoneToday;
-  const dungeonCanStart = !state.activeDungeon && !dungeonDailyUsed && dungeonWeekCount<3 && dungeonKeyAvailable;
+  const dungeonCanStart = !state.activeDungeon && !dungeonDailyUsed && dungeonWeekCount<3 && dungeonAccessOpen;
 
   const dailyEvent = state.dailyEvent && state.dailyEvent.type!=="none" && now < (state.dailyEvent.expiresAt||0)
     ? state.dailyEvent
@@ -2002,6 +2029,14 @@ function App(){
   },[keyLootQueue,keyLootUp,rankUp,levelUp,statDecadeUp,completionUp,streakUp,recordUp,dungeonUp,ruptureUp,urgentUp,debtUp,prestigeUp]);
 
   useEffect(()=>{
+    if(itemLootUp || !itemLootQueue.length) return;
+    if(rankUp || levelUp || statDecadeUp || completionUp || streakUp || recordUp || keyLootUp || dungeonUp || ruptureUp || urgentUp || debtUp || prestigeUp || itemUseUp) return;
+    const [next,...rest]=itemLootQueue;
+    setItemLootQueue(rest);
+    setItemLootUp(next);
+  },[itemLootQueue,itemLootUp,rankUp,levelUp,statDecadeUp,completionUp,streakUp,recordUp,keyLootUp,dungeonUp,ruptureUp,urgentUp,debtUp,prestigeUp,itemUseUp]);
+
+  useEffect(()=>{
     if(!allDailyDone || state.dailyCompletionAnimDay===today) return;
     setState(s=>s.dailyCompletionAnimDay===today?s:{...s,dailyCompletionAnimDay:today});
     setCompletionQueue(q=>[...q,{
@@ -2121,9 +2156,9 @@ function App(){
   const STAT_LBL2={"Force":"Force","Sante":"Sant\u00e9","Esprit":"Esprit","Endurance":"Endurance","Agilite":"Agilit\u00e9","Discipline":"Discipline"};
   function addXp(amount,stat,e,silent,showStat,skipEventBonus=false){
     setState(s=>{
-      const ev=s.dailyEvent;
-      const eventBonus = !skipEventBonus && ev && ev.type==="bonus" && !ev.completedAt && Date.now()<(ev.expiresAt||0) && ev.stat===stat
-        ? Math.round((Number(amount)||0)*(ev.bonusPct||0))
+      const el=s.activeElixir;
+      const eventBonus = !skipEventBonus && el && Date.now()<(el.expiresAt||0) && el.stat===stat
+        ? Math.round((Number(amount)||0)*(Number(el.pct)||0))
         : 0;
       const gain=(Number(amount)||0)+eventBonus;
       const nt=s.totalXp+gain;
@@ -2554,11 +2589,10 @@ function App(){
       });
       if(current && current.startedAt && wkStr(new Date(current.startedAt))===week) launched.add(current.runId||("active_"+current.startedAt));
       if(s.dungeonRunDay===day || launched.size>=3) return s;
-      const keys=Math.max(0,Math.floor(Number(s.dungeonKeys)||0));
-      if(keys<1) return s;
+      if(s.dungeonAccessOpen!==true) return s;
       const dungeon=DUNGEONS.find(d=>d.id===id);
       if(!dungeon) return s;
-      return {...s,activeDungeon:{id,runId:"dg_"+t,startedAt:t,expiresAt:next7AM(t),completedRooms:[],completedAt:null},dungeonRunDay:day,dungeonKeys:keys-1,dungeonKeyDay:null,dungeonKeyRollWon:false,lastActiveDay:day};
+      return {...s,activeDungeon:{id,runId:"dg_"+t,startedAt:t,expiresAt:next7AM(t),completedRooms:[],completedAt:null},dungeonRunDay:day,dungeonAccessOpen:false,dungeonKeyDay:null,dungeonKeyRollWon:false,lastActiveDay:day};
     });
   }
 
@@ -2587,8 +2621,11 @@ function App(){
           dungeon.reward.stat2?{xp:270,stat:dungeon.reward.stat2}:null
         ].filter(Boolean);
         ruptureRewards.forEach(r=>{
-          totalXp+=(r.xp||0);
-          statXp[r.stat]=(statXp[r.stat]||0)+(r.xp||0);
+          const el=s.activeElixir;
+          const bonus=el&&Date.now()<(el.expiresAt||0)&&el.stat===r.stat?Math.round((r.xp||0)*(Number(el.pct)||0)):0;
+          const gain=(r.xp||0)+bonus;
+          totalXp+=gain;
+          statXp[r.stat]=(statXp[r.stat]||0)+gain;
           stats[r.stat]=getLvl(statXp[r.stat]);
         });
         const awardedXp=ruptureRewards.reduce((sum,r)=>sum+(r.xp||0),0);
@@ -2630,8 +2667,11 @@ function App(){
       const stats={...s.stats};
       const roomRewards=dungeonRoomRewardPairs(dungeon,nextIdx);
       roomRewards.forEach(r=>{
-        totalXp+=(r.xp||0);
-        statXp[r.stat]=(statXp[r.stat]||0)+(r.xp||0);
+        const el=s.activeElixir;
+        const bonus=el&&Date.now()<(el.expiresAt||0)&&el.stat===r.stat?Math.round((r.xp||0)*(Number(el.pct)||0)):0;
+        const gain=(r.xp||0)+bonus;
+        totalXp+=gain;
+        statXp[r.stat]=(statXp[r.stat]||0)+gain;
         stats[r.stat]=getLvl(statXp[r.stat]);
       });
       const awardedXp = roomRewards.reduce((sum,r)=>sum+(r.xp||0),0);
@@ -2652,7 +2692,11 @@ function App(){
       const completedAt=t;
       const rewards=dungeonRewardPairs(dungeon);
       const rewardText=rewards.map(r=>"+"+r.xp+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ");
-      setTimeout(()=>setDungeonUp({title:dungeon.title,short:dungeon.short,icon:dungeon.icon,color:dungeon.color,reward:rewardText}),200);
+      setTimeout(()=>{
+        setDungeonUp({title:dungeon.title,short:dungeon.short,icon:dungeon.icon,color:dungeon.color,reward:rewardText});
+        setState(cur=>({...cur,inventory:{...(cur.inventory||{}),majorElixir:Math.max(0,Math.floor(Number(cur.inventory&&cur.inventory.majorElixir)||0))+1}}));
+        enqueueItemLoot("majorElixir","guaranteed");
+      },200);
       return {...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:null,dungeonLog:[...(s.dungeonLog||[]),{id:dungeon.id,title:dungeon.title,stat:dungeon.stat,xp:rewards.reduce((a,r)=>a+(r.xp||0),0),completedAt,expiresAt:ad.expiresAt||completedAt+86400000}],lastActiveDay:todayStr()};
     });
   }
@@ -3185,6 +3229,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     return h("div",{class:"card",style:"border:1px solid rgba(245,158,11,0.55);background:rgba(245,158,11,0.025)"},
       h("div",{class:"ctitle",style:"margin:0;color:"+dungeonGold},"DONJON"),
       h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},subtitle+" · 🗝️ "+dungeonKeys),
+      dungeonAccessOpen&&h("div",{style:"margin-top:8px;color:#4ade80;font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:1px"},"ACCÈS AU DONJON OUVERT"),
       dungeonCanStart
         ? h("button",{onClick:()=>setConfirmDungeonChoice({type:"enter",color:dungeonGold}),style:"width:100%;margin-top:12px;padding:11px;border-radius:9px;border:1px solid "+dungeonGold+"88;background:"+dungeonGold+"12;color:"+dungeonGold+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.35px;text-transform:uppercase;cursor:pointer"},"ENTRER DANS UN DONJON")
         : h("div",{style:"text-align:center;padding:10px 0 2px;color:var(--td);font-size:11px;line-height:1.45"},
@@ -3192,11 +3237,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               ? "Tu as déjà lancé un donjon aujourd’hui. Prochain lancement disponible demain."
               : dungeonWeekCount>=3
                 ? "Limite atteinte : 3 donjons ont déjà été lancés cette semaine."
-                : !dungeonKeyAvailable && !dungeonLootConditionsMet
-                  ? "Aucune clé disponible. Termine la quête urgente, toutes les quêtes journalières et toutes les quêtes bonus pour obtenir une clé."
-                  : !dungeonKeyAvailable
-                    ? "La clé de la journée parfaite est en cours d’attribution…"
-                    : "Une clé est disponible, mais le donjon ne peut pas être lancé actuellement."
+                : !dungeonAccessOpen
+                  ? "Utilise une Clé de Donjon depuis ton inventaire pour ouvrir l’accès."
+                  : "L’accès est ouvert, mais le donjon ne peut pas être lancé actuellement."
           )
     );
   }
@@ -3410,7 +3453,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       ),
 
       h(DebtCard,null),
-      dailyEvent&&h(DailyEventCard,null),
+      activeElixir&&h("div",{style:"margin:-2px 0 12px;padding:9px 11px;border-left:2px solid "+(STAT_COLOR[activeElixir.stat]||rank.color)+";background:rgba(255,255,255,.025);font-family:Orbitron,sans-serif"},
+        h("div",{style:"font-size:9px;color:var(--td);letter-spacing:1.2px;text-transform:uppercase"},activeElixir.kind==="majorElixir"?"Élixir d’expérience majeur":"Élixir d’expérience mineur"),
+        h("div",{style:"margin-top:4px;font-size:11px;color:"+(STAT_COLOR[activeElixir.stat]||rank.color)+";font-weight:800"},"+"+Math.round((activeElixir.pct||0)*100)+" % XP — "+(STAT_LBL[activeElixir.stat]||activeElixir.stat)+" · "+fmtCD((activeElixir.expiresAt||0)-now))
+      ),
 
       activeSq&&h("div",{class:"card",style:"border-color:#ef444444"},
         h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Quête urgente"+(activeSq.tier?" · "+(SQ_TIER_LABEL[activeSq.tier]||""):"")),
@@ -3504,6 +3550,101 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   }
 
   // ─── ONGLET STATS ─────────────────────────────────────────────────────
+
+
+  const INVENTORY_ITEMS={
+    dungeonKey:{name:"CLÉ DE DONJON",short:"CLÉ DE DONJON",emoji:"🗝️",action:"UTILISER",desc:"Cette clé vous permet d’entrer dans n’importe quel donjon.",obtain:["Obtention garantie après avoir complété la quête urgente, toutes les quêtes journalières et toutes les quêtes bonus dans la même journée.","Loot rare après une quête urgente (5 %) ou lors d’un nouveau record (5 %)."]},
+    majorElixir:{name:"ÉLIXIR D’EXPÉRIENCE MAJEUR",short:"ÉLIXIR MAJEUR",emoji:"🧪",action:"CONSOMMER",pct:.20,desc:"Cet élixir vous permet de gagner 20 % d’XP en plus dans la statistique de votre choix pendant 24 h. Utilisez-le à bon escient !",obtain:["Obtention garantie après avoir complété un donjon avant sa rupture."]},
+    minorElixir:{name:"ÉLIXIR D’EXPÉRIENCE MINEUR",short:"ÉLIXIR MINEUR",emoji:"⚗️",action:"CONSOMMER",pct:.10,desc:"Cet élixir vous permet de gagner 10 % d’XP en plus dans la statistique de votre choix pendant 24 h. Utilisez-le à bon escient !",obtain:["Loot rare après une quête urgente (5 %) ou lors d’un nouveau record (5 %)."]}
+  };
+  function itemQty(id){ return id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
+  function Inventory(){
+    const ids=["dungeonKey","majorElixir","minorElixir"];
+    return h("div",{class:"tab"},
+      h("div",{class:"ctitle",style:"margin-bottom:12px"},"INVENTAIRE"),
+      h("div",{style:"display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px"},ids.map(id=>{
+        const it=INVENTORY_ITEMS[id], qty=itemQty(id), grey=id!=="dungeonKey"&&!!activeElixir;
+        return h("button",{key:id,onClick:()=>setInventoryItem(id),style:"position:relative;aspect-ratio:1/1;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.025);padding:8px;color:var(--tx);cursor:pointer;opacity:"+(grey?".48":"1")+";display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px"},
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;line-height:1.25;letter-spacing:.5px;text-transform:uppercase;text-align:center;min-height:20px"},it.short),
+          h("div",{style:"font-size:34px;line-height:1"},it.emoji),
+          h("div",{style:"position:absolute;right:6px;bottom:5px;border-radius:999px;min-width:20px;padding:2px 5px;background:rgba(0,0,0,.55);font-family:Orbitron,sans-serif;font-size:9px;color:#fff"},"×"+qty)
+        );
+      }))
+    );
+  }
+  function InventoryItemModal(){
+    if(!inventoryItem)return null;
+    const id=inventoryItem,it=INVENTORY_ITEMS[id],qty=itemQty(id);
+    const isElixir=id!=="dungeonKey";
+    let disabled=qty<1;
+    let reason=qty<1?"Aucun exemplaire disponible.":"";
+    if(id==="dungeonKey"){
+      if(dungeonAccessOpen){disabled=true;reason="Un accès au donjon est déjà ouvert.";}
+      else if(activeDungeon){disabled=true;reason="Un donjon est déjà actif.";}
+      else if(dungeonDailyUsed){disabled=true;reason="Un donjon a déjà été lancé aujourd’hui.";}
+      else if(dungeonWeekCount>=3){disabled=true;reason="La limite de trois donjons cette semaine est atteinte.";}
+    }else if(activeElixir){disabled=true;reason="Un élixir est déjà actif pendant encore "+fmtCD((activeElixir.expiresAt||0)-now)+".";}
+    return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setInventoryItem(null)}},
+      h("div",{class:"modal",style:"position:relative;max-width:390px;width:calc(100% - 28px)"},
+        h("button",{onClick:()=>setInventoryItem(null),style:"position:absolute;right:12px;top:10px;border:0;background:transparent;color:#fff;font-size:22px;cursor:pointer"},"×"),
+        h("div",{class:"mtitle",style:"padding-right:28px"},it.name),
+        h("div",{style:"font-size:58px;text-align:center;margin:14px 0 8px"},it.emoji),
+        h("div",{style:"text-align:center;font-family:Orbitron,sans-serif;font-size:10px;color:var(--td);margin-bottom:16px"},"QUANTITÉ : "+qty),
+        h("div",{style:"font-size:12px;line-height:1.6;color:var(--tx);margin-bottom:14px"},it.desc),
+        h("details",{style:"margin-bottom:16px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);padding:10px 0"},
+          h("summary",{style:"cursor:pointer;font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1px"},"OBTENTION"),
+          h("div",{style:"margin-top:9px;display:flex;flex-direction:column;gap:7px"},it.obtain.map((x,i)=>h("div",{key:i,style:"font-size:10px;color:var(--td);line-height:1.5"},"• "+x)))
+        ),
+        reason&&h("div",{style:"font-size:10px;color:var(--td);text-align:center;margin-bottom:8px"},reason),
+        h("button",{disabled,onClick:()=>{setInventoryItem(null);setConfirmItemUse({id})},style:"width:100%;padding:12px;border-radius:9px;border:1px solid "+(disabled?"rgba(255,255,255,.08)":rank.color)+";background:"+(disabled?"rgba(255,255,255,.03)":rank.color+"18")+";color:"+(disabled?"var(--td)":rank.color)+";font-family:Orbitron,sans-serif;letter-spacing:1.3px;cursor:"+(disabled?"default":"pointer")},it.action)
+      )
+    );
+  }
+  function ConfirmItemUseModal(){
+    if(!confirmItemUse)return null;
+    const id=confirmItemUse.id,it=INVENTORY_ITEMS[id];
+    return h("div",{class:"ruov"},h("div",{class:"rucont"},
+      h("div",{class:"ruevol",style:"color:"+rank.color},"CONFIRMATION"),
+      h("div",{style:"font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:#fff;text-align:center;line-height:1.4;max-width:340px"},"Êtes-vous certain de vouloir "+(id==="dungeonKey"?"utiliser une ":"consommer un ")+it.name+" ?"),
+      h("div",{style:"display:flex;gap:10px;margin-top:22px"},
+        h("button",{class:"rudis",style:"min-width:110px;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>setConfirmItemUse(null)},"Non"),
+        h("button",{class:"rudis",style:"min-width:110px",onClick:()=>{
+          setConfirmItemUse(null);
+          if(id==="dungeonKey"){
+            setState(s=>({...s,dungeonKeys:Math.max(0,(Number(s.dungeonKeys)||0)-1),dungeonAccessOpen:true}));
+            setItemUseUp({id});
+          }else setElixirStatChoice({id});
+        }},id==="dungeonKey"?"Oui":"Continuer")
+      )
+    ));
+  }
+  function ElixirStatModal(){
+    if(!elixirStatChoice)return null;
+    const id=elixirStatChoice.id,it=INVENTORY_ITEMS[id];
+    const choices=["Force","Sante","Esprit","Endurance","Agilite"];
+    return h("div",{class:"modal-ov"},h("div",{class:"modal",style:"max-width:390px;width:calc(100% - 28px)"},
+      h("div",{class:"mtitle"},"CHOISIR UNE STATISTIQUE"),
+      h("div",{style:"font-size:11px;color:var(--td);line-height:1.5;margin-bottom:12px"},"Appliquer "+Math.round(it.pct*100)+" % d’XP supplémentaires pendant 24 h."),
+      h("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:8px"},choices.map(stat=>h("button",{key:stat,onClick:()=>{setElixirStatChoice(null);setConfirmElixirUse({id,stat})},style:"padding:11px;border-radius:9px;border:1px solid "+STAT_COLOR[stat]+"88;background:"+STAT_COLOR[stat]+"12;color:"+STAT_COLOR[stat]+";font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},STAT_LBL[stat]||stat))),
+      h("button",{onClick:()=>setElixirStatChoice(null),style:"width:100%;margin-top:12px;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--td);font-family:Orbitron,sans-serif;cursor:pointer"},"Annuler")
+    ));
+  }
+  function ConfirmElixirModal(){
+    if(!confirmElixirUse)return null;
+    const {id,stat}=confirmElixirUse,it=INVENTORY_ITEMS[id],c=STAT_COLOR[stat]||rank.color;
+    return h("div",{class:"ruov"},h("div",{class:"rucont"},
+      h("div",{class:"ruevol",style:"color:"+c},"CONFIRMATION"),
+      h("div",{style:"font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:#fff;text-align:center;line-height:1.45;max-width:350px"},"Appliquer +"+Math.round(it.pct*100)+" % d’XP à "+(STAT_LBL[stat]||stat)+" pendant 24 h ?"),
+      h("div",{style:"display:flex;gap:10px;margin-top:22px"},
+        h("button",{class:"rudis",style:"min-width:110px;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>setConfirmElixirUse(null)},"Annuler"),
+        h("button",{class:"rudis",style:"min-width:110px;--rc:"+c+";--rg:"+c+"66",onClick:()=>{
+          const expiresAt=Date.now()+86400000;
+          setState(s=>({...s,inventory:{...(s.inventory||{}),[id]:Math.max(0,(Number(s.inventory&&s.inventory[id])||0)-1)},activeElixir:{kind:id,stat,pct:it.pct,startedAt:Date.now(),expiresAt}}));
+          setConfirmElixirUse(null);setItemUseUp({id,stat,pct:it.pct});
+        }},"Consommer")
+      )
+    ));
+  }
 
   function Stats(){
     return h("div",{class:"tab"},
@@ -4152,7 +4293,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h("div",{class:"rucont"},
         h(NotificationHeader,null),
         h("div",{class:"ruevol",style:"color:"+headingColor+";text-shadow:0 0 16px "+(rare?gold+"99":glow)},rare?"DROP RARE OBTENU !":"OBJET OBTENU !"),
-        h("div",{class:"rurank",style:"--rc:"+gold+";--rg:"+gold+"88;color:"+gold+";text-shadow:0 0 20px "+gold+"99;font-size:clamp(38px,11vw,64px);letter-spacing:-1px;white-space:normal;max-width:350px;line-height:1.05","data-r":"CLÉ DU DONJON"},"CLÉ DU DONJON"),
+        h("div",{class:"rurank",style:"--rc:"+gold+";--rg:"+gold+"88;color:"+gold+";text-shadow:0 0 20px "+gold+"99;font-size:clamp(38px,11vw,64px);letter-spacing:-1px;white-space:normal;max-width:350px;line-height:1.05","data-r":"CLÉ DE DONJON"},"CLÉ DE DONJON"),
         h("button",{class:"rudis",style:"--rc:"+color+";--rg:"+glow,onClick:()=>setKeyLootUp(null)},"Continuer")
       )
     );
@@ -4472,6 +4613,30 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
   // ─── ONGLET CODEX ─────────────────────────────────────────────────────
 
+
+  function ItemLootUp(){
+    if(!itemLootUp)return null;
+    const it=INVENTORY_ITEMS[itemLootUp.item]||INVENTORY_ITEMS.minorElixir;
+    const gold="#f59e0b", c=itemLootUp.kind==="rare"?gold:rank.color;
+    return h("div",{class:"ruov",style:"--rc:"+rank.color+";--rg:"+rank.glow},h("div",{class:"rucont"},
+      h(NotificationHeader,null),
+      h("div",{class:"ruevol",style:"color:"+c},itemLootUp.kind==="rare"?"DROP RARE OBTENU !":"OBJET OBTENU !"),
+      h("div",{class:"rurank",style:"font-size:clamp(34px,10vw,58px);white-space:normal;line-height:1.1;max-width:360px","data-r":it.name},it.name),
+      h("button",{class:"rudis",onClick:()=>setItemLootUp(null)},"Continuer")
+    ));
+  }
+  function ItemUseUp(){
+    if(!itemUseUp)return null;
+    const it=INVENTORY_ITEMS[itemUseUp.id];
+    return h("div",{class:"ruov",style:"--rc:"+rank.color+";--rg:"+rank.glow},h("div",{class:"rucont"},
+      h(NotificationHeader,null),
+      h("div",{class:"ruevol",style:"color:"+rank.color},itemUseUp.id==="dungeonKey"?"Vous avez utilisé une":"Vous avez consommé un"),
+      h("div",{class:"rurank",style:"font-size:clamp(32px,9vw,56px);white-space:normal;line-height:1.1;max-width:360px","data-r":it.name},it.name),
+      itemUseUp.stat&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Vous bénéficiez de +"+Math.round(itemUseUp.pct*100)+" % d’XP dans ",h("span",{style:"color:"+(STAT_COLOR[itemUseUp.stat]||rank.color)},STAT_LBL[itemUseUp.stat]||itemUseUp.stat)," pendant 24 h."),
+      h("button",{class:"rudis",onClick:()=>setItemUseUp(null)},"Continuer")
+    ));
+  }
+
   function Codex(){
     const toggleC = k => setCodexOpen(o=>({obl:false,bonus:false,reg:false,sq:false,ev:false,mm:false,debt:false,ep:false,dj:false,cs:false,[k]:!o[k]}));
     const statLabel = stat => STAT_LBL2[stat] || STAT_LBL[stat] || stat || "";
@@ -4784,7 +4949,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           groupByDominantStat(DUNGEONS,renderDungeonCodex,dg=>dg.stat)
         )
       ),
-      h(Section,{id:"elan",title:"Élans",count:elanList.length},
+      false&&h(Section,{id:"elan",title:"Élans",count:elanList.length},
         h(Fragment,null,
           h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:7px"},"Bonus automatiques de +15 % XP accordés le lendemain d’un donjon complété et appliqués aux gains de la stat concernée."),
           h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-bottom:10px"},
@@ -4845,7 +5010,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               h("div",{style:"margin-top:6px;width:min(340px,calc(100vw - 112px));min-height:26px;font-size:9.5px;line-height:1.3;color:"+mantraColor+";font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-transform:uppercase;display:block;opacity:.96;white-space:normal;overflow:hidden"},dailyMantra)
             ),
             prestige>0&&h("div",{class:"prestige-badge"},"\u269B\uFE0F Ascension "+ROMAN[prestige-1]),
-            h("button",{class:"gbtn",style:"display:flex;align-items:center;justify-content:center",onClick:()=>setShowSet(true)},"⚙️")
+            h("div",{style:"display:flex;gap:7px"},
+              h("button",{class:"gbtn",style:"display:flex;align-items:center;justify-content:center",onClick:()=>switchTab("codex")},"📜"),
+              h("button",{class:"gbtn",style:"display:flex;align-items:center;justify-content:center",onClick:()=>setShowSet(true)},"⚙️")
+            )
           )
         )
       ),
@@ -4853,6 +5021,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{style:"height:26px;flex:0 0 auto"}),
         tab==="home"    &&h(Home,null),
         tab==="quests"  &&h(Quests,null),
+        tab==="inventory"&&h(Inventory,null),
         tab==="stats"   &&h(Stats,null),
         tab==="history" && History(),
         tab==="codex"   && h(Codex,null),
@@ -4865,15 +5034,16 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("button",{class:"nbtn "+(tab==="quests"?"on":""),onClick:()=>switchTab("quests")},
           h("span",null,"Quêtes")
         ),
+        h("button",{class:"nbtn "+(tab==="inventory"?"on":""),onClick:()=>switchTab("inventory")},
+          h("span",null,"Inventaire")
+        ),
         h("button",{class:"nbtn "+(tab==="stats"?"on":""),onClick:()=>switchTab("stats")},
           h("span",null,"Stats")
         ),
         h("button",{class:"nbtn "+(tab==="history"?"on":""),onClick:()=>switchTab("history")},
           h("span",null,"Historique")
         ),
-        h("button",{class:"nbtn "+(tab==="codex"?"on":""),onClick:()=>switchTab("codex")},
-          h("span",null,"Codex")
-        )
+
       ),
       h(Settings,null),
       h(RankUp,null),
@@ -4883,6 +5053,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(StreakUp,null),
       h(RecordUp,null),
       h(DungeonKeyLootUp,null),
+      h(ItemLootUp,null),
+      h(ItemUseUp,null),
+      h(InventoryItemModal,null),
+      h(ConfirmItemUseModal,null),
+      h(ElixirStatModal,null),
+      h(ConfirmElixirModal,null),
       h(DungeonUp,null),
       h(DungeonRuptureUp,null),
       h(UrgentUp,null),
