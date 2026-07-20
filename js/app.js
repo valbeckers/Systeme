@@ -4258,6 +4258,15 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     if(!urgentUp)return null;
     const color=urgentUp.color||"#fbbf24";
     const glow=urgentUp.glow||"#fbbf2455";
+    const urgentTitle=String(urgentUp.name||"");
+    const longestUrgentWord=urgentTitle.split(/\s+/).reduce((max,word)=>Math.max(max,word.length),0);
+    const urgentTitleSize=longestUrgentWord>=15
+      ? "clamp(23px,6.2vw,38px)"
+      : urgentTitle.length>=24
+        ? "clamp(25px,7vw,42px)"
+        : urgentTitle.length>=17
+          ? "clamp(28px,8vw,49px)"
+          : "clamp(34px,10vw,62px)";
     const particles=Array.from({length:42},(_,i)=>({
       id:i,
       left:Math.random()*100,
@@ -4273,7 +4282,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h("div",{class:"rucont"},
         h(NotificationHeader,null),
         h("div",{class:"ruevol",style:"color:#ef4444;text-shadow:0 0 16px rgba(239,68,68,.7)"},"QUÊTE URGENTE COMPLÉTÉE !"),
-        h("div",{class:"rurank",style:"--rc:"+(urgentUp.nameColor||color)+";--rg:"+(urgentUp.nameColor||color)+"66;color:"+(urgentUp.nameColor||color)+";text-shadow:0 0 18px "+(urgentUp.nameColor||color)+"66;font-size:clamp(36px,10vw,62px);letter-spacing:-1px;white-space:normal;max-width:340px;line-height:1.05","data-r":urgentUp.name},urgentUp.name),
+        h("div",{class:"rurank",style:"--rc:"+(urgentUp.nameColor||color)+";--rg:"+(urgentUp.nameColor||color)+"66;color:"+(urgentUp.nameColor||color)+";text-shadow:0 0 18px "+(urgentUp.nameColor||color)+"66;font-size:"+urgentTitleSize+";letter-spacing:-1px;white-space:normal;width:calc(100vw - 32px);max-width:360px;line-height:1.08;overflow-wrap:anywhere;word-break:normal;hyphens:auto","data-r":urgentTitle},urgentTitle),
         h("div",{style:"margin-top:14px;display:flex;flex-direction:column;gap:6px;align-items:center"},
           (urgentUp.rewards||[]).map((r,i)=>{
             const rewardColor=STAT_COLOR[r.stat]||color;
