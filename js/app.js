@@ -3673,7 +3673,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function ConfirmItemUseModal(){
     if(!confirmItemUse)return null;
     const id=confirmItemUse.id,it=INVENTORY_ITEMS[id];
-    return h("div",{class:"ruov"},h("div",{class:"rucont"},
+    return h("div",{class:"ruov",style:"--rc:"+rank.color+";--rg:"+rank.glow},h("div",{class:"rucont",style:"width:min(500px,calc(100vw - 34px));background:rgba(15,15,18,.97);border:1px solid "+rank.color+"88;border-radius:18px;padding:22px;box-shadow:0 0 30px "+rank.color+"22"},
       h("div",{class:"ruevol",style:"color:"+rank.color},"CONFIRMATION"),
       h("div",{style:"font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:#fff;text-align:center;line-height:1.4;max-width:340px"},"Êtes-vous certain de vouloir "+(id==="dungeonKey"?"utiliser une ":"consommer un ")+it.name+" ?"),
       h("div",{style:"display:flex;gap:10px;margin-top:22px"},
@@ -3702,7 +3702,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function ConfirmElixirModal(){
     if(!confirmElixirUse)return null;
     const {id,stat}=confirmElixirUse,it=INVENTORY_ITEMS[id],c=STAT_COLOR[stat]||rank.color;
-    return h("div",{class:"ruov"},h("div",{class:"rucont"},
+    return h("div",{class:"ruov",style:"--rc:"+c+";--rg:"+c+"66"},h("div",{class:"rucont",style:"width:min(500px,calc(100vw - 34px));background:rgba(15,15,18,.97);border:1px solid "+c+"88;border-radius:18px;padding:22px;box-shadow:0 0 30px "+c+"22"},
       h("div",{class:"ruevol",style:"color:"+c},"CONFIRMATION"),
       h("div",{style:"font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:#fff;text-align:center;line-height:1.45;max-width:350px"},"Appliquer +"+Math.round(it.pct*100)+" % d’XP à "+(STAT_LBL[stat]||stat)+" pendant 24 h ?"),
       h("div",{style:"display:flex;gap:10px;margin-top:22px"},
