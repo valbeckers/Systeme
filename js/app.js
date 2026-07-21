@@ -1,4 +1,3 @@
-
 const { h, render, Fragment } = preact;
 const { useState, useEffect, useRef } = preactHooks;
 
@@ -53,6 +52,13 @@ function QuestIcon(id, fallback, size=14, extraStyle=""){
     style:"font-size:"+size+"px;line-height:1;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;flex-shrink:0;"+extraStyle
   },fallback);
 }
+
+const REGRESSION_DEF = {
+  id:"reg_red",
+  icon:"🔴",
+  statPenalty:2000,
+  globalPenalty:12000
+};
 
 
 const DEFS = [
@@ -960,6 +966,13 @@ function cleanEnduranceChoiceByDay(obj){
   });
   return out;
 }
+function cleanRegressionLog(obj){
+  const out={};
+  Object.entries(obj||{}).forEach(([day,activated])=>{
+    if(/^\d{4}-\d{2}-\d{2}$/.test(day) && (activated===true || Number(activated)>0)) out[day]=true;
+  });
+  return out;
+}
 function cleanSystemState(raw){
   const data=migrateRuntimeQuestDefinitions(migrateMergedEspritState({...((raw&&typeof raw==="object")?raw:{})}));
   const dailyIds=new Set(DEFS.filter(o=>o.daily).map(o=>o.id));
@@ -1017,6 +1030,7 @@ function cleanSystemState(raw){
     questDebt:data.questDebt||null,
     debtUsesByWeek:data.debtUsesByWeek||{},
     debtResolvedDays:data.debtResolvedDays||{},
+    regressionLog:cleanRegressionLog(data.regressionLog),
     enduranceChoiceByDay:cleanEnduranceChoiceByDay(data.enduranceChoiceByDay),
     exerciseRotationByDay:cleanExerciseRotationByDay(data.exerciseRotationByDay),
     dailyCompletionAnimDay:data.dailyCompletionAnimDay||null,
@@ -1136,6 +1150,7 @@ const IMPORTED = {
   sqRerollDay:null,
   completedSqLog:[],
   sqStatCycle:[],
+  regressionLog:{},
   enduranceChoiceByDay:{},
   exerciseRotationByDay:{},
   dailyCompletionAnimDay:null,
@@ -1197,6 +1212,7 @@ function buildState(){
     dailyEvent:saved.dailyEvent||IMPORTED.dailyEvent||null,
     eventDay:saved.eventDay||IMPORTED.eventDay||null,
     eventHistory:saved.eventHistory||IMPORTED.eventHistory||[],
+    regressionLog:saved.regressionLog||{},
     enduranceChoiceByDay:saved.enduranceChoiceByDay||{},
     exerciseRotationByDay:saved.exerciseRotationByDay||{},
     completedSqLog:saved.completedSqLog||[],
@@ -1437,6 +1453,7 @@ function App(){
   const [ruptureUp,setRuptureUp] = useState(null);
   const [urgentUp,setUrgentUp] = useState(null);
   const [confirmRerollSq,setConfirmRerollSq] = useState(null);
+  const [confirmRegression,setConfirmRegression] = useState(false);
   const [confirmDungeonChoice,setConfirmDungeonChoice] = useState(null);
   const [dungeonChoiceOpen,setDungeonChoiceOpen] = useState(false);
   const [importModal,setImportModal] = useState(false);
@@ -1446,7 +1463,7 @@ function App(){
   const [exportValue,setExportValue] = useState("");
   const [dungeonHelpOpen,setDungeonHelpOpen] = useState({});
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
-  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,sq:false,elan:false,debt:false,dj:false,cs:false});
+  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,reg:false,sq:false,elan:false,debt:false,dj:false,cs:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
   const [showStatReqDetail,setShowStatReqDetail] = useState(false);
   const [showRankReqStats,setShowRankReqStats] = useState(false);
@@ -1473,6 +1490,28 @@ function App(){
   function awardElixir(kind,source="rare"){
     setState(s=>({...s,inventory:{...(s.inventory||{}),[kind]:Math.max(0,Math.floor(Number(s.inventory&&s.inventory[kind])||0))+1}}));
     enqueueItemLoot(kind,source);
+  }
+
+  function applyRegression(){
+    const day=todayStr();
+    setState(s=>{
+      if((s.regressionLog||{})[day]) return s;
+      const statXp={...(s.statXp||{})};
+      const stats={...(s.stats||{})};
+      STATS.forEach(stat=>{
+        statXp[stat]=Math.max(0,(Number(statXp[stat])||0)-REGRESSION_DEF.statPenalty);
+        stats[stat]=getLvl(statXp[stat]);
+      });
+      return {
+        ...s,
+        totalXp:Math.max(0,(Number(s.totalXp)||0)-REGRESSION_DEF.globalPenalty),
+        statXp,
+        stats,
+        regressionLog:{...(s.regressionLog||{}),[day]:true},
+        lastActiveDay:day
+      };
+    });
+    setConfirmRegression(false);
   }
 
   function tryRareDungeonKeyDrop(){
@@ -3432,7 +3471,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         prestigeAvailable&&h("button",{
           onClick:()=>{
             const newPrestige=(state.prestige||0)+1;
-            setState(s=>({...s,streak:0,streakBonusDay:null,weeklyBonusWk:null,streakMilestones:[],dailyLog:{},weeklyLog:{},specialQuests:[],sqStatCycle:[],sqCooldownUntil:null,sqRerollDay:null,activeDungeon:null,dungeonRunDay:null,dungeonRunsByWeek:{},dungeonKeyRollDay:null,dungeonKeys:0,dungeonKeyDay:null,dungeonKeyRollWon:false,dungeonLog:[],enduranceChoiceByDay:{},prestige:newPrestige}));
+            setState(s=>({...s,streak:0,streakBonusDay:null,weeklyBonusWk:null,streakMilestones:[],dailyLog:{},weeklyLog:{},regressionLog:{},specialQuests:[],sqStatCycle:[],sqCooldownUntil:null,sqRerollDay:null,activeDungeon:null,dungeonRunDay:null,dungeonRunsByWeek:{},dungeonKeyRollDay:null,dungeonKeys:0,dungeonKeyDay:null,dungeonKeyRollWon:false,dungeonLog:[],enduranceChoiceByDay:{},prestige:newPrestige}));
             setPrestigeUp(newPrestige);
           },
           style:"width:100%;margin-top:12px;padding:12px;background:rgba(168,85,247,0.1);border:1px solid #a855f7;border-radius:10px;color:#a855f7;font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:3px;cursor:pointer;text-transform:uppercase;text-shadow:0 0 12px #a855f7"
@@ -3521,6 +3560,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const bonTotal=bonBase.length;
     const wkDone=wkBase.filter(isQuestDone).length;
     const wkTotal=wkBase.length;
+    const regressionDoneToday=!!((state.regressionLog||{})[today]);
 
     const SectionHeader = ({title,done,total}) => h("div",{class:"shdr",style:"margin-bottom:10px"},
       h("div",{class:"ctitle",style:"margin:0"+(title==="Régressions"?";color:#ef4444":"")},title),
@@ -3540,6 +3580,23 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               ? h("div",{style:"font-size:12px;color:var(--td);text-align:center;padding:8px 0"},"Chargement du défi...")
               : null
             )
+      ),
+      h("div",{class:"card",style:"border-color:#ef444444"},
+        h("div",{class:"shdr",style:"margin-bottom:10px"},
+          h("div",{class:"ctitle",style:"margin:0;color:#ef4444"},"Régressions")
+        ),
+        h("div",{style:"display:flex;flex-direction:column;align-items:center;text-align:center;padding:6px 0 2px"},
+          h("div",{style:"font-size:42px;line-height:1;margin:2px 0 12px"},REGRESSION_DEF.icon),
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--td);line-height:1.5;letter-spacing:.4px;margin-bottom:12px"},
+            "−"+REGRESSION_DEF.statPenalty.toLocaleString("fr-FR")+" XP sur chaque statistique · −"+REGRESSION_DEF.globalPenalty.toLocaleString("fr-FR")+" XP global"
+          ),
+          regressionDoneToday
+            ? h("div",{style:"width:100%;padding:10px;border-radius:8px;border:1px solid #ef444466;background:rgba(239,68,68,0.07);color:#ef4444;font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.2px;text-transform:uppercase"},"Régression déclarée aujourd’hui ✘")
+            : h("button",{
+                onClick:()=>setConfirmRegression(true),
+                style:"width:100%;padding:10px;border-radius:8px;border:1px solid #ef444466;background:rgba(239,68,68,0.06);color:#ef4444;font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer;letter-spacing:1.2px;text-transform:uppercase"
+              },"Déclarer la régression")
+        )
       ),
       activeDungeon&&h(DungeonCard,null),
       h(DebtCard,null),
@@ -3932,6 +3989,21 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               marks.map((m,i)=>h("div",{key:obj.id+"_d"+i,style:"text-align:center;font-family:Orbitron,sans-serif;font-size:12px;font-weight:700;color:"+m.color+";opacity:"+m.opacity},m.txt))
             );
           }),
+          h("div",{key:REGRESSION_DEF.id,style:"display:grid;grid-template-columns:minmax(0,1fr) repeat(7,22px);gap:5px;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,0.04)"},
+            h("div",{style:"display:flex;align-items:center;min-width:0;color:var(--tx);font-size:12px"},
+              QuestIcon(REGRESSION_DEF.id,REGRESSION_DEF.icon,14)
+            ),
+            weekDays.map((day,i)=>{
+              const future=day>today;
+              const activated=!!((state.regressionLog||{})[day]);
+              const mark=future
+                ? {txt:"·",color:"var(--td)",opacity:.45}
+                : activated
+                  ? {txt:"✘",color:"#ef4444",opacity:1}
+                  : {txt:"✓",color:"#4ade80",opacity:1};
+              return h("div",{key:REGRESSION_DEF.id+"_d"+i,style:"text-align:center;font-family:Orbitron,sans-serif;font-size:12px;font-weight:700;color:"+mark.color+";opacity:"+mark.opacity},mark.txt);
+            })
+          ),
           ordered.every(o=>!(tots[o.id]>0))&&h("div",{style:"text-align:center;font-size:13px;color:var(--td);padding:16px 0"},"Aucune activité cette semaine")
         )
       ),
@@ -4409,6 +4481,25 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
+
+  function ConfirmRegressionModal(){
+    if(!confirmRegression)return null;
+    const color="#ef4444";
+    return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+color+"55;background:rgba(0,0,0,.92)",onClick:e=>{if(e.target===e.currentTarget)setConfirmRegression(false);}},
+      h("div",{class:"rucont",style:"width:min(500px,calc(100vw - 34px));background:rgba(15,15,18,.97);border:1px solid "+color+"88;border-radius:18px;padding:22px"},
+        h("div",{class:"ruevol",style:"color:"+color},"CONFIRMATION"),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:"+color+";letter-spacing:1px;text-transform:uppercase;text-align:center;line-height:1.25;margin-top:8px"},"Confirmer la régression ?"),
+        h("div",{style:"font-size:12px;color:var(--td);line-height:1.55;text-align:center;margin-top:12px"},
+          "Le même malus sera répercuté sur les deux compteurs : −"+REGRESSION_DEF.statPenalty.toLocaleString("fr-FR")+" XP sur chacune des six statistiques et −"+REGRESSION_DEF.globalPenalty.toLocaleString("fr-FR")+" XP sur l’XP globale."
+        ),
+        h("div",{style:"font-size:11px;color:#ef4444;line-height:1.45;text-align:center;margin-top:9px;font-family:Orbitron,sans-serif"},"Cette action est irréversible."),
+        h("div",{style:"display:flex;gap:10px;width:100%;margin-top:18px"},
+          h("button",{onClick:()=>setConfirmRegression(false),style:"flex:1;padding:12px;border-radius:9px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--td);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer"},"Annuler"),
+          h("button",{onClick:applyRegression,style:"flex:1;padding:12px;border-radius:9px;border:1px solid "+color+";background:"+color+"18;color:"+color+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer"},"Appliquer le malus")
+        )
+      )
+    );
+  }
 
   function ConfirmDebtModal(){
     if(!confirmDebt)return null;
@@ -4966,6 +5057,22 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         )
       ),
       h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial)),
+      h(Section,{id:"reg",title:"Régressions",count:1},
+        h("div",{style:cardStyle},
+          h("div",{style:"display:flex;align-items:flex-start;gap:10px"},
+            h("div",{style:"font-size:22px;line-height:1.1;min-width:28px;text-align:center"},REGRESSION_DEF.icon),
+            h("div",{style:"flex:1;min-width:0"},
+              h("div",{style:"display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px"},
+                h("span",{style:"display:inline-block;border:1px solid #ef444455;color:#ef4444;border-radius:999px;padding:2px 7px;font-size:10px;font-family:Orbitron,sans-serif;background:#ef444411"},"−"+REGRESSION_DEF.statPenalty.toLocaleString("fr-FR")+" XP / statistique"),
+                h("span",{style:"display:inline-block;border:1px solid #ef444455;color:#ef4444;border-radius:999px;padding:2px 7px;font-size:10px;font-family:Orbitron,sans-serif;background:#ef444411"},"−"+REGRESSION_DEF.globalPenalty.toLocaleString("fr-FR")+" XP global")
+              ),
+              h("div",{style:detailStyle},"▸ Activation : manuelle, depuis l’onglet Quêtes"),
+              h("div",{style:detailStyle},"▸ Fréquence : une seule déclaration par jour"),
+              h("div",{style:detailStyle},"▸ Effet : le niveau global et les niveaux de statistiques peuvent diminuer")
+            )
+          )
+        )
+      ),
       h(Section,{id:"dj",title:"Donjons",count:DUNGEONS.length},
         h(Fragment,null,
           h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Après 24 h, un donjon inachevé subit une Rupture : les salles déjà validées et leurs XP sont conservés, toutes les étapes restantes sont remplacées par un Boss de Rupture tiré selon sa rareté. Ce boss dispose de 24 h et ne peut pas provoquer une seconde rupture."),
@@ -5086,6 +5193,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(DungeonRuptureUp,null),
       h(UrgentUp,null),
       h(DebtUp,null),
+      h(ConfirmRegressionModal,null),
       h(ConfirmDebtModal,null),
       h(ConfirmDungeonChoice,null),
       h(ConfirmReroll,null),
