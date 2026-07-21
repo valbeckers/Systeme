@@ -1454,6 +1454,7 @@ function App(){
   const [urgentUp,setUrgentUp] = useState(null);
   const [confirmRerollSq,setConfirmRerollSq] = useState(null);
   const [confirmRegression,setConfirmRegression] = useState(false);
+  const [regressionUp,setRegressionUp] = useState(false);
   const [confirmDungeonChoice,setConfirmDungeonChoice] = useState(null);
   const [dungeonChoiceOpen,setDungeonChoiceOpen] = useState(false);
   const [importModal,setImportModal] = useState(false);
@@ -1512,6 +1513,7 @@ function App(){
       };
     });
     setConfirmRegression(false);
+    setRegressionUp(true);
   }
 
   function tryRareDungeonKeyDrop(){
@@ -3581,23 +3583,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               : null
             )
       ),
-      h("div",{class:"card",style:"border-color:#ef444444"},
-        h("div",{class:"shdr",style:"margin-bottom:10px"},
-          h("div",{class:"ctitle",style:"margin:0;color:#ef4444"},"Régressions")
-        ),
-        h("div",{style:"display:flex;flex-direction:column;align-items:center;text-align:center;padding:6px 0 2px"},
-          h("div",{style:"font-size:42px;line-height:1;margin:2px 0 12px"},REGRESSION_DEF.icon),
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--td);line-height:1.5;letter-spacing:.4px;margin-bottom:12px"},
-            "−"+REGRESSION_DEF.statPenalty.toLocaleString("fr-FR")+" XP sur chaque statistique · −"+REGRESSION_DEF.globalPenalty.toLocaleString("fr-FR")+" XP global"
-          ),
-          regressionDoneToday
-            ? h("div",{style:"width:100%;padding:10px;border-radius:8px;border:1px solid #ef444466;background:rgba(239,68,68,0.07);color:#ef4444;font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.2px;text-transform:uppercase"},"Régression déclarée aujourd’hui ✘")
-            : h("button",{
-                onClick:()=>setConfirmRegression(true),
-                style:"width:100%;padding:10px;border-radius:8px;border:1px solid #ef444466;background:rgba(239,68,68,0.06);color:#ef4444;font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer;letter-spacing:1.2px;text-transform:uppercase"
-              },"Déclarer la régression")
-        )
-      ),
       activeDungeon&&h(DungeonCard,null),
       h(DebtCard,null),
       h("div",{class:"card"},
@@ -3612,7 +3597,26 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h(SectionHeader,{title:"Quêtes bonus",done:bonDone,total:bonTotal}),
         bon.map(o=>o.isEnduranceChoice?h(EnduranceChoiceItem,{key:o.id,mode:"quest"}):h(QI,{key:o.id,obj:o}))
       ),
-      h(DungeonChoiceCard,null)
+      h(DungeonChoiceCard,null),
+      h("div",{class:"card",style:"border-color:#ef444444"},
+        h("div",{class:"shdr",style:"margin-bottom:10px"},
+          h("div",{class:"ctitle",style:"margin:0;color:#ef4444"},"Régressions")
+        ),
+        h("div",{class:"qi",style:"padding:10px;border-color:#ef444444;background:rgba(239,68,68,0.025)"},
+          h("div",{style:"display:flex;align-items:center;gap:8px;min-width:0"},
+            QuestIcon(REGRESSION_DEF.id,REGRESSION_DEF.icon,14,"width:18px;height:18px;line-height:1;flex-shrink:0"),
+            h("div",{style:"flex:1;min-width:0;font-family:Orbitron,sans-serif;font-size:9px;color:var(--td);line-height:1.4;letter-spacing:.35px"},
+              "-2000 XP sur chaque statistique · -12000 XP global"
+            )
+          ),
+          regressionDoneToday
+            ? h("div",{style:"width:100%;margin-top:9px;padding:9px;border-radius:8px;border:1px solid #ef444466;background:rgba(239,68,68,0.07);color:#ef4444;font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;text-align:center"},"Régression déclarée aujourd’hui ✘")
+            : h("button",{
+                onClick:()=>setConfirmRegression(true),
+                style:"width:100%;margin-top:9px;padding:9px;border-radius:8px;border:1px solid #ef444466;background:rgba(239,68,68,0.06);color:#ef4444;font-family:Orbitron,sans-serif;font-size:9px;cursor:pointer;letter-spacing:1px;text-transform:uppercase"
+              },"Déclarer la régression")
+        )
+      )
     );
   }
 
@@ -4501,6 +4505,32 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
+  function RegressionUp(){
+    if(!regressionUp)return null;
+    const color="#ef4444";
+    const glow="rgba(239,68,68,.72)";
+    const particles=Array.from({length:46},(_,i)=>({
+      id:i,left:Math.random()*100,delay:Math.random()*2.6,
+      dur:1.05+Math.random()*1.8,size:2+Math.random()*5,accent:Math.random()>0.58
+    }));
+    return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+glow+";background:rgba(0,0,0,.94)"},
+      h("div",{class:"ruparts"},particles.map(p=>
+        h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?"#7f1d1d":color)+";box-shadow:0 0 10px "+glow+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
+      )),
+      h("div",{class:"rucont",style:"color:"+color},
+        h("div",{class:"ruevol",style:"color:"+color+";text-shadow:0 0 18px "+glow+";font-size:clamp(21px,6vw,31px);letter-spacing:2px"},"☠️ REGRESSION"),
+        h("div",{style:"max-width:340px;margin-top:16px;font-size:13px;line-height:1.55;text-align:center;color:"+color+";font-family:Orbitron,sans-serif"},
+          "Vous avez succombé à la tentation, une pénalité vous est imposée :"
+        ),
+        h("div",{style:"margin-top:17px;font-family:Orbitron,sans-serif;font-size:clamp(20px,6vw,31px);font-weight:900;line-height:1.45;letter-spacing:1px;text-align:center;color:"+color+";text-shadow:0 0 14px "+glow},
+          h("div",null,"-2000XP / STAT"),
+          h("div",null,"-12000XP GLOBAL")
+        ),
+        h("button",{class:"rudis",style:"--rc:"+color+";--rg:"+glow+";color:"+color,onClick:()=>setRegressionUp(false)},"Continuer")
+      )
+    );
+  }
+
   function ConfirmDebtModal(){
     if(!confirmDebt)return null;
     const obj=confirmDebt.obj;
@@ -5057,22 +5087,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         )
       ),
       h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial)),
-      h(Section,{id:"reg",title:"Régressions",count:1},
-        h("div",{style:cardStyle},
-          h("div",{style:"display:flex;align-items:flex-start;gap:10px"},
-            h("div",{style:"font-size:22px;line-height:1.1;min-width:28px;text-align:center"},REGRESSION_DEF.icon),
-            h("div",{style:"flex:1;min-width:0"},
-              h("div",{style:"display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px"},
-                h("span",{style:"display:inline-block;border:1px solid #ef444455;color:#ef4444;border-radius:999px;padding:2px 7px;font-size:10px;font-family:Orbitron,sans-serif;background:#ef444411"},"−"+REGRESSION_DEF.statPenalty.toLocaleString("fr-FR")+" XP / statistique"),
-                h("span",{style:"display:inline-block;border:1px solid #ef444455;color:#ef4444;border-radius:999px;padding:2px 7px;font-size:10px;font-family:Orbitron,sans-serif;background:#ef444411"},"−"+REGRESSION_DEF.globalPenalty.toLocaleString("fr-FR")+" XP global")
-              ),
-              h("div",{style:detailStyle},"▸ Activation : manuelle, depuis l’onglet Quêtes"),
-              h("div",{style:detailStyle},"▸ Fréquence : une seule déclaration par jour"),
-              h("div",{style:detailStyle},"▸ Effet : le niveau global et les niveaux de statistiques peuvent diminuer")
-            )
-          )
-        )
-      ),
       h(Section,{id:"dj",title:"Donjons",count:DUNGEONS.length},
         h(Fragment,null,
           h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Après 24 h, un donjon inachevé subit une Rupture : les salles déjà validées et leurs XP sont conservés, toutes les étapes restantes sont remplacées par un Boss de Rupture tiré selon sa rareté. Ce boss dispose de 24 h et ne peut pas provoquer une seconde rupture."),
@@ -5106,6 +5120,19 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           )
         )
       ),
+      h(Section,{id:"reg",title:"Régressions",count:1},
+        h("div",{style:cardStyle},
+          h("div",{style:"display:flex;align-items:flex-start;gap:10px"},
+            QuestIcon(REGRESSION_DEF.id,REGRESSION_DEF.icon,14,"width:18px;height:18px;line-height:1;flex-shrink:0"),
+            h("div",{style:"flex:1;min-width:0"},
+              h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:#ef4444;line-height:1.4;margin-bottom:7px"},"-2000 XP sur chaque statistique · -12000 XP global"),
+              h("div",{style:detailStyle},"▸ Activation : manuelle, depuis l’onglet Quêtes"),
+              h("div",{style:detailStyle},"▸ Fréquence : une seule déclaration par jour"),
+              h("div",{style:detailStyle},"▸ Effet : le niveau global et les niveaux de statistiques peuvent diminuer")
+            )
+          )
+        )
+      )
     );
   }
   // ─── RENDU PRINCIPAL ──────────────────────────────────────────────────
@@ -5194,6 +5221,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(UrgentUp,null),
       h(DebtUp,null),
       h(ConfirmRegressionModal,null),
+      h(RegressionUp,null),
       h(ConfirmDebtModal,null),
       h(ConfirmDungeonChoice,null),
       h(ConfirmReroll,null),
