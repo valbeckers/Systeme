@@ -1016,10 +1016,12 @@ function cleanSystemState(raw){
     dungeonKeys:Math.max(0,Math.floor(Number(data.dungeonKeys) || ((data.dungeonKeyRollWon===true && data.dungeonKeyDay)?1:0))),
     inventory:{
       majorElixir:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.majorElixir)||0)),
-      minorElixir:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.minorElixir)||0))
+      minorElixir:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.minorElixir)||0)),
+      supremeElixir:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.supremeElixir)||0)),
+      transmutationGrimoire:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.transmutationGrimoire)||0))
     },
     dungeonAccessOpen:data.dungeonAccessOpen===true,
-    activeElixir:(data.activeElixir&&Number(data.activeElixir.expiresAt)>Date.now()&&["Force","Sante","Esprit","Endurance","Agilite"].includes(data.activeElixir.stat))?data.activeElixir:null,
+    activeElixir:(data.activeElixir&&Number(data.activeElixir.expiresAt)>Date.now()&&(data.activeElixir.kind==="supremeElixir"||["Force","Sante","Esprit","Endurance","Agilite"].includes(data.activeElixir.stat)))?data.activeElixir:null,
     dungeonKeyDay:data.dungeonKeyDay||null,
     dungeonKeyRollWon:data.dungeonKeyRollWon===true,
     dungeonLog:cleanDungeonLog(data.dungeonLog),
@@ -1206,7 +1208,7 @@ function buildState(){
     dungeonSkipDay:saved.dungeonSkipDay||null,
     dungeonRunsByWeek:saved.dungeonRunsByWeek||{},
     dungeonLog:saved.dungeonLog||[],
-    inventory:saved.inventory||{majorElixir:0,minorElixir:0},
+    inventory:saved.inventory||{majorElixir:0,minorElixir:0,supremeElixir:0,transmutationGrimoire:0},
     dungeonAccessOpen:saved.dungeonAccessOpen===true,
     activeElixir:saved.activeElixir||null,
     dailyExtraXp:saved.dailyExtraXp||IMPORTED.dailyExtraXp||{},
@@ -1490,9 +1492,13 @@ function App(){
     setItemLootQueue(q=>[...q,{item,kind,id:Date.now()+Math.random()}]);
   }
 
-  function awardElixir(kind,source="rare"){
+  function awardInventoryItem(kind,source="rare"){
     setState(s=>({...s,inventory:{...(s.inventory||{}),[kind]:Math.max(0,Math.floor(Number(s.inventory&&s.inventory[kind])||0))+1}}));
     enqueueItemLoot(kind,source);
+  }
+
+  function awardElixir(kind,source="rare"){
+    awardInventoryItem(kind,source);
   }
 
   function applyRegression(){
@@ -1520,10 +1526,12 @@ function App(){
 
   function tryRareDungeonKeyDrop(){
     const keyWon=Math.random()<0.01;
-    const elixirWon=Math.random()<0.05;
+    const elixirWon=Math.random()<0.01;
+    const grimoireWon=Math.random()<0.01;
     if(keyWon) awardDungeonKey("rare");
     if(elixirWon) awardElixir("minorElixir","rare");
-    return keyWon||elixirWon;
+    if(grimoireWon) awardInventoryItem("transmutationGrimoire","rare");
+    return keyWon||elixirWon||grimoireWon;
   }
 
   // Migration grips sec→min sur le state en mémoire (au cas où localStorage non migré)
@@ -2096,6 +2104,7 @@ function App(){
       type:"daily",
       text:"Toutes les quêtes journalières ont été complétées"
     }]);
+    tryRareDungeonKeyDrop();
   },[allDailyDone,today,state.dailyCompletionAnimDay]);
 
   useEffect(()=>{
@@ -2105,6 +2114,7 @@ function App(){
       type:"bonus",
       text:"Toutes les quêtes bonus ont été complétées"
     }]);
+    tryRareDungeonKeyDrop();
   },[allBonusDone,today,state.bonusCompletionAnimDay]);
 
   // Bonus streak + increment streak au moment ou toutes les quetes sont faites
@@ -2210,7 +2220,7 @@ function App(){
   function addXp(amount,stat,e,silent,showStat,skipEventBonus=false){
     setState(s=>{
       const el=s.activeElixir;
-      const eventBonus = !skipEventBonus && el && Date.now()<(el.expiresAt||0) && el.stat===stat
+      const eventBonus = !skipEventBonus && el && Date.now()<(el.expiresAt||0) && (el.kind==="supremeElixir"||el.stat===stat)
         ? Math.round((Number(amount)||0)*(Number(el.pct)||0))
         : 0;
       const gain=(Number(amount)||0)+eventBonus;
@@ -2677,7 +2687,7 @@ function App(){
         ].filter(Boolean);
         ruptureRewards.forEach(r=>{
           const el=s.activeElixir;
-          const bonus=el&&Date.now()<(el.expiresAt||0)&&el.stat===r.stat?Math.round((r.xp||0)*(Number(el.pct)||0)):0;
+          const bonus=el&&Date.now()<(el.expiresAt||0)&&(el.kind==="supremeElixir"||el.stat===r.stat)?Math.round((r.xp||0)*(Number(el.pct)||0)):0;
           const gain=(r.xp||0)+bonus;
           totalXp+=gain;
           statXp[r.stat]=(statXp[r.stat]||0)+gain;
@@ -2727,7 +2737,7 @@ function App(){
       const roomRewards=dungeonRoomRewardPairs(dungeon,nextIdx);
       roomRewards.forEach(r=>{
         const el=s.activeElixir;
-        const bonus=el&&Date.now()<(el.expiresAt||0)&&el.stat===r.stat?Math.round((r.xp||0)*(Number(el.pct)||0)):0;
+        const bonus=el&&Date.now()<(el.expiresAt||0)&&(el.kind==="supremeElixir"||el.stat===r.stat)?Math.round((r.xp||0)*(Number(el.pct)||0)):0;
         const gain=(r.xp||0)+bonus;
         totalXp+=gain;
         statXp[r.stat]=(statXp[r.stat]||0)+gain;
@@ -2754,8 +2764,9 @@ function App(){
       const rewardText=rewards.map(r=>"+"+r.xp+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ");
       setTimeout(()=>{
         setDungeonUp({title:dungeon.title,short:dungeon.short,icon:dungeon.icon,color:dungeon.color,reward:rewardText});
-        setState(cur=>({...cur,inventory:{...(cur.inventory||{}),majorElixir:Math.max(0,Math.floor(Number(cur.inventory&&cur.inventory.majorElixir)||0))+1}}));
-        enqueueItemLoot("majorElixir","guaranteed");
+        awardElixir("majorElixir","guaranteed");
+        if(Math.random()<0.10) awardElixir("minorElixir","rare");
+        if(dungeon.id==="alchemist" && Math.random()<0.25) awardInventoryItem("transmutationGrimoire","rare");
       },200);
       return {...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:null,dungeonLog:[...(s.dungeonLog||[]),{id:dungeon.id,title:dungeon.title,stat:dungeon.stat,xp:rewards.reduce((a,r)=>a+(r.xp||0),0),completedAt,expiresAt:ad.expiresAt||completedAt+86400000}],lastActiveDay:todayStr()};
     });
@@ -3521,9 +3532,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       ),
 
       h(DebtCard,null),
-      activeElixir&&h("div",{style:"margin:-2px 0 12px;padding:9px 11px;border-left:2px solid "+(STAT_COLOR[activeElixir.stat]||rank.color)+";background:rgba(255,255,255,.025);font-family:Orbitron,sans-serif"},
-        h("div",{style:"font-size:9px;color:var(--td);letter-spacing:1.2px;text-transform:uppercase"},activeElixir.kind==="majorElixir"?"Élixir d’expérience majeur":"Élixir d’expérience mineur"),
-        h("div",{style:"margin-top:4px;font-size:11px;color:"+(STAT_COLOR[activeElixir.stat]||rank.color)+";font-weight:800"},"+"+Math.round((activeElixir.pct||0)*100)+" % XP — "+(STAT_LBL[activeElixir.stat]||activeElixir.stat)+" · "+fmtCD((activeElixir.expiresAt||0)-now))
+      activeElixir&&h("div",{style:"margin:-2px 0 12px;padding:9px 11px;border-left:2px solid "+(activeElixir.kind==="supremeElixir"?"#9333ea":(STAT_COLOR[activeElixir.stat]||rank.color))+";background:rgba(255,255,255,.025);font-family:Orbitron,sans-serif"},
+        h("div",{style:"font-size:9px;color:var(--td);letter-spacing:1.2px;text-transform:uppercase"},activeElixir.kind==="majorElixir"?"Élixir d’expérience majeur":activeElixir.kind==="supremeElixir"?"Élixir suprême":"Élixir d’expérience mineur"),
+        h("div",{style:"margin-top:4px;font-size:11px;color:"+(activeElixir.kind==="supremeElixir"?"#9333ea":(STAT_COLOR[activeElixir.stat]||rank.color))+";font-weight:800"},"+"+Math.round((activeElixir.pct||0)*100)+" % XP"+(activeElixir.kind==="supremeElixir"?" — TOUTES LES STATISTIQUES":" — "+(STAT_LBL[activeElixir.stat]||activeElixir.stat))+" · "+fmtCD((activeElixir.expiresAt||0)-now))
       ),
 
       activeSq&&h("div",{class:"card",style:"border-color:#ef444444"},
@@ -3641,8 +3652,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
 
   function ElixirIcon(kind,size=34){
-    const liquid=kind==="majorElixir"?"#f5b82e":"#22c55e";
-    const shine=kind==="majorElixir"?"#fde68a":"#86efac";
+    const liquid=kind==="majorElixir"?"#f5b82e":kind==="supremeElixir"?"#9333ea":"#22c55e";
+    const shine=kind==="majorElixir"?"#fde68a":kind==="supremeElixir"?"#d8b4fe":"#86efac";
     return h("svg",{viewBox:"0 0 64 64",width:size,height:size,"aria-hidden":"true",style:"display:block;overflow:visible"},
       h("g",{transform:"rotate(-24 32 32)"},
         h("rect",{x:21,y:7,width:22,height:7,rx:3.5,fill:"#d7dde8",stroke:"#111827","stroke-width":2.5}),
@@ -3656,20 +3667,22 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
   function InventoryItemIcon(id,size){
-    if(id==="majorElixir"||id==="minorElixir")return ElixirIcon(id,size);
+    if(id==="majorElixir"||id==="minorElixir"||id==="supremeElixir")return ElixirIcon(id,size);
     return h("span",{style:"font-size:"+size+"px;line-height:1"},INVENTORY_ITEMS[id].emoji);
   }
   const INVENTORY_ITEMS={
     dungeonKey:{name:"CLÉ DE DONJON",short:"CLÉ DE DONJON",emoji:"🗝️",action:"UTILISER",desc:"Cette clé vous permet d’entrer dans n’importe quel donjon.",obtain:["Après avoir complété la quête urgente, toutes les quêtes journalières et toutes les quêtes bonus dans la même journée (Taux : 100 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %)."]},
     majorElixir:{name:"ÉLIXIR D’EXPÉRIENCE MAJEUR",short:"ÉLIXIR MAJEUR",emoji:"🧪",action:"CONSOMMER",pct:.20,desc:"Cet élixir vous permet de gagner 20 % d’XP en plus dans la statistique de votre choix pendant 24 h. Utilisez-le à bon escient !",obtain:["Après avoir complété un donjon avant sa rupture (Taux : 100 %)."]},
-    minorElixir:{name:"ÉLIXIR D’EXPÉRIENCE MINEUR",short:"ÉLIXIR MINEUR",emoji:"🧪",action:"CONSOMMER",pct:.10,desc:"Cet élixir vous permet de gagner 10 % d’XP en plus dans la statistique de votre choix pendant 24 h. Utilisez-le à bon escient !",obtain:["Après avoir complété un donjon (Taux : 10 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %)."]}
+    minorElixir:{name:"ÉLIXIR D’EXPÉRIENCE MINEUR",short:"ÉLIXIR MINEUR",emoji:"🧪",action:"CONSOMMER",pct:.10,desc:"Cet élixir vous permet de gagner 10 % d’XP en plus dans la statistique de votre choix pendant 24 h. Utilisez-le à bon escient !",obtain:["Après avoir complété un donjon (Taux : 10 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %)."]},
+    supremeElixir:{name:"ÉLIXIR SUPRÊME",short:"ÉLIXIR SUPRÊME",emoji:"🧪",action:"CONSOMMER",pct:.30,desc:"Cet élixir vous permet de gagner 30 % d’XP en plus pendant 24 h. Utilisez-le à bon escient !",obtain:["En fusionnant 3 Élixirs mineurs via le 📔 Grimoire de transmutation."]},
+    transmutationGrimoire:{name:"GRIMOIRE DE TRANSMUTATION",short:"GRIMOIRE",emoji:"📔",action:"TRANSMUTER",desc:"Permet de fusionner trois Élixirs mineurs pour créer un Élixir suprême.",obtain:["Après avoir terminé un Donjon de l’Alchimiste (Taux : 25 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %)."]}
   };
   function itemQty(id){ return id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
   function Inventory(){
-    const ids=["dungeonKey","majorElixir","minorElixir"];
+    const ids=["dungeonKey","majorElixir","minorElixir","supremeElixir","transmutationGrimoire"];
     return h("div",{class:"tab"},
       h("div",{style:"display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px"},ids.map(id=>{
-        const it=INVENTORY_ITEMS[id], qty=itemQty(id), grey=id!=="dungeonKey"&&!!activeElixir;
+        const it=INVENTORY_ITEMS[id], qty=itemQty(id), grey=["majorElixir","minorElixir","supremeElixir"].includes(id)&&!!activeElixir;
         return h("button",{key:id,onClick:()=>setInventoryItem(id),style:"position:relative;aspect-ratio:1/1;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.025);padding:8px;color:var(--tx);cursor:pointer;opacity:"+(grey?".48":"1")+";display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px"},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;line-height:1.25;letter-spacing:.5px;text-transform:uppercase;text-align:center;min-height:20px"},it.short),
           h("div",{style:"line-height:1"},InventoryItemIcon(id,38)),
@@ -3681,7 +3694,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function InventoryItemModal(){
     if(!inventoryItem)return null;
     const id=inventoryItem,it=INVENTORY_ITEMS[id],qty=itemQty(id);
-    const isElixir=id!=="dungeonKey";
+    const isElixir=["majorElixir","minorElixir","supremeElixir"].includes(id);
     let disabled=qty<1;
     let reason=qty<1?"Aucun exemplaire disponible.":"";
     if(id==="dungeonKey"){
@@ -3689,6 +3702,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       else if(activeDungeon){disabled=true;reason="Un donjon est déjà actif.";}
       else if(dungeonDailyUsed){disabled=true;reason="Un donjon a déjà été lancé aujourd’hui.";}
       else if(dungeonWeekCount>=3){disabled=true;reason="La limite de trois donjons cette semaine est atteinte.";}
+    }else if(id==="transmutationGrimoire"){
+      const minors=Math.max(0,Math.floor(Number(state.inventory&&state.inventory.minorElixir)||0));
+      if(minors<3){disabled=true;reason="Trois Élixirs mineurs sont nécessaires ("+minors+"/3).";}
     }else if(activeElixir){disabled=true;reason="Un élixir est déjà actif pendant encore "+fmtCD((activeElixir.expiresAt||0)-now)+".";}
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setInventoryItem(null)}},
       h("div",{class:"modal",style:"position:relative;max-width:390px;width:calc(100% - 28px)"},
@@ -3711,7 +3727,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const id=confirmItemUse.id,it=INVENTORY_ITEMS[id];
     return h("div",{class:"ruov",style:"--rc:"+rank.color+";--rg:"+rank.glow},h("div",{class:"rucont",style:"width:min(500px,calc(100vw - 34px));background:rgba(15,15,18,.97);border:1px solid "+rank.color+"88;border-radius:18px;padding:22px;box-shadow:0 0 30px "+rank.color+"22"},
       h("div",{class:"ruevol",style:"color:"+rank.color},"CONFIRMATION"),
-      h("div",{style:"font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:#fff;text-align:center;line-height:1.4;max-width:340px"},"Êtes-vous certain de vouloir "+(id==="dungeonKey"?"utiliser une ":"consommer un ")+it.name+" ?"),
+      h("div",{style:"font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:#fff;text-align:center;line-height:1.4;max-width:340px"},"Êtes-vous certain de vouloir "+(id==="dungeonKey"?"utiliser une ":id==="transmutationGrimoire"?"utiliser le ":"consommer un ")+it.name+" ?"),
       h("div",{style:"display:flex;gap:10px;margin-top:22px"},
         h("button",{class:"rudis",style:"min-width:110px;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>setConfirmItemUse(null)},"Non"),
         h("button",{class:"rudis",style:"min-width:110px",onClick:()=>{
@@ -3719,8 +3735,16 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           if(id==="dungeonKey"){
             setState(s=>({...s,dungeonKeys:Math.max(0,(Number(s.dungeonKeys)||0)-1),dungeonAccessOpen:true}));
             setItemUseUp({id});
+          }else if(id==="transmutationGrimoire"){
+            setState(s=>{const inv={...(s.inventory||{})};if((Number(inv.minorElixir)||0)<3||(Number(inv.transmutationGrimoire)||0)<1)return s;inv.minorElixir=Math.max(0,(Number(inv.minorElixir)||0)-3);inv.transmutationGrimoire=Math.max(0,(Number(inv.transmutationGrimoire)||0)-1);inv.supremeElixir=Math.max(0,(Number(inv.supremeElixir)||0)+1);return {...s,inventory:inv};});
+            enqueueItemLoot("supremeElixir","guaranteed");
+            setItemUseUp({id,transmuted:true});
+          }else if(id==="supremeElixir"){
+            const expiresAt=Date.now()+86400000;
+            setState(s=>({...s,inventory:{...(s.inventory||{}),supremeElixir:Math.max(0,(Number(s.inventory&&s.inventory.supremeElixir)||0)-1)},activeElixir:{kind:id,pct:it.pct,startedAt:Date.now(),expiresAt}}));
+            setItemUseUp({id,pct:it.pct,global:true});
           }else setElixirStatChoice({id});
-        }},id==="dungeonKey"?"Oui":"Continuer")
+        }},id==="dungeonKey"||id==="transmutationGrimoire"||id==="supremeElixir"?"Oui":"Continuer")
       )
     ));
   }
@@ -4810,9 +4834,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const it=INVENTORY_ITEMS[itemUseUp.id];
     return h("div",{class:"ruov",style:"--rc:"+rank.color+";--rg:"+rank.glow},h("div",{class:"rucont"},
       h(NotificationHeader,null),
-      h("div",{class:"ruevol",style:"color:"+rank.color},itemUseUp.id==="dungeonKey"?"Vous avez utilisé une":"Vous avez consommé un"),
+      h("div",{class:"ruevol",style:"color:"+rank.color},itemUseUp.id==="dungeonKey"?"Vous avez utilisé une":itemUseUp.id==="transmutationGrimoire"?"Transmutation accomplie":"Vous avez consommé un"),
       h("div",{class:"rurank",style:"font-size:clamp(32px,9vw,56px);white-space:normal;line-height:1.1;max-width:360px","data-r":it.name},it.name),
       itemUseUp.stat&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Vous bénéficiez de +"+Math.round(itemUseUp.pct*100)+" % d’XP dans ",h("span",{style:"color:"+(STAT_COLOR[itemUseUp.stat]||rank.color)},STAT_LBL[itemUseUp.stat]||itemUseUp.stat)," pendant 24 h."),
+      itemUseUp.global&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:#c084fc"},"Vous bénéficiez de +"+Math.round(itemUseUp.pct*100)+" % d’XP sur toutes les statistiques pendant 24 h."),
+      itemUseUp.transmuted&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:#c084fc"},"3 Élixirs mineurs ont été fusionnés en 1 Élixir suprême."),
       h("button",{class:"rudis",onClick:()=>setItemUseUp(null)},"Continuer")
     ));
   }
