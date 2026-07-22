@@ -3666,8 +3666,32 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       )
     );
   }
+  function GrimoireIcon(size){
+    const s=size||40;
+    return h("svg",{width:s,height:s,viewBox:"0 0 64 64","aria-hidden":"true",style:"display:block;filter:drop-shadow(0 0 5px rgba(255,174,51,.25))"},
+      h("defs",null,
+        h("linearGradient",{id:"grimoireCover",x1:"0",y1:"0",x2:"1",y2:"1"},
+          h("stop",{offset:"0%","stop-color":"#ffc94a"}),
+          h("stop",{offset:"100%","stop-color":"#e58a17"})
+        ),
+        h("linearGradient",{id:"grimoireSpine",x1:"0",y1:"0",x2:"1",y2:"0"},
+          h("stop",{offset:"0%","stop-color":"#8e1f2d"}),
+          h("stop",{offset:"100%","stop-color":"#c43a45"})
+        )
+      ),
+      h("path",{d:"M13 8h36c4.4 0 8 3.6 8 8v36c0 2.2-1.8 4-4 4H17c-5.5 0-10-4.5-10-10V14c0-3.3 2.7-6 6-6z",fill:"url(#grimoireCover)",stroke:"#6b3b12","stroke-width":2.5,"stroke-linejoin":"round"}),
+      h("path",{d:"M13 8h9v48h-5c-5.5 0-10-4.5-10-10V14c0-3.3 2.7-6 6-6z",fill:"url(#grimoireSpine)",stroke:"#6b1b25","stroke-width":2.2,"stroke-linejoin":"round"}),
+      h("path",{d:"M22 11h27c3 0 5 2 5 5v34c0 1.7-1.3 3-3 3H22z",fill:"none",stroke:"rgba(255,255,255,.45)","stroke-width":1.6}),
+      h("rect",{x:28,y:20,width:20,height:24,rx:2.5,fill:"#fff7df",stroke:"#9d5b1b","stroke-width":2}),
+      h("path",{d:"M32 27h12M32 32h12M32 37h8",stroke:"#d0973a","stroke-width":2,"stroke-linecap":"round"}),
+      h("circle",{cx:17,cy:18,r:2.2,fill:"#f4c1c5"}),
+      h("circle",{cx:17,cy:46,r:2.2,fill:"#f4c1c5"}),
+      h("path",{d:"M10 46c0 3.9 3.1 7 7 7h36",fill:"none",stroke:"rgba(255,255,255,.55)","stroke-width":2,"stroke-linecap":"round"})
+    );
+  }
   function InventoryItemIcon(id,size){
     if(id==="majorElixir"||id==="minorElixir"||id==="supremeElixir")return ElixirIcon(id,size);
+    if(id==="transmutationGrimoire")return GrimoireIcon(size);
     return h("span",{style:"font-size:"+size+"px;line-height:1"},INVENTORY_ITEMS[id].emoji);
   }
   const INVENTORY_ITEMS={
