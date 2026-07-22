@@ -3624,10 +3624,29 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   // ─── ONGLET STATS ─────────────────────────────────────────────────────
 
 
+  function ElixirIcon(kind,size=34){
+    const liquid=kind==="majorElixir"?"#f5b82e":"#22c55e";
+    const shine=kind==="majorElixir"?"#fde68a":"#86efac";
+    return h("svg",{viewBox:"0 0 64 64",width:size,height:size,"aria-hidden":"true",style:"display:block;overflow:visible"},
+      h("g",{transform:"rotate(-24 32 32)"},
+        h("rect",{x:21,y:7,width:22,height:7,rx:3.5,fill:"#d7dde8",stroke:"#111827","stroke-width":2.5}),
+        h("path",{d:"M24 13v31c0 8 4.7 13 8 13s8-5 8-13V13",fill:"#eef2f7",stroke:"#111827","stroke-width":3,"stroke-linejoin":"round"}),
+        h("path",{d:"M25.5 35h13v9c0 6.6-3.7 10.5-6.5 10.5S25.5 50.6 25.5 44z",fill:liquid}),
+        h("path",{d:"M27 37c3-2 7-2 10 0",fill:"none",stroke:shine,"stroke-width":2.2,"stroke-linecap":"round"}),
+        h("circle",{cx:30,cy:43,r:1.8,fill:shine}),
+        h("circle",{cx:35,cy:48,r:1.35,fill:shine}),
+        h("path",{d:"M28 17v14",stroke:"#fff","stroke-width":2.3,"stroke-linecap":"round",opacity:.85})
+      )
+    );
+  }
+  function InventoryItemIcon(id,size){
+    if(id==="majorElixir"||id==="minorElixir")return ElixirIcon(id,size);
+    return h("span",{style:"font-size:"+size+"px;line-height:1"},INVENTORY_ITEMS[id].emoji);
+  }
   const INVENTORY_ITEMS={
     dungeonKey:{name:"CLÉ DE DONJON",short:"CLÉ DE DONJON",emoji:"🗝️",action:"UTILISER",desc:"Cette clé vous permet d’entrer dans n’importe quel donjon.",obtain:["Obtention garantie après avoir complété la quête urgente, toutes les quêtes journalières et toutes les quêtes bonus dans la même journée.","Loot rare après une quête urgente (1 %) ou lors d’un nouveau record (1 %)."]},
     majorElixir:{name:"ÉLIXIR D’EXPÉRIENCE MAJEUR",short:"ÉLIXIR MAJEUR",emoji:"🧪",action:"CONSOMMER",pct:.20,desc:"Cet élixir vous permet de gagner 20 % d’XP en plus dans la statistique de votre choix pendant 24 h. Utilisez-le à bon escient !",obtain:["Obtention garantie après avoir complété un donjon avant sa rupture."]},
-    minorElixir:{name:"ÉLIXIR D’EXPÉRIENCE MINEUR",short:"ÉLIXIR MINEUR",emoji:"⚗️",action:"CONSOMMER",pct:.10,desc:"Cet élixir vous permet de gagner 10 % d’XP en plus dans la statistique de votre choix pendant 24 h. Utilisez-le à bon escient !",obtain:["Loot rare après une quête urgente (5 %) ou lors d’un nouveau record (5 %)."]}
+    minorElixir:{name:"ÉLIXIR D’EXPÉRIENCE MINEUR",short:"ÉLIXIR MINEUR",emoji:"🧪",action:"CONSOMMER",pct:.10,desc:"Cet élixir vous permet de gagner 10 % d’XP en plus dans la statistique de votre choix pendant 24 h. Utilisez-le à bon escient !",obtain:["Loot rare après une quête urgente (5 %) ou lors d’un nouveau record (5 %)."]}
   };
   function itemQty(id){ return id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
   function Inventory(){
@@ -3637,7 +3656,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         const it=INVENTORY_ITEMS[id], qty=itemQty(id), grey=id!=="dungeonKey"&&!!activeElixir;
         return h("button",{key:id,onClick:()=>setInventoryItem(id),style:"position:relative;aspect-ratio:1/1;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.025);padding:8px;color:var(--tx);cursor:pointer;opacity:"+(grey?".48":"1")+";display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px"},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;line-height:1.25;letter-spacing:.5px;text-transform:uppercase;text-align:center;min-height:20px"},it.short),
-          h("div",{style:"font-size:34px;line-height:1"},it.emoji),
+          h("div",{style:"line-height:1"},InventoryItemIcon(id,38)),
           h("div",{style:"position:absolute;right:6px;bottom:5px;border-radius:999px;min-width:20px;padding:2px 5px;background:rgba(0,0,0,.55);font-family:Orbitron,sans-serif;font-size:9px;color:#fff"},"×"+qty)
         );
       }))
@@ -3659,7 +3678,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h("div",{class:"modal",style:"position:relative;max-width:390px;width:calc(100% - 28px)"},
         h("button",{onClick:()=>setInventoryItem(null),style:"position:absolute;right:12px;top:10px;border:0;background:transparent;color:#fff;font-size:22px;cursor:pointer"},"×"),
         h("div",{class:"mtitle",style:"padding-right:28px"},it.name),
-        h("div",{style:"font-size:58px;text-align:center;margin:14px 0 8px"},it.emoji),
+        h("div",{style:"display:flex;justify-content:center;align-items:center;margin:14px 0 8px"},InventoryItemIcon(id,64)),
         h("div",{style:"text-align:center;font-family:Orbitron,sans-serif;font-size:10px;color:var(--td);margin-bottom:16px"},"QUANTITÉ : "+qty),
         h("div",{style:"font-size:12px;line-height:1.6;color:var(--tx);margin-bottom:14px"},it.desc),
         h("div",{style:"margin-bottom:16px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);padding:10px 0"},
