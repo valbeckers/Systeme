@@ -1518,7 +1518,7 @@ function App(){
   }
 
   function tryRareDungeonKeyDrop(){
-    const keyWon=Math.random()<0.05;
+    const keyWon=Math.random()<0.01;
     const elixirWon=Math.random()<0.05;
     if(keyWon) awardDungeonKey("rare");
     if(elixirWon) awardElixir("minorElixir","rare");
