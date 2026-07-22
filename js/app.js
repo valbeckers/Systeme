@@ -1464,6 +1464,7 @@ function App(){
   const [exportManualModal,setExportManualModal] = useState(false);
   const [exportValue,setExportValue] = useState("");
   const [dungeonHelpOpen,setDungeonHelpOpen] = useState({});
+  const [selectedDungeonRoom,setSelectedDungeonRoom] = useState(null);
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
   const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,reg:false,sq:false,elan:false,debt:false,dj:false,cs:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
@@ -2628,6 +2629,7 @@ function App(){
   }
 
   function startDungeon(id){
+    setSelectedDungeonRoom(null);
     setState(s=>{
       const t=Date.now();
       const day=todayStr();
@@ -2652,7 +2654,8 @@ function App(){
     setState(s=>({...s,dungeonSkipDay:todayStr()}));
   }
 
-  function validateDungeonRoom(){
+  function validateDungeonRoom(roomIdxOverride=null){
+    const selectedIdx = Number.isInteger(roomIdxOverride) ? roomIdxOverride : selectedDungeonRoom;
     setState(s=>{
       const ad=s.activeDungeon;
       if(!ad || ad.completedAt) return s;
@@ -2709,8 +2712,12 @@ function App(){
       }
 
       const completed=Array.isArray(ad.completedRooms)?ad.completedRooms:[];
-      const nextIdx=completed.length;
-      if(nextIdx>=dungeon.rooms.length) return s;
+      const nextIdx=selectedIdx;
+      if(!Number.isInteger(nextIdx) || nextIdx<0 || nextIdx>=dungeon.rooms.length) return s;
+      if(completed.includes(nextIdx)) return s;
+      const bossIdx=dungeon.rooms.length-1;
+      const allPreviousRoomsDone=Array.from({length:bossIdx},(_,i)=>i).every(i=>completed.includes(i));
+      if(nextIdx===bossIdx && !allPreviousRoomsDone) return s;
 
       const beforeXp=s.totalXp;
       const beforeStats=s.stats;
@@ -2733,8 +2740,9 @@ function App(){
       if(awardedXp>0) dayLog.dungeon=(dayLog.dungeon||0)+awardedXp;
       if(awardedXp>0) daily[day]=dayLog;
 
-      const nextCompleted=[...completed,nextIdx];
+      const nextCompleted=[...completed,nextIdx].sort((a,b)=>a-b);
       const isComplete=nextCompleted.length>=dungeon.rooms.length;
+      setSelectedDungeonRoom(null);
       triggerProgressOverlay(beforeXp,beforeStats,totalXp,stats,300);
 
       if(!isComplete){
@@ -3168,7 +3176,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const d=activeDungeon;
     const remaining=d ? d.expiresAt-now : 0;
     const completedRooms=d ? (d.completedRooms||[]) : [];
-    const nextRoom=d ? d.rooms[completedRooms.length] : null;
+    const selectedRoom=d&&Number.isInteger(selectedDungeonRoom)?d.rooms[selectedDungeonRoom]:null;
     const color=d ? d.color : rank.color;
     if(compact && !d) return null;
     if(d&&d.ruptureBoss){
@@ -3206,12 +3214,16 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         ),
         h("div",{style:"display:flex;flex-direction:column;gap:6px;margin-top:10px"},d.rooms.map((room,i)=>{
           const done=completedRooms.includes(i);
-          const current=i===completedRooms.length;
-          return h("div",{key:i,style:"display:flex;gap:8px;align-items:flex-start;padding:8px;border-radius:10px;background:"+(current?color+"12":"rgba(255,255,255,0.025)")+";border:1px solid "+(current?color+"44":"rgba(255,255,255,0.05)")+";opacity:"+(done?"0.75":"1")},
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:"+(done?"#4ade80":current?color:"var(--td)")+";width:18px;text-align:center;flex-shrink:0"},done?"✓":(i+1)),
+          const boss=i===d.rooms.length-1;
+          const allPreviousRoomsDone=d.rooms.slice(0,-1).every((_,idx)=>completedRooms.includes(idx));
+          const locked=!done&&boss&&!allPreviousRoomsDone;
+          const selected=!done&&!locked&&selectedDungeonRoom===i;
+          return h("div",{key:i,onClick:()=>{if(!done&&!locked)setSelectedDungeonRoom(i);},style:"display:flex;gap:8px;align-items:flex-start;padding:8px;border-radius:10px;background:"+(selected?color+"18":"rgba(255,255,255,0.025)")+";border:1px solid "+(selected?color+"88":"rgba(255,255,255,0.05)")+";opacity:"+(done?"0.72":locked?"0.42":"1")+";cursor:"+(!done&&!locked?"pointer":"default")+";box-shadow:"+(selected?"0 0 14px "+color+"22":"none")},
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:"+(done?"#4ade80":selected?color:"var(--td)")+";width:18px;text-align:center;flex-shrink:0"},done?"✓":locked?"🔒":(i+1)),
             h("div",{style:"min-width:0;flex:1"},
               h("div",{style:"font-size:12px;color:var(--tx);font-weight:700;line-height:1.25"},(i===d.rooms.length-1?"Boss — ":"")+room.name),
               h("div",{style:"font-size:10px;color:var(--td);line-height:1.35;margin-top:2px"},room.desc),
+              locked&&h("div",{style:"font-size:8.5px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:.7px;text-transform:uppercase;margin-top:4px"},"Termine toutes les salles pour accéder au boss"),
               h("div",{style:"font-size:8.5px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:4px"},dungeonRoomRewardPairs(d,i).map(r=>"+"+r.xp+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ")),
               room.help&&h("button",{onClick:()=>setDungeonHelpOpen(o=>({...o,[d.id+"_"+i]:!o[d.id+"_"+i]})),style:"margin-top:6px;padding:5px 7px;border-radius:7px;border:1px solid "+color+"55;background:rgba(255,255,255,0.025);color:"+color+";font-family:Orbitron,sans-serif;font-size:8px;letter-spacing:1px;text-transform:uppercase;cursor:pointer"},dungeonHelpOpen[d.id+"_"+i]?"Masquer l’aide":"Aide"),
               room.help&&dungeonHelpOpen[d.id+"_"+i]&&h("div",{style:"margin-top:6px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.07);font-size:10px;color:var(--td);line-height:1.45"},
@@ -3221,7 +3233,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             )
           );
         })),
-        nextRoom&&h("button",{onClick:validateDungeonRoom,style:"width:100%;margin-top:10px;padding:11px;border-radius:9px;border:1px solid "+color+"66;background:"+color+"12;color:"+color+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"},completedRooms.length===d.rooms.length-1?"Valider le boss":"Valider la salle suivante")
+        completedRooms.length<d.rooms.length&&h("button",{
+          onClick:()=>validateDungeonRoom(selectedDungeonRoom),
+          disabled:!selectedRoom,
+          style:"width:100%;margin-top:10px;padding:11px;border-radius:9px;border:1px solid "+color+(selectedRoom?"66":"33")+";background:"+color+(selectedRoom?"12":"08")+";color:"+(selectedRoom?color:"var(--td)")+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:"+(selectedRoom?"pointer":"not-allowed")+";opacity:"+(selectedRoom?"1":"0.55")
+        },"Valider la salle")
       );
     }
     return h("div",{class:"card",style:"border-color:var(--rc)44"},
