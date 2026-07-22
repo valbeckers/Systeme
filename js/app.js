@@ -1,3 +1,4 @@
+
 const { h, render, Fragment } = preact;
 const { useState, useEffect, useRef } = preactHooks;
 
@@ -172,7 +173,7 @@ const DUNGEONS = [
     {name:"Rangement", desc:"10 objets"},
     {name:"Bloc profond", desc:"45 min sur une tâche choisie, sans interruption volontaire"},
   ]},
-  {id:"steward", title:"Donjon de l’Intendant", short:"Intendant", stat:"Discipline", icon:"🧹", color:"#f59e0b", reward:{xp:2250,stat:"Discipline",xp2:450,stat2:"Sante"}, rooms:[
+  {id:"steward", title:"Donjon de l’Intendant", short:"Intendant", stat:"Discipline", icon:"🧹", color:"#c084fc", reward:{xp:2250,stat:"Discipline",xp2:450,stat2:"Sante"}, rooms:[
     {name:"Linge", desc:"15 min"},
     {name:"Rangement", desc:"15 min"},
     {name:"Poussière", desc:"15 min"},
