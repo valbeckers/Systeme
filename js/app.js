@@ -2102,16 +2102,18 @@ function App(){
     });
   },[now,state.activeDungeon?.expiresAt,state.activeDungeon?.ruptureBoss?.id]);
 
-  // Échec automatique d’une dette non remboursée après son jour d’échéance
+  // Échec automatique au reset de J+2 si la dette n’est pas entièrement remboursée.
   useEffect(()=>{
     const debt=state.questDebt;
     if(!debt || debt.status!=="active") return;
-    if(today<=debt.dueDay) return;
+    const fallbackExpiry=new Date(addDaysStr(debt.sourceDay||today,2)+"T07:00:00").getTime();
+    const expiresAt=Number(debt.expiresAt)||fallbackExpiry;
+    if(now<expiresAt) return;
     setState(s=>s.questDebt&&s.questDebt.status==="active"
       ? {...s,questDebt:{...s.questDebt,status:"failed",failedAt:Date.now()}}
       : s
     );
-  },[today,state.questDebt?.status,state.questDebt?.dueDay]);
+  },[now,today,state.questDebt?.status,state.questDebt?.expiresAt,state.questDebt?.sourceDay]);
 
   // Animations de complétion des groupes de quêtes — une seule fois par jour.
   // Clé de donjon : une clé garantie par journée totalement complétée
@@ -2315,8 +2317,10 @@ function App(){
           id:obj.id,name:obj.name,icon:obj.icon,unit:obj.unit,
           stat:obj.stat,stat2:obj.stat2||null,
           amount,paid:0,target,current,
-          sourceDay:today,dueDay:addDaysStr(today,1),
-          createdAt:Date.now(),status:"active",
+          sourceDay:today,dueDay:addDaysStr(today,2),
+          createdAt:Date.now(),
+          expiresAt:new Date(addDaysStr(today,2)+"T07:00:00").getTime(),
+          status:"active",
           rewards:debtRewardPairs(obj,current,target)
         },
         debtUsesByWeek:uses
@@ -2327,7 +2331,10 @@ function App(){
 
   function repayDebtPortion(obj,val){
     const debt=state.questDebt;
-    if(!debt || debt.status!=="active" || debt.id!==obj.id || debt.dueDay!==today) return {used:0,remaining:val};
+    if(!debt || debt.status!=="active" || debt.id!==obj.id) return {used:0,remaining:val};
+    const fallbackExpiry=new Date(addDaysStr(debt.sourceDay||today,2)+"T07:00:00").getTime();
+    const expiresAt=Number(debt.expiresAt)||fallbackExpiry;
+    if(Date.now()>=expiresAt) return {used:0,remaining:val};
     const left=Math.max(0,debt.amount-(debt.paid||0));
     const used=Math.min(left,val);
     const remaining=Math.max(0,val-used);
@@ -3426,19 +3433,20 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     if(!debt || debt.status!=="active") return null;
     const color=STAT_COLOR[debt.stat]||"#f59e0b";
     const pct=Math.min(100,((debt.paid||0)/Math.max(1,debt.amount))*100);
-    const isDue=debt.dueDay===today;
+    const dueDay=debt.dueDay||addDaysStr(debt.sourceDay||today,2);
+    const isLastDay=dueDay===today;
     return h("div",{class:"card",style:"border-color:"+color+"66;background:linear-gradient(135deg,"+color+"12,rgba(255,255,255,.025))"},
       h("div",{class:"ctitle",style:"color:"+color+";margin-bottom:8px"},"Dette active"),
       h("div",{style:"display:flex;align-items:center;gap:9px"},
         QuestIcon(debt.id,debt.icon,16,"min-width:24px"),
         h("div",{style:"flex:1"},
           h("div",{style:"font-size:14px;font-weight:800;color:var(--tx)"},debt.name),
-          h("div",{style:"font-size:10px;color:var(--td);margin-top:3px"},isDue?"À rembourser aujourd’hui":"Remboursement demain")
+          h("div",{style:"font-size:10px;color:var(--td);margin-top:3px"},isLastDay?"Dernier jour pour rembourser":"Remboursable dès maintenant")
         ),
         h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:"+color},fmtNum(debt.paid||0)+"/"+fmtNum(debt.amount)+" "+debt.unit)
       ),
       h("div",{class:"qbar",style:"margin-top:9px"},h("div",{class:"qfill"+(pct>=100?" done":pct>0?" partial":""),style:"width:"+pct+"%"})),
-      h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;margin-top:8px;letter-spacing:.7px;text-transform:uppercase"},"Échéance : "+debt.dueDay+" · priorité avant la quête du jour")
+      h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;margin-top:8px;letter-spacing:.7px;text-transform:uppercase"},"Échéance : reset du "+dueDay+" à 7h · priorité avant la quête du jour")
     );
   }
 
@@ -5348,10 +5356,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("div",{style:detailStyle},"▸ Déclenchement : lorsqu’une quête obligatoire compensable n’est pas terminée"),
             h("div",{style:detailStyle},"▸ Report : seule la quantité manquante devient une dette"),
             h("div",{style:detailStyle},"▸ Limites : une seule dette active et maximum trois dettes par semaine"),
-            h("div",{style:detailStyle},"▸ Remboursement : le lendemain, avant l’objectif du jour ; une dette ne peut jamais être reportée"),
+            h("div",{style:detailStyle},"▸ Remboursement : dès son activation et jusqu’au reset de J+2 ; chaque progression rembourse la dette avant d’alimenter la quête du jour"),
             h("div",{style:detailStyle},"▸ Streak : gelé jusqu’au remboursement, puis préservé si la dette est soldée"),
             h("div",{style:detailStyle},"▸ XP et records : XP conservés, sans bonus de dépassement et sans record"),
-            h("div",{style:detailStyle},"▸ Quêtes compensables : Pecs, Abdos, Jambes, Tractions négatives et Lecture")
+            h("div",{style:detailStyle},"▸ Quêtes compensables : Sommeil, Pecs, Abdos, Jambes, Tractions négatives, Mollets et Lecture")
           )
         )
       ),
