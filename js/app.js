@@ -2102,18 +2102,16 @@ function App(){
     });
   },[now,state.activeDungeon?.expiresAt,state.activeDungeon?.ruptureBoss?.id]);
 
-  // Échec automatique au reset de J+2 si la dette n’est pas entièrement remboursée.
+  // Échec automatique d’une dette non remboursée après son jour d’échéance
   useEffect(()=>{
     const debt=state.questDebt;
     if(!debt || debt.status!=="active") return;
-    const fallbackExpiry=new Date(addDaysStr(debt.sourceDay||today,2)+"T07:00:00").getTime();
-    const expiresAt=Number(debt.expiresAt)||fallbackExpiry;
-    if(now<expiresAt) return;
+    if(today<=debt.dueDay) return;
     setState(s=>s.questDebt&&s.questDebt.status==="active"
       ? {...s,questDebt:{...s.questDebt,status:"failed",failedAt:Date.now()}}
       : s
     );
-  },[now,today,state.questDebt?.status,state.questDebt?.expiresAt,state.questDebt?.sourceDay]);
+  },[today,state.questDebt?.status,state.questDebt?.dueDay]);
 
   // Animations de complétion des groupes de quêtes — une seule fois par jour.
   // Clé de donjon : une clé garantie par journée totalement complétée
@@ -2317,10 +2315,8 @@ function App(){
           id:obj.id,name:obj.name,icon:obj.icon,unit:obj.unit,
           stat:obj.stat,stat2:obj.stat2||null,
           amount,paid:0,target,current,
-          sourceDay:today,dueDay:addDaysStr(today,2),
-          createdAt:Date.now(),
-          expiresAt:new Date(addDaysStr(today,2)+"T07:00:00").getTime(),
-          status:"active",
+          sourceDay:today,dueDay:addDaysStr(today,1),
+          createdAt:Date.now(),status:"active",
           rewards:debtRewardPairs(obj,current,target)
         },
         debtUsesByWeek:uses
@@ -2331,10 +2327,7 @@ function App(){
 
   function repayDebtPortion(obj,val){
     const debt=state.questDebt;
-    if(!debt || debt.status!=="active" || debt.id!==obj.id) return {used:0,remaining:val};
-    const fallbackExpiry=new Date(addDaysStr(debt.sourceDay||today,2)+"T07:00:00").getTime();
-    const expiresAt=Number(debt.expiresAt)||fallbackExpiry;
-    if(Date.now()>=expiresAt) return {used:0,remaining:val};
+    if(!debt || debt.status!=="active" || debt.id!==obj.id || debt.dueDay!==today) return {used:0,remaining:val};
     const left=Math.max(0,debt.amount-(debt.paid||0));
     const used=Math.min(left,val);
     const remaining=Math.max(0,val-used);
@@ -3433,20 +3426,19 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     if(!debt || debt.status!=="active") return null;
     const color=STAT_COLOR[debt.stat]||"#f59e0b";
     const pct=Math.min(100,((debt.paid||0)/Math.max(1,debt.amount))*100);
-    const dueDay=debt.dueDay||addDaysStr(debt.sourceDay||today,2);
-    const isLastDay=dueDay===today;
+    const isDue=debt.dueDay===today;
     return h("div",{class:"card",style:"border-color:"+color+"66;background:linear-gradient(135deg,"+color+"12,rgba(255,255,255,.025))"},
       h("div",{class:"ctitle",style:"color:"+color+";margin-bottom:8px"},"Dette active"),
       h("div",{style:"display:flex;align-items:center;gap:9px"},
         QuestIcon(debt.id,debt.icon,16,"min-width:24px"),
         h("div",{style:"flex:1"},
           h("div",{style:"font-size:14px;font-weight:800;color:var(--tx)"},debt.name),
-          h("div",{style:"font-size:10px;color:var(--td);margin-top:3px"},isLastDay?"Dernier jour pour rembourser":"Remboursable dès maintenant")
+          h("div",{style:"font-size:10px;color:var(--td);margin-top:3px"},isDue?"À rembourser aujourd’hui":"Remboursement demain")
         ),
         h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:"+color},fmtNum(debt.paid||0)+"/"+fmtNum(debt.amount)+" "+debt.unit)
       ),
       h("div",{class:"qbar",style:"margin-top:9px"},h("div",{class:"qfill"+(pct>=100?" done":pct>0?" partial":""),style:"width:"+pct+"%"})),
-      h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;margin-top:8px;letter-spacing:.7px;text-transform:uppercase"},"Échéance : reset du "+dueDay+" à 7h · priorité avant la quête du jour")
+      h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;margin-top:8px;letter-spacing:.7px;text-transform:uppercase"},"Échéance : "+debt.dueDay+" · priorité avant la quête du jour")
     );
   }
 
@@ -4616,22 +4608,26 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const glow=rank.glow||color+"66";
     const gold="#fbbf24";
     const headingColor=rare?gold:color;
-    const particles=Array.from({length:48},(_,i)=>({
+    const particles=Array.from({length:54},(_,i)=>({
       id:i,
       left:Math.random()*100,
       delay:Math.random()*2.5,
       dur:1.05+Math.random()*1.9,
       size:2+Math.random()*5,
-      gold:Math.random()>0.38
+      accent:Math.random()>0.38
     }));
     return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+glow},
       h("div",{class:"ruparts"},particles.map(p=>
-        h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.gold?gold:"#ffffff")+";box-shadow:0 0 10px "+(p.gold?gold+"99":glow)+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
+        h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?gold:"#ffffff")+";box-shadow:0 0 10px "+(p.accent?gold+"99":glow)+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
       )),
       h("div",{class:"rucont"},
         h(NotificationHeader,null),
         h("div",{class:"ruevol",style:"color:"+headingColor+";text-shadow:0 0 16px "+(rare?gold+"99":glow)},rare?"DROP RARE OBTENU !":"OBJET OBTENU !"),
-        h("div",{class:"rurank",style:"--rc:"+gold+";--rg:"+gold+"88;color:"+gold+";text-shadow:0 0 20px "+gold+"99;font-size:clamp(38px,11vw,64px);letter-spacing:-1px;white-space:normal;max-width:350px;line-height:1.05","data-r":"CLÉ DE DONJON"},"CLÉ DE DONJON"),
+        h("div",{style:"position:relative;display:flex;align-items:center;justify-content:center;width:150px;height:150px;margin:8px 0 14px"},
+          h("div",{style:"position:absolute;inset:18px;border-radius:50%;background:radial-gradient(circle,"+gold+"55 0%,"+gold+"20 42%,transparent 72%);filter:blur(5px);box-shadow:0 0 34px "+gold+"77"}),
+          h("div",{style:"position:relative;z-index:1;filter:drop-shadow(0 0 14px "+gold+"aa);animation:ruPulse 1.8s ease-in-out infinite"},InventoryItemIcon("dungeonKey",112))
+        ),
+        h("div",{class:"rurank",style:"--rc:"+gold+";--rg:"+gold+"88;color:"+gold+";text-shadow:0 0 20px "+gold+"99;font-size:clamp(32px,9vw,52px);letter-spacing:-1px;white-space:normal;max-width:350px;line-height:1.05","data-r":"CLÉ DE DONJON"},"CLÉ DE DONJON"),
         h("button",{class:"rudis",style:"--rc:"+color+";--rg:"+glow,onClick:()=>setKeyLootUp(null)},"Continuer")
       )
     );
@@ -5000,14 +4996,46 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function ItemLootUp(){
     if(!itemLootUp)return null;
     const it=INVENTORY_ITEMS[itemLootUp.item]||INVENTORY_ITEMS.minorElixir;
-    const gold="#f59e0b", c=itemLootUp.kind==="rare"?gold:rank.color;
-    return h("div",{class:"ruov",style:"--rc:"+rank.color+";--rg:"+rank.glow},h("div",{class:"rucont"},
-      h(NotificationHeader,null),
-      h("div",{class:"ruevol",style:"color:"+c},itemLootUp.kind==="rare"?"DROP RARE OBTENU !":"OBJET OBTENU !"),
-      h("div",{class:"rurank",style:"font-size:clamp(34px,10vw,58px);white-space:normal;line-height:1.1;max-width:360px","data-r":it.name},it.name),
-      h("button",{class:"rudis",onClick:()=>setItemLootUp(null)},"Continuer")
-    ));
+    const rare=itemLootUp.kind==="rare";
+    const fx={
+      majorElixir:{main:"#22c55e",accent:"#bbf7d0"},
+      minorElixir:{main:"#38bdf8",accent:"#bae6fd"},
+      supremeElixir:{main:"#a855f7",accent:"#e9d5ff"},
+      transmutationGrimoire:{main:"#8b5cf6",accent:"#c4b5fd"},
+      masterContract:{main:"#d4a84f",accent:"#fef3c7"},
+      overachievementMark:{main:"#f97316",accent:"#fed7aa"},
+      recordHammer:{main:"#ef4444",accent:"#fca5a5"},
+      teleportCrystal:{main:"#06b6d4",accent:"#a5f3fc"},
+      invisibilityCape:{main:"#94a3b8",accent:"#e2e8f0"}
+    }[itemLootUp.item]||{main:rank.color||"#f59e0b",accent:"#ffffff"};
+    const main=rare?"#f59e0b":fx.main;
+    const accent=rare?"#fde68a":fx.accent;
+    const glow=main+"99";
+    const particles=Array.from({length:52},(_,i)=>({
+      id:i,
+      left:Math.random()*100,
+      delay:Math.random()*2.6,
+      dur:1.05+Math.random()*2,
+      size:2+Math.random()*5,
+      accent:Math.random()>.62
+    }));
+    return h("div",{class:"ruov",style:"--rc:"+main+";--rg:"+glow},
+      h("div",{class:"ruparts"},particles.map(p=>
+        h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?accent:main)+";box-shadow:0 0 10px "+(p.accent?accent+"aa":glow)+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
+      )),
+      h("div",{class:"rucont"},
+        h(NotificationHeader,null),
+        h("div",{class:"ruevol",style:"color:"+main+";text-shadow:0 0 16px "+glow},rare?"DROP RARE OBTENU !":"OBJET OBTENU !"),
+        h("div",{style:"position:relative;display:flex;align-items:center;justify-content:center;width:150px;height:150px;margin:8px 0 14px"},
+          h("div",{style:"position:absolute;inset:18px;border-radius:50%;background:radial-gradient(circle,"+main+"55 0%,"+main+"20 42%,transparent 72%);filter:blur(5px);box-shadow:0 0 34px "+glow}),
+          h("div",{style:"position:relative;z-index:1;filter:drop-shadow(0 0 14px "+glow+");animation:ruPulse 1.8s ease-in-out infinite"},InventoryItemIcon(itemLootUp.item,112))
+        ),
+        h("div",{class:"rurank",style:"--rc:"+main+";--rg:"+glow+";color:"+main+";text-shadow:0 0 18px "+glow+";font-size:clamp(28px,8vw,48px);white-space:normal;line-height:1.08;max-width:360px","data-r":it.name},it.name),
+        h("button",{class:"rudis",style:"--rc:"+main+";--rg:"+glow,onClick:()=>setItemLootUp(null)},"Continuer")
+      )
+    );
   }
+
   function ItemUseUp(){
     if(!itemUseUp)return null;
     const it=INVENTORY_ITEMS[itemUseUp.id];
@@ -5356,10 +5384,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("div",{style:detailStyle},"▸ Déclenchement : lorsqu’une quête obligatoire compensable n’est pas terminée"),
             h("div",{style:detailStyle},"▸ Report : seule la quantité manquante devient une dette"),
             h("div",{style:detailStyle},"▸ Limites : une seule dette active et maximum trois dettes par semaine"),
-            h("div",{style:detailStyle},"▸ Remboursement : dès son activation et jusqu’au reset de J+2 ; chaque progression rembourse la dette avant d’alimenter la quête du jour"),
+            h("div",{style:detailStyle},"▸ Remboursement : le lendemain, avant l’objectif du jour ; une dette ne peut jamais être reportée"),
             h("div",{style:detailStyle},"▸ Streak : gelé jusqu’au remboursement, puis préservé si la dette est soldée"),
             h("div",{style:detailStyle},"▸ XP et records : XP conservés, sans bonus de dépassement et sans record"),
-            h("div",{style:detailStyle},"▸ Quêtes compensables : Sommeil, Pecs, Abdos, Jambes, Tractions négatives, Mollets et Lecture")
+            h("div",{style:detailStyle},"▸ Quêtes compensables : Pecs, Abdos, Jambes, Tractions négatives et Lecture")
           )
         )
       ),
