@@ -3327,6 +3327,29 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const remaining=d.expiresAt-now;
     const completedRooms=d.completedRooms||[];
     const color=d.color||rank.color;
+
+    // Sur l'accueil, un donjon en rupture doit être présenté comme tel
+    // et non comme un donjon normal fraîchement ouvert.
+    if(d.ruptureBoss){
+      const rb=d.ruptureBoss;
+      const ruptureColor=rb.rarityColor||DUNGEON_RUPTURE_RARITIES[rb.rarity]?.color||color;
+      return h("div",{class:"card",style:"border-color:"+ruptureColor+"88;background:linear-gradient(135deg,"+ruptureColor+"12,rgba(255,255,255,0.025))"},
+        h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
+          h("div",{style:"min-width:0"},
+            h("div",{class:"ctitle",style:"margin:0;color:"+ruptureColor},"⚠️ RUPTURE — "+d.title),
+            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"Boss de Rupture · "+fmtCD(remaining)+" restants")
+          ),
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+ruptureColor+";border:1px solid "+ruptureColor+"66;border-radius:999px;padding:4px 7px;white-space:nowrap;text-transform:uppercase"},rb.rarityLabel||"Rupture")
+        ),
+        h("div",{style:"padding:10px;border-radius:10px;border:1px solid "+ruptureColor+"55;background:"+ruptureColor+"10"},
+          h("div",{style:"font-size:8.5px;color:"+ruptureColor+";font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px"},"☠️ Boss de Rupture"),
+          h("div",{style:"font-size:14px;color:var(--tx);font-weight:900;line-height:1.2"},rb.name),
+          h("div",{style:"font-size:10px;color:var(--td);line-height:1.4;margin-top:5px"},rb.objective)
+        ),
+        h("div",{style:"font-size:9px;color:var(--td);margin-top:7px;line-height:1.35"},completedRooms.length+" salle"+(completedRooms.length>1?"s":"")+" sécurisée"+(completedRooms.length>1?"s":"")+" · XP conservés")
+      );
+    }
+
     return h("div",{class:"card",style:"border-color:"+color+"66"},
       h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
         h("div",{style:"min-width:0"},
