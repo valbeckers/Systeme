@@ -65,7 +65,7 @@ const REGRESSION_DEF = {
 const DEFS = [
   // ─── SANTÉ ────────────────────────────────────────────────────────────
   {id:"water",  name:"Hydratation",     unit:"verre", xpPer:10,  daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDCA7",               base:10, baseHistory:[{until:"2026-04-29",base:8}]},
-  {id:"sleep",  name:"Dormir 8h",   unit:"nuit",  xpPer:0,   daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDECF\uFE0F",         base:1,  binary:true, binaryXp:150},
+  {id:"sleep",  name:"Dormir 8h",   unit:"h",     xpPer:18.75,daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDECF\uFE0F",         base:8,  fixedBase:true},
     // ─── FORCE ────────────────────────────────────────────────────────────
   {id:"push",   name:"Pecs", unit:"rep", xpPer:3, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦾", base:30},
   {id:"abs",    name:"Abdos", unit:"rep", xpPer:1.5, daily:true, weekly:false,optional:false,stat:"Force", icon:"🧱", base:60},
@@ -1189,6 +1189,18 @@ function migrateGripsToMin(dailyLog){
   return out;
 }
 
+function migrateSleepToHours(dailyLog){
+  // Ancienne version : Sommeil était binaire (0/1 nuit).
+  // Nouvelle version : la durée est enregistrée en heures avec un objectif fixe de 8 h.
+  const out={};
+  for(const [day,log] of Object.entries(dailyLog||{})){
+    const row={...(log||{})};
+    if(row.sleep===1) row.sleep=8;
+    out[day]=row;
+  }
+  return out;
+}
+
 function resetInvalidRunningRecord(dailyLog){
   const out={};
   for(const [day,log] of Object.entries(dailyLog||{})){
@@ -1207,8 +1219,11 @@ function resetInvalidRunningRecord(dailyLog){
 
 function buildState(){
   const saved=loadState();
-  if(!saved)return {...IMPORTED,dailyLog:resetInvalidRunningRecord(IMPORTED.dailyLog)};
-  const migratedLog=resetInvalidRunningRecord(migrateGripsToMin(saved.dailyLog||IMPORTED.dailyLog));
+  if(!saved)return {...IMPORTED,dailyLog:resetInvalidRunningRecord(migrateSleepToHours(IMPORTED.dailyLog)),sleepHoursMigrated:true};
+  const sourceLog=saved.sleepHoursMigrated
+    ? (saved.dailyLog||IMPORTED.dailyLog)
+    : migrateSleepToHours(saved.dailyLog||IMPORTED.dailyLog);
+  const migratedLog=resetInvalidRunningRecord(migrateGripsToMin(sourceLog));
   const out={
     ...IMPORTED,
     ...saved,
@@ -1240,6 +1255,7 @@ function buildState(){
     stats:saved.stats||IMPORTED.stats,
     statXp:saved.statXp||IMPORTED.statXp,
     dailyLog:migratedLog,
+    sleepHoursMigrated:true,
     weeklyLog:saved.weeklyLog||IMPORTED.weeklyLog,
     totalXp:Math.max(saved.totalXp||0, IMPORTED.totalXp),
     prestige:saved.prestige||IMPORTED.prestige||0,
@@ -1298,7 +1314,7 @@ function buildState(){
 
 
 // ─── SYSTÈME DE DETTE DE QUÊTE ───────────────────────────────────────────
-const DEBT_ELIGIBLE_IDS = new Set(["push","abs","squats","negative_pullups","calves","reading"]);
+const DEBT_ELIGIBLE_IDS = new Set(["sleep","push","abs","squats","negative_pullups","calves","reading"]);
 const MAX_DEBTS_PER_WEEK = 3;
 const RUN_RECORD_RESET_DAY = "2026-07-13";
 
@@ -2987,22 +3003,24 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             },"+10 "+unitPlur)
           );
         }
-        const QUICK_IDS=["push","abs","squats","negative_pullups","calves","reading","flex","balance","grips","med","water","mob"];
-        const unitLabel={push:obj.unit,abs:obj.unit,squats:obj.unit,negative_pullups:"rep",calves:obj.unit,reading:"min",flex:"min",balance:"min",grips:"min",med:"min",water:"verre",mob:"min"};
-        const unitLabelPlural={push:obj.unit==="rep"?"reps":obj.unit,abs:obj.unit==="rep"?"reps":obj.unit,squats:obj.unit==="rep"?"reps":obj.unit,negative_pullups:"reps",calves:"reps",reading:"min",flex:"min",balance:"min",grips:"min",med:"min",water:"verres",mob:"min"};
+        const QUICK_IDS=["sleep","push","abs","squats","negative_pullups","calves","reading","flex","balance","grips","med","water","mob"];
+        const unitLabel={sleep:"h",push:obj.unit,abs:obj.unit,squats:obj.unit,negative_pullups:"rep",calves:obj.unit,reading:"min",flex:"min",balance:"min",grips:"min",med:"min",water:"verre",mob:"min"};
+        const unitLabelPlural={sleep:"h",push:obj.unit==="rep"?"reps":obj.unit,abs:obj.unit==="rep"?"reps":obj.unit,squats:obj.unit==="rep"?"reps":obj.unit,negative_pullups:"reps",calves:"reps",reading:"min",flex:"min",balance:"min",grips:"min",med:"min",water:"verres",mob:"min"};
         if(QUICK_IDS.includes(obj.id)){
           const lbl=unitLabel[obj.id]||obj.unit;
           const lblPl=unitLabelPlural[obj.id]||obj.unit;
           const isWater=obj.id==="water";
+          const isSleep=obj.id==="sleep";
+          const quickAmount=isSleep?8:10;
           return h("div",{style:"display:flex;gap:8px;margin-top:8px"},
             h("button",{
               onClick:e=>{inputs.current[obj.id]="1";validate(obj,e);},
               style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px;transition:all .2s"
             },"+1 "+lbl+(isWater?" \uD83D\uDCA7":"")),
             !isWater&&h("button",{
-              onClick:e=>{inputs.current[obj.id]="10";validate(obj,e);},
+              onClick:e=>{inputs.current[obj.id]=String(quickAmount);validate(obj,e);},
               style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px;transition:all .2s"
-            },"+10 "+lblPl)
+            },"+"+quickAmount+" "+lblPl)
           );
         }
         return h("div",{class:"qinrow"},
