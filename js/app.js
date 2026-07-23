@@ -69,7 +69,7 @@ const CUSTOM_QUEST_ICONS = {
 function QuestIcon(id, fallback, size=14, extraStyle=""){
   const src = CUSTOM_QUEST_ICONS[id];
   if(src){
-    const px = Math.max(22, Math.round(size*1.55));
+    const px = Math.max(44, Math.round(size*3.1));
     return h("img",{
       src,
       alt:"",
