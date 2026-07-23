@@ -3249,20 +3249,18 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       return h("div",{class:"card",style:"border-color:"+ruptureColor+"88;background:linear-gradient(135deg,"+ruptureColor+"12,rgba(255,255,255,0.025))"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px"},
           h("div",{style:"min-width:0"},
-            h("div",{class:"ctitle",style:"margin:0;color:"+ruptureColor},"⚠️ RUPTURE — "+d.title),
-            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"Boss de Rupture · "+fmtCD(remaining)+" restants")
+            h("div",{class:"ctitle",style:"margin:0;color:"+ruptureColor},"⚠️ RUPTURE — "+d.title)
           ),
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+ruptureColor+";border:1px solid "+ruptureColor+"66;border-radius:999px;padding:4px 7px;white-space:nowrap;text-transform:uppercase"},rb.rarityLabel||"Rupture")
         ),
         h("div",{style:"padding:12px;border-radius:11px;border:1px solid "+ruptureColor+"55;background:"+ruptureColor+"10"},
-          h("div",{style:"font-size:9px;color:"+ruptureColor+";font-family:Orbitron,sans-serif;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:5px"},"☠️ Boss de Rupture"),
+          h("div",{style:"font-size:9px;color:"+ruptureColor+";font-family:Orbitron,sans-serif;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:5px"},"☠️ Boss de Rupture · "+fmtCD(remaining)+" restants"),
           h("div",{style:"font-size:15px;color:var(--tx);font-weight:900;line-height:1.2"},rb.name),
           h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin-top:6px"},rb.objective),
           h("div",{style:"font-size:9px;color:"+ruptureColor+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:9px"},
             "+1350 XP "+(STAT_LBL[d.reward.stat]||d.reward.stat)+" · +270 XP "+(STAT_LBL[d.reward.stat2]||d.reward.stat2)
           )
         ),
-        h("div",{style:"font-size:10px;color:var(--td);margin-top:8px;line-height:1.4"},secured+" salle"+(secured>1?"s":"")+" sécurisée"+(secured>1?"s":"")+" · XP conservés"),
         h("button",{onClick:validateDungeonRoom,style:"width:100%;margin-top:10px;padding:11px;border-radius:9px;border:1px solid "+ruptureColor+"77;background:"+ruptureColor+"18;color:"+ruptureColor+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"},"Vaincre le Boss de Rupture")
       );
     }
@@ -3336,17 +3334,18 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       return h("div",{class:"card",style:"border-color:"+ruptureColor+"88;background:linear-gradient(135deg,"+ruptureColor+"12,rgba(255,255,255,0.025))"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
           h("div",{style:"min-width:0"},
-            h("div",{class:"ctitle",style:"margin:0;color:"+ruptureColor},"⚠️ RUPTURE — "+d.title),
-            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"Boss de Rupture · "+fmtCD(remaining)+" restants")
+            h("div",{class:"ctitle",style:"margin:0;color:"+ruptureColor},"⚠️ RUPTURE — "+d.title)
           ),
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+ruptureColor+";border:1px solid "+ruptureColor+"66;border-radius:999px;padding:4px 7px;white-space:nowrap;text-transform:uppercase"},rb.rarityLabel||"Rupture")
         ),
         h("div",{style:"padding:10px;border-radius:10px;border:1px solid "+ruptureColor+"55;background:"+ruptureColor+"10"},
-          h("div",{style:"font-size:8.5px;color:"+ruptureColor+";font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px"},"☠️ Boss de Rupture"),
+          h("div",{style:"font-size:8.5px;color:"+ruptureColor+";font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px"},"☠️ Boss de Rupture · "+fmtCD(remaining)+" restants"),
           h("div",{style:"font-size:14px;color:var(--tx);font-weight:900;line-height:1.2"},rb.name),
-          h("div",{style:"font-size:10px;color:var(--td);line-height:1.4;margin-top:5px"},rb.objective)
-        ),
-        h("div",{style:"font-size:9px;color:var(--td);margin-top:7px;line-height:1.35"},completedRooms.length+" salle"+(completedRooms.length>1?"s":"")+" sécurisée"+(completedRooms.length>1?"s":"")+" · XP conservés")
+          h("div",{style:"font-size:10px;color:var(--td);line-height:1.4;margin-top:5px"},rb.objective),
+          h("div",{style:"font-size:8.5px;color:"+ruptureColor+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:8px"},
+            "+1350 XP "+(STAT_LBL[d.reward.stat]||d.reward.stat)+" · +270 XP "+(STAT_LBL[d.reward.stat2]||d.reward.stat2)
+          )
+        )
       );
     }
 
