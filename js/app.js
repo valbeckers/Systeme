@@ -3853,7 +3853,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }else if(id==="debtAcknowledgement"){
       if(state.questDebt&&state.questDebt.status==="active"){disabled=true;reason="Une dette est déjà active.";}
       else if(state.debtUseDay===today){disabled=true;reason="Une reconnaissance de dette a déjà été utilisée aujourd’hui.";}
-      else if(!objs.some(o=>o.daily&&!o.optional&&isDebtEligibleQuest(o)&&getDisplayProgress(o)<getEffectiveTarget(o.id))){disabled=true;reason="Aucune quête éligible incomplète aujourd’hui.";}
+      else if(!objs.some(o=>o.daily&&!o.optional&&isDebtEligibleQuest(o)&&(Number(tLog[o.id])||0)<getEffectiveTarget(o.id))){disabled=true;reason="Aucune quête éligible incomplète aujourd’hui.";}
     }else if(id==="recordHammer"){
       if(state.recordChallenge&&state.recordChallenge.week===wk){disabled=true;reason="Un record officiel est déjà actif cette semaine.";}
     }else if(id==="teleportCrystal"||id==="invisibilityCape"){
@@ -3953,7 +3953,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     let options=[];
     if(type==="overachievementMark")options=eligibleMarkQuests().map(obj=>({id:obj.id,label:obj.icon+" "+obj.name,obj}));
     if(type==="recordHammer")options=recordOptions().map(x=>({id:x.obj.id,label:x.obj.icon+" "+x.obj.name+" — "+fmtNum(x.best)+" "+x.obj.unit,obj:x.obj,best:x.best}));
-    if(type==="debtAcknowledgement")options=objs.filter(o=>o.daily&&!o.optional&&isDebtEligibleQuest(o)&&getDisplayProgress(o)<getEffectiveTarget(o.id)).map(o=>({id:o.id,label:o.icon+" "+o.name+" — "+fmtNum(getEffectiveTarget(o.id)-getDisplayProgress(o))+" "+o.unit+" manquants",obj:o}));
+    if(type==="debtAcknowledgement")options=objs.filter(o=>o.daily&&!o.optional&&isDebtEligibleQuest(o)&&(Number(tLog[o.id])||0)<getEffectiveTarget(o.id)).map(o=>({id:o.id,label:o.icon+" "+o.name+" — "+fmtNum(getEffectiveTarget(o.id)-(Number(tLog[o.id])||0))+" "+o.unit+" manquants",obj:o}));
     if(type==="invisibilityCape"||type==="cape"){const d=activeDungeon;options=d?d.rooms.slice(0,-1).map((r,i)=>!(d.completedRooms||[]).includes(i)?{id:i,label:(i+1)+". "+r.name}:null).filter(Boolean):[];}
     return h("div",{class:"modal-ov"},h("div",{class:"modal",style:"max-width:410px;width:calc(100% - 28px)"},h("div",{class:"mtitle"},type==="overachievementMark"?"CHOISIR UNE QUÊTE":type==="recordHammer"?"CHOISIR UN RECORD":type==="debtAcknowledgement"?"CRÉER UNE DETTE":"PASSER UNE SALLE"),h("div",{style:"display:flex;flex-direction:column;gap:8px;margin-top:12px"},options.map(x=>h("button",{key:x.id,onClick:()=>{
       if(type==="debtAcknowledgement"){createQuestDebt(x.obj);return;}
