@@ -3853,7 +3853,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h("div",{class:"modal",style:"position:relative;max-width:390px;width:calc(100% - 28px)"},
         h("button",{onClick:()=>setInventoryItem(null),style:"position:absolute;right:12px;top:10px;border:0;background:transparent;color:#fff;font-size:22px;cursor:pointer"},"×"),
         h("div",{class:"mtitle",style:"padding-right:28px"},it.name),
-        h("div",{style:"display:flex;justify-content:center;align-items:center;margin:14px 0 8px"},InventoryItemIcon(id,64)),
+        h("div",{style:"display:flex;justify-content:center;align-items:center;margin:14px 0 8px"},InventoryItemIcon(id,128)),
         h("div",{style:"text-align:center;font-family:Orbitron,sans-serif;font-size:10px;color:var(--td);margin-bottom:16px"},id==="regressionOrb"?"OBJET PERMANENT":"QUANTITÉ : "+qty),
         h("div",{style:"font-size:12px;line-height:1.6;color:var(--tx);margin-bottom:14px"},it.desc),
         !it.permanent&&h("div",{style:"margin-bottom:16px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);padding:10px 0"},
