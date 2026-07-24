@@ -3853,7 +3853,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }else if(id==="debtAcknowledgement"){
       if(state.questDebt&&state.questDebt.status==="active"){disabled=true;reason="Une dette est déjà active.";}
       else if(state.debtUseDay===today){disabled=true;reason="Une reconnaissance de dette a déjà été utilisée aujourd’hui.";}
-      else if(!dailyObjs.some(o=>isDebtEligibleQuest(o)&&getDisplayProgress(o)<getEffectiveTarget(o.id))){disabled=true;reason="Aucune quête éligible incomplète aujourd’hui.";}
+      else if(!objs.some(o=>o.daily&&!o.optional&&isDebtEligibleQuest(o)&&getDisplayProgress(o)<getEffectiveTarget(o.id))){disabled=true;reason="Aucune quête éligible incomplète aujourd’hui.";}
     }else if(id==="recordHammer"){
       if(state.recordChallenge&&state.recordChallenge.week===wk){disabled=true;reason="Un record officiel est déjà actif cette semaine.";}
     }else if(id==="teleportCrystal"||id==="invisibilityCape"){
