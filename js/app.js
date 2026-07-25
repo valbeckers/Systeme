@@ -3599,8 +3599,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;font-weight:900;letter-spacing:1px;color:"+color+";text-transform:uppercase"},"Marque du dépassement active"),
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:800;line-height:1.25;margin-top:3px"},name)
           )
-        ),
-        h("div",{style:"font-family:Orbitron,sans-serif;font-size:8.5px;color:"+color+";border:1px solid "+color+"66;border-radius:999px;padding:4px 7px;white-space:nowrap"},"+"+"500 XP")
+        )
       ),
       h("div",{style:"width:100%;padding:10px;border-radius:8px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.055);margin-bottom:10px"},
         h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;color:var(--td);letter-spacing:.8px;text-transform:uppercase"},"Record à battre"),
