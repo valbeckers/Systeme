@@ -1896,10 +1896,45 @@ function App(){
 
   // 10. Quete speciale
   const [now,setNow] = useState(Date.now());
+  const timedRefreshScrollRef = useRef(null);
+
+  function captureTimedRefreshScroll(){
+    const nodes=[...document.querySelectorAll(".scroll-area,.modal")];
+    timedRefreshScrollRef.current=nodes.map((node,index)=>({
+      index,
+      className:node.className||"",
+      scrollTop:node.scrollTop||0,
+      scrollLeft:node.scrollLeft||0
+    }));
+  }
+
   useEffect(()=>{
-    const id=setInterval(()=>setNow(Date.now()),30000); // tick toutes les 30s
+    // Le rafraîchissement reste actif toutes les 30 secondes.
+    // On mémorise seulement la position de chaque zone défilable avant le rendu.
+    const id=setInterval(()=>{
+      captureTimedRefreshScroll();
+      setNow(Date.now());
+    },30000);
     return ()=>clearInterval(id);
   },[]);
+
+  useEffect(()=>{
+    const saved=timedRefreshScrollRef.current;
+    if(!saved) return;
+    timedRefreshScrollRef.current=null;
+
+    // Les menus internes sont recréés par le rendu global : on restaure leur
+    // position juste après leur reconstruction, sans suspendre les minuteries.
+    requestAnimationFrame(()=>{
+      const nodes=[...document.querySelectorAll(".scroll-area,.modal")];
+      saved.forEach(pos=>{
+        const node=nodes[pos.index];
+        if(!node) return;
+        node.scrollTop=pos.scrollTop;
+        node.scrollLeft=pos.scrollLeft;
+      });
+    });
+  },[now]);
   useEffect(()=>{
     const day=eventDayStr(now);
     if(state.eventDay!==day){
