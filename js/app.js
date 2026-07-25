@@ -3916,6 +3916,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     return h("span",{style:"font-size:"+size+"px;line-height:1"},INVENTORY_ITEMS[id].emoji);
   }
   const INVENTORY_ITEMS={
+    codex:{name:"CODEX",short:"CODEX",emoji:"📖",action:"",desc:"Recueil permanent des règles et contenus de l’application.",obtain:[],permanent:true},
     regressionOrb:{name:"ORBE DE RÉGRESSION",short:"ORBE DE RÉGRESSION",emoji:"🔴",action:"ACTIVER",desc:"Permet de lancer une régression. Si plusieurs régressions existent, vous pourrez choisir laquelle activer.",obtain:[],permanent:true},
     debtAcknowledgement:{name:"RECONNAISSANCE DE DETTE",short:"RECONNAISSANCE DE DETTE",emoji:"📜",action:"UTILISER",desc:"Permet de créer une dette sur une quête éligible.",obtain:["Après avoir atteint un palier de 5 Streak (Taux : 100 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %)."]},
     dungeonKey:{name:"CLÉ DE DONJON",short:"CLÉ DE DONJON",emoji:"🗝️",action:"UTILISER",desc:"Cette clé vous permet d’entrer dans n’importe quel donjon.",obtain:["Après avoir complété la quête urgente, toutes les quêtes journalières et toutes les quêtes bonus dans la même journée (Taux : 100 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %)."]},
@@ -3932,9 +3933,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     teleportCrystal:{name:"CRISTAL DE TÉLÉPORTATION",short:"CRISTAL DE TÉLÉPORTATION",emoji:"💠",action:"UTILISER",desc:"Permet de quitter un donjon en cours de route. L’XP acquise jusque-là est conservée et le donjon se referme sans rupture.",obtain:["Après avoir complété un donjon (Taux : 10 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %)."]},
     invisibilityCape:{name:"CAPE D’INVISIBILITÉ",short:"CAPE D’INVISIBILITÉ",emoji:"👣",action:"UTILISER",desc:"Permet de passer une salle de donjon sans être vu. La salle est considérée comme terminée, sans gain d’XP.",obtain:["Après avoir complété un donjon (Taux : 10 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %)."]}
   };
-  function itemQty(id){ return id==="regressionOrb"?1:id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
+  function itemQty(id){ return ["codex","regressionOrb"].includes(id)?1:id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
   function Inventory(){
-    const ids=["regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","etherStopper","rerollToken","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape"]
+    const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","etherStopper","rerollToken","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape"]
       .sort((a,b)=>{
         const quantityDiff=itemQty(b)-itemQty(a);
         if(quantityDiff!==0)return quantityDiff;
@@ -3942,11 +3943,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       });
     return h("div",{class:"tab"},
       h("div",{style:"display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px"},ids.map(id=>{
-        const it=INVENTORY_ITEMS[id], qty=itemQty(id), grey=id!=="regressionOrb"&&!(id==="etherStopper"&&suspendedElixir)&&(qty<1||(["majorElixir","minorElixir","supremeElixir"].includes(id)&&(!!activeElixir||!!suspendedElixir)));
+        const it=INVENTORY_ITEMS[id], qty=itemQty(id), grey=!["codex","regressionOrb"].includes(id)&&!(id==="etherStopper"&&suspendedElixir)&&(qty<1||(["majorElixir","minorElixir","supremeElixir"].includes(id)&&(!!activeElixir||!!suspendedElixir)));
         return h("button",{key:id,onClick:()=>setInventoryItem(id),style:"position:relative;aspect-ratio:1/1;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.025);padding:8px;color:var(--tx);cursor:pointer;opacity:"+(grey?".48":"1")+";display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px"},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;line-height:1.25;letter-spacing:.5px;text-transform:uppercase;text-align:center;min-height:20px"},it.short),
           h("div",{style:"line-height:1"},InventoryItemIcon(id,38)),
-          h("div",{style:"position:absolute;right:6px;bottom:5px;border-radius:999px;min-width:20px;padding:2px 5px;background:rgba(0,0,0,.55);font-family:Orbitron,sans-serif;font-size:9px;color:#fff"},id==="regressionOrb"?"∞":id==="etherStopper"&&suspendedElixir?"PAUSE":"×"+qty)
+          h("div",{style:"position:absolute;right:6px;bottom:5px;border-radius:999px;min-width:20px;padding:2px 5px;background:rgba(0,0,0,.55);font-family:Orbitron,sans-serif;font-size:9px;color:#fff"},["codex","regressionOrb"].includes(id)?"∞":id==="etherStopper"&&suspendedElixir?"PAUSE":"×"+qty)
         );
       }))
     );
@@ -3959,6 +3960,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   }
   function InventoryItemModal(){
     if(!inventoryItem)return null;
+    if(inventoryItem==="codex")return h(Codex,null);
     const id=inventoryItem,it=INVENTORY_ITEMS[id],qty=itemQty(id);
     const isElixir=["majorElixir","minorElixir","supremeElixir"].includes(id);
     let disabled=(id==="regressionOrb"||(id==="etherStopper"&&suspendedElixir))?false:qty<1;
@@ -5560,53 +5562,44 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const specialList = STATS.flatMap(stat=>(SP[stat]||[]).map(q=>({...q,stat:q.stat||stat})));
     const elanList=EVENT_BONUSES.filter(e=>!e.disabled).map(e=>({...e,type:"bonus"}));
 
-    return h("div",{class:"tab"},
-      h("div",{class:"card"},
-        h("div",{class:"ctitle"},"Codex"),
-        h("div",{style:"font-size:12px;color:var(--td);line-height:1.45"},"Catalogue complet des quêtes existantes. Les objectifs des quêtes quotidiennes et hebdomadaires sont calculés au rang actuel.")
-      ),
-      h(Section,{id:"obl",title:"Quêtes journalières",count:required.length},renderRequiredCodex()),
-      h(Section,{id:"bonus",title:"Quêtes bonus",count:bonus.length+hiddenBonus.length},
-        h(Fragment,null,
-          groupByDominantStat(bonus,renderQuest),
-          hiddenBonus.length>0&&h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin:10px 0 8px"},"BONUS MASQUÉS / CONTEXTUELS"),
-          hiddenBonus.length>0&&groupByDominantStat(hiddenBonus,renderQuest)
-        )
-      ),
-      h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial)),
-      h(Section,{id:"dj",title:"Donjons",count:DUNGEONS.length},
-        h(Fragment,null,
-          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Après 24 h, un donjon inachevé subit une Rupture : les salles déjà validées et leurs XP sont conservés, toutes les étapes restantes sont remplacées par un Boss de Rupture tiré selon sa rareté. Ce boss dispose de 24 h et ne peut pas provoquer une seconde rupture."),
-          groupByDominantStat(DUNGEONS,renderDungeonCodex,dg=>dg.stat)
-        )
-      ),
-      false&&h(Section,{id:"elan",title:"Élans",count:elanList.length},
-        h(Fragment,null,
-          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:7px"},"Bonus automatiques de +15 % XP accordés le lendemain d’un donjon complété et appliqués aux gains de la stat concernée."),
-          h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-bottom:10px"},
-            h("div",{style:detailStyle},"▸ Déclenchement : le lendemain d’un donjon normal complété"),
-            h("div",{style:detailStyle},"▸ Sélection : une stat aléatoire parmi Santé / Force / Esprit / Endurance / Agilité, pondérée selon les XP gagnés la veille"),
-            h("div",{style:detailStyle},"▸ Exclusion : la Discipline ne peut pas être tirée"),
-            h("div",{style:detailStyle},"▸ Durée : jusqu’au reset de 7h"),
-            h("div",{style:detailStyle},"▸ Effet : bonus automatique sur les gains de la stat concernée")
-          ),
-          elanList.map(renderElanCodex)
-        )
-      ),
-      h(Section,{id:"debt",title:"Système de dette",count:1},
-        h(Fragment,null,
-          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:7px"},"Le système de dette permet de reporter uniquement la quantité manquante d’une quête obligatoire compensable, afin de préserver le streak sous condition de remboursement."),
-          h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-bottom:2px"},
-            h("div",{style:detailStyle},"▸ Déclenchement : lorsqu’une quête obligatoire compensable n’est pas terminée"),
-            h("div",{style:detailStyle},"▸ Report : seule la quantité manquante devient une dette"),
-            h("div",{style:detailStyle},"▸ Activation : nécessite une Reconnaissance de dette, utilisable uniquement depuis l’inventaire"),
-            h("div",{style:detailStyle},"▸ Limites : une seule dette active et une seule création de dette par jour"),
-            h("div",{style:detailStyle},"▸ Streak : gelé jusqu’au remboursement, puis préservé si la dette est soldée"),
-            h("div",{style:detailStyle},"▸ XP et records : XP conservés, sans bonus de dépassement et sans record"),
-            h("div",{style:detailStyle},"▸ Quêtes compensables : Pecs, Abdos, Jambes, Tractions négatives et Lecture")
+    return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setInventoryItem(null)}},
+      h("div",{class:"modal",style:"position:relative;max-width:470px;width:calc(100% - 24px);max-height:88vh;overflow:auto;padding-top:16px"},
+        h("button",{onClick:()=>setInventoryItem(null),style:"position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:999px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);color:var(--tx);font-size:18px;line-height:1;cursor:pointer;z-index:2"},"×"),
+        h("div",{style:"display:flex;flex-direction:column;align-items:center;text-align:center;padding:2px 36px 15px"},
+          h("div",{style:"font-size:58px;line-height:1;margin-bottom:8px"},"📖"),
+          h("div",{class:"mtitle",style:"margin:0"},"CODEX"),
+          h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin-top:7px"},"Catalogue complet des quêtes et systèmes de l’application.")
+        ),
+        h(Section,{id:"dj",title:"Donjons",count:DUNGEONS.length},
+          h(Fragment,null,
+            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Après 24 h, un donjon inachevé subit une Rupture : les salles déjà validées et leurs XP sont conservés, toutes les étapes restantes sont remplacées par un Boss de Rupture tiré selon sa rareté. Ce boss dispose de 24 h et ne peut pas provoquer une seconde rupture."),
+            groupByDominantStat(DUNGEONS,renderDungeonCodex,dg=>dg.stat)
+          )
+        ),
+        h(Section,{id:"bonus",title:"Quêtes bonus",count:bonus.length+hiddenBonus.length},
+          h(Fragment,null,
+            groupByDominantStat(bonus,renderQuest),
+            hiddenBonus.length>0&&h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin:10px 0 8px"},"BONUS MASQUÉS / CONTEXTUELS"),
+            hiddenBonus.length>0&&groupByDominantStat(hiddenBonus,renderQuest)
+          )
+        ),
+        h(Section,{id:"obl",title:"Quêtes journalières",count:required.length},renderRequiredCodex()),
+        h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial)),
+        h(Section,{id:"debt",title:"Système de dette",count:1},
+          h(Fragment,null,
+            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:7px"},"Le système de dette permet de reporter uniquement la quantité manquante d’une quête obligatoire compensable, afin de préserver le streak sous condition de remboursement."),
+            h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-bottom:2px"},
+              h("div",{style:detailStyle},"▸ Déclenchement : lorsqu’une quête obligatoire compensable n’est pas terminée"),
+              h("div",{style:detailStyle},"▸ Report : seule la quantité manquante devient une dette"),
+              h("div",{style:detailStyle},"▸ Activation : nécessite une Reconnaissance de dette, utilisable uniquement depuis l’inventaire"),
+              h("div",{style:detailStyle},"▸ Limites : une seule dette active et une seule création de dette par jour"),
+              h("div",{style:detailStyle},"▸ Streak : gelé jusqu’au remboursement, puis préservé si la dette est soldée"),
+              h("div",{style:detailStyle},"▸ XP et records : XP conservés, sans bonus de dépassement et sans record"),
+              h("div",{style:detailStyle},"▸ Quêtes compensables : Pecs, Abdos, Jambes, Tractions négatives et Lecture")
+            )
           )
         )
-      ),
+      )
     );
   }
   // ─── RENDU PRINCIPAL ──────────────────────────────────────────────────
@@ -5642,7 +5635,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             ),
             prestige>0&&h("div",{class:"prestige-badge"},"\u269B\uFE0F Ascension "+ROMAN[prestige-1]),
             h("div",{style:"display:flex;align-items:center;gap:2px;flex:0 0 auto;transform:translateY(-2px)"},
-              h("button",{class:"gbtn",title:"Codex","aria-label":"Ouvrir le Codex",style:"display:flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;font-size:23px;line-height:1",onClick:()=>switchTab("codex")},"📜"),
               h("button",{class:"gbtn",title:"Réglages","aria-label":"Ouvrir les réglages",style:"display:flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;font-size:24px;line-height:1",onClick:()=>setShowSet(true)},"⚙️")
             )
           )
@@ -5655,7 +5647,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         tab==="inventory"&&h(Inventory,null),
         tab==="stats"   &&h(Stats,null),
         tab==="history" && History(),
-        tab==="codex"   && h(Codex,null),
         floats.map(f=>h("div",{key:f.id,class:"xpfloat",style:"top:"+(f.y||"40%")+(typeof f.y==="number"?"px":"")+";left:50%;transform:translateX(-50%);white-space:pre-line;text-align:center"},f.txt))
       ),
       h("nav",{class:"nav"},
