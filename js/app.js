@@ -3602,15 +3602,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         ),
         h("div",{style:"font-family:Orbitron,sans-serif;font-size:8.5px;color:"+color+";border:1px solid "+color+"66;border-radius:999px;padding:4px 7px;white-space:nowrap"},"+"+"500 XP")
       ),
-      h("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px"},
-        h("div",{style:"padding:8px;border-radius:8px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.055)"},
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;color:var(--td);letter-spacing:.8px;text-transform:uppercase"},"Record à battre"),
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:13px;font-weight:900;color:var(--tx);margin-top:4px"},fmtNum(target)+" "+questRecordUnit(unit,target))
-        ),
-        h("div",{style:"padding:8px;border-radius:8px;background:"+color+"0d;border:1px solid "+color+"44"},
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;color:var(--td);letter-spacing:.8px;text-transform:uppercase"},"Objectif"),
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:13px;font-weight:900;color:"+color+";margin-top:4px"},fmtNum(goal)+" "+pluralUnit+" ou plus")
-        )
+      h("div",{style:"width:100%;padding:10px;border-radius:8px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.055);margin-bottom:10px"},
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;color:var(--td);letter-spacing:.8px;text-transform:uppercase"},"Record à battre"),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:15px;font-weight:900;color:var(--tx);margin-top:4px"},fmtNum(target)+" "+questRecordUnit(unit,target))
       ),
       h("div",{style:"display:flex;justify-content:space-between;align-items:center;font-family:Orbitron,sans-serif;font-size:9px;margin-bottom:5px"},
         h("span",{style:"color:var(--td)"},"MEILLEURE PERFORMANCE CETTE SEMAINE"),
