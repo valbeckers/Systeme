@@ -3610,7 +3610,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("span",{style:"color:"+(bestThisWeek>target?"#4ade80":color)},fmtNum(bestThisWeek)+" / "+fmtNum(goal)+" "+pluralUnit)
       ),
       h("div",{class:"qbar",style:"height:7px"},
-        h("div",{class:"qfill"+(bestThisWeek>target?" done":pct>0?" partial":""),style:"width:"+pct+"%;background:"+(bestThisWeek>target?"#4ade80":"linear-gradient(90deg,"+color+"99,"+color+")")+";box-shadow:0 0 10px "+color+"55"})
+        h("div",{
+          class:"qfill"+(pct>0?" partial":""),
+          style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,transparent,transparent 4px,"+color+" 4px,"+color+" 8px);background-size:11.31px 11.31px;opacity:.8;box-shadow:0 0 10px "+color+"33"
+        })
       ),
       h("div",{style:"display:flex;justify-content:space-between;gap:10px;margin-top:8px;font-family:Orbitron,sans-serif;font-size:8.5px;letter-spacing:.55px;text-transform:uppercase"},
         h("span",{style:"color:var(--td)"},"Récompense : +500 XP "+(STAT_LBL[stat]||stat||"")),
