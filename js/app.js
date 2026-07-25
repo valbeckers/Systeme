@@ -1673,6 +1673,16 @@ function App(){
   const wLog  = state.weeklyLog[wk]||{};
   const prestige = state.prestige||0;
 
+  // Une Marque du dépassement est valable uniquement pendant sa semaine d’activation.
+  useEffect(()=>{
+    const challenge=state.recordChallenge;
+    if(!challenge || challenge.week===wk) return;
+    setState(s=>s.recordChallenge&&s.recordChallenge.week!==wk
+      ? {...s,recordChallenge:null}
+      : s
+    );
+  },[wk,state.recordChallenge?.week]);
+
   // Une seule sortie bonus par jour : Running ou Rando.
   const runQuestObj = objs.find(o=>o.id==="run") || DEFS.find(o=>o.id==="run");
   const hikeQuestObj = objs.find(o=>o.id==="walk") || DEFS.find(o=>o.id==="walk");
@@ -3547,6 +3557,75 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
+  function RecordChallengeHomeCard(){
+    const challenge=state.recordChallenge;
+    if(!challenge || challenge.week!==wk) return null;
+
+    const currentObj=objs.find(o=>o.id===challenge.questId)
+      || DEFS.find(o=>o.id===challenge.questId)
+      || null;
+    const name=(currentObj&&currentObj.name)||challenge.name||"Record officiel";
+    const icon=(currentObj&&currentObj.icon)||challenge.icon||"✨";
+    const unit=(currentObj&&currentObj.unit)||challenge.unit||"";
+    const stat=(currentObj&&currentObj.stat)||challenge.stat||null;
+    const color=STAT_COLOR[stat]||"#a78bfa";
+    const target=Math.max(0,Number(challenge.target)||0);
+
+    let bestThisWeek=0;
+    Object.entries(state.dailyLog||{}).forEach(([day,log])=>{
+      const date=new Date(day+"T12:00:00");
+      if(Number.isNaN(date.getTime()) || wkStr(date)!==challenge.week) return;
+      const value=Number(log&&log[challenge.questId]);
+      if(Number.isFinite(value)&&value>bestThisWeek) bestThisWeek=value;
+    });
+
+    const stepByUnit={rep:1,verre:1,page:1,objet:1,contact:1,action:1,repas:1,"sér.":1,km:.01,min:.1,h:.1};
+    const step=stepByUnit[unit]||1;
+    const goal=target+step;
+    const pct=goal>0?Math.max(0,Math.min(100,(bestThisWeek/goal)*100)):0;
+
+    const weekEnd=new Date(now);
+    const daysUntilMonday=((8-weekEnd.getDay())%7)||7;
+    weekEnd.setDate(weekEnd.getDate()+daysUntilMonday);
+    weekEnd.setHours(0,0,0,0);
+    const remaining=Math.max(0,weekEnd.getTime()-now);
+
+    const pluralUnit=questRecordUnit(unit,goal);
+    return h("div",{class:"card",style:"border-color:"+color+"88;background:linear-gradient(135deg,"+color+"16,rgba(255,255,255,.022));box-shadow:0 0 20px "+color+"18"},
+      h("div",{style:"display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px"},
+        h("div",{style:"display:flex;align-items:center;gap:9px;min-width:0"},
+          QuestIcon(challenge.questId,icon,20,"width:28px;height:28px"),
+          h("div",{style:"min-width:0"},
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;font-weight:900;letter-spacing:1px;color:"+color+";text-transform:uppercase"},"Marque du dépassement active"),
+            h("div",{style:"font-size:13px;color:var(--tx);font-weight:800;line-height:1.25;margin-top:3px"},name)
+          )
+        ),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:8.5px;color:"+color+";border:1px solid "+color+"66;border-radius:999px;padding:4px 7px;white-space:nowrap"},"+"+"500 XP")
+      ),
+      h("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px"},
+        h("div",{style:"padding:8px;border-radius:8px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.055)"},
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;color:var(--td);letter-spacing:.8px;text-transform:uppercase"},"Record à battre"),
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:13px;font-weight:900;color:var(--tx);margin-top:4px"},fmtNum(target)+" "+questRecordUnit(unit,target))
+        ),
+        h("div",{style:"padding:8px;border-radius:8px;background:"+color+"0d;border:1px solid "+color+"44"},
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;color:var(--td);letter-spacing:.8px;text-transform:uppercase"},"Objectif"),
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:13px;font-weight:900;color:"+color+";margin-top:4px"},fmtNum(goal)+" "+pluralUnit+" ou plus")
+        )
+      ),
+      h("div",{style:"display:flex;justify-content:space-between;align-items:center;font-family:Orbitron,sans-serif;font-size:9px;margin-bottom:5px"},
+        h("span",{style:"color:var(--td)"},"MEILLEURE PERFORMANCE CETTE SEMAINE"),
+        h("span",{style:"color:"+(bestThisWeek>target?"#4ade80":color)},fmtNum(bestThisWeek)+" / "+fmtNum(goal)+" "+pluralUnit)
+      ),
+      h("div",{class:"qbar",style:"height:7px"},
+        h("div",{class:"qfill"+(bestThisWeek>target?" done":pct>0?" partial":""),style:"width:"+pct+"%;background:"+(bestThisWeek>target?"#4ade80":"linear-gradient(90deg,"+color+"99,"+color+")")+";box-shadow:0 0 10px "+color+"55"})
+      ),
+      h("div",{style:"display:flex;justify-content:space-between;gap:10px;margin-top:8px;font-family:Orbitron,sans-serif;font-size:8.5px;letter-spacing:.55px;text-transform:uppercase"},
+        h("span",{style:"color:var(--td)"},"Récompense : +500 XP "+(STAT_LBL[stat]||stat||"")),
+        h("span",{style:"color:"+color+";white-space:nowrap"},"Temps restant : "+fmtCD(remaining))
+      )
+    );
+  }
+
   function Home(){
     const dailyObjs = sortStat(objs.filter(o=>o.daily&&!o.optional));
     const weeklyObjs = sortStat(objs.filter(o=>o.weekly));
@@ -3695,6 +3774,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         )
       ),
 
+      h(RecordChallengeHomeCard,null),
       h(DebtCard,null),
       activeElixir&&h("div",{style:"margin:-2px 0 12px;padding:9px 11px;border-left:2px solid "+(activeElixir.kind==="supremeElixir"?"#9333ea":(STAT_COLOR[activeElixir.stat]||rank.color))+";background:rgba(255,255,255,.025);font-family:Orbitron,sans-serif"},
         h("div",{style:"font-size:9px;color:var(--td);letter-spacing:1.2px;text-transform:uppercase"},activeElixir.kind==="majorElixir"?"Élixir d’expérience majeur":activeElixir.kind==="supremeElixir"?"Élixir d’expérience magistral":"Élixir d’expérience mineur"),
@@ -4049,7 +4129,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     if(type==="invisibilityCape"||type==="cape"){const d=activeDungeon;options=d?d.rooms.slice(0,-1).map((r,i)=>!(d.completedRooms||[]).includes(i)?{id:i,label:(i+1)+". "+r.name}:null).filter(Boolean):[];}
     return h("div",{class:"modal-ov"},h("div",{class:"modal",style:"max-width:410px;width:calc(100% - 28px)"},h("div",{class:"mtitle"},type==="recordHammer"?"CHOISIR UN RECORD":type==="debtAcknowledgement"?"CRÉER UNE DETTE":"PASSER UNE SALLE"),h("div",{style:"display:flex;flex-direction:column;gap:8px;margin-top:12px"},options.map(x=>h("button",{key:x.id,onClick:()=>{
       if(type==="debtAcknowledgement"){createQuestDebt(x.obj);return;}
-      if(type==="recordHammer"){setState(s=>({...s,inventory:{...(s.inventory||{}),recordHammer:Math.max(0,(Number(s.inventory&&s.inventory.recordHammer)||0)-1)},recordChallenge:{questId:x.obj.id,target:x.best,week:wk,startedAt:Date.now()}}));}
+      if(type==="recordHammer"){setState(s=>({...s,inventory:{...(s.inventory||{}),recordHammer:Math.max(0,(Number(s.inventory&&s.inventory.recordHammer)||0)-1)},recordChallenge:{questId:x.obj.id,target:x.best,week:wk,startedAt:Date.now(),name:x.obj.name,icon:x.obj.icon,unit:x.obj.unit,stat:x.obj.stat}}));}
       else {setState(s=>{const ad=s.activeDungeon;if(!ad)return s;return {...s,inventory:{...(s.inventory||{}),invisibilityCape:Math.max(0,(Number(s.inventory&&s.inventory.invisibilityCape)||0)-1)},activeDungeon:{...ad,completedRooms:[...(ad.completedRooms||[]),Number(x.id)].filter((v,i,a)=>a.indexOf(v)===i).sort((a,b)=>a-b)}};});}
       setSpecialItemChoice(null);setItemUseUp({id:type==="cape"?"invisibilityCape":type});
     },style:"padding:11px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:var(--tx);font-family:Orbitron,sans-serif;font-size:9px"},x.label))),!options.length&&h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:10px"},"Aucun choix disponible."),h("button",{onClick:()=>setSpecialItemChoice(null),style:"width:100%;margin-top:12px;padding:10px"},"Annuler")));
