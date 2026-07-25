@@ -3939,8 +3939,24 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function Inventory(){
     const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","etherStopper","rerollToken","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape"]
       .sort((a,b)=>{
-        const quantityDiff=itemQty(b)-itemQty(a);
-        if(quantityDiff!==0)return quantityDiff;
+        const permanentA=["codex","regressionOrb"].includes(a);
+        const permanentB=["codex","regressionOrb"].includes(b);
+        const qtyA=itemQty(a);
+        const qtyB=itemQty(b);
+
+        // Ordre :
+        // 1. objets possédés en quantité finie, triés par quantité décroissante ;
+        // 2. objets permanents affichés avec ∞ ;
+        // 3. objets non possédés ;
+        const groupA=qtyA>0?(permanentA?1:0):2;
+        const groupB=qtyB>0?(permanentB?1:0):2;
+        if(groupA!==groupB)return groupA-groupB;
+
+        if(groupA===0){
+          const quantityDiff=qtyB-qtyA;
+          if(quantityDiff!==0)return quantityDiff;
+        }
+
         return INVENTORY_ITEMS[a].short.localeCompare(INVENTORY_ITEMS[b].short,"fr",{sensitivity:"base"});
       });
     return h("div",{class:"tab"},
