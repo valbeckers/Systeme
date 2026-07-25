@@ -5584,21 +5584,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           )
         ),
         h(Section,{id:"obl",title:"Quêtes journalières",count:required.length},renderRequiredCodex()),
-        h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial)),
-        h(Section,{id:"debt",title:"Système de dette",count:1},
-          h(Fragment,null,
-            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-bottom:7px"},"Le système de dette permet de reporter uniquement la quantité manquante d’une quête obligatoire compensable, afin de préserver le streak sous condition de remboursement."),
-            h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-bottom:2px"},
-              h("div",{style:detailStyle},"▸ Déclenchement : lorsqu’une quête obligatoire compensable n’est pas terminée"),
-              h("div",{style:detailStyle},"▸ Report : seule la quantité manquante devient une dette"),
-              h("div",{style:detailStyle},"▸ Activation : nécessite une Reconnaissance de dette, utilisable uniquement depuis l’inventaire"),
-              h("div",{style:detailStyle},"▸ Limites : une seule dette active et une seule création de dette par jour"),
-              h("div",{style:detailStyle},"▸ Streak : gelé jusqu’au remboursement, puis préservé si la dette est soldée"),
-              h("div",{style:detailStyle},"▸ XP et records : XP conservés, sans bonus de dépassement et sans record"),
-              h("div",{style:detailStyle},"▸ Quêtes compensables : Pecs, Abdos, Jambes, Tractions négatives et Lecture")
-            )
-          )
-        )
+        h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial))
       )
     );
   }
