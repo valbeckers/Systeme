@@ -5564,7 +5564,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setInventoryItem(null)}},
       h("div",{class:"modal",style:"position:relative;max-width:470px;width:calc(100% - 24px);max-height:88vh;overflow:auto;padding-top:16px"},
-        h("button",{onClick:()=>setInventoryItem(null),style:"position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:999px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);color:var(--tx);font-size:18px;line-height:1;cursor:pointer;z-index:2"},"×"),
+        h("button",{onClick:()=>setInventoryItem(null),style:"position:absolute;right:12px;top:10px;border:0;background:transparent;color:#fff;font-size:22px;cursor:pointer"},"×"),
         h("div",{style:"display:flex;flex-direction:column;align-items:center;text-align:center;padding:2px 36px 15px"},
           h("div",{style:"font-size:58px;line-height:1;margin-bottom:8px"},"📖"),
           h("div",{class:"mtitle",style:"margin:0"},"CODEX"),
