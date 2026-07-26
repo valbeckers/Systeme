@@ -5686,7 +5686,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{style:"font-size:18px;line-height:1;min-width:24px;text-align:center"},dg.icon),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},dg.title),
-            h("div",{style:"font-size:10px;color:"+(STAT_COLOR[dg.stat]||dg.color)+";margin-top:3px;font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase"},statLabel(dg.stat)),
             h("div",{style:"margin-top:7px"},rewards.map((r,i)=>h(StatPill,{key:i,stat:r.stat,xp:r.xp}))),
             h("div",{style:"display:flex;flex-direction:column;gap:5px;margin-top:8px"},
               dg.rooms.map((room,i)=>h("div",{key:i,style:detailStyle},
