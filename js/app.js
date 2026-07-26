@@ -3080,7 +3080,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{class:"qhdr",style:"align-items:center",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:5px"},
           h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:center;gap:7px;line-height:1.25;white-space:normal;overflow:visible;min-height:18px"},QuestIcon(obj.id,obj.icon,14,"width:18px;height:18px;margin-top:0"),h("span",{style:"line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip;display:inline-flex;align-items:center;min-height:18px"},obj.name)),
           h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.25;padding-top:0"},
-            (obj.binaryXp+" XP "+(STAT_LBL[obj.stat]||obj.stat))
+            (obj.binaryXp+" XP · "+(STAT_LBL[obj.stat]||obj.stat))
           )
         ),
         h("div",{style:"display:flex;gap:8px;margin-top:8px"},
@@ -3123,25 +3123,25 @@ const BONUS_BADGE_COLOR = "#fbbf24";
                   const primaryStat = STAT_LBL[tier.stat]||tier.stat;
                   const secondaryStat = tier.stat2 ? (STAT_LBL[tier.stat2]||tier.stat2) : null;
                   const thirdStat = tier.stat3 ? (STAT_LBL[tier.stat3]||tier.stat3) : null;
-                  let rewardText = tier.xp+" XP "+primaryStat;
+                  let rewardText = tier.xp+" XP · "+primaryStat;
                   if(tier.xp2 && tier.stat2){
-                    rewardText += tier.xp2===tier.xp ? " + "+secondaryStat : " + "+tier.xp2+" XP "+secondaryStat;
+                    rewardText += tier.xp2===tier.xp ? " + "+secondaryStat : " + "+tier.xp2+" XP · "+secondaryStat;
                   }
                   if(tier.xp3 && tier.stat3){
-                    rewardText += tier.xp3===tier.xp ? " + "+thirdStat : " + "+tier.xp3+" XP "+thirdStat;
+                    rewardText += tier.xp3===tier.xp ? " + "+thirdStat : " + "+tier.xp3+" XP · "+thirdStat;
                   }
                   return h("div",{key:i,style:"opacity:"+(d>=tier.at?"1":"0.6")+";white-space:nowrap"},(d>=tier.at?"\u2713 ":"")+rewardText);
                 }),
                 obj.overGoalXpPer&&h("div",{style:"opacity:"+(d>(obj.target||obj.base||0)?"1":"0.6")+";white-space:nowrap"},"+"+obj.overGoalXpPer+" XP/"+obj.unit+" au-delà")
               )
             :obj.binary
-              ?(obj.binaryXp+" XP "+(STAT_LBL[obj.stat]||obj.stat))
+              ?(obj.binaryXp+" XP · "+(STAT_LBL[obj.stat]||obj.stat))
               :obj.stat2
                 ?h(Fragment,null,
-                    h("div",null,obj.xpPer+" XP/"+obj.unit+" "+(STAT_LBL[obj.stat]||obj.stat)),
-                    h("div",null,(obj.xpPer2||obj.xpPer)+" XP/"+obj.unit+" "+(STAT_LBL[obj.stat2]||obj.stat2))
+                    h("div",null,obj.xpPer+" XP/"+obj.unit+" · "+(STAT_LBL[obj.stat]||obj.stat)),
+                    h("div",null,(obj.xpPer2||obj.xpPer)+" XP/"+obj.unit+" · "+(STAT_LBL[obj.stat2]||obj.stat2))
                   )
-                :(obj.xpPer+" XP/"+obj.unit+" "+(STAT_LBL[obj.stat]||obj.stat))
+                :(obj.xpPer+" XP/"+obj.unit+" · "+(STAT_LBL[obj.stat]||obj.stat))
         )
       ),
       h("div",{class:"qrow"},
@@ -3904,12 +3904,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       ),
 
       h(RecordChallengeHomeCard,null),
-      h(DebtCard,null),
       activeElixir&&h("div",{style:"margin:-2px 0 12px;padding:9px 11px;border-left:2px solid "+(activeElixir.kind==="supremeElixir"?"#9333ea":(STAT_COLOR[activeElixir.stat]||rank.color))+";background:rgba(255,255,255,.025);font-family:Orbitron,sans-serif"},
         h("div",{style:"font-size:9px;color:var(--td);letter-spacing:1.2px;text-transform:uppercase"},activeElixir.kind==="majorElixir"?"Élixir d’expérience majeur":activeElixir.kind==="supremeElixir"?"Élixir d’expérience magistral":"Élixir d’expérience mineur"),
         h("div",{style:"margin-top:4px;font-size:11px;color:"+(activeElixir.kind==="supremeElixir"?"#9333ea":(STAT_COLOR[activeElixir.stat]||rank.color))+";font-weight:800"},"+"+Math.round((activeElixir.pct||0)*100)+" % XP"+(activeElixir.kind==="supremeElixir"?" — TOUTES LES STATISTIQUES":" — "+(STAT_LBL[activeElixir.stat]||activeElixir.stat))+" · "+fmtCD((activeElixir.expiresAt||0)-now))
       ),
 
+      h(DebtCard,null),
       activeBreach&&h(BreachCard,{compact:true}),
       activeSq&&h("div",{class:"card",style:"border-color:#ef444444"},
         h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Quête urgente"+(activeSq.tier?" · "+(SQ_TIER_LABEL[activeSq.tier]||""):"")),
@@ -3972,6 +3972,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
 
     return h("div",{class:"tab"},
+      h(DebtCard,null),
       activeBreach&&h(BreachCard,null),
       (!completedSq||activeSq)&&h("div",{class:"card",style:"border-color:#ef444444"},
         h("div",{class:"shdr"},
@@ -3987,7 +3988,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             )
       ),
       activeDungeon&&h(DungeonCard,null),
-      h(DebtCard,null),
       h("div",{class:"card"},
         h(SectionHeader,{title:"Quêtes journalières",done:reqDone,total:reqTotal}),
         req.map(o=>h(QI,{key:o.id,obj:o})),
@@ -4000,7 +4000,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h(SectionHeader,{title:"Quêtes bonus",done:bonDone,total:bonTotal}),
         bon.map(o=>o.isEnduranceChoice?h(EnduranceChoiceItem,{key:o.id,mode:"quest"}):h(QI,{key:o.id,obj:o}))
       ),
-      h(DungeonChoiceCard,null),
+      !activeDungeon&&h(DungeonChoiceCard,null),
     );
   }
 
