@@ -5811,6 +5811,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{class:"mtitle",style:"padding-right:28px"},"CODEX"),
         h("div",{style:"display:flex;justify-content:center;align-items:center;margin:14px 0 8px"},InventoryItemIcon("codex",128)),
         h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;text-align:center;margin-bottom:15px"},"Catalogue complet des quêtes et systèmes de l’application."),
+        h(Section,{id:"breach",title:"Brèches",count:breachList.length},h(Fragment,null,h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Une Brèche a 1 % de chance d’apparaître au reset quotidien. Elle remplace la quête urgente du jour, reste ouverte 72 h et se referme sans conséquence en cas d’échec. Sa réussite garantit un objet aléatoire non permanent."),groupByDominantStat(breachList,renderSpecial))),
         h(Section,{id:"dj",title:"Donjons",count:DUNGEONS.length},
           h(Fragment,null,
             h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Après 24 h, un donjon inachevé subit une Rupture : les salles déjà validées et leurs XP sont conservés, toutes les étapes restantes sont remplacées par un Boss de Rupture tiré selon sa rareté. Ce boss dispose de 24 h et ne peut pas provoquer une seconde rupture."),
@@ -5826,7 +5827,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         ),
         h(Section,{id:"obl",title:"Quêtes journalières",count:required.length},renderRequiredCodex()),
         h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial)),
-        h(Section,{id:"breach",title:"Brèches",count:breachList.length},h(Fragment,null,h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Une Brèche a 1 % de chance d’apparaître au reset quotidien. Elle remplace la quête urgente du jour, reste ouverte 72 h et se referme sans conséquence en cas d’échec. Sa réussite garantit un objet aléatoire non permanent."),groupByDominantStat(breachList,renderSpecial)))
+
       )
     );
   }
