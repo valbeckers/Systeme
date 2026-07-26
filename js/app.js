@@ -72,7 +72,7 @@ const DEFS = [
   {id:"push",   name:"Pecs", unit:"rep", xpPer:3, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦾", base:30},
   {id:"abs",    name:"Abdos", unit:"rep", xpPer:1.5, daily:true, weekly:false,optional:false,stat:"Force", icon:"🧱", base:60},
   {id:"squats", name:"Jambes", unit:"rep", xpPer:3, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦿", base:15, stat2:"Agilite", xpPer2:3},
-  {id:"negative_pullups", name:"Tractions négatives", unit:"rep", xpPer:12, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦾", base:8, startDate:"2026-07-14"},
+  {id:"negative_pullups", name:"Dos & Biceps", unit:"rep", xpPer:12, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦾", base:8, startDate:"2026-07-14"},
   {id:"calves", name:"Mollets",unit:"rep", xpPer:1.5, daily:false, weekly:false,optional:false,legacyRotation:true,stat:"Force", icon:"🦵🏻", base:30, stat2:"Agilite", xpPer2:1},
   {id:"grips",  name:"Grip",      unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Force",         icon:"\u270A\uD83C\uDFFB",         base:10, fixedBase:true},
   // ─── ESPRIT ───────────────────────────────────────────────────────────
@@ -1476,6 +1476,10 @@ const EXERCISE_ROTATIONS = {
     {id:"pushups",label:"Pompes",icon:"💪🏼"},
     {id:"dips",label:"Dips",icon:"💪🏼"},
   ],
+  back:[
+    {id:"negative_pullups",label:"Tractions négatives",icon:"💪🏼"},
+    {id:"australian_pullups",label:"Tractions australiennes",icon:"💪🏼"},
+  ],
   abs:[
     {id:"crunches",label:"Crunches",icon:"🧎🏻"},
     {id:"leg_raises",label:"Levées de jambes",icon:"🦵🏻"},
@@ -1488,10 +1492,10 @@ const EXERCISE_ROTATIONS = {
     {id:"lunges",label:"Fentes",icon:"🦵🏻"},
   ],
 };
-const EXERCISE_FAMILY_LABELS={push:"Pecs",abs:"Abdos",squats:"Jambes"};
-const EXERCISE_FAMILY_ICONS={push:"🦾",abs:"🧱",squats:"🦿"};
-const LEGACY_EXERCISE_DEFAULTS={push:"pushups",abs:"crunches",legs:"squats"};
-function isExerciseFamilyQuestId(id){ return id==="push"||id==="abs"||id==="squats"; }
+const EXERCISE_FAMILY_LABELS={push:"Pecs",negative_pullups:"Dos & Biceps",abs:"Abdos",squats:"Jambes"};
+const EXERCISE_FAMILY_ICONS={push:"🦾",negative_pullups:"🦾",abs:"🧱",squats:"🦿"};
+const LEGACY_EXERCISE_DEFAULTS={push:"pushups",back:"negative_pullups",abs:"crunches",legs:"squats"};
+function isExerciseFamilyQuestId(id){ return id==="push"||id==="negative_pullups"||id==="abs"||id==="squats"; }
 function exerciseFamilyLabel(id,fallback){ return EXERCISE_FAMILY_LABELS[id]||fallback||id; }
 function exerciseFamilyIcon(id,fallback){ return EXERCISE_FAMILY_ICONS[id]||fallback||"•"; }
 
@@ -1518,13 +1522,17 @@ function previousRotationChoice(history,day,family){
 }
 function ensureExerciseRotationForDay(state,day){
   const history={...(state.exerciseRotationByDay||{})};
-  if(history[day]) return state;
-  history[day]={};
+  const current={...(history[day]||{})};
+  let changed=!history[day];
   for(const [family,options] of Object.entries(EXERCISE_ROTATIONS)){
+    if(options.some(o=>o.id===current[family])) continue;
     const last=previousRotationChoice(history,day,family);
     const picked=weightedExercisePick(options,last);
-    history[day][family]=picked&&picked.id;
+    current[family]=picked&&picked.id;
+    changed=true;
   }
+  if(!changed) return state;
+  history[day]=current;
   return {...state,exerciseRotationByDay:history};
 }
 function cleanExerciseRotationByDay(raw){
@@ -1546,10 +1554,12 @@ function rotatedQuestObjects(baseObjs,rotation,stats,totalXp){
   const tier=statLevelTier(force);
   const byId=(family,id)=>EXERCISE_ROTATIONS[family].find(o=>o.id===id)||EXERCISE_ROTATIONS[family][0];
   const chest=byId("push",rotation&&rotation.push);
+  const back=byId("back",rotation&&rotation.back);
   const abs=byId("abs",rotation&&rotation.abs);
   const legs=byId("legs",rotation&&rotation.legs);
   return (baseObjs||[]).map(obj=>{
     if(obj.id==="push") return {...obj,name:"Pecs - "+chest.label,icon:"🦾",exerciseIcon:chest.icon,rotationExercise:chest.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3,stat2:null,xpPer2:null};
+    if(obj.id==="negative_pullups") return {...obj,name:"Dos & Biceps - "+back.label,icon:"🦾",exerciseIcon:back.icon,rotationExercise:back.label,target:getStatLevelTarget("negative_pullups",stats),unit:"rep",xpPer:12,stat2:null,xpPer2:null};
     if(obj.id==="abs"){
       if(abs.id==="crunches") return {...obj,name:"Abdos - Crunches",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:getStatLevelTarget("abs",stats),unit:"rep",xpPer:1.5};
       if(abs.id==="leg_raises") return {...obj,name:"Abdos - Levées de jambes",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:legRaiseTargetForForceLevel(force),unit:"rep",xpPer:3};
@@ -1801,7 +1811,9 @@ function App(){
   const wk    = wkStr();
 
   useEffect(()=>{
-    if((state.exerciseRotationByDay||{})[today]) return;
+    const row=(state.exerciseRotationByDay||{})[today]||{};
+    const complete=Object.entries(EXERCISE_ROTATIONS).every(([family,options])=>options.some(o=>o.id===row[family]));
+    if(complete) return;
     setState(s=>ensureExerciseRotationForDay(s,today));
   },[today,state.exerciseRotationByDay]);
 
@@ -1943,6 +1955,7 @@ function App(){
     const saved=(state.exerciseRotationByDay||{})[day]||{};
     const rotation={
       push:saved.push||LEGACY_EXERCISE_DEFAULTS.push,
+      back:saved.back||LEGACY_EXERCISE_DEFAULTS.back,
       abs:saved.abs||LEGACY_EXERCISE_DEFAULTS.abs,
       legs:saved.legs||LEGACY_EXERCISE_DEFAULTS.legs
     };
@@ -4714,6 +4727,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const exerciseHistoryDefs=[
       {id:"ex_pushups",name:"Pompes",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"push",family:"push",rotationId:"pushups"},
       {id:"ex_dips",name:"Dips",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"push",family:"push",rotationId:"dips"},
+      {id:"ex_negative_pullups",name:"Tractions négatives",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"negative_pullups",family:"back",rotationId:"negative_pullups"},
+      {id:"ex_australian_pullups",name:"Tractions australiennes",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"negative_pullups",family:"back",rotationId:"australian_pullups"},
       {id:"ex_crunches",name:"Crunches",icon:"🧎🏻",unit:"rep",stat:"Force",sourceId:"abs",family:"abs",rotationId:"crunches"},
       {id:"ex_leg_raises",name:"Levées de jambes",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"abs",family:"abs",rotationId:"leg_raises"},
       {id:"ex_plank",name:"Gainage",icon:"🫳🏼",unit:"min",stat:"Force",sourceId:"abs",family:"abs",rotationId:"plank"},
@@ -4722,7 +4737,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       {id:"ex_calves",name:"Mollets",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"squats",family:"legs",rotationId:"calves",legacySourceId:"calves"},
       {id:"ex_lunges",name:"Fentes",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"squats",family:"legs",rotationId:"lunges"},
     ];
-    const rotatingSourceIds=new Set(["push","abs","squats","calves"]);
+    const rotatingSourceIds=new Set(["push","negative_pullups","abs","squats","calves"]);
     function exerciseRotationIdForDay(day,family){
       return ((state.exerciseRotationByDay||{})[day]||{})[family] || LEGACY_EXERCISE_DEFAULTS[family];
     }
@@ -4739,6 +4754,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       if(!isExerciseFamilyQuestId(obj.id)) return obj;
       const rotation=(state.exerciseRotationByDay||{})[day]||{
         push:LEGACY_EXERCISE_DEFAULTS.push,
+        back:LEGACY_EXERCISE_DEFAULTS.back,
         abs:LEGACY_EXERCISE_DEFAULTS.abs,
         legs:LEGACY_EXERCISE_DEFAULTS.legs
       };
@@ -5801,6 +5817,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         );
       }
       const pushTarget=getStatLevelTarget("push",state.stats);
+      const backTarget=getStatLevelTarget("negative_pullups",state.stats);
       const absTarget=getStatLevelTarget("abs",state.stats);
       const legRaiseTarget=legRaiseTargetForForceLevel(force);
       const plankTarget=Math.max(1,Math.ceil(force/10));
@@ -5812,6 +5829,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px"},"🦾 PECS & TRICEPS"),
           h(Exercise,{icon:"💪🏼",name:"Pompes",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
           h(Exercise,{icon:"💪🏼",name:"Dips",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]})
+        ),
+        h("div",{style:familyStyle},
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px"},"🦾 DOS & BICEPS"),
+          h(Exercise,{icon:"💪🏼",name:"Tractions négatives",target:backTarget,unit:"reps",rewards:[{stat:"Force",xp:"12/rep"}]}),
+          h(Exercise,{icon:"💪🏼",name:"Tractions australiennes",target:backTarget,unit:"reps",rewards:[{stat:"Force",xp:"12/rep"}]})
         ),
         h("div",{style:familyStyle},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px"},"🧱 ABDOS"),
@@ -5996,7 +6018,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }
 
     function renderRequiredCodex(){
-      const rotatingIds=new Set(["push","abs","squats","calves"]);
+      const rotatingIds=new Set(["push","negative_pullups","abs","squats","calves"]);
       const staticRequired=objs.filter(o=>o.daily&&!o.optional&&!rotatingIds.has(o.id));
       const groups=STATS.map(stat=>({stat,list:[]}));
       staticRequired.forEach(item=>{
