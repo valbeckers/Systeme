@@ -99,35 +99,65 @@ const SP = {
     {id:"sp_no_sugar", name:"Aucun sucre transformé", icon:"\uD83C\uDF6C", unit:"jour", target:1, xp:500, days:1, binary:true, desc:"Aucun sucre transformé"},
     {id:"sp_mealnostim", name:"Repas sans stimulation", icon:"🧠", unit:"repas", target:2, xp:1000, days:1, tiers:[{at:1,xp:250,stat:"Sante"},{at:2,xp:500,stat:"Sante",xp2:250,stat2:"Discipline"}], desc:"2 repas sans stimulation (palier à 1 repas)"},  ],
   Force:[
-    {id:"sp_wallsit", name:"Wall sit",     icon:"\uD83E\uDE91",                                         unit:"min",  target:10,  xp:1000, xp2:500, stat2:"Endurance", days:1, desc:"10 min de wall sit"},
   ],
   Esprit:[
-    {id:"sp_learning", name:"Apprentissage actif",  icon:"\uD83C\uDF93",                                  unit:"jour", target:1, xp:1000, xp2:500, stat2:"Discipline", days:1, binary:true, desc:"1h d'apprentissage actif"},
     {id:"sp_memo30",   name:"Mémorisation",icon:"\uD83E\uDDE0",                                  unit:"jour", target:1, xp:1000, days:1, binary:true, desc:"30 min de mémorisation active"},
     {id:"sp_silence30",name:"Silence",          icon:"\uD83E\uDD2B",                                  unit:"jour", target:1, xp:500, days:1, binary:true, desc:"30 min sans parler ni consommer"},
     {id:"sp_nophone3h", name:"Téléphone hors de portée 3h", icon:"\uD83D\uDCF5",                unit:"jour", target:1, xp:500, xp2:250, stat2:"Discipline", days:1, binary:true, desc:"Téléphone hors de portée 3h"},
   ],
   Endurance:[
-    {id:"sp_run10k", name:"Sortie course 10km", icon:"\uD83C\uDFC3\uD83C\uDFFB", unit:"km", target:10, xp:2500, days:1, desc:"Sortie course 10 km"},
-    {id:"sp_sprint",  name:"Running fractionné 10x100m",icon:"\u26A1",                                 unit:"sér.",target:10, xp:1000, days:1, desc:"10 x 100m sprint/récup"},
     {id:"sp_stairs",  name:"Montées d'escaliers", icon:"\uD83E\uDE9C",                                 unit:"A/R",  target:30, xp:500, xp2:250, stat2:"Agilite", days:1, desc:"30 montées/descentes"},
-    {id:"sp_jump",    name:"Corde à sauter",icon:"\uD83D\uDCA6",                                 unit:"min",  target:20, xp:500, xp2:250, stat2:"Agilite", days:1, desc:"20 min de corde à sauter"},
     {id:"sp_walk30",  name:"Sortie marche",     icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F",           unit:"min",  target:30, xp:500, days:1, desc:"30 min de marche"},
   ],
   Agilite:[
     {id:"sp_flow20",  name:"Animal flow", icon:"\uD83D\uDC0A",                                         unit:"min",  target:30, xp:1500, days:1, tiers:[{at:15,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"},{at:30,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"}], desc:"30 min d'animal flow (palier à 15 min)"},
     {id:"sp_fluide",  name:"Flow martial", icon:"\uD83C\uDF0A",                              unit:"min",  target:30, xp:1500, days:1, tiers:[{at:15,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"},{at:30,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"}], desc:"30 min de flow martial / mouvement continu sans rupture"},
-
-    {id:"sp_flex30",  name:"Souplesse", icon:"\uD83E\uDD38\uD83C\uDFFB",                              unit:"min",  target:30, xp:1500, days:1, tiers:[{at:15,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"},{at:30,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"}], desc:"30 min de souplesse (palier à 15 min)"},    {id:"sp_silent",  name:"Déplacements silencieux", icon:"\uD83D\uDC08",                          unit:"min",  target:10, xp:500, days:1, desc:"Marcher sans bruit (escaliers, pièces)"},
+    {id:"sp_silent",  name:"Déplacements silencieux", icon:"\uD83D\uDC08",                          unit:"min",  target:10, xp:500, days:1, desc:"Marcher sans bruit (escaliers, pièces)"},
         {id:"sp_footwork", name:"Footwork rapide", icon:"\u26A1",                                            unit:"min",  target:10, xp:500, step:5, days:1, desc:"Footwork rapide (carrelage, devant/derrière/côtés)"},
   ],
   Discipline:[
     {id:"sp_no_passive", name:"Aucun contenu passif", icon:"\uD83D\uDEAB", unit:"jour", target:1, xp:500, days:1, binary:true, desc:"Aucun contenu passif"},
-    {id:"sp_cold",      name:"Douche froide 3min",              icon:"\uD83D\uDEBF",                          unit:"min",  target:3, xp:500, stat:"Sante", xp2:250, stat2:"Discipline", days:1, binary:true, compactUnit:true, desc:"Douche froide 3 min"},
     {id:"sp_task",      name:"Accomplir une tâche repoussée", icon:"\uD83D\uDD57",                   unit:"jour", target:1, xp:500, days:1, binary:true, desc:"Accomplir une tâche repoussée"},
     {id:"sp_declutter", name:"Désencombrement",            icon:"\uD83D\uDCE6",                          unit:"objet",target:10,xp:500, days:1, desc:"Jeter/ranger 10 objets"},
   ],
 };
+
+// Brèches : événement rare tiré une seule fois au reset quotidien.
+const BREACH_COLOR="#163a70";
+const BREACH_LOOT_TEXT="Après avoir refermé une Brèche (Taux : 100 %, puis tirage aléatoire parmi les objets de l’inventaire).";
+const BREACH_POOL=[
+  {id:"breach_cold5",name:"Douche froide 5 minutes",icon:"🚿",unit:"épreuve",target:1,binary:true,xp:1500,stat:"Sante",xp2:500,stat2:"Discipline",desc:"Douche froide continue pendant 5 minutes"},
+  {id:"breach_wallsit15",name:"Wall sit 15 minutes",icon:"🪑",unit:"min",target:15,step:5,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:"15 minutes cumulées de wall sit"},
+  {id:"breach_push300",name:"Faire 300 pompes",icon:"🦾",unit:"rep",target:300,step:25,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:"300 pompes cumulées"},
+  {id:"breach_squats150",name:"Faire 150 squats",icon:"🦿",unit:"rep",target:150,step:10,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:"150 squats cumulés"},
+  {id:"breach_pullups50",name:"Faire 50 tractions",icon:"🦾",unit:"rep",target:50,step:5,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:"50 tractions cumulées"},
+  {id:"breach_plank15",name:"Gainage 15 minutes",icon:"🫳🏼",unit:"min",target:15,step:5,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:"15 minutes cumulées de gainage"},
+  {id:"breach_learning2h",name:"Apprentissage actif pendant 2 heures",icon:"🎓",unit:"épreuve",target:1,binary:true,xp:1500,stat:"Esprit",xp2:500,stat2:"Discipline",desc:"2 heures d’apprentissage actif"},
+  {id:"breach_reading1h",name:"Lecture continue pendant 1 heure",icon:"📚",unit:"épreuve",target:1,binary:true,xp:1500,stat:"Esprit",xp2:500,stat2:"Discipline",desc:"1 heure de lecture continue"},
+  {id:"breach_run10",name:"Running 10 km",icon:"🏃🏻",unit:"épreuve",target:1,binary:true,xp:2000,stat:"Endurance",desc:"Courir 10 km"},
+  {id:"breach_sprint10",name:"Running fractionné 10 × 100 m",icon:"⚡",unit:"sér.",target:10,step:1,xp:1500,stat:"Endurance",xp2:500,stat2:"Agilite",desc:"10 séries de 100 mètres"},
+  {id:"breach_rope30",name:"Corde à sauter 30 minutes",icon:"💦",unit:"min",target:30,step:5,xp:1500,stat:"Endurance",xp2:500,stat2:"Agilite",desc:"30 minutes cumulées de corde à sauter"},
+  {id:"breach_flex60",name:"Souplesse pendant 1 heure",icon:"🤸🏻",unit:"min",target:60,step:10,xp:1500,stat:"Agilite",xp2:500,stat2:"Endurance",desc:"1 heure cumulée de souplesse"}
+];
+function breachTemplateById(id){return BREACH_POOL.find(b=>b.id===id)||null;}
+function normalizeActiveBreach(entry){
+  if(!entry||!entry.id)return null;
+  const tpl=breachTemplateById(entry.id);if(!tpl)return null;
+  return {...tpl,breachId:entry.breachId||("breach_"+(entry.startedAt||Date.now())),progress:Math.max(0,Number(entry.progress)||0),startedAt:Number(entry.startedAt)||Date.now(),expiresAt:Number(entry.expiresAt)||((Number(entry.startedAt)||Date.now())+72*60*60*1000),completedAt:entry.completedAt||null,isBreach:true};
+}
+function processDailyBreachRoll(state,now=Date.now()){
+  const day=eventDayStr(now);
+  const current=normalizeActiveBreach(state.activeBreach);
+  if(current&&!current.completedAt&&now<current.expiresAt){
+    if(state.breachRollDay!==day)return {...state,activeBreach:current,breachRollDay:day};
+    if(state.activeBreach&&state.activeBreach.id===current.id&&state.activeBreach.expiresAt===current.expiresAt)return state;
+    return {...state,activeBreach:current};
+  }
+  if(state.breachRollDay===day)return state.activeBreach?{...state,activeBreach:null}:state;
+  if(Math.random()>=0.01)return {...state,activeBreach:null,breachRollDay:day};
+  const tpl=BREACH_POOL[Math.floor(Math.random()*BREACH_POOL.length)];
+  return {...state,activeBreach:{...tpl,breachId:"breach_"+now,progress:0,startedAt:now,expiresAt:now+72*60*60*1000,completedAt:null,isBreach:true},breachRollDay:day,breachTriggeredDay:day,specialQuests:(state.specialQuests||[]).filter(q=>q.completedAt||now>=(q.expiresAt||0)),sqCooldownUntil:next7AM(now),sqRerollDay:null};
+}
 
 
 // Donjons volontaires : 1 actif à la fois, 1/jour, 3/semaine, accès par clé, 24h puis Boss de Rupture.
@@ -933,7 +963,7 @@ function cleanEventHistory(history){
     .slice(-12);
 }
 function cleanDailyExtraXp(extra){
-  const allowed=new Set(["eventBonus","sq","dungeon","streak","debt"]);
+  const allowed=new Set(["eventBonus","sq","breach","dungeon","streak","debt"]);
   const out={};
   Object.entries(extra||{}).forEach(([day,row])=>{
     if(!row || typeof row!=="object") return;
@@ -1022,6 +1052,9 @@ function cleanSystemState(raw){
     statXp:statPack.statXp,
     specialQuests,
     sqCooldownUntil:data.sqCooldownUntil||null,
+    activeBreach:normalizeActiveBreach(data.activeBreach),
+    breachRollDay:data.breachRollDay||null,
+    breachTriggeredDay:data.breachTriggeredDay||null,
     activeDungeon:data.activeDungeon||null,
     dungeonRunDay:data.dungeonRunDay||null,
     dungeonSkipDay:data.dungeonSkipDay||null,
@@ -1173,6 +1206,9 @@ const IMPORTED = {
   statXp:{Sante:10100,Force:13488,Esprit:12700,Endurance:2962,Agilite:1652,Discipline:3150},
   specialQuests:[],
   sqCooldownUntil:null,
+  activeBreach:null,
+  breachRollDay:null,
+  breachTriggeredDay:null,
   activeDungeon:null,
   dungeonRunDay:null,
   dungeonSkipDay:null,
@@ -1255,6 +1291,9 @@ function buildState(){
     objectives:DEFS,
     specialQuests:saved.specialQuests||[],
     sqCooldownUntil:saved.sqCooldownUntil||null,
+    activeBreach:normalizeActiveBreach(saved.activeBreach),
+    breachRollDay:saved.breachRollDay||null,
+    breachTriggeredDay:saved.breachTriggeredDay||null,
     sqRerollDay:saved.sqRerollDay||null,
     activeDungeon:saved.activeDungeon||null,
     dungeonRunDay:saved.dungeonRunDay||null,
@@ -1469,7 +1508,8 @@ function App(){
     const now=Date.now();
     let base=applyDailyEventReset(buildState(),now);
     base=ensureExerciseRotationForDay(base,todayStr());
-    // Auto-init quete speciale si aucune active
+    base=processDailyBreachRoll(base,now);
+    // Auto-init quête urgente si aucune Brèche ne la remplace aujourd’hui
     const sqs=base.specialQuests||[];
     const hasActive=sqs.find(q=>!q.completedAt&&now<(q.expiresAt||0));
     const resetStart=current7AMStart(now);
@@ -1478,7 +1518,7 @@ function App(){
     const sqCdUntil=base.sqCooldownUntil||0;
     const cooldownOk=now>=sqCdUntil;
     const staleCooldownWithoutQuest=!hasActive&&!hasCompletedThisWindow&&sqCdUntil>now;
-    if(!hasActive&&!hasCompletedThisWindow&&(cooldownOk||staleCooldownWithoutQuest)){
+    if(base.breachTriggeredDay!==eventDayStr(now)&&!hasActive&&!hasCompletedThisWindow&&(cooldownOk||staleCooldownWithoutQuest)){
       const result=pickRandomSq(sqs.filter(q=>!q.completedAt).map(q=>q.id),base.sqStatCycle,base.completedSqLog,base.urgentCompassStat);
       if(result){
         const {tpl,pickedStat,cycleReset,forced}=result;
@@ -1532,7 +1572,7 @@ function App(){
   const [dungeonHelpOpen,setDungeonHelpOpen] = useState({});
   const [selectedDungeonRoom,setSelectedDungeonRoom] = useState(null);
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
-  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,reg:false,sq:false,elan:false,debt:false,dj:false,cs:false});
+  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,reg:false,sq:false,breach:false,elan:false,debt:false,dj:false,cs:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
   const [showStatReqDetail,setShowStatReqDetail] = useState(false);
   const [showRankReqStats,setShowRankReqStats] = useState(false);
@@ -1542,6 +1582,7 @@ function App(){
   const [confirmReset,setConfirmReset] = useState(false);
   const [wkOff,setWkOff]  = useState(0);
   const inputs = useRef({});
+  const completedBreachRef = useRef(null);
 
   function enqueueDungeonKeyLoot(kind){
     setKeyLootQueue(q=>[...q,{kind:kind==="rare"?"rare":"guaranteed",id:Date.now()+Math.random()}]);
@@ -1563,6 +1604,13 @@ function App(){
 
   function awardElixir(kind,source="rare"){
     awardInventoryItem(kind,source);
+  }
+  function awardRandomBreachLoot(){
+    const eligible=Object.entries(INVENTORY_ITEMS).filter(([id,item])=>!item.permanent).map(([id])=>id);
+    if(!eligible.length)return null;
+    const won=eligible[Math.floor(Math.random()*eligible.length)];
+    if(won==="dungeonKey")awardDungeonKey("guaranteed");else awardInventoryItem(won,"guaranteed");
+    return won;
   }
 
   function applyRegression(){
@@ -1940,12 +1988,15 @@ function App(){
   },[now]);
   useEffect(()=>{
     const day=eventDayStr(now);
-    if(state.eventDay!==day){
-      setState(s=>applyDailyEventReset(s,now));
-    }
-  },[now,state.eventDay]);
+    setState(s=>{
+      let next=s.eventDay!==day?applyDailyEventReset(s,now):s;
+      return processDailyBreachRoll(next,now);
+    });
+  },[now]);
   const sqs         = state.specialQuests||[];
   const activeSq    = sqs.find(q=>!q.completedAt&&now<q.expiresAt)||null;
+  const activeBreach=state.activeBreach&&!state.activeBreach.completedAt&&now<(state.activeBreach.expiresAt||0)?normalizeActiveBreach(state.activeBreach):null;
+  const breachReplacesUrgentToday=state.breachTriggeredDay===eventDayStr(now);
   const completedSq = activeSq ? null : ([...(sqs||[])].filter(q=>q.completedAt&&(now-q.completedAt)<86400000).sort((a,b)=>(b.completedAt||0)-(a.completedAt||0))[0]||null);
   const sqCooldownUntil = state.sqCooldownUntil||null;
   const sqCooldownActive = sqCooldownUntil && now < sqCooldownUntil;
@@ -1958,6 +2009,7 @@ function App(){
     const resetStart=current7AMStart(now);
     const resetEnd=next7AM(resetStart);
     const list=state.specialQuests||[];
+    if(breachReplacesUrgentToday)return;
     const hasValidActive=list.some(q=>!q.completedAt&&now<(q.expiresAt||0));
     const hasCompletedCurrentWindow=list.some(q=>q.completedAt&&q.completedAt>=resetStart&&q.completedAt<resetEnd);
     if(hasValidActive||hasCompletedCurrentWindow) return;
@@ -1989,7 +2041,7 @@ function App(){
         lastActiveDay:todayStr()
       };
     });
-  },[now,state.specialQuests,state.sqCooldownUntil]);
+  },[now,state.specialQuests,state.sqCooldownUntil,breachReplacesUrgentToday]);
 
   const activeDungeonTpl = state.activeDungeon ? DUNGEONS.find(d=>d.id===state.activeDungeon.id) : null;
   const activeDungeon = state.activeDungeon && activeDungeonTpl && !state.activeDungeon.completedAt && now < state.activeDungeon.expiresAt
@@ -3368,6 +3420,49 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
+  function BreachCard({compact=false}={}){
+    const b=activeBreach;if(!b)return null;
+    const remaining=Math.max(0,b.expiresAt-now);
+    const pct=Math.min(100,((Number(b.progress)||0)/Math.max(1,b.target))*100);
+    const pairs=[{xp:b.xp,stat:b.stat},b.xp2&&b.stat2?{xp:b.xp2,stat:b.stat2}:null].filter(Boolean);
+    const finish=()=>{
+      const current=state.activeBreach;
+      if(!current||current.breachId!==b.breachId||completedBreachRef.current===b.breachId)return;
+      completedBreachRef.current=b.breachId;
+      pairs.forEach(p=>addXp(p.xp,p.stat,null,true));
+      triggerUrgentUp({...b,isBreach:true},pairs);
+      setState(s=>{
+        if(!s.activeBreach||s.activeBreach.breachId!==b.breachId)return s;
+        const day=todayStr(),daily={...(s.dailyExtraXp||{})},row={...(daily[day]||{})};
+        row.breach=(row.breach||0)+pairs.reduce((sum,p)=>sum+(p.xp||0),0);daily[day]=row;
+        return {...s,activeBreach:null,dailyExtraXp:daily};
+      });
+      awardRandomBreachLoot();
+    };
+    const add=n=>{
+      const next=Math.min(b.target,(Number(b.progress)||0)+n);
+      if(next>=b.target){setState(s=>s.activeBreach&&s.activeBreach.breachId===b.breachId?{...s,activeBreach:{...s.activeBreach,progress:next}}:s);setTimeout(finish,0);}
+      else setState(s=>s.activeBreach&&s.activeBreach.breachId===b.breachId?{...s,activeBreach:{...s.activeBreach,progress:next}}:s);
+    };
+    const progressText=b.binary?"À accomplir":fmtNum(b.progress||0)+"/"+b.target+" "+b.unit;
+    return h("div",{class:"card sq-urgent",style:"position:relative;overflow:hidden;border-color:#8dbbff;background:linear-gradient(145deg,#07162f,#102e5c);box-shadow:0 0 18px rgba(141,187,255,.32),inset 0 0 24px rgba(255,255,255,.035)"},
+      [["top:-10px;left:8px"],["top:-10px;right:8px"],["bottom:-11px;left:10px"],["bottom:-11px;right:10px"]].map((p,i)=>h("span",{key:i,style:"position:absolute;"+p[0]+";color:#fff;font-size:17px;filter:drop-shadow(0 0 7px #fff);pointer-events:none"},"⚡")),
+      h("div",{style:"position:relative;z-index:2"},
+        h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:9px"},
+          h("div",{class:"ctitle",style:"margin:0;color:#dbeafe;text-shadow:0 0 10px rgba(255,255,255,.55)"},"BRÈCHE"),
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#fff;border:1px solid rgba(255,255,255,.45);border-radius:999px;padding:4px 7px;white-space:nowrap"},"⏱ "+fmtCD(remaining))
+        ),
+        h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px"},
+          h("div",{style:"display:flex;align-items:center;gap:9px;min-width:0"},QuestIcon(b.id,b.icon,18,"min-width:26px"),h("div",{style:"min-width:0"},h("div",{style:"font-size:13px;font-weight:800;color:#fff;line-height:1.25"},b.name),!compact&&h("div",{style:"font-size:10px;color:#cbd5e1;line-height:1.4;margin-top:3px"},b.desc))),
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#dbeafe;line-height:1.35;text-align:right;white-space:nowrap"},pairs.map((p,i)=>h("div",{key:i},"+"+p.xp+" XP "+(STAT_LBL[p.stat]||p.stat))))
+        ),
+        h("div",{class:"qrow",style:"align-items:center;margin-top:9px"},h("div",{class:"qbar"},h("div",{class:"qfill partial",style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,#274f88,#274f88 5px,#7aa7df 5px,#7aa7df 10px);background-size:14px 14px;opacity:.95"})),h("div",{class:"qxp",style:"color:#dbeafe;white-space:nowrap;min-width:86px;text-align:right"},progressText)),
+        !compact&&h("div",{style:"margin-top:9px"},b.binary?h("button",{onClick:finish,style:"width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.07);color:#fff;font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px"},"REFERMER LA BRÈCHE ✓"):h("div",{style:"display:flex;gap:8px"},h("button",{onClick:()=>add(1),style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.05);color:#fff;font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},"+1 "+b.unit),h("button",{onClick:()=>add(b.step||10),style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.08);color:#fff;font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},"+"+(b.step||10)+" "+b.unit))),
+        !compact&&h("div",{style:"font-size:9px;color:#bfdbfe;font-family:Orbitron,sans-serif;line-height:1.45;margin-top:9px;text-align:center"},"OBJET ALÉATOIRE GARANTI À LA RÉUSSITE")
+      )
+    );
+  }
+
   function DungeonCard({compact=false}={}){
     const d=activeDungeon;
     const remaining=d ? d.expiresAt-now : 0;
@@ -3815,6 +3910,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{style:"margin-top:4px;font-size:11px;color:"+(activeElixir.kind==="supremeElixir"?"#9333ea":(STAT_COLOR[activeElixir.stat]||rank.color))+";font-weight:800"},"+"+Math.round((activeElixir.pct||0)*100)+" % XP"+(activeElixir.kind==="supremeElixir"?" — TOUTES LES STATISTIQUES":" — "+(STAT_LBL[activeElixir.stat]||activeElixir.stat))+" · "+fmtCD((activeElixir.expiresAt||0)-now))
       ),
 
+      activeBreach&&h(BreachCard,{compact:true}),
       activeSq&&h("div",{class:"card",style:"border-color:#ef444444"},
         h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Quête urgente"+(activeSq.tier?" · "+(SQ_TIER_LABEL[activeSq.tier]||""):"")),
         h(SqCard,{sq:activeSq,showInput:false})
@@ -3876,6 +3972,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
 
     return h("div",{class:"tab"},
+      activeBreach&&h(BreachCard,null),
       (!completedSq||activeSq)&&h("div",{class:"card",style:"border-color:#ef444444"},
         h("div",{class:"shdr"},
           h("div",null,
@@ -3975,6 +4072,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     invisibilityCape:{name:"CAPE D’INVISIBILITÉ",short:"CAPE D’INVISIBILITÉ",emoji:"👣",action:"UTILISER",desc:"Permet de passer une salle de donjon sans être vu. La salle est considérée comme terminée, sans gain d’XP.",obtain:["Après avoir complété un donjon (Taux : 10 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %)."]},
     recoveryOintment:{name:"ONGUENT DE RÉCUPÉRATION",short:"ONGUENT DE RÉCUPÉRATION",emoji:"🧴",action:"UTILISER",desc:"Permet de passer une quête journalière ou bonus en cas de blessure ou de repos forcé. La quête est considérée comme validée, sans gain d’XP.",obtain:["Après avoir complété un donjon (Taux : 10 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %)."]}
   };
+  Object.values(INVENTORY_ITEMS).forEach(item=>{
+    if(!item.permanent&&!item.obtain.includes(BREACH_LOOT_TEXT))item.obtain=[...item.obtain,BREACH_LOOT_TEXT];
+  });
   function itemQty(id){ return ["codex","regressionOrb"].includes(id)?1:id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
   function Inventory(){
     const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","etherStopper","rerollToken","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape","recoveryOintment"]
@@ -4744,7 +4844,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function triggerUrgentUp(sq,pairs){
     if(!sq || !pairs || !pairs.length) return;
     setTimeout(()=>setUrgentUp({
-      title:"QUÊTE URGENTE COMPLÉTÉE",
+      title:sq.isBreach?"BRÈCHE REFERMÉE":"QUÊTE URGENTE COMPLÉTÉE",
       name:sq.name,
       color:rank.color||"#fbbf24",
       glow:rank.glow||"#fbbf2455",
@@ -4909,7 +5009,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       )),
       h("div",{class:"rucont"},
         h(NotificationHeader,null),
-        h("div",{class:"ruevol",style:"color:#ef4444;text-shadow:0 0 16px rgba(239,68,68,.7)"},"QUÊTE URGENTE COMPLÉTÉE !"),
+        h("div",{class:"ruevol",style:"color:"+(urgentUp.title==="BRÈCHE REFERMÉE"?"#8dbbff":"#ef4444")+";text-shadow:0 0 16px "+(urgentUp.title==="BRÈCHE REFERMÉE"?"rgba(141,187,255,.7)":"rgba(239,68,68,.7)")},urgentUp.title==="BRÈCHE REFERMÉE"?"BRÈCHE REFERMÉE !":"QUÊTE URGENTE COMPLÉTÉE !"),
         h("div",{class:"rurank",style:"--rc:"+(urgentUp.nameColor||color)+";--rg:"+(urgentUp.nameColor||color)+"66;color:"+(urgentUp.nameColor||color)+";text-shadow:0 0 18px "+(urgentUp.nameColor||color)+"66;font-size:"+urgentTitleSize+";letter-spacing:-1px;white-space:normal;width:calc(100vw - 32px);max-width:360px;line-height:1.08;overflow-wrap:anywhere;word-break:normal;hyphens:auto","data-r":urgentTitle},urgentTitle),
         h("div",{style:"margin-top:14px;display:flex;flex-direction:column;gap:6px;align-items:center"},
           (urgentUp.rewards||[]).map((r,i)=>{
@@ -5702,6 +5802,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const bonus = objs.filter(o=>o.optional&&!o.weekly&&!o.bonusHidden);
     const hiddenBonus = objs.filter(o=>o.optional&&!o.weekly&&o.bonusHidden);
     const specialList = STATS.flatMap(stat=>(SP[stat]||[]).map(q=>({...q,stat:q.stat||stat})));
+    const breachList=BREACH_POOL.map(q=>({...q,isBreach:true}));
     const elanList=EVENT_BONUSES.filter(e=>!e.disabled).map(e=>({...e,type:"bonus"}));
 
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setInventoryItem(null)}},
@@ -5724,7 +5825,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           )
         ),
         h(Section,{id:"obl",title:"Quêtes journalières",count:required.length},renderRequiredCodex()),
-        h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial))
+        h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial)),
+        h(Section,{id:"breach",title:"Brèches",count:breachList.length},h(Fragment,null,h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Une Brèche a 1 % de chance d’apparaître au reset quotidien. Elle remplace la quête urgente du jour, reste ouverte 72 h et se referme sans conséquence en cas d’échec. Sa réussite garantit un objet aléatoire non permanent."),groupByDominantStat(breachList,renderSpecial)))
       )
     );
   }
