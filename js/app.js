@@ -3291,14 +3291,21 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const primaryStat = STAT_LBL[safeStat] || safeStat || "";
     const secondaryStat = item.stat2 ? (STAT_LBL[item.stat2] || item.stat2) : null;
     const thirdStat = item.stat3 ? (STAT_LBL[item.stat3] || item.stat3) : null;
-    let rewardText = (item.xp||0)+" XP"+(primaryStat?" "+primaryStat:"");
+    let rewardText = (item.xp||0)+" XP · "+primaryStat;
     if(item.xp2 && item.stat2){
-      rewardText += item.xp2===(item.xp||0) ? " + "+secondaryStat : " + "+item.xp2+" XP "+secondaryStat;
+      rewardText += item.xp2===(item.xp||0) ? " + "+secondaryStat : " + "+item.xp2+" XP · "+secondaryStat;
     }
     if(item.xp3 && item.stat3){
-      rewardText += item.xp3===(item.xp||0) ? " + "+thirdStat : " + "+item.xp3+" XP "+thirdStat;
+      rewardText += item.xp3===(item.xp||0) ? " + "+thirdStat : " + "+item.xp3+" XP · "+thirdStat;
     }
     return rewardText;
+  }
+
+  function questRewardText(xp,stat,binary,target,unit){
+    const label=STAT_LBL[stat]||stat||"";
+    if(binary)return fmtNum(xp||0)+" XP · "+label;
+    const perUnit=(Number(xp)||0)/Math.max(1,Number(target)||1);
+    return fmtNum(perUnit)+" XP/"+unit+" · "+label;
   }
 
   function sqRewardLines(sq){
@@ -3310,9 +3317,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       }));
     }
     return [
-      sq?.xp ? {key:"xp1", text:rewardLineText({id:sq.id,xp:sq.xp, stat:sq.stat||sqMainStat(sq)})} : null,
-      sq?.xp2&&sq?.stat2 ? {key:"xp2", text:rewardLineText({xp:sq.xp2, stat:sq.stat2})} : null,
-      sq?.xp3&&sq?.stat3 ? {key:"xp3", text:rewardLineText({xp:sq.xp3, stat:sq.stat3})} : null,
+      sq?.xp ? {key:"xp1", text:questRewardText(sq.xp,sq.stat||sqMainStat(sq),sq.binary,sq.target,sq.unit)} : null,
+      sq?.xp2&&sq?.stat2 ? {key:"xp2", text:questRewardText(sq.xp2,sq.stat2,sq.binary,sq.target,sq.unit)} : null,
+      sq?.xp3&&sq?.stat3 ? {key:"xp3", text:questRewardText(sq.xp3,sq.stat3,sq.binary,sq.target,sq.unit)} : null,
     ].filter(Boolean);
   }
 
@@ -3454,7 +3461,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         ),
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px"},
           h("div",{style:"display:flex;align-items:center;gap:9px;min-width:0"},QuestIcon(b.id,b.icon,18,"min-width:26px"),h("div",{style:"min-width:0"},h("div",{style:"font-size:13px;font-weight:800;color:#fff;line-height:1.25"},b.name),!compact&&h("div",{style:"font-size:10px;color:#cbd5e1;line-height:1.4;margin-top:3px"},b.desc))),
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#dbeafe;line-height:1.35;text-align:right;white-space:nowrap"},pairs.map((p,i)=>h("div",{key:i},"+"+p.xp+" XP "+(STAT_LBL[p.stat]||p.stat))))
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#dbeafe;line-height:1.35;text-align:right;white-space:nowrap"},pairs.map((p,i)=>h("div",{key:i},questRewardText(p.xp,p.stat,b.binary,b.target,b.unit))))
         ),
         h("div",{class:"qrow",style:"align-items:center;margin-top:9px"},h("div",{class:"qbar"},h("div",{class:"qfill partial",style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,#274f88,#274f88 5px,#7aa7df 5px,#7aa7df 10px);background-size:14px 14px;opacity:.95"})),h("div",{class:"qxp",style:"color:#dbeafe;white-space:nowrap;min-width:86px;text-align:right"},progressText)),
         !compact&&h("div",{style:"margin-top:9px"},b.binary?h("button",{onClick:finish,style:"width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.07);color:#fff;font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px"},"REFERMER LA BRÈCHE ✓"):h("div",{style:"display:flex;gap:8px"},h("button",{onClick:()=>add(1),style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.05);color:#fff;font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},"+1 "+b.unit),h("button",{onClick:()=>add(b.step||10),style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.08);color:#fff;font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},"+"+(b.step||10)+" "+b.unit))),
