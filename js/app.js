@@ -5711,18 +5711,20 @@ const BONUS_BADGE_COLOR = "#fbbf24";
                 )
               ))
             ),
-            h("div",{style:"margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.07)"},
-              h("div",{style:"font-size:9px;color:"+(STAT_COLOR[dg.stat]||dg.color)+";font-family:Orbitron,sans-serif;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:7px"},"Boss de Rupture — +1350 / +270 XP"),
-              (DUNGEON_RUPTURE_BOSSES[dg.id]||[]).map(rb=>{
-                const meta=DUNGEON_RUPTURE_RARITIES[rb.rarity]||DUNGEON_RUPTURE_RARITIES.mineur;
-                return h("div",{key:rb.id,style:"margin-bottom:7px;padding:7px 8px;border-radius:8px;border:1px solid "+meta.color+"33;background:"+meta.color+"08"},
-                  h("div",{style:"font-size:10px;color:"+meta.color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase"},meta.label+" — "+rb.name),
-                  h("div",{style:"font-size:10px;color:var(--td);line-height:1.4;margin-top:3px"},rb.objective)
-                );
-              })
-            )
           )
         )
+      );
+    }
+
+    function renderBreachBossCodex(rb){
+      const meta=DUNGEON_RUPTURE_RARITIES[rb.rarity]||DUNGEON_RUPTURE_RARITIES.mineur;
+      return h("div",{key:rb.id,style:"margin-bottom:7px;padding:8px 9px;border-radius:9px;border:1px solid "+meta.color+"33;background:"+meta.color+"08"},
+        h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
+          h("div",{style:"font-size:11px;color:"+meta.color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;line-height:1.3"},rb.name),
+          h("div",{style:"font-size:8px;color:"+meta.color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;white-space:nowrap;border:1px solid "+meta.color+"44;border-radius:999px;padding:3px 6px"},meta.label)
+        ),
+        h("div",{style:"font-size:10px;color:var(--td);line-height:1.4;margin-top:4px"},rb.objective),
+        h("div",{style:"font-size:8.5px;color:"+meta.color+";font-family:Orbitron,sans-serif;letter-spacing:.7px;text-transform:uppercase;margin-top:6px"},"Récompense : XP initiale de la Brèche + objet aléatoire garanti")
       );
     }
 
@@ -5823,6 +5825,14 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const hiddenBonus = objs.filter(o=>o.optional&&!o.weekly&&o.bonusHidden);
     const specialList = STATS.flatMap(stat=>(SP[stat]||[]).map(q=>({...q,stat:q.stat||stat})));
     const breachList=BREACH_POOL.map(q=>({...q,isBreach:true}));
+    const breachBossList=[
+      ...((DUNGEON_RUPTURE_BOSSES.alchemist||[]).map(rb=>({...rb,stat:"Sante"}))),
+      ...((DUNGEON_RUPTURE_BOSSES.warrior||[]).map(rb=>({...rb,stat:"Force"}))),
+      ...((DUNGEON_RUPTURE_BOSSES.monk||[]).map(rb=>({...rb,stat:"Esprit"}))),
+      ...((DUNGEON_RUPTURE_BOSSES.pilgrim||[]).map(rb=>({...rb,stat:"Endurance"}))),
+      ...((DUNGEON_RUPTURE_BOSSES.hunter||[]).map(rb=>({...rb,stat:"Agilite"}))),
+      ...((DUNGEON_RUPTURE_BOSSES.guardian||[]).map(rb=>({...rb,stat:"Discipline"})))
+    ];
     const elanList=EVENT_BONUSES.filter(e=>!e.disabled).map(e=>({...e,type:"bonus"}));
 
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setInventoryItem(null)}},
@@ -5831,7 +5841,17 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{class:"mtitle",style:"padding-right:28px"},"CODEX"),
         h("div",{style:"display:flex;justify-content:center;align-items:center;margin:14px 0 8px"},InventoryItemIcon("codex",128)),
         h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;text-align:center;margin-bottom:15px"},"Catalogue complet des quêtes et systèmes de l’application."),
-        h(Section,{id:"breach",title:"Brèches",count:breachList.length},h(Fragment,null,h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Une Brèche a 1 % de chance d’apparaître au reset quotidien. Elle remplace la quête urgente du jour et reste ouverte 72 h. Si elle n’est pas refermée, elle entre en Rupture : un Boss apparaît pendant 24 h. Le maîtriser accorde l’XP initiale de la Brèche et un objet aléatoire garanti. En cas d’échec, un malus de −25 % d’XP s’applique pendant 24 h."),groupByDominantStat(breachList,renderSpecial))),
+        h(Section,{id:"breach",title:"Brèches",count:breachList.length+breachBossList.length},
+          h(Fragment,null,
+            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Une Brèche a 1 % de chance d’apparaître au reset quotidien. Elle remplace la quête urgente du jour et reste ouverte 72 h. Si elle n’est pas refermée, elle entre en Rupture : un Boss apparaît pendant 24 h. Le maîtriser accorde l’XP initiale de la Brèche et un objet aléatoire garanti. En cas d’échec, un malus de −25 % d’XP s’applique pendant 24 h."),
+            h("div",{style:"font-size:9px;color:#8dbbff;font-family:Orbitron,sans-serif;letter-spacing:1.2px;text-transform:uppercase;margin:4px 0 9px"},"Brèches"),
+            groupByDominantStat(breachList,renderSpecial),
+            h("div",{style:"margin-top:13px;padding-top:11px;border-top:1px solid rgba(255,255,255,0.08)"},
+              h("div",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:9px"},"Boss de Rupture"),
+              groupByDominantStat(breachBossList,renderBreachBossCodex,rb=>rb.stat)
+            )
+          )
+        ),
         h(Section,{id:"dj",title:"Donjons",count:DUNGEONS.length},
           h(Fragment,null,
             h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Un Donjon inachevé se ferme à l’expiration de son délai. Les salles déjà validées et leurs XP restent acquises. Le Cristal de téléportation permet toujours de quitter volontairement un Donjon actif."),
