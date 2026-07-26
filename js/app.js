@@ -4186,8 +4186,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setInventoryItem(null)}},
       h("div",{class:"modal",style:"position:relative;max-width:390px;width:calc(100% - 28px)"},
-        h("button",{onClick:()=>setInventoryItem(null),style:"position:absolute;right:12px;top:10px;border:0;background:transparent;color:#fff;font-size:22px;cursor:pointer"},"×"),
-        h("div",{class:"mtitle",style:"padding-right:28px"},it.name),
+        h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:12px"},
+          h("div",{class:"mtitle",style:"margin:0;line-height:1.2;min-width:0"},it.name),
+          h("button",{onClick:()=>setInventoryItem(null),style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
+        ),
         h("div",{style:"display:flex;justify-content:center;align-items:center;margin:14px 0 8px"},InventoryItemIcon(id,128)),
         h("div",{style:"text-align:center;font-family:Orbitron,sans-serif;font-size:10px;color:var(--td);margin-bottom:16px"},id==="regressionOrb"?"OBJET PERMANENT":id==="etherStopper"&&suspendedElixir?"ÉLIXIR SUSPENDU · "+fmtCD(suspendedElixir.remainingMs):"QUANTITÉ : "+qty),
         h("div",{style:"font-size:12px;line-height:1.6;color:var(--tx);margin-bottom:14px"},it.desc),
@@ -4797,9 +4799,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget){setShowSet(false);setConfirmReset(false);}}},
       h("div",{class:"modal"},
-        h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"},
-          h("div",{class:"mtitle",style:"margin-bottom:0;display:flex;align-items:center;gap:8px"},"⚙️","Réglages"),
-          h("button",{style:"background:none;border:none;color:var(--td);font-size:44px;line-height:1;cursor:pointer",onClick:()=>{setShowSet(false);setConfirmReset(false);}},"\u2715")
+        h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px"},
+          h("div",{class:"mtitle",style:"margin:0;line-height:1.2"},"Réglages"),
+          h("button",{onClick:()=>{setShowSet(false);setConfirmReset(false);},style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
         ),
         h("div",{class:"msec"},
           h("div",{class:"mlbl"},"Corriger les données du jour"),
@@ -5835,8 +5837,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setInventoryItem(null)}},
       h("div",{class:"modal",style:"position:relative;max-width:470px;width:calc(100% - 24px);max-height:88vh;overflow:auto;padding-top:16px"},
-        h("button",{onClick:()=>setInventoryItem(null),style:"position:absolute;right:12px;top:10px;border:0;background:transparent;color:#fff;font-size:22px;cursor:pointer"},"×"),
-        h("div",{class:"mtitle",style:"padding-right:28px"},"CODEX"),
+        h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:12px"},
+          h("div",{class:"mtitle",style:"margin:0;line-height:1.2"},"CODEX"),
+          h("button",{onClick:()=>setInventoryItem(null),style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
+        ),
         h("div",{style:"display:flex;justify-content:center;align-items:center;margin:14px 0 8px"},InventoryItemIcon("codex",128)),
         h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;text-align:center;margin-bottom:15px"},"Catalogue complet des quêtes et systèmes de l’application."),
         h(Section,{id:"breach",title:"Brèches",count:breachList.length+breachBossList.length},
