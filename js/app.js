@@ -270,7 +270,7 @@ function processDailyBreachRoll(state,now=Date.now()){
 // Donjons volontaires : 1 actif à la fois, 1/jour, 3/semaine, accès par clé. À l’expiration, fermeture simple.
 // Ordre aligné sur les stats : Santé, Force, Esprit, Endurance, Agilité, Discipline.
 const DUNGEONS = [
-  {id:"alchemist", title:"Donjon de l’Alchimiste", short:"Alchimiste", stat:"Sante", icon:"⚗️", color:"#ef4444", reward:{xp:2250,stat:"Sante",xp2:450,stat2:"Esprit"}, rooms:[
+  {id:"alchemist", title:"Donjon de l’Alchimiste", short:"Alchimiste", stat:"Sante", icon:"🧪", color:"#ef4444", reward:{xp:2250,stat:"Sante",xp2:450,stat2:"Esprit"}, rooms:[
     {name:"Hydratation", desc:"2 verres d’eau d’une traite"},
     {name:"Lumière naturelle", desc:"10 min au soleil"},
     {name:"Repas propre", desc:"1 repas équilibré, sans sucre transformé ni junk-food ni écran"},
@@ -5811,9 +5811,14 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       }
       function Exercise({icon,name,target,unit,rewards}){
         return h("div",{style:subStyle},
-          h("div",{style:"display:flex;align-items:center;gap:7px;font-size:12px;color:var(--tx);font-weight:800"},h("span",{style:"font-size:15px"},icon),name),
-          h("div",{style:"margin-top:5px"},(rewards||[]).map((r,i)=>h(Reward,{key:i,stat:r.stat,xp:r.xp}))),
-          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-top:4px"},"▸ Objectif : "+objective(target,unit))
+          h("div",{style:"display:flex;align-items:center;gap:8px"},
+            h("span",{style:"font-size:15px;line-height:1;min-width:24px;text-align:center;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0"},icon),
+            h("div",{style:"flex:1;min-width:0"},
+              h("div",{style:"font-size:12px;color:var(--tx);font-weight:800"},name),
+              h("div",{style:"margin-top:5px"},(rewards||[]).map((r,i)=>h(Reward,{key:i,stat:r.stat,xp:r.xp}))),
+              h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-top:4px"},"▸ Objectif : "+objective(target,unit))
+            )
+          )
         );
       }
       const pushTarget=getStatLevelTarget("push",state.stats);
@@ -5915,8 +5920,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     function renderDungeonCodex(dg){
       const rewards=dungeonRewardPairs(dg);
       return h("div",{key:dg.id,style:cardStyle},
-        h("div",{style:"display:flex;align-items:flex-start;gap:8px"},
-          h("div",{style:"font-size:18px;line-height:1;min-width:24px;text-align:center"},dg.icon),
+        h("div",{style:"display:flex;align-items:center;gap:8px"},
+          h("div",{style:"font-size:18px;line-height:1;min-width:24px;text-align:center;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0"},dg.icon),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},dg.title),
             h("div",{style:"margin-top:7px"},rewards.map((r,i)=>h(StatPill,{key:i,stat:r.stat,xp:r.xp}))),
