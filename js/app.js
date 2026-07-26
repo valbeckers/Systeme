@@ -1041,7 +1041,8 @@ function cleanSystemState(raw){
       destinyCompass:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.destinyCompass)||0)),
       etherStopper:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.etherStopper)||0)),
       rerollToken:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.rerollToken)||0)),
-      alchemicalCatalyst:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.alchemicalCatalyst)||0))
+      alchemicalCatalyst:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.alchemicalCatalyst)||0)),
+      recoveryOintment:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.recoveryOintment)||0))
     },
     masterContractArmed:data.masterContractArmed===true,
     recordChallenge:data.recordChallenge||null,
@@ -1603,14 +1604,15 @@ function App(){
       ["destinyCompass",source==="urgent"?0.10:0.01],
       ["etherStopper",0.01],
       ["rerollToken",0.01],
-      ["alchemicalCatalyst",0.01]
+      ["alchemicalCatalyst",0.01],
+      ["recoveryOintment",0.01]
     ];
     let won=false;
     drops.forEach(([id,p])=>{if(Math.random()<p){won=true;if(id==="key")awardDungeonKey("rare");else awardInventoryItem(id,"rare");}});
     return won;
   }
   function tryDungeonItemDrops(){
-    [["masterContract",.10],["recordHammer",.10],["teleportCrystal",.10],["invisibilityCape",.10],["destinyCompass",.01],["etherStopper",.10],["rerollToken",.10]].forEach(([id,p])=>{if(Math.random()<p)awardInventoryItem(id,"rare");});
+    [["masterContract",.10],["recordHammer",.10],["teleportCrystal",.10],["invisibilityCape",.10],["destinyCompass",.01],["etherStopper",.10],["rerollToken",.10],["recoveryOintment",.10]].forEach(([id,p])=>{if(Math.random()<p)awardInventoryItem(id,"rare");});
   }
 
   // Migration grips sec→min sur le state en mémoire (au cas où localStorage non migré)
@@ -3969,11 +3971,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     masterContract:{name:"CONTRAT DU MAÎTRE",short:"CONTRAT DU MAÎTRE",emoji:"📜",action:"UTILISER",desc:"Au lancement du prochain donjon, choisissez une contrainte supplémentaire parmi trois. Si le donjon est terminé, la récompense finale augmente de 20 %. Contraintes : délai réduit à 12 heures, objectifs multipliés par 1,5, ou boss remplacé par un Boss de Rupture.",obtain:["Après avoir complété un donjon (Taux : 10 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %)."]},
     recordHammer:{name:"MARQUE DU DÉPASSEMENT",short:"MARQUE DU DÉPASSEMENT",emoji:"✨",action:"UTILISER",desc:"Permet de marquer un record comme objectif officiel de la semaine. Le battre avant la fin de semaine rapporte +500 XP. L’objet est perdu en cas d’échec.",obtain:["Après avoir complété un donjon (Taux : 10 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 10 %)."]},
     teleportCrystal:{name:"CRISTAL DE TÉLÉPORTATION",short:"CRISTAL DE TÉLÉPORTATION",emoji:"💠",action:"UTILISER",desc:"Permet de quitter un donjon en cours de route. L’XP acquise jusque-là est conservée et le donjon se referme sans rupture.",obtain:["Après avoir complété un donjon (Taux : 10 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %)."]},
-    invisibilityCape:{name:"CAPE D’INVISIBILITÉ",short:"CAPE D’INVISIBILITÉ",emoji:"👣",action:"UTILISER",desc:"Permet de passer une salle de donjon sans être vu. La salle est considérée comme terminée, sans gain d’XP.",obtain:["Après avoir complété un donjon (Taux : 10 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %)."]}
+    invisibilityCape:{name:"CAPE D’INVISIBILITÉ",short:"CAPE D’INVISIBILITÉ",emoji:"👣",action:"UTILISER",desc:"Permet de passer une salle de donjon sans être vu. La salle est considérée comme terminée, sans gain d’XP.",obtain:["Après avoir complété un donjon (Taux : 10 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %)."]},
+    recoveryOintment:{name:"ONGUENT DE RÉCUPÉRATION",short:"ONGUENT DE RÉCUPÉRATION",emoji:"🧴",action:"UTILISER",desc:"Permet de passer une quête journalière ou bonus en cas de blessure ou de repos forcé. La quête est considérée comme validée, sans gain d’XP.",obtain:["Après avoir complété un donjon (Taux : 10 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %)."]}
   };
   function itemQty(id){ return ["codex","regressionOrb"].includes(id)?1:id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
   function Inventory(){
-    const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","etherStopper","rerollToken","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape"]
+    const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","etherStopper","rerollToken","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape","recoveryOintment"]
       .sort((a,b)=>{
         const permanentA=["codex","regressionOrb"].includes(a);
         const permanentB=["codex","regressionOrb"].includes(b);
@@ -4051,6 +4054,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       else if(!objs.some(o=>o.daily&&!o.optional&&isDebtEligibleQuest(o)&&(Number(tLog[o.id])||0)<getEffectiveTarget(o.id))){disabled=true;reason="Aucune quête éligible incomplète aujourd’hui.";}
     }else if(id==="recordHammer"){
       if(state.recordChallenge&&state.recordChallenge.week===wk){disabled=true;reason="Un record officiel est déjà actif cette semaine.";}
+    }else if(id==="recoveryOintment"){
+      const regularEligible=objs.some(o=>o.daily&&(Number(tLog[o.id])||0)<getEffectiveTarget(o.id));
+      if(!regularEligible){disabled=true;reason="Aucune quête journalière ou bonus active et incomplète ne peut être passée.";}
     }else if(id==="teleportCrystal"||id==="invisibilityCape"){
       if(!activeDungeon){disabled=true;reason="Aucun donjon n’est actuellement actif.";}
     }else if(activeElixir||suspendedElixir){
@@ -4119,6 +4125,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             setState(s=>({...s,inventory:{...(s.inventory||{}),masterContract:Math.max(0,(Number(s.inventory&&s.inventory.masterContract)||0)-1)},masterContractArmed:true}));setItemUseUp({id});
           }else if(id==="debtAcknowledgement"){
             setSpecialItemChoice({type:"debtAcknowledgement"});
+          }else if(id==="recoveryOintment"){
+            setSpecialItemChoice({type:"recoveryOintment"});
           }else if(id==="recordHammer"||id==="invisibilityCape"){
             setSpecialItemChoice({type:id});
           }else if(id==="teleportCrystal"){
@@ -4177,8 +4185,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     let options=[];
     if(type==="recordHammer")options=recordOptions().map(x=>({id:x.obj.id,label:x.obj.icon+" "+x.obj.name+" — "+fmtNum(x.best)+" "+x.obj.unit,obj:x.obj,best:x.best}));
     if(type==="debtAcknowledgement")options=objs.filter(o=>o.daily&&!o.optional&&isDebtEligibleQuest(o)&&(Number(tLog[o.id])||0)<getEffectiveTarget(o.id)).map(o=>({id:o.id,label:o.icon+" "+o.name+" — "+fmtNum(getEffectiveTarget(o.id)-(Number(tLog[o.id])||0))+" "+o.unit+" manquants",obj:o}));
+    if(type==="recoveryOintment"){
+      options=objs.filter(o=>o.daily&&(Number(tLog[o.id])||0)<getEffectiveTarget(o.id)).map(o=>({id:"regular:"+o.id,label:o.icon+" "+o.name,obj:o,questKind:"regular"}));
+    }
     if(type==="invisibilityCape"||type==="cape"){const d=activeDungeon;options=d?d.rooms.slice(0,-1).map((r,i)=>!(d.completedRooms||[]).includes(i)?{id:i,label:(i+1)+". "+r.name}:null).filter(Boolean):[];}
-    return h("div",{class:"modal-ov"},h("div",{class:"modal",style:"max-width:410px;width:calc(100% - 28px)"},h("div",{class:"mtitle"},type==="recordHammer"?"CHOISIR UN RECORD":type==="debtAcknowledgement"?"CRÉER UNE DETTE":"PASSER UNE SALLE"),h("div",{style:"display:flex;flex-direction:column;gap:8px;margin-top:12px"},options.map(x=>h("button",{key:x.id,onClick:()=>{
+    return h("div",{class:"modal-ov"},h("div",{class:"modal",style:"max-width:410px;width:calc(100% - 28px)"},h("div",{class:"mtitle"},type==="recordHammer"?"CHOISIR UN RECORD":type==="debtAcknowledgement"?"CRÉER UNE DETTE":type==="recoveryOintment"?"CHOISIR UNE QUÊTE":"PASSER UNE SALLE"),h("div",{style:"display:flex;flex-direction:column;gap:8px;margin-top:12px"},options.map(x=>h("button",{key:x.id,onClick:()=>{
       setSpecialItemChoice(null);
       setConfirmTargetedItemUse({type:type==="cape"?"invisibilityCape":type,choice:x});
     },style:"padding:11px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:var(--tx);font-family:Orbitron,sans-serif;font-size:9px"},x.label))),!options.length&&h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:10px"},"Aucun choix disponible."),h("button",{onClick:()=>setSpecialItemChoice(null),style:"width:100%;margin-top:12px;padding:10px"},"Annuler")));
@@ -4206,6 +4217,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }else if(type==="invisibilityCape"){
       text="Utiliser la Cape d’invisibilité pour passer la salle « "+choice.label.replace(/^\d+\.\s*/,"")+" » sans gagner son XP ?";
       confirmLabel="Passer la salle";
+    }else if(type==="recoveryOintment"){
+      text="Utiliser l’Onguent de récupération pour valider « "+choice.obj.name+" » sans gagner d’XP ?";
+      confirmLabel="Passer la quête";
     }else if(type==="masterContract"){
       text="Lancer ce donjon avec la contrainte « "+pending.label+" » et une récompense finale augmentée de 20 % ?";
       confirmLabel="Signer le contrat";
@@ -4224,6 +4238,17 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       }else if(type==="invisibilityCape"){
         setState(s=>{const ad=s.activeDungeon;if(!ad||(Number(s.inventory&&s.inventory.invisibilityCape)||0)<1)return s;return {...s,inventory:{...(s.inventory||{}),invisibilityCape:Math.max(0,(Number(s.inventory&&s.inventory.invisibilityCape)||0)-1)},activeDungeon:{...ad,completedRooms:[...(ad.completedRooms||[]),Number(choice.id)].filter((v,i,a)=>a.indexOf(v)===i).sort((a,b)=>a-b)}};});
         setItemUseUp({id:"invisibilityCape"});
+      }else if(type==="recoveryOintment"){
+        setState(s=>{
+          const inv={...(s.inventory||{})};
+          if((Number(inv.recoveryOintment)||0)<1)return s;
+          inv.recoveryOintment=Math.max(0,(Number(inv.recoveryOintment)||0)-1);
+          const target=getEffectiveTarget(choice.obj.id);
+          const d={...s.dailyLog};
+          d[today]={...(d[today]||{}),[choice.obj.id]:target};
+          return {...s,inventory:inv,dailyLog:d,lastActiveDay:todayStr()};
+        });
+        setItemUseUp({id:"recoveryOintment",questName:choice.obj.name});
       }else if(type==="masterContract"){
         startDungeon(pending.dungeonId,pending.constraint);
       }
@@ -5331,6 +5356,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       teleportCrystal:{main:"#06b6d4",accent:"#a5f3fc"},
       invisibilityCape:{main:"#94a3b8",accent:"#e2e8f0"},
       debtAcknowledgement:{main:"#b91c1c",accent:"#f5d0a9"},
+      recoveryOintment:{main:"#22c55e",accent:"#d9f99d"},
       destinyCompass:{main:"#d4a84f",accent:"#60a5fa"},
       etherStopper:{main:"#7c3aed",accent:"#60a5fa"},
       rerollToken:{main:"#d4a84f",accent:"#38bdf8"},
