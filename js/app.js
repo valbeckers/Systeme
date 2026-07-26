@@ -5255,6 +5255,13 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   // ─── ONGLET CODEX ─────────────────────────────────────────────────────
 
 
+  function responsiveItemAnimationTitleStyle(name,maxSize=48){
+    const len=String(name||"").length;
+    const vw=len>=28?6.5:len>=22?7.2:8;
+    const min=len>=28?22:24;
+    return "font-size:clamp("+min+"px,"+vw+"vw,"+maxSize+"px);white-space:normal;line-height:1.08;width:calc(100vw - 32px);max-width:360px;overflow-wrap:anywhere;word-break:normal;hyphens:auto;text-align:center";
+  }
+
   function ItemLootUp(){
     if(!itemLootUp)return null;
     const it=INVENTORY_ITEMS[itemLootUp.item]||INVENTORY_ITEMS.minorElixir;
@@ -5297,7 +5304,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{style:"position:absolute;inset:18px;border-radius:50%;background:radial-gradient(circle,"+main+"55 0%,"+main+"20 42%,transparent 72%);filter:blur(5px);box-shadow:0 0 34px "+glow}),
           h("div",{style:"position:relative;z-index:1;filter:drop-shadow(0 0 14px "+glow+");animation:ruPulse 1.8s ease-in-out infinite"},InventoryItemIcon(itemLootUp.item,112))
         ),
-        h("div",{class:"rurank",style:"--rc:"+main+";--rg:"+glow+";color:"+main+";text-shadow:0 0 18px "+glow+";font-size:clamp(28px,8vw,48px);white-space:normal;line-height:1.08;max-width:360px","data-r":it.name},it.name),
+        h("div",{class:"rurank",style:"--rc:"+main+";--rg:"+glow+";color:"+main+";text-shadow:0 0 18px "+glow+";"+responsiveItemAnimationTitleStyle(it.name,48),"data-r":it.name},it.name),
         h("button",{class:"rudis",style:"--rc:"+main+";--rg:"+glow,onClick:()=>setItemLootUp(null)},"Continuer")
       )
     );
@@ -5309,7 +5316,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     return h("div",{class:"ruov",style:"--rc:"+rank.color+";--rg:"+rank.glow},h("div",{class:"rucont"},
       h(NotificationHeader,null),
       h("div",{class:"ruevol",style:"color:"+rank.color},itemUseUp.id==="dungeonKey"?"Vous avez utilisé une":itemUseUp.id==="debtAcknowledgement"?"Dette créée avec une":itemUseUp.id==="transmutationGrimoire"?"Transmutation accomplie":itemUseUp.id==="destinyCompass"?"Boussole orientée":itemUseUp.id==="etherStopper"?(itemUseUp.resumed?"Élixir réactivé":"Élixir suspendu"):itemUseUp.id==="rerollToken"?"Quête urgente invoquée":itemUseUp.id==="alchemicalCatalyst"?"Catalyseur préparé":"Vous avez consommé un"),
-      h("div",{class:"rurank",style:"font-size:clamp(32px,9vw,56px);white-space:normal;line-height:1.1;max-width:360px","data-r":it.name},it.name),
+      h("div",{class:"rurank",style:responsiveItemAnimationTitleStyle(it.name,56),"data-r":it.name},it.name),
       itemUseUp.stat&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Vous bénéficiez de +"+Math.round(itemUseUp.pct*100)+" % d’XP dans ",h("span",{style:"color:"+(STAT_COLOR[itemUseUp.stat]||rank.color)},STAT_LBL[itemUseUp.stat]||itemUseUp.stat)," pendant 24 h."),
       itemUseUp.global&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:#c084fc"},"Vous bénéficiez de +"+Math.round(itemUseUp.pct*100)+" % d’XP sur toutes les statistiques pendant 24 h."),
       itemUseUp.transmuted&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:#c084fc"},itemUseUp.catalystUsed?"Le Catalyseur et le Grimoire ont fusionné 3 Élixirs d’expérience mineurs en 1 Élixir d’expérience magistral.":"5 Élixirs d’expérience mineurs ont été fusionnés en 1 Élixir d’expérience magistral."),
