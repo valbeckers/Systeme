@@ -218,68 +218,56 @@ const DUNGEONS = [
 
 ];
 
-// Boss de Rupture — tirage lorsqu’une Brèche reste ouverte après 72 h.
-// Probabilités : Mineur 50 %, Majeur 30 %, Élite 15 %, Légendaire 5 %.
-const DUNGEON_RUPTURE_RARITIES = {
-  mineur:{label:"Mineur",color:"#4ade80",chance:0.50},
-  majeur:{label:"Majeur",color:"#60a5fa",chance:0.30},
-  elite:{label:"Élite",color:"#c084fc",chance:0.15},
-  legendaire:{label:"Légendaire",color:"#f97316",chance:0.05},
-};
-
+// Boss de Rupture — tirage aléatoire équiprobable lorsqu’une Brèche reste ouverte après 72 h.
 const DUNGEON_RUPTURE_BOSSES = {
   alchemist:[
-    {id:"alchemist_putride",rarity:"mineur",name:"L’Alchimiste Putride",objective:"2 repas équilibrés consécutifs, sans sucre transformé, junk-food ni écran"},
-    {id:"alchemist_noir",rarity:"majeur",name:"L’Alchimiste Noir",objective:"Journée de purification : 2 L d’eau répartis avant 18 h et 2 repas propres"},
-    {id:"alchemist_dechu",rarity:"elite",name:"L’Alchimiste Déchu",objective:"30 min de lumière naturelle"},
-    {id:"alchemist_corrompu",rarity:"legendaire",name:"L’Alchimiste Corrompu",objective:"30 min de marche en extérieur"},
+    {id:"alchemist_putride",name:"L’Alchimiste Putride",objective:"2 repas équilibrés consécutifs, sans sucre transformé, junk-food ni écran"},
+    {id:"alchemist_noir",name:"L’Alchimiste Noir",objective:"Journée de purification : 2 L d’eau répartis avant 18 h et 2 repas propres"},
+    {id:"alchemist_dechu",name:"L’Alchimiste Déchu",objective:"30 min de lumière naturelle"},
+    {id:"alchemist_corrompu",name:"L’Alchimiste Corrompu",objective:"30 min de marche en extérieur"},
   ],
   warrior:[
-    {id:"warrior_berserker",rarity:"mineur",name:"Le Berserker",objective:"200 pompes réparties dans la journée"},
-    {id:"warrior_colosse",rarity:"majeur",name:"Le Colosse",objective:"100 squats + 100 fentes"},
-    {id:"warrior_gladiateur",rarity:"elite",name:"Le Gladiateur",objective:"30 min de shadow boxing"},
-    {id:"warrior_titan",rarity:"legendaire",name:"Le Titan",objective:"15 min de Wall Sit cumulées"},
+    {id:"warrior_berserker",name:"Le Berserker",objective:"200 pompes réparties dans la journée"},
+    {id:"warrior_colosse",name:"Le Colosse",objective:"100 squats + 100 fentes"},
+    {id:"warrior_gladiateur",name:"Le Gladiateur",objective:"30 min de shadow boxing"},
+    {id:"warrior_titan",name:"Le Titan",objective:"15 min de Wall Sit cumulées"},
   ],
   pilgrim:[
-    {id:"pilgrim_nomade",rarity:"mineur",name:"Le Nomade",objective:"30 min de marche cumulées"},
-    {id:"pilgrim_voyageur_perdu",rarity:"majeur",name:"Le Voyageur Perdu",objective:"Atteindre 10 000 pas"},
-    {id:"pilgrim_predateur",rarity:"elite",name:"Le Prédateur",objective:"20 min de corde à sauter"},
-    {id:"pilgrim_messager",rarity:"legendaire",name:"Le Messager",objective:"Courir 7 km"},
+    {id:"pilgrim_nomade",name:"Le Nomade",objective:"30 min de marche cumulées"},
+    {id:"pilgrim_voyageur_perdu",name:"Le Voyageur Perdu",objective:"Atteindre 10 000 pas"},
+    {id:"pilgrim_predateur",name:"Le Prédateur",objective:"20 min de corde à sauter"},
+    {id:"pilgrim_messager",name:"Le Messager",objective:"Courir 7 km"},
   ],
   hunter:[
-    {id:"hunter_rodeur",rarity:"mineur",name:"Le Rôdeur",objective:"10 min de déplacements latéraux rapides"},
-    {id:"hunter_fauve",rarity:"majeur",name:"Le Fauve",objective:"20 min de footwork"},
-    {id:"hunter_traqueur",rarity:"elite",name:"Le Traqueur",objective:"30 allers-retours d’escaliers"},
-    {id:"hunter_acrobate",rarity:"legendaire",name:"L’Acrobate",objective:"30 min d’Animal Flow ou de mobilité active continue"},
+    {id:"hunter_rodeur",name:"Le Rôdeur",objective:"10 min de déplacements latéraux rapides"},
+    {id:"hunter_fauve",name:"Le Fauve",objective:"20 min de footwork"},
+    {id:"hunter_traqueur",name:"Le Traqueur",objective:"30 allers-retours d’escaliers"},
+    {id:"hunter_acrobate",name:"L’Acrobate",objective:"30 min d’Animal Flow ou de mobilité active continue"},
   ],
   monk:[
-    {id:"monk_sage_dechu",rarity:"mineur",name:"Le Sage Déchu",objective:"30 min de lecture profonde sans interruption"},
-    {id:"monk_veilleur",rarity:"majeur",name:"Le Veilleur",objective:"30 min de méditation guidée"},
-    {id:"monk_ombre_interieure",rarity:"elite",name:"L’Ombre Intérieure",objective:"45 min de silence total, sans téléphone, musique, vidéo, podcast ni conversation"},
-    {id:"monk_scribe",rarity:"legendaire",name:"Le Scribe",objective:"Rédiger un résumé de 300 mots d’une lecture ou d’un podcast, sans consulter la source pendant la rédaction"},
+    {id:"monk_sage_dechu",name:"Le Sage Déchu",objective:"30 min de lecture profonde sans interruption"},
+    {id:"monk_veilleur",name:"Le Veilleur",objective:"30 min de méditation guidée"},
+    {id:"monk_ombre_interieure",name:"L’Ombre Intérieure",objective:"45 min de silence total, sans téléphone, musique, vidéo, podcast ni conversation"},
+    {id:"monk_scribe",name:"Le Scribe",objective:"Rédiger un résumé de 300 mots d’une lecture ou d’un podcast, sans consulter la source pendant la rédaction"},
   ],
   guardian:[
-    {id:"guardian_commandant",rarity:"mineur",name:"Le Commandant",objective:"Terminer entièrement 3 tâches repoussées"},
-    {id:"guardian_sentinelle",rarity:"majeur",name:"La Sentinelle",objective:"Ranger entièrement une pièce"},
-    {id:"guardian_stratege",rarity:"elite",name:"Le Stratège",objective:"Planifier précisément la journée suivante puis commencer immédiatement la première tâche"},
-    {id:"guardian_dechu",rarity:"legendaire",name:"Le Gardien Déchu",objective:"60 min de Deep Work sans interruption volontaire"},
+    {id:"guardian_commandant",name:"Le Commandant",objective:"Terminer entièrement 3 tâches repoussées"},
+    {id:"guardian_sentinelle",name:"La Sentinelle",objective:"Ranger entièrement une pièce"},
+    {id:"guardian_stratege",name:"Le Stratège",objective:"Planifier précisément la journée suivante puis commencer immédiatement la première tâche"},
+    {id:"guardian_dechu",name:"Le Gardien Déchu",objective:"60 min de Deep Work sans interruption volontaire"},
   ],
   steward:[
-    {id:"steward_negligent",rarity:"mineur",name:"Le Négligent",objective:"Ranger 20 objets"},
-    {id:"steward_poussiere",rarity:"majeur",name:"Le Seigneur de la Poussière",objective:"Faire la poussière pendant 30 min"},
-    {id:"steward_encombreur",rarity:"elite",name:"L’Encombreur",objective:"Ranger entièrement une pièce"},
-    {id:"steward_crasse",rarity:"legendaire",name:"Le Maître de la Crasse",objective:"60 min de nettoyage domestique continu"},
+    {id:"steward_negligent",name:"Le Négligent",objective:"Ranger 20 objets"},
+    {id:"steward_poussiere",name:"Le Seigneur de la Poussière",objective:"Faire la poussière pendant 30 min"},
+    {id:"steward_encombreur",name:"L’Encombreur",objective:"Ranger entièrement une pièce"},
+    {id:"steward_crasse",name:"Le Maître de la Crasse",objective:"60 min de nettoyage domestique continu"},
   ],
 };
 
 function pickDungeonRuptureBoss(dungeonId){
   const pool=DUNGEON_RUPTURE_BOSSES[dungeonId]||[];
   if(!pool.length) return null;
-  const roll=Math.random();
-  const rarity=roll<0.50?"mineur":roll<0.80?"majeur":roll<0.95?"elite":"legendaire";
-  const boss=pool.find(b=>b.rarity===rarity)||pool[0];
-  const meta=DUNGEON_RUPTURE_RARITIES[boss.rarity]||DUNGEON_RUPTURE_RARITIES.mineur;
-  return {...boss,rarityLabel:meta.label,rarityColor:meta.color};
+  return {...pool[Math.floor(Math.random()*pool.length)],ruptureColor:"#ef4444"};
 }
 
 function ruptureDungeonIdForStat(stat){
@@ -995,8 +983,6 @@ function cleanDungeonLog(log){
     const rb=e.ruptureBoss&&typeof e.ruptureBoss==="object" ? {
       id:e.ruptureBoss.id||null,
       name:e.ruptureBoss.name||"Boss de Rupture",
-      rarity:e.ruptureBoss.rarity||"mineur",
-      rarityLabel:e.ruptureBoss.rarityLabel||null,
       objective:e.ruptureBoss.objective||""
     } : null;
     return {
@@ -2252,7 +2238,7 @@ function App(){
       if(!cur||cur.ruptureBoss||t<(cur.expiresAt||0))return s;
       return {...s,activeBreach:{...cur,progress:0,rupturedAt:t,ruptureBoss,expiresAt:ruptureBoss.expiresAt}};
     });
-    setRuptureUp({dungeonTitle:"Brèche en Rupture",icon:"⚡",name:boss.name,objective:boss.objective,rarityLabel:boss.rarityLabel,rarityColor:boss.rarityColor});
+    setRuptureUp({dungeonTitle:"Brèche en Rupture",icon:"⚡",name:boss.name,objective:boss.objective,ruptureColor:"#ef4444"});
   },[now,state.activeBreach?.expiresAt,state.activeBreach?.ruptureBoss?.id]);
 
   // Échec automatique d’une dette non remboursée après son jour d’échéance
@@ -2951,8 +2937,8 @@ function App(){
         triggerProgressOverlay(beforeXp,beforeStats,totalXp,stats,300);
         setTimeout(()=>setDungeonUp({
           label:"BOSS DE RUPTURE VAINCU",short:rb.name,icon:"☠️",
-          color:rb.rarityColor||dungeon.color,reward:rewardText,
-          subtitle:(rb.rarityLabel||"Boss")+" · "+dungeon.short,rupture:true
+          color:rb.ruptureColor||"#ef4444",reward:rewardText,
+          subtitle:"Boss de Rupture · "+dungeon.short,rupture:true
         }),200);
         return {
           ...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:null,
@@ -2960,7 +2946,7 @@ function App(){
             id:dungeon.id,runId:ad.runId,startedAt:ad.startedAt,title:dungeon.title,stat:dungeon.stat,
             xp:priorRoomXp+awardedXp,completedAt,expiresAt:ad.expiresAt,
             rupture:true,ruptureBoss:{
-              id:rb.id,name:rb.name,rarity:rb.rarity,rarityLabel:rb.rarityLabel,objective:rb.objective
+              id:rb.id,name:rb.name,objective:rb.objective
             }
           }],
           lastActiveDay:day
@@ -3465,7 +3451,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       [["top:-10px;left:8px"],["top:-10px;right:8px"],["bottom:-11px;left:10px"],["bottom:-11px;right:10px"]].map((p,i)=>h("span",{key:i,style:"position:absolute;"+p[0]+";color:#fff;font-size:17px;filter:drop-shadow(0 0 7px #fff);pointer-events:none"},"⚡")),
       h("div",{style:"position:relative;z-index:2"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:9px"},
-          h("div",{class:"ctitle",style:"margin:0;color:"+(isRupture?(rupture.rarityColor||"#fff"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE"),
+          h("div",{class:"ctitle",style:"margin:0;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE"),
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#fff;border:1px solid rgba(255,255,255,.45);border-radius:999px;padding:4px 7px;white-space:nowrap"},"⏱ "+fmtCD(remaining))
         ),
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px"},
@@ -3488,14 +3474,13 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     if(compact && !d) return null;
     if(d&&d.ruptureBoss){
       const rb=d.ruptureBoss;
-      const ruptureColor=rb.rarityColor||DUNGEON_RUPTURE_RARITIES[rb.rarity]?.color||color;
+      const ruptureColor=rb.ruptureColor||"#ef4444";
       const secured=(d.completedRooms||[]).length;
       return h("div",{class:"card",style:"border-color:"+ruptureColor+"88;background:linear-gradient(135deg,"+ruptureColor+"12,rgba(255,255,255,0.025))"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px"},
           h("div",{style:"min-width:0"},
             h("div",{class:"ctitle",style:"margin:0;color:"+ruptureColor},"⚠️ RUPTURE — "+d.title)
           ),
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+ruptureColor+";border:1px solid "+ruptureColor+"66;border-radius:999px;padding:4px 7px;white-space:nowrap;text-transform:uppercase"},rb.rarityLabel||"Rupture")
         ),
         h("div",{style:"padding:12px;border-radius:11px;border:1px solid "+ruptureColor+"55;background:"+ruptureColor+"10"},
           h("div",{style:"font-size:9px;color:"+ruptureColor+";font-family:Orbitron,sans-serif;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:5px"},"☠️ Boss de Rupture · "+fmtCD(remaining)+" restants"),
@@ -3574,13 +3559,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     // et non comme un donjon normal fraîchement ouvert.
     if(d.ruptureBoss){
       const rb=d.ruptureBoss;
-      const ruptureColor=rb.rarityColor||DUNGEON_RUPTURE_RARITIES[rb.rarity]?.color||color;
+      const ruptureColor=rb.ruptureColor||"#ef4444";
       return h("div",{class:"card",style:"border-color:"+ruptureColor+"88;background:linear-gradient(135deg,"+ruptureColor+"12,rgba(255,255,255,0.025))"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
           h("div",{style:"min-width:0"},
             h("div",{class:"ctitle",style:"margin:0;color:"+ruptureColor},"⚠️ RUPTURE — "+d.title)
           ),
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+ruptureColor+";border:1px solid "+ruptureColor+"66;border-radius:999px;padding:4px 7px;white-space:nowrap;text-transform:uppercase"},rb.rarityLabel||"Rupture")
         ),
         h("div",{style:"padding:10px;border-radius:10px;border:1px solid "+ruptureColor+"55;background:"+ruptureColor+"10"},
           h("div",{style:"font-size:8.5px;color:"+ruptureColor+";font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px"},"☠️ Boss de Rupture · "+fmtCD(remaining)+" restants"),
@@ -4988,7 +4972,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
   function DungeonRuptureUp(){
     if(!ruptureUp)return null;
-    const rarityColor=ruptureUp.rarityColor||"#f97316";
+    const rarityColor=ruptureUp.ruptureColor||"#ef4444";
     const rankColor=rank.color||"#fbbf24";
     const rankGlow=rank.glow||rankColor+"55";
     const red="#ef4444";
@@ -4998,7 +4982,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h("div",{class:"rucont"},
         h("div",{class:"ruevol",style:"color:"+red+";text-shadow:0 0 18px rgba(239,68,68,.65)"},"⚠️ RUPTURE DE DONJON"),
         h("div",{class:"rurank",style:"--rc:"+red+";--rg:rgba(239,68,68,.75);color:"+red+";text-shadow:0 0 20px rgba(239,68,68,.75);font-size:clamp(34px,10vw,60px);letter-spacing:-1px;white-space:normal;max-width:350px;line-height:1.05;margin-top:10px","data-r":"☠️ "+ruptureUp.name},"☠️ "+ruptureUp.name),
-        h("div",{class:"rulabel",style:"margin-top:12px;letter-spacing:3px;color:"+rarityColor},"BOSS "+String(ruptureUp.rarityLabel||"DE RUPTURE").toUpperCase()),
+        h("div",{class:"rulabel",style:"margin-top:12px;letter-spacing:3px;color:"+rarityColor},"BOSS DE RUPTURE"),
         h("button",{class:"rudis",style:"--rc:#ef4444;--rg:rgba(239,68,68,.65)",onClick:()=>setRuptureUp(null)},"Continuer")
       )
     );
@@ -5719,12 +5703,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }
 
     function renderBreachBossCodex(rb){
-      const meta=DUNGEON_RUPTURE_RARITIES[rb.rarity]||DUNGEON_RUPTURE_RARITIES.mineur;
-      return h("div",{key:rb.id,style:"margin-bottom:7px;padding:8px 9px;border-radius:9px;border:1px solid "+meta.color+"33;background:"+meta.color+"08"},
-        h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
-          h("div",{style:"font-size:11px;color:"+meta.color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;line-height:1.3"},rb.name),
-          h("div",{style:"font-size:8px;color:"+meta.color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;white-space:nowrap;border:1px solid "+meta.color+"44;border-radius:999px;padding:3px 6px"},meta.label)
-        ),
+      const color="#ef4444";
+      return h("div",{key:rb.id,style:"margin-bottom:7px;padding:8px 9px;border-radius:9px;border:1px solid "+color+"33;background:"+color+"08"},
+        h("div",{style:"font-size:11px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;line-height:1.3"},rb.name),
         h("div",{style:"font-size:10px;color:var(--td);line-height:1.4;margin-top:4px"},rb.objective)
       );
     }
