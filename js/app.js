@@ -5703,7 +5703,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }
 
     function renderBreachBossCodex(rb){
-      const color="#ef4444";
+      const color=STAT_COLOR[rb.stat]||"var(--rc)";
       return h("div",{key:rb.id,style:"margin-bottom:7px;padding:8px 9px;border-radius:9px;border:1px solid "+color+"33;background:"+color+"08"},
         h("div",{style:"font-size:11px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;line-height:1.3"},rb.name),
         h("div",{style:"font-size:10px;color:var(--td);line-height:1.4;margin-top:4px"},rb.objective)
@@ -5829,7 +5829,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Une Brèche a 1 % de chance d’apparaître au reset quotidien. Elle remplace la quête urgente du jour et reste ouverte 72 h. Si elle n’est pas refermée, elle entre en Rupture : un Boss apparaît pendant 24 h. Le maîtriser accorde l’XP initiale de la Brèche et un objet aléatoire garanti. En cas d’échec, un malus de −25 % d’XP s’applique pendant 24 h."),
             groupByDominantStat(breachList,renderSpecial),
             h("div",{style:"margin-top:13px;padding-top:11px;border-top:1px solid rgba(255,255,255,0.08)"},
-              h("div",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:9px"},"Boss de Rupture"),
+              h("div",{style:"font-size:9px;color:#fff;font-family:Orbitron,sans-serif;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:9px"},"Boss de Rupture"),
               groupByDominantStat(breachBossList,renderBreachBossCodex,rb=>rb.stat)
             )
           )
