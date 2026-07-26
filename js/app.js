@@ -5732,8 +5732,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       return h("div",{class:"card"},
         h("div",{onClick:()=>toggleC(id),style:"cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 "+(open?"12px":"0")+" 0"},
           h("div",null,
-            h("div",{class:"ctitle",style:"margin:0"+(id==="reg"?";color:#ef4444":"")},title),
-            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;margin-top:3px"},count+" entrée"+(count>1?"s":""))
+            h("div",{class:"ctitle",style:"margin:0"+(id==="reg"?";color:#ef4444":"")},title)
           ),
           h(ChevronC,{k:id})
         ),
@@ -5853,7 +5852,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         ),
         h(Section,{id:"dj",title:"Donjons",count:DUNGEONS.length},
           h(Fragment,null,
-            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Un Donjon inachevé se ferme à l’expiration de son délai. Les salles déjà validées et leurs XP restent acquises. Le Cristal de téléportation permet toujours de quitter volontairement un Donjon actif."),
+            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Un Donjon inachevé se ferme à l’expiration de son délai. Les salles déjà validées et leurs XP restent acquises."),
             groupByDominantStat(DUNGEONS,renderDungeonCodex,dg=>dg.stat)
           )
         ),
