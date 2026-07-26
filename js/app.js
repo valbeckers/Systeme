@@ -143,24 +143,27 @@ function breachTemplateById(id){return BREACH_POOL.find(b=>b.id===id)||null;}
 function normalizeActiveBreach(entry){
   if(!entry||!entry.id)return null;
   const tpl=breachTemplateById(entry.id);if(!tpl)return null;
-  return {...tpl,breachId:entry.breachId||("breach_"+(entry.startedAt||Date.now())),progress:Math.max(0,Number(entry.progress)||0),startedAt:Number(entry.startedAt)||Date.now(),expiresAt:Number(entry.expiresAt)||((Number(entry.startedAt)||Date.now())+72*60*60*1000),completedAt:entry.completedAt||null,isBreach:true};
+  const ruptureBoss=entry.ruptureBoss&&entry.ruptureBoss.id
+    ? {...entry.ruptureBoss,startedAt:Number(entry.ruptureBoss.startedAt)||Date.now(),expiresAt:Number(entry.ruptureBoss.expiresAt)||((Number(entry.ruptureBoss.startedAt)||Date.now())+24*60*60*1000)}
+    : null;
+  return {...tpl,breachId:entry.breachId||("breach_"+(entry.startedAt||Date.now())),progress:Math.max(0,Number(entry.progress)||0),startedAt:Number(entry.startedAt)||Date.now(),expiresAt:ruptureBoss?ruptureBoss.expiresAt:(Number(entry.expiresAt)||((Number(entry.startedAt)||Date.now())+72*60*60*1000)),completedAt:entry.completedAt||null,ruptureBoss,rupturedAt:entry.rupturedAt||null,isBreach:true};
 }
 function processDailyBreachRoll(state,now=Date.now()){
   const day=eventDayStr(now);
   const current=normalizeActiveBreach(state.activeBreach);
-  if(current&&!current.completedAt&&now<current.expiresAt){
+  if(current&&!current.completedAt){
     if(state.breachRollDay!==day)return {...state,activeBreach:current,breachRollDay:day};
     if(state.activeBreach&&state.activeBreach.id===current.id&&state.activeBreach.expiresAt===current.expiresAt)return state;
     return {...state,activeBreach:current};
   }
-  if(state.breachRollDay===day)return state.activeBreach?{...state,activeBreach:null}:state;
+  if(state.breachRollDay===day)return state;
   if(Math.random()>=0.01)return {...state,activeBreach:null,breachRollDay:day};
   const tpl=BREACH_POOL[Math.floor(Math.random()*BREACH_POOL.length)];
-  return {...state,activeBreach:{...tpl,breachId:"breach_"+now,progress:0,startedAt:now,expiresAt:now+72*60*60*1000,completedAt:null,isBreach:true},breachRollDay:day,breachTriggeredDay:day,specialQuests:(state.specialQuests||[]).filter(q=>q.completedAt||now>=(q.expiresAt||0)),sqCooldownUntil:next7AM(now),sqRerollDay:null};
+  return {...state,activeBreach:{...tpl,breachId:"breach_"+now,progress:0,startedAt:now,expiresAt:now+72*60*60*1000,completedAt:null,ruptureBoss:null,isBreach:true},breachRollDay:day,breachTriggeredDay:day,specialQuests:(state.specialQuests||[]).filter(q=>q.completedAt||now>=(q.expiresAt||0)),sqCooldownUntil:next7AM(now),sqRerollDay:null};
 }
 
 
-// Donjons volontaires : 1 actif à la fois, 1/jour, 3/semaine, accès par clé, 24h puis Boss de Rupture.
+// Donjons volontaires : 1 actif à la fois, 1/jour, 3/semaine, accès par clé. À l’expiration, fermeture simple.
 // Ordre aligné sur les stats : Santé, Force, Esprit, Endurance, Agilité, Discipline.
 const DUNGEONS = [
   {id:"alchemist", title:"Donjon de l’Alchimiste", short:"Alchimiste", stat:"Sante", icon:"⚗️", color:"#ef4444", reward:{xp:2250,stat:"Sante",xp2:450,stat2:"Esprit"}, rooms:[
@@ -215,7 +218,7 @@ const DUNGEONS = [
 
 ];
 
-// Boss de Rupture — tirage à l’expiration d’un donjon normal.
+// Boss de Rupture — tirage lorsqu’une Brèche reste ouverte après 72 h.
 // Probabilités : Mineur 50 %, Majeur 30 %, Élite 15 %, Légendaire 5 %.
 const DUNGEON_RUPTURE_RARITIES = {
   mineur:{label:"Mineur",color:"#4ade80",chance:0.50},
@@ -277,6 +280,13 @@ function pickDungeonRuptureBoss(dungeonId){
   const boss=pool.find(b=>b.rarity===rarity)||pool[0];
   const meta=DUNGEON_RUPTURE_RARITIES[boss.rarity]||DUNGEON_RUPTURE_RARITIES.mineur;
   return {...boss,rarityLabel:meta.label,rarityColor:meta.color};
+}
+
+function ruptureDungeonIdForStat(stat){
+  return {Sante:"alchemist",Force:"warrior",Esprit:"monk",Endurance:"pilgrim",Agilite:"hunter",Discipline:"guardian"}[stat]||"guardian";
+}
+function pickBreachRuptureBoss(stat){
+  return pickDungeonRuptureBoss(ruptureDungeonIdForStat(stat));
 }
 
 // Couleurs et libellés des tiers des quêtes urgentes
@@ -1085,6 +1095,7 @@ function cleanSystemState(raw){
     alchemicalCatalystArmed:data.alchemicalCatalystArmed===true,
     dungeonAccessOpen:data.dungeonAccessOpen===true,
     activeElixir:(data.activeElixir&&Number(data.activeElixir.expiresAt)>Date.now()&&(data.activeElixir.kind==="supremeElixir"||["Force","Sante","Esprit","Endurance","Agilite"].includes(data.activeElixir.stat)))?data.activeElixir:null,
+    ruptureMalus:(data.ruptureMalus&&Number(data.ruptureMalus.expiresAt)>Date.now())?{pct:-0.25,startedAt:Number(data.ruptureMalus.startedAt)||Date.now(),expiresAt:Number(data.ruptureMalus.expiresAt)}:null,
     dungeonKeyDay:data.dungeonKeyDay||null,
     dungeonKeyRollWon:data.dungeonKeyRollWon===true,
     dungeonLog:cleanDungeonLog(data.dungeonLog),
@@ -1214,6 +1225,7 @@ const IMPORTED = {
   dungeonSkipDay:null,
   dungeonRunsByWeek:{},
   dungeonLog:[],
+  ruptureMalus:null,
   dailyExtraXp:{},
   dailyEvent:null,
   eventDay:null,
@@ -1309,6 +1321,7 @@ function buildState(){
     alchemicalCatalystArmed:saved.alchemicalCatalystArmed===true,
     dungeonAccessOpen:saved.dungeonAccessOpen===true,
     activeElixir:saved.activeElixir||null,
+    ruptureMalus:saved.ruptureMalus||null,
     dailyExtraXp:saved.dailyExtraXp||IMPORTED.dailyExtraXp||{},
     dailyEvent:saved.dailyEvent||IMPORTED.dailyEvent||null,
     eventDay:saved.eventDay||IMPORTED.eventDay||null,
@@ -1360,20 +1373,8 @@ function buildState(){
   }
   if(out.activeDungeon && !out.activeDungeon.completedAt){
     const ad=out.activeDungeon;
-    const start=(ad.ruptureBoss&&ad.ruptureBoss.startedAt)||ad.rupturedAt||ad.startedAt||Date.now();
-    const expiresAt=next7AM(start);
-    let ruptureBoss=ad.ruptureBoss;
-    if(ruptureBoss){
-      const updated=(DUNGEON_RUPTURE_BOSSES[ad.id]||[]).find(b=>b.rarity===ruptureBoss.rarity);
-      ruptureBoss=updated
-        ? {...ruptureBoss,...updated,startedAt:ruptureBoss.startedAt||start,expiresAt}
-        : {...ruptureBoss,expiresAt};
-    }
-    out.activeDungeon={
-      ...ad,
-      expiresAt,
-      ruptureBoss
-    };
+    if(ad.ruptureBoss && !ad.contractConstraint) out.activeDungeon=null;
+    else out.activeDungeon={...ad,ruptureBoss:null,rupturedAt:null};
   }
   return out;
 }
@@ -1995,7 +1996,7 @@ function App(){
   },[now]);
   const sqs         = state.specialQuests||[];
   const activeSq    = sqs.find(q=>!q.completedAt&&now<q.expiresAt)||null;
-  const activeBreach=state.activeBreach&&!state.activeBreach.completedAt&&now<(state.activeBreach.expiresAt||0)?normalizeActiveBreach(state.activeBreach):null;
+  const activeBreach=state.activeBreach&&!state.activeBreach.completedAt?normalizeActiveBreach(state.activeBreach):null;
   const breachReplacesUrgentToday=state.breachTriggeredDay===eventDayStr(now);
   const completedSq = activeSq ? null : ([...(sqs||[])].filter(q=>q.completedAt&&(now-q.completedAt)<86400000).sort((a,b)=>(b.completedAt||0)-(a.completedAt||0))[0]||null);
   const sqCooldownUntil = state.sqCooldownUntil||null;
@@ -2216,41 +2217,43 @@ function App(){
     if(computedStreak!==state.streak)setState(s=>({...s,streak:computedStreak}));
   },[computedStreak]);
 
-  // Expiration : le donjon normal se rompt après 24 h ; le Boss de Rupture disparaît après son propre délai.
+  // Un Donjon expiré se ferme simplement ; les XP déjà gagnées restent acquises.
   useEffect(()=>{
     const ad=state.activeDungeon;
-    if(!ad || ad.completedAt || now < (ad.expiresAt||0)) return;
+    if(!ad||ad.completedAt||now<(ad.expiresAt||0))return;
+    setState(s=>{
+      const cur=s.activeDungeon;
+      return cur&&!cur.completedAt&&Date.now()>=(cur.expiresAt||0)?{...s,activeDungeon:null}:s;
+    });
+  },[now,state.activeDungeon?.expiresAt]);
 
-    // Une rupture ne peut pas se reproduire : à la seconde expiration, le donjon se referme.
-    if(ad.ruptureBoss){
+  // Une Brèche non refermée après 72 h entre en Rupture pendant 24 h.
+  useEffect(()=>{
+    const b=state.activeBreach;
+    if(!b||b.completedAt||now<(b.expiresAt||0))return;
+    if(b.ruptureBoss){
+      const t=Date.now();
       setState(s=>{
-        const cur=s.activeDungeon;
-        return cur&&cur.ruptureBoss&&Date.now()>=(cur.expiresAt||0) ? {...s,activeDungeon:null} : s;
+        const cur=s.activeBreach;
+        if(!cur||!cur.ruptureBoss||t<(cur.expiresAt||0))return s;
+        return {...s,activeBreach:null,ruptureMalus:{pct:-0.25,startedAt:t,expiresAt:t+24*60*60*1000}};
       });
       return;
     }
-
-    const dungeon=DUNGEONS.find(d=>d.id===ad.id);
-    const boss=dungeon ? pickDungeonRuptureBoss(dungeon.id) : null;
-    if(!dungeon || !boss){
-      setState(s=>s.activeDungeon&&Date.now()>=(s.activeDungeon.expiresAt||0)?{...s,activeDungeon:null}:s);
+    const boss=pickBreachRuptureBoss(b.stat);
+    if(!boss){
+      setState(s=>s.activeBreach&&Date.now()>=(s.activeBreach.expiresAt||0)?{...s,activeBreach:null}:s);
       return;
     }
-
-    // Le Boss de Rupture se referme au prochain passage de 7 h, comme les quêtes urgentes et les donjons.
     const t=Date.now();
-    const ruptureBoss={...boss,startedAt:t,expiresAt:next7AM(t)};
+    const ruptureBoss={...boss,startedAt:t,expiresAt:t+24*60*60*1000};
     setState(s=>{
-      const cur=s.activeDungeon;
-      if(!cur || cur.ruptureBoss || Date.now()<(cur.expiresAt||0)) return s;
-      return {...s,activeDungeon:{...cur,rupturedAt:t,ruptureBoss,expiresAt:ruptureBoss.expiresAt}};
+      const cur=s.activeBreach;
+      if(!cur||cur.ruptureBoss||t<(cur.expiresAt||0))return s;
+      return {...s,activeBreach:{...cur,progress:0,rupturedAt:t,ruptureBoss,expiresAt:ruptureBoss.expiresAt}};
     });
-    setRuptureUp({
-      dungeonTitle:dungeon.title,icon:dungeon.icon,
-      name:boss.name,objective:boss.objective,
-      rarityLabel:boss.rarityLabel,rarityColor:boss.rarityColor
-    });
-  },[now,state.activeDungeon?.expiresAt,state.activeDungeon?.ruptureBoss?.id]);
+    setRuptureUp({dungeonTitle:"Brèche en Rupture",icon:"⚡",name:boss.name,objective:boss.objective,rarityLabel:boss.rarityLabel,rarityColor:boss.rarityColor});
+  },[now,state.activeBreach?.expiresAt,state.activeBreach?.ruptureBoss?.id]);
 
   // Échec automatique d’une dette non remboursée après son jour d’échéance
   useEffect(()=>{
@@ -2427,13 +2430,18 @@ function App(){
   }
 
   const STAT_LBL2={"Force":"Force","Sante":"Sant\u00e9","Esprit":"Esprit","Endurance":"Endurance","Agilite":"Agilit\u00e9","Discipline":"Discipline"};
+  function xpAdjustment(s,amount,stat,skipEventBonus=false){
+    const base=Number(amount)||0;
+    const el=s.activeElixir;
+    const bonus=!skipEventBonus&&el&&Date.now()<(el.expiresAt||0)&&(el.kind==="supremeElixir"||el.stat===stat)?Math.round(base*(Number(el.pct)||0)):0;
+    const malus=s.ruptureMalus&&Date.now()<(s.ruptureMalus.expiresAt||0)?-Math.round(base*0.25):0;
+    return {bonus,malus,gain:Math.max(0,base+bonus+malus)};
+  }
   function addXp(amount,stat,e,silent,showStat,skipEventBonus=false){
     setState(s=>{
-      const el=s.activeElixir;
-      const eventBonus = !skipEventBonus && el && Date.now()<(el.expiresAt||0) && (el.kind==="supremeElixir"||el.stat===stat)
-        ? Math.round((Number(amount)||0)*(Number(el.pct)||0))
-        : 0;
-      const gain=(Number(amount)||0)+eventBonus;
+      const adjusted=xpAdjustment(s,amount,stat,skipEventBonus);
+      const eventBonus=adjusted.bonus;
+      const gain=adjusted.gain;
       const nt=s.totalXp+gain;
       const sx={...s.statXp,[stat]:(s.statXp[stat]||0)+gain};
       const newStats={...s.stats,[stat]:getLvl(sx[stat])};
@@ -2925,9 +2933,8 @@ function App(){
           dungeon.reward.stat2?{xp:270,stat:dungeon.reward.stat2}:null
         ].filter(Boolean);
         ruptureRewards.forEach(r=>{
-          const el=s.activeElixir;
-          const bonus=el&&Date.now()<(el.expiresAt||0)&&(el.kind==="supremeElixir"||el.stat===r.stat)?Math.round((r.xp||0)*(Number(el.pct)||0)):0;
-          const gain=(r.xp||0)+bonus;
+          const adjusted=xpAdjustment(s,r.xp,r.stat);
+          const gain=adjusted.gain;
           totalXp+=gain;
           statXp[r.stat]=(statXp[r.stat]||0)+gain;
           stats[r.stat]=getLvl(statXp[r.stat]);
@@ -3437,7 +3444,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       if(!current||current.breachId!==b.breachId||completedBreachRef.current===b.breachId)return;
       completedBreachRef.current=b.breachId;
       pairs.forEach(p=>addXp(p.xp,p.stat,null,true));
-      triggerUrgentUp({...b,isBreach:true},pairs);
+      triggerUrgentUp({...b,isBreach:true,isRupture:!!b.ruptureBoss},pairs);
       setState(s=>{
         if(!s.activeBreach||s.activeBreach.breachId!==b.breachId)return s;
         const day=todayStr(),daily={...(s.dailyExtraXp||{})},row={...(daily[day]||{})};
@@ -3451,20 +3458,22 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       if(next>=b.target){setState(s=>s.activeBreach&&s.activeBreach.breachId===b.breachId?{...s,activeBreach:{...s.activeBreach,progress:next}}:s);setTimeout(finish,0);}
       else setState(s=>s.activeBreach&&s.activeBreach.breachId===b.breachId?{...s,activeBreach:{...s.activeBreach,progress:next}}:s);
     };
-    const progressText=b.binary?"À accomplir":fmtNum(b.progress||0)+"/"+b.target+" "+b.unit;
+    const isRupture=!!b.ruptureBoss;
+    const rupture=b.ruptureBoss;
+    const progressText=isRupture?"Boss à maîtriser":(b.binary?"À accomplir":fmtNum(b.progress||0)+"/"+b.target+" "+b.unit);
     return h("div",{class:"card sq-urgent",style:"position:relative;overflow:hidden;border-color:#8dbbff;background:linear-gradient(145deg,#07162f,#102e5c);box-shadow:0 0 18px rgba(141,187,255,.32),inset 0 0 24px rgba(255,255,255,.035)"},
       [["top:-10px;left:8px"],["top:-10px;right:8px"],["bottom:-11px;left:10px"],["bottom:-11px;right:10px"]].map((p,i)=>h("span",{key:i,style:"position:absolute;"+p[0]+";color:#fff;font-size:17px;filter:drop-shadow(0 0 7px #fff);pointer-events:none"},"⚡")),
       h("div",{style:"position:relative;z-index:2"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:9px"},
-          h("div",{class:"ctitle",style:"margin:0;color:#dbeafe;text-shadow:0 0 10px rgba(255,255,255,.55)"},"BRÈCHE"),
+          h("div",{class:"ctitle",style:"margin:0;color:"+(isRupture?(rupture.rarityColor||"#fff"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE"),
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#fff;border:1px solid rgba(255,255,255,.45);border-radius:999px;padding:4px 7px;white-space:nowrap"},"⏱ "+fmtCD(remaining))
         ),
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px"},
-          h("div",{style:"display:flex;align-items:center;gap:9px;min-width:0"},QuestIcon(b.id,b.icon,18,"min-width:26px"),h("div",{style:"min-width:0"},h("div",{style:"font-size:13px;font-weight:800;color:#fff;line-height:1.25"},b.name),!compact&&h("div",{style:"font-size:10px;color:#cbd5e1;line-height:1.4;margin-top:3px"},b.desc))),
+          h("div",{style:"display:flex;align-items:center;gap:9px;min-width:0"},QuestIcon(b.id,isRupture?"☠️":b.icon,18,"min-width:26px"),h("div",{style:"min-width:0"},h("div",{style:"font-size:13px;font-weight:800;color:#fff;line-height:1.25"},isRupture?rupture.name:b.name),!compact&&h("div",{style:"font-size:10px;color:#cbd5e1;line-height:1.4;margin-top:3px"},isRupture?rupture.objective:b.desc))),
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#dbeafe;line-height:1.35;text-align:right;white-space:nowrap"},pairs.map((p,i)=>h("div",{key:i},questRewardText(p.xp,p.stat,b.binary,b.target,b.unit))))
         ),
         h("div",{class:"qrow",style:"align-items:center;margin-top:9px"},h("div",{class:"qbar"},h("div",{class:"qfill partial",style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,#274f88,#274f88 5px,#7aa7df 5px,#7aa7df 10px);background-size:14px 14px;opacity:.95"})),h("div",{class:"qxp",style:"color:#dbeafe;white-space:nowrap;min-width:86px;text-align:right"},progressText)),
-        !compact&&h("div",{style:"margin-top:9px"},b.binary?h("button",{onClick:finish,style:"width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.07);color:#fff;font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px"},"REFERMER LA BRÈCHE ✓"):h("div",{style:"display:flex;gap:8px"},h("button",{onClick:()=>add(1),style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.05);color:#fff;font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},"+1 "+b.unit),h("button",{onClick:()=>add(b.step||10),style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.08);color:#fff;font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},"+"+(b.step||10)+" "+b.unit))),
+        !compact&&h("div",{style:"margin-top:9px"},(isRupture||b.binary)?h("button",{onClick:finish,style:"width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.07);color:#fff;font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px"},isRupture?"MAÎTRISER LE BOSS ✓":"REFERMER LA BRÈCHE ✓"):h("div",{style:"display:flex;gap:8px"},h("button",{onClick:()=>add(1),style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.05);color:#fff;font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},"+1 "+b.unit),h("button",{onClick:()=>add(b.step||10),style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.08);color:#fff;font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},"+"+(b.step||10)+" "+b.unit))),
         !compact&&h("div",{style:"font-size:9px;color:#bfdbfe;font-family:Orbitron,sans-serif;line-height:1.45;margin-top:9px;text-align:center"},"OBJET ALÉATOIRE GARANTI À LA RÉUSSITE")
       )
     );
@@ -3914,6 +3923,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       activeElixir&&h("div",{style:"margin:-2px 0 12px;padding:9px 11px;border-left:2px solid "+(activeElixir.kind==="supremeElixir"?"#9333ea":(STAT_COLOR[activeElixir.stat]||rank.color))+";background:rgba(255,255,255,.025);font-family:Orbitron,sans-serif"},
         h("div",{style:"font-size:9px;color:var(--td);letter-spacing:1.2px;text-transform:uppercase"},activeElixir.kind==="majorElixir"?"Élixir d’expérience majeur":activeElixir.kind==="supremeElixir"?"Élixir d’expérience magistral":"Élixir d’expérience mineur"),
         h("div",{style:"margin-top:4px;font-size:11px;color:"+(activeElixir.kind==="supremeElixir"?"#9333ea":(STAT_COLOR[activeElixir.stat]||rank.color))+";font-weight:800"},"+"+Math.round((activeElixir.pct||0)*100)+" % XP"+(activeElixir.kind==="supremeElixir"?" — TOUTES LES STATISTIQUES":" — "+(STAT_LBL[activeElixir.stat]||activeElixir.stat))+" · "+fmtCD((activeElixir.expiresAt||0)-now))
+      ),
+      state.ruptureMalus&&now<(state.ruptureMalus.expiresAt||0)&&h("div",{style:"margin:-2px 0 12px;padding:9px 11px;border-left:2px solid #ef4444;background:rgba(239,68,68,.045);font-family:Orbitron,sans-serif"},
+        h("div",{style:"font-size:9px;color:var(--td);letter-spacing:1.2px;text-transform:uppercase"},"Malus de Rupture"),
+        h("div",{style:"margin-top:4px;font-size:11px;color:#ef4444;font-weight:800"},"−25 % XP · "+fmtCD((state.ruptureMalus.expiresAt||0)-now))
       ),
 
       h(DebtCard,null),
@@ -4851,7 +4864,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function triggerUrgentUp(sq,pairs){
     if(!sq || !pairs || !pairs.length) return;
     setTimeout(()=>setUrgentUp({
-      title:sq.isBreach?"BRÈCHE REFERMÉE":"QUÊTE URGENTE COMPLÉTÉE",
+      title:sq.isRupture?"RUPTURE MAÎTRISÉE":(sq.isBreach?"BRÈCHE REFERMÉE":"QUÊTE URGENTE COMPLÉTÉE"),
       name:sq.name,
       color:rank.color||"#fbbf24",
       glow:rank.glow||"#fbbf2455",
@@ -5016,7 +5029,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       )),
       h("div",{class:"rucont"},
         h(NotificationHeader,null),
-        h("div",{class:"ruevol",style:"color:"+(urgentUp.title==="BRÈCHE REFERMÉE"?"#8dbbff":"#ef4444")+";text-shadow:0 0 16px "+(urgentUp.title==="BRÈCHE REFERMÉE"?"rgba(141,187,255,.7)":"rgba(239,68,68,.7)")},urgentUp.title==="BRÈCHE REFERMÉE"?"BRÈCHE REFERMÉE !":"QUÊTE URGENTE COMPLÉTÉE !"),
+        h("div",{class:"ruevol",style:"color:"+((urgentUp.title==="BRÈCHE REFERMÉE"||urgentUp.title==="RUPTURE MAÎTRISÉE")?"#8dbbff":"#ef4444")+";text-shadow:0 0 16px "+((urgentUp.title==="BRÈCHE REFERMÉE"||urgentUp.title==="RUPTURE MAÎTRISÉE")?"rgba(141,187,255,.7)":"rgba(239,68,68,.7)")},urgentUp.title==="RUPTURE MAÎTRISÉE"?"RUPTURE MAÎTRISÉE !":urgentUp.title==="BRÈCHE REFERMÉE"?"BRÈCHE REFERMÉE !":"QUÊTE URGENTE COMPLÉTÉE !"),
         h("div",{class:"rurank",style:"--rc:"+(urgentUp.nameColor||color)+";--rg:"+(urgentUp.nameColor||color)+"66;color:"+(urgentUp.nameColor||color)+";text-shadow:0 0 18px "+(urgentUp.nameColor||color)+"66;font-size:"+urgentTitleSize+";letter-spacing:-1px;white-space:normal;width:calc(100vw - 32px);max-width:360px;line-height:1.08;overflow-wrap:anywhere;word-break:normal;hyphens:auto","data-r":urgentTitle},urgentTitle),
         h("div",{style:"margin-top:14px;display:flex;flex-direction:column;gap:6px;align-items:center"},
           (urgentUp.rewards||[]).map((r,i)=>{
@@ -5818,10 +5831,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{class:"mtitle",style:"padding-right:28px"},"CODEX"),
         h("div",{style:"display:flex;justify-content:center;align-items:center;margin:14px 0 8px"},InventoryItemIcon("codex",128)),
         h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;text-align:center;margin-bottom:15px"},"Catalogue complet des quêtes et systèmes de l’application."),
-        h(Section,{id:"breach",title:"Brèches",count:breachList.length},h(Fragment,null,h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Une Brèche a 1 % de chance d’apparaître au reset quotidien. Elle remplace la quête urgente du jour, reste ouverte 72 h et se referme sans conséquence en cas d’échec. Sa réussite garantit un objet aléatoire non permanent."),groupByDominantStat(breachList,renderSpecial))),
+        h(Section,{id:"breach",title:"Brèches",count:breachList.length},h(Fragment,null,h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Une Brèche a 1 % de chance d’apparaître au reset quotidien. Elle remplace la quête urgente du jour et reste ouverte 72 h. Si elle n’est pas refermée, elle entre en Rupture : un Boss apparaît pendant 24 h. Le maîtriser accorde l’XP initiale de la Brèche et un objet aléatoire garanti. En cas d’échec, un malus de −25 % d’XP s’applique pendant 24 h."),groupByDominantStat(breachList,renderSpecial))),
         h(Section,{id:"dj",title:"Donjons",count:DUNGEONS.length},
           h(Fragment,null,
-            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Après 24 h, un donjon inachevé subit une Rupture : les salles déjà validées et leurs XP sont conservés, toutes les étapes restantes sont remplacées par un Boss de Rupture tiré selon sa rareté. Ce boss dispose de 24 h et ne peut pas provoquer une seconde rupture."),
+            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Un Donjon inachevé se ferme à l’expiration de son délai. Les salles déjà validées et leurs XP restent acquises. Le Cristal de téléportation permet toujours de quitter volontairement un Donjon actif."),
             groupByDominantStat(DUNGEONS,renderDungeonCodex,dg=>dg.stat)
           )
         ),
