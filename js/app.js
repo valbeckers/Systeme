@@ -69,7 +69,7 @@ const DEFS = [
   {id:"water",  name:"Hydratation",     unit:"verre", xpPer:10,  daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDCA7",               base:10, baseHistory:[{until:"2026-04-29",base:8}]},
   {id:"sleep",  name:"Dormir 8h",   unit:"h",     xpPer:18.75,daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDECF\uFE0F",         base:8,  fixedBase:true},
     // ─── FORCE ────────────────────────────────────────────────────────────
-  {id:"push",   name:"Pecs", unit:"rep", xpPer:3, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦾", base:30},
+  {id:"push",   name:"Pecs & Triceps", unit:"rep", xpPer:3, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦾", base:30},
   {id:"abs",    name:"Abdos", unit:"rep", xpPer:1.5, daily:true, weekly:false,optional:false,stat:"Force", icon:"🧱", base:60},
   {id:"squats", name:"Jambes", unit:"rep", xpPer:3, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦿", base:15, stat2:"Agilite", xpPer2:3},
   {id:"negative_pullups", name:"Dos & Biceps", unit:"rep", xpPer:12, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦾", base:8, startDate:"2026-07-14"},
@@ -1492,7 +1492,7 @@ const EXERCISE_ROTATIONS = {
     {id:"lunges",label:"Fentes",icon:"🦵🏻"},
   ],
 };
-const EXERCISE_FAMILY_LABELS={push:"Pecs",negative_pullups:"Dos & Biceps",abs:"Abdos",squats:"Jambes"};
+const EXERCISE_FAMILY_LABELS={push:"Pecs & Triceps",negative_pullups:"Dos & Biceps",abs:"Abdos",squats:"Jambes"};
 const EXERCISE_FAMILY_ICONS={push:"🦾",negative_pullups:"🦾",abs:"🧱",squats:"🦿"};
 const LEGACY_EXERCISE_DEFAULTS={push:"pushups",back:"negative_pullups",abs:"crunches",legs:"squats"};
 function isExerciseFamilyQuestId(id){ return id==="push"||id==="negative_pullups"||id==="abs"||id==="squats"; }
@@ -1558,7 +1558,7 @@ function rotatedQuestObjects(baseObjs,rotation,stats,totalXp){
   const abs=byId("abs",rotation&&rotation.abs);
   const legs=byId("legs",rotation&&rotation.legs);
   return (baseObjs||[]).map(obj=>{
-    if(obj.id==="push") return {...obj,name:"Pecs - "+chest.label,icon:"🦾",exerciseIcon:chest.icon,rotationExercise:chest.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3,stat2:null,xpPer2:null};
+    if(obj.id==="push") return {...obj,name:"Pecs & Triceps - "+chest.label,icon:"🦾",exerciseIcon:chest.icon,rotationExercise:chest.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3,stat2:null,xpPer2:null};
     if(obj.id==="negative_pullups") return {...obj,name:"Dos & Biceps - "+back.label,icon:"🦾",exerciseIcon:back.icon,rotationExercise:back.label,target:getStatLevelTarget("negative_pullups",stats),unit:"rep",xpPer:12,stat2:null,xpPer2:null};
     if(obj.id==="abs"){
       if(abs.id==="crunches") return {...obj,name:"Abdos - Crunches",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:getStatLevelTarget("abs",stats),unit:"rep",xpPer:1.5};
