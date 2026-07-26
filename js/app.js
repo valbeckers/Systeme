@@ -183,7 +183,7 @@ const DUNGEONS = [
   {id:"monk", title:"Donjon du Moine", short:"Moine", stat:"Esprit", icon:"🧘🏻‍♂️", color:"#ec4899", reward:{xp:2250,stat:"Esprit",xp2:450,stat2:"Discipline"}, rooms:[
     {name:"Lecture profonde", desc:"Lire 10 min sans interruption"},
     {name:"Apprentissage actif", desc:"10 min d’apprentissage volontaire avec prise de notes minimale"},
-    {name:"Mémoire", desc:"10 min de rappel actif", helpTitle:"Rappel actif", help:"Le rappel actif consiste à récupérer une information de mémoire, sans relire directement la réponse.\n\nIdées concrètes :\n• Rappel actif simple : ferme la source et restitue ce que tu as retenu.\n• Compression mentale : résume une idée en une phrase, puis en 3 mots-clés.\n• Transmission : explique une notion comme à quelqu’un de 12 ans.\n• Carte mentale : idée centrale + 3 à 5 branches, de mémoire.\n• Flash mental : liste 5 éléments liés à un sujet avant de vérifier.\n• Question-réponse : crée 3 questions et réponds sans relire.\n• Mémoire différée : apprends, attends 5 min, puis restitue."},
+    {name:"Mémoire", desc:"10 min de rappel actif"},
     {name:"Méditation", desc:"15 min"},
     {name:"Gratitude", desc:"Écrire 3 choses pour lesquelles je suis reconnaissant"},
   ]},
@@ -202,9 +202,9 @@ const DUNGEONS = [
     {name:"Souplesse active / Animal flow", desc:"30 min"},
   ]},
   {id:"guardian", title:"Donjon du Gardien", short:"Gardien", stat:"Discipline", icon:"🛡️", color:"#c084fc", reward:{xp:2250,stat:"Discipline",xp2:450,stat2:"Esprit"}, rooms:[
-    {name:"Capture mentale", desc:"Traiter, planifier ou supprimer 5 éléments de ta charge mentale", helpTitle:"Capture mentale", help:"Note tout ce qui te prend de l’espace mental : petites tâches, démarches, messages, idées, choses à ranger ou décisions à prendre. Pour valider : 5 éléments doivent être traités, planifiés à une date précise, ou supprimés si inutiles."},
+    {name:"Capture mentale", desc:"Traiter, planifier ou supprimer 5 éléments de ta charge mentale"},
     {name:"Tâches repoussées", desc:"Terminer totalement 2 tâches repoussées"},
-    {name:"Aucun contenu passif", desc:"2h", helpTitle:"Contenu passif", help:"À inclure : doomscrolling, vidéos courtes, réseaux sociaux sans intention, YouTube en consommation passive, fils d’actualité, jeux vidéo lancés par réflexe, film ou série regardés pour combler le vide. Film/série/jeu vidéo peuvent rester autorisés s’ils sont choisis volontairement comme vraie activité de détente ; ils comptent comme passifs s’ils servent juste à fuir l’ennui, repousser une tâche ou remplir automatiquement le temps."},
+    {name:"Aucun contenu passif", desc:"2h"},
     {name:"Rangement", desc:"10 objets"},
     {name:"Bloc profond", desc:"45 min sur une tâche choisie, sans interruption volontaire"},
   ]},
