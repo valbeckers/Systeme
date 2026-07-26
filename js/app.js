@@ -1513,6 +1513,7 @@ function App(){
   const [specialItemChoice,setSpecialItemChoice] = useState(null);
   const [contractDungeonChoice,setContractDungeonChoice] = useState(null);
   const [confirmElixirUse,setConfirmElixirUse] = useState(null);
+  const [confirmTargetedItemUse,setConfirmTargetedItemUse] = useState(null);
   const [dungeonUp,setDungeonUp] = useState(null);
   const [ruptureUp,setRuptureUp] = useState(null);
   const [urgentUp,setUrgentUp] = useState(null);
@@ -4134,9 +4135,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h("div",{class:"mtitle"},"ORIENTER LA BOUSSOLE"),
       h("div",{style:"font-size:11px;color:var(--td);line-height:1.55;margin-bottom:12px"},"Choisissez la statistique de la prochaine quête urgente. La quête précise restera aléatoire et le cycle anti-répétition actuel ne sera pas modifié."),
       h("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:8px"},choices.map(stat=>h("button",{key:stat,onClick:()=>{
-        setState(s=>{const inv={...(s.inventory||{})};if((Number(inv.destinyCompass)||0)<1||s.urgentCompassStat)return s;inv.destinyCompass=Math.max(0,(Number(inv.destinyCompass)||0)-1);return {...s,inventory:inv,urgentCompassStat:stat};});
         setCompassStatChoice(false);
-        setItemUseUp({id:"destinyCompass",statChosen:stat});
+        setConfirmTargetedItemUse({type:"destinyCompass",stat});
       },style:"padding:11px;border-radius:9px;border:1px solid "+STAT_COLOR[stat]+"88;background:"+STAT_COLOR[stat]+"12;color:"+STAT_COLOR[stat]+";font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},STAT_LBL[stat]||stat))),
       h("button",{onClick:()=>setCompassStatChoice(false),style:"width:100%;margin-top:12px;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--td);font-family:Orbitron,sans-serif;cursor:pointer"},"Annuler")
     ));
@@ -4179,13 +4179,68 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     if(type==="debtAcknowledgement")options=objs.filter(o=>o.daily&&!o.optional&&isDebtEligibleQuest(o)&&(Number(tLog[o.id])||0)<getEffectiveTarget(o.id)).map(o=>({id:o.id,label:o.icon+" "+o.name+" — "+fmtNum(getEffectiveTarget(o.id)-(Number(tLog[o.id])||0))+" "+o.unit+" manquants",obj:o}));
     if(type==="invisibilityCape"||type==="cape"){const d=activeDungeon;options=d?d.rooms.slice(0,-1).map((r,i)=>!(d.completedRooms||[]).includes(i)?{id:i,label:(i+1)+". "+r.name}:null).filter(Boolean):[];}
     return h("div",{class:"modal-ov"},h("div",{class:"modal",style:"max-width:410px;width:calc(100% - 28px)"},h("div",{class:"mtitle"},type==="recordHammer"?"CHOISIR UN RECORD":type==="debtAcknowledgement"?"CRÉER UNE DETTE":"PASSER UNE SALLE"),h("div",{style:"display:flex;flex-direction:column;gap:8px;margin-top:12px"},options.map(x=>h("button",{key:x.id,onClick:()=>{
-      if(type==="debtAcknowledgement"){createQuestDebt(x.obj);return;}
-      if(type==="recordHammer"){setState(s=>({...s,inventory:{...(s.inventory||{}),recordHammer:Math.max(0,(Number(s.inventory&&s.inventory.recordHammer)||0)-1)},recordChallenge:{questId:x.obj.id,target:x.best,week:wk,startedAt:Date.now(),name:x.obj.name,icon:x.obj.icon,unit:x.obj.unit,stat:x.obj.stat}}));}
-      else {setState(s=>{const ad=s.activeDungeon;if(!ad)return s;return {...s,inventory:{...(s.inventory||{}),invisibilityCape:Math.max(0,(Number(s.inventory&&s.inventory.invisibilityCape)||0)-1)},activeDungeon:{...ad,completedRooms:[...(ad.completedRooms||[]),Number(x.id)].filter((v,i,a)=>a.indexOf(v)===i).sort((a,b)=>a-b)}};});}
-      setSpecialItemChoice(null);setItemUseUp({id:type==="cape"?"invisibilityCape":type});
+      setSpecialItemChoice(null);
+      setConfirmTargetedItemUse({type:type==="cape"?"invisibilityCape":type,choice:x});
     },style:"padding:11px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:var(--tx);font-family:Orbitron,sans-serif;font-size:9px"},x.label))),!options.length&&h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:10px"},"Aucun choix disponible."),h("button",{onClick:()=>setSpecialItemChoice(null),style:"width:100%;margin-top:12px;padding:10px"},"Annuler")));
   }
-  function ContractChoiceModal(){if(!contractDungeonChoice)return null;const choices=[["12h","Délai réduit à 12 heures"],["x1.5","Tous les objectifs ×1,5"],["rupture","Boss remplacé par un Boss de Rupture"]];return h("div",{class:"modal-ov"},h("div",{class:"modal",style:"max-width:410px;width:calc(100% - 28px)"},h("div",{class:"mtitle"},"CONTRAT DU MAÎTRE"),h("div",{style:"font-size:11px;color:var(--td);line-height:1.5;margin-bottom:12px"},"Choisissez une contrainte. La récompense finale du donjon augmentera de 20 %."),choices.map(([id,label])=>h("button",{key:id,onClick:()=>{const dg=contractDungeonChoice;setContractDungeonChoice(null);startDungeon(dg,id);},style:"width:100%;margin-top:8px;padding:11px;border-radius:9px;border:1px solid #f59e0b66;background:#f59e0b0d;color:#f59e0b;font-family:Orbitron,sans-serif;font-size:9px"},label)),h("button",{onClick:()=>setContractDungeonChoice(null),style:"width:100%;margin-top:12px;padding:10px"},"Annuler")));}
+  function ContractChoiceModal(){if(!contractDungeonChoice)return null;const choices=[["12h","Délai réduit à 12 heures"],["x1.5","Tous les objectifs ×1,5"],["rupture","Boss remplacé par un Boss de Rupture"]];return h("div",{class:"modal-ov"},h("div",{class:"modal",style:"max-width:410px;width:calc(100% - 28px)"},h("div",{class:"mtitle"},"CONTRAT DU MAÎTRE"),h("div",{style:"font-size:11px;color:var(--td);line-height:1.5;margin-bottom:12px"},"Choisissez une contrainte. La récompense finale du donjon augmentera de 20 %."),choices.map(([id,label])=>h("button",{key:id,onClick:()=>{const dg=contractDungeonChoice;setContractDungeonChoice(null);setConfirmTargetedItemUse({type:"masterContract",dungeonId:dg,constraint:id,label});},style:"width:100%;margin-top:8px;padding:11px;border-radius:9px;border:1px solid #f59e0b66;background:#f59e0b0d;color:#f59e0b;font-family:Orbitron,sans-serif;font-size:9px"},label)),h("button",{onClick:()=>setContractDungeonChoice(null),style:"width:100%;margin-top:12px;padding:10px"},"Annuler")));}
+  function ConfirmTargetedItemUseModal(){
+    if(!confirmTargetedItemUse)return null;
+    const pending=confirmTargetedItemUse;
+    const type=pending.type;
+    const choice=pending.choice||null;
+    const color=type==="destinyCompass"?(STAT_COLOR[pending.stat]||rank.color):type==="masterContract"?"#f59e0b":rank.color;
+
+    let text="";
+    let confirmLabel="Confirmer";
+
+    if(type==="debtAcknowledgement"){
+      text="Créer une dette sur « "+choice.obj.name+" » pour "+fmtNum(getEffectiveTarget(choice.obj.id)-(Number(tLog[choice.obj.id])||0))+" "+choice.obj.unit+" manquants ?";
+      confirmLabel="Créer la dette";
+    }else if(type==="recordHammer"){
+      text="Choisir « "+choice.obj.name+" » comme record officiel à dépasser avant la fin de la semaine ?";
+      confirmLabel="Marquer ce record";
+    }else if(type==="destinyCompass"){
+      text="Orienter la prochaine quête urgente vers la statistique "+(STAT_LBL[pending.stat]||pending.stat)+" ?";
+      confirmLabel="Orienter";
+    }else if(type==="invisibilityCape"){
+      text="Utiliser la Cape d’invisibilité pour passer la salle « "+choice.label.replace(/^\d+\.\s*/,"")+" » sans gagner son XP ?";
+      confirmLabel="Passer la salle";
+    }else if(type==="masterContract"){
+      text="Lancer ce donjon avec la contrainte « "+pending.label+" » et une récompense finale augmentée de 20 % ?";
+      confirmLabel="Signer le contrat";
+    }
+
+    function confirmTarget(){
+      if(type==="debtAcknowledgement"){
+        createQuestDebt(choice.obj);
+      }else if(type==="recordHammer"){
+        setState(s=>({...s,inventory:{...(s.inventory||{}),recordHammer:Math.max(0,(Number(s.inventory&&s.inventory.recordHammer)||0)-1)},recordChallenge:{questId:choice.obj.id,target:choice.best,week:wk,startedAt:Date.now(),name:choice.obj.name,icon:choice.obj.icon,unit:choice.obj.unit,stat:choice.obj.stat}}));
+        setItemUseUp({id:"recordHammer"});
+      }else if(type==="destinyCompass"){
+        const stat=pending.stat;
+        setState(s=>{const inv={...(s.inventory||{})};if((Number(inv.destinyCompass)||0)<1||s.urgentCompassStat)return s;inv.destinyCompass=Math.max(0,(Number(inv.destinyCompass)||0)-1);return {...s,inventory:inv,urgentCompassStat:stat};});
+        setItemUseUp({id:"destinyCompass",statChosen:stat});
+      }else if(type==="invisibilityCape"){
+        setState(s=>{const ad=s.activeDungeon;if(!ad||(Number(s.inventory&&s.inventory.invisibilityCape)||0)<1)return s;return {...s,inventory:{...(s.inventory||{}),invisibilityCape:Math.max(0,(Number(s.inventory&&s.inventory.invisibilityCape)||0)-1)},activeDungeon:{...ad,completedRooms:[...(ad.completedRooms||[]),Number(choice.id)].filter((v,i,a)=>a.indexOf(v)===i).sort((a,b)=>a-b)}};});
+        setItemUseUp({id:"invisibilityCape"});
+      }else if(type==="masterContract"){
+        startDungeon(pending.dungeonId,pending.constraint);
+      }
+      setConfirmTargetedItemUse(null);
+    }
+
+    return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+color+"66"},
+      h("div",{class:"rucont",style:"width:min(500px,calc(100vw - 34px));background:rgba(15,15,18,.97);border:1px solid "+color+"88;border-radius:18px;padding:22px;box-shadow:0 0 30px "+color+"22"},
+        h("div",{class:"ruevol",style:"color:"+color},"CONFIRMATION"),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:#fff;text-align:center;line-height:1.5;max-width:360px"},text),
+        h("div",{style:"display:flex;gap:10px;margin-top:22px"},
+          h("button",{class:"rudis",style:"min-width:110px;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>setConfirmTargetedItemUse(null)},"Annuler"),
+          h("button",{class:"rudis",style:"min-width:110px;--rc:"+color+";--rg:"+color+"66",onClick:confirmTarget},confirmLabel)
+        )
+      )
+    );
+  }
 
   function Stats(){
     return h("div",{class:"tab"},
@@ -5728,6 +5783,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(ConfirmElixirModal,null),
       h(SpecialItemChoiceModal,null),
       h(ContractChoiceModal,null),
+      h(ConfirmTargetedItemUseModal,null),
       h(DungeonUp,null),
       h(DungeonRuptureUp,null),
       h(UrgentUp,null),
