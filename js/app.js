@@ -137,16 +137,120 @@ const BREACH_POOL=[
   {id:"breach_run10",name:"Running 10 km",icon:"🏃🏻",unit:"épreuve",target:1,binary:true,xp:2000,stat:"Endurance",desc:"Courir 10 km"},
   {id:"breach_sprint10",name:"Running fractionné 10 × 100 m",icon:"⚡",unit:"sér.",target:10,step:1,xp:1500,stat:"Endurance",xp2:500,stat2:"Agilite",desc:"10 séries de 100 mètres"},
   {id:"breach_rope30",name:"Corde à sauter 30 minutes",icon:"💦",unit:"min",target:30,step:5,xp:1500,stat:"Endurance",xp2:500,stat2:"Agilite",desc:"30 minutes cumulées de corde à sauter"},
-  {id:"breach_flex60",name:"Souplesse pendant 1 heure",icon:"🤸🏻",unit:"min",target:60,step:10,xp:1500,stat:"Agilite",xp2:500,stat2:"Endurance",desc:"1 heure cumulée de souplesse"}
+  {id:"breach_flex60",name:"Souplesse / Animal Flow pendant 1 heure",icon:"🤸🏻",unit:"min",target:60,step:10,xp:1500,stat:"Agilite",xp2:500,stat2:"Endurance",desc:"1 heure cumulée de souplesse ou d’Animal Flow"}
 ];
+
+// Chaque Brèche possède un Boss de Rupture attitré. En Rupture, le Boss reprend
+// l’objectif initial et invoque une garde rapprochée de trois sous-quêtes.
+const BREACH_RUPTURE_BOSSES = {
+  breach_cold5:{
+    id:"breach_boss_cryomancien",name:"Le Cryomancien",guards:[
+      {id:"hydromancien",name:"L’Hydromancien",objective:"Boire 2 litres d’eau pendant la période de Rupture",unit:"L",target:2,step:0.5},
+      {id:"purificateur",name:"Le Purificateur",objective:"Prendre 2 repas propres consécutifs",unit:"repas",target:2,step:1},
+      {id:"porte_lumiere",name:"Le Porte-Lumière",objective:"Passer 30 minutes à la lumière naturelle",unit:"min",target:30,step:10},
+    ]
+  },
+  breach_wallsit15:{
+    id:"breach_boss_titan",name:"Le Titan",guards:[
+      {id:"delieur_jambes",name:"Le Délieur des Jambes",objective:"Faire 10 minutes de mobilité du bas du corps",unit:"min",target:10,step:5},
+      {id:"lancier",name:"Le Lancier",objective:"Effectuer 50 fentes",unit:"rep",target:50,step:10},
+      {id:"porte_colonne",name:"Le Porte-Colonne",objective:"Effectuer 100 élévations de mollets",unit:"rep",target:100,step:25},
+    ]
+  },
+  breach_push300:{
+    id:"breach_boss_berserker",name:"Le Berserker",guards:[
+      {id:"armurier",name:"L’Armurier",objective:"Faire 10 minutes de mobilité des épaules et des poignets",unit:"min",target:10,step:5},
+      {id:"brise_appuis",name:"Le Brise-Appuis",objective:"Effectuer 100 dips",unit:"rep",target:100,step:25},
+      {id:"grimpeur_rouge",name:"Le Grimpeur Rouge",objective:"Effectuer 20 tractions",unit:"rep",target:20,step:5},
+    ]
+  },
+  breach_squats150:{
+    id:"breach_boss_colosse",name:"Le Colosse",guards:[
+      {id:"tailleur_pierre",name:"Le Tailleur de Pierre",objective:"Faire 10 minutes de mobilité du bas du corps",unit:"min",target:10,step:5},
+      {id:"pilier",name:"Le Pilier",objective:"Effectuer 100 élévations de mollets",unit:"rep",target:100,step:25},
+      {id:"gardien_mur",name:"Le Gardien du Mur",objective:"Réaliser 5 minutes de Wall Sit",unit:"min",target:5,step:1},
+    ]
+  },
+  breach_pullups50:{
+    id:"breach_boss_brise_chaines",name:"Le Brise-Chaînes",guards:[
+      {id:"deliant",name:"Le Déliant",objective:"Effectuer 10 minutes de mobilité des épaules et du dos",unit:"min",target:10,step:5},
+      {id:"descendeur",name:"Le Descendeur",objective:"Faire 25 tractions négatives",unit:"rep",target:25,step:5},
+      {id:"suspendu",name:"Le Suspendu",objective:"Réaliser 2 minutes de dead hang",unit:"min",target:2,step:0.5},
+    ]
+  },
+  breach_plank15:{
+    id:"breach_boss_bastion",name:"Le Bastion",guards:[
+      {id:"maitre_articulations",name:"Le Maître des Articulations",objective:"Faire 10 minutes de mobilité complète",unit:"min",target:10,step:5},
+      {id:"broyeur",name:"Le Broyeur",objective:"Effectuer 100 crunches",unit:"rep",target:100,step:25},
+      {id:"flanc_garde",name:"Le Flanc-Garde",objective:"Effectuer 50 répétitions de gainage oblique",unit:"rep",target:50,step:10},
+    ]
+  },
+  breach_learning2h:{
+    id:"breach_boss_archiviste",name:"L’Archiviste",guards:[
+      {id:"scribe",name:"Le Scribe",objective:"Rédiger un résumé de 300 mots de ce que tu viens d’apprendre",unit:"mot",target:300,step:50},
+      {id:"mnemarque",name:"Le Mnémarque",objective:"Réaliser 20 minutes de mémorisation",unit:"min",target:20,step:5},
+      {id:"veilleur_muet",name:"Le Veilleur Muet",objective:"Garder le téléphone hors de portée et couper les notifications pendant 3 heures",unit:"h",target:3,step:1},
+    ]
+  },
+  breach_reading1h:{
+    id:"breach_boss_sage_dechu",name:"Le Sage Déchu",guards:[
+      {id:"contemplateur",name:"Le Contemplateur",objective:"Méditer pendant 10 minutes",unit:"min",target:10,step:5},
+      {id:"recitant",name:"Le Récitant",objective:"Restituer 10 idées de mémoire sans rouvrir le texte",unit:"idée",target:10,step:1},
+      {id:"gardien_silence",name:"Le Gardien du Silence",objective:"Passer 30 minutes sans téléphone, musique, vidéo ni podcast",unit:"min",target:30,step:10},
+    ]
+  },
+  breach_run10:{
+    id:"breach_boss_arpenteur",name:"L’Arpenteur",guards:[
+      {id:"eclaireur",name:"L’Éclaireur",objective:"Effectuer 5 minutes d’échauffement dynamique",unit:"min",target:5,step:1},
+      {id:"cadenceur",name:"Le Cadenceur",objective:"Effectuer 100 jumping jacks",unit:"rep",target:100,step:25},
+      {id:"recuperateur",name:"Le Récupérateur",objective:"Faire 10 minutes de marche ou de mobilité après la course",unit:"min",target:10,step:5},
+    ]
+  },
+  breach_sprint10:{
+    id:"breach_boss_predateur",name:"Le Prédateur",guards:[
+      {id:"pisteur",name:"Le Pisteur",objective:"Effectuer 5 minutes d’échauffement dynamique",unit:"min",target:5,step:1},
+      {id:"rabatteur",name:"Le Rabatteur",objective:"Effectuer 100 jumping jacks",unit:"rep",target:100,step:25},
+      {id:"retour_chasse",name:"Le Retour de Chasse",objective:"Faire 10 minutes de marche ou de mobilité après la course",unit:"min",target:10,step:5},
+    ]
+  },
+  breach_rope30:{
+    id:"breach_boss_tisseur_orage",name:"Le Tisseur d’Orage",guards:[
+      {id:"delieur_foudre",name:"Le Délieur de Foudre",objective:"Faire 5 minutes de mobilité des chevilles et des mollets",unit:"min",target:5,step:1},
+      {id:"porte_tonnerre",name:"Le Porte-Tonnerre",objective:"Effectuer 100 élévations de mollets",unit:"rep",target:100,step:25},
+      {id:"eclair",name:"L’Éclair",objective:"Effectuer 100 jumping jacks",unit:"rep",target:100,step:25},
+    ]
+  },
+  breach_flex60:{
+    id:"breach_boss_acrobate",name:"L’Acrobate",guards:[
+      {id:"delieur",name:"Le Délieur",objective:"Faire 5 minutes de mobilité corporelle",unit:"min",target:5,step:1},
+      {id:"ombre",name:"L’Ombre",objective:"Réaliser 10 minutes de déplacement silencieux",unit:"min",target:10,step:5},
+      {id:"funambule",name:"Le Funambule",objective:"Réaliser 10 minutes d’exercices d’équilibre et de coordination",unit:"min",target:10,step:5},
+    ]
+  },
+};
+
 function breachTemplateById(id){return BREACH_POOL.find(b=>b.id===id)||null;}
+function breachRuptureTemplateById(id){return BREACH_RUPTURE_BOSSES[id]||null;}
+function buildBreachRuptureBoss(breachId,raw={}){
+  const breach=breachTemplateById(breachId);
+  const tpl=breachRuptureTemplateById(breachId);
+  if(!breach||!tpl)return null;
+  const previous=Array.isArray(raw.guards)?raw.guards:[];
+  const guards=tpl.guards.map(g=>{
+    const old=previous.find(x=>x&&x.id===g.id)||{};
+    const target=Math.max(1,Number(g.target)||1);
+    return {...g,progress:Math.max(0,Math.min(target,Number(old.progress)||0))};
+  });
+  const startedAt=Number(raw.startedAt)||Date.now();
+  return {...tpl,objective:breach.desc,guards,ruptureColor:"#ef4444",startedAt,expiresAt:Number(raw.expiresAt)||(startedAt+24*60*60*1000)};
+}
 function normalizeActiveBreach(entry){
   if(!entry||!entry.id)return null;
   const tpl=breachTemplateById(entry.id);if(!tpl)return null;
-  const ruptureBoss=entry.ruptureBoss&&entry.ruptureBoss.id
-    ? {...entry.ruptureBoss,startedAt:Number(entry.ruptureBoss.startedAt)||Date.now(),expiresAt:Number(entry.ruptureBoss.expiresAt)||((Number(entry.ruptureBoss.startedAt)||Date.now())+24*60*60*1000)}
+  const ruptureBoss=entry.ruptureBoss
+    ? buildBreachRuptureBoss(tpl.id,entry.ruptureBoss)
     : null;
-  return {...tpl,breachId:entry.breachId||("breach_"+(entry.startedAt||Date.now())),progress:Math.max(0,Number(entry.progress)||0),startedAt:Number(entry.startedAt)||Date.now(),expiresAt:ruptureBoss?ruptureBoss.expiresAt:(Number(entry.expiresAt)||((Number(entry.startedAt)||Date.now())+72*60*60*1000)),completedAt:entry.completedAt||null,ruptureBoss,rupturedAt:entry.rupturedAt||null,isBreach:true};
+  return {...tpl,breachId:entry.breachId||("breach_"+(entry.startedAt||Date.now())),progress:Math.max(0,Math.min(tpl.target,Number(entry.progress)||0)),startedAt:Number(entry.startedAt)||Date.now(),expiresAt:ruptureBoss?ruptureBoss.expiresAt:(Number(entry.expiresAt)||((Number(entry.startedAt)||Date.now())+72*60*60*1000)),completedAt:entry.completedAt||null,ruptureBoss,rupturedAt:entry.rupturedAt||null,isBreach:true};
 }
 function processDailyBreachRoll(state,now=Date.now()){
   const day=eventDayStr(now);
@@ -218,7 +322,7 @@ const DUNGEONS = [
 
 ];
 
-// Boss de Rupture — tirage aléatoire équiprobable lorsqu’une Brèche reste ouverte après 72 h.
+// Boss alternatifs utilisés uniquement par la contrainte « Boss de Rupture » du Contrat du Maître.
 const DUNGEON_RUPTURE_BOSSES = {
   alchemist:[
     {id:"alchemist_putride",name:"L’Alchimiste Putride",objective:"2 repas équilibrés consécutifs, sans sucre transformé, junk-food ni écran"},
@@ -270,11 +374,8 @@ function pickDungeonRuptureBoss(dungeonId){
   return {...pool[Math.floor(Math.random()*pool.length)],ruptureColor:"#ef4444"};
 }
 
-function ruptureDungeonIdForStat(stat){
-  return {Sante:"alchemist",Force:"warrior",Esprit:"monk",Endurance:"pilgrim",Agilite:"hunter",Discipline:"guardian"}[stat]||"guardian";
-}
-function pickBreachRuptureBoss(stat){
-  return pickDungeonRuptureBoss(ruptureDungeonIdForStat(stat));
+function pickBreachRuptureBoss(breachId){
+  return buildBreachRuptureBoss(breachId);
 }
 
 // Couleurs et libellés des tiers des quêtes urgentes
@@ -2226,7 +2327,7 @@ function App(){
       });
       return;
     }
-    const boss=pickBreachRuptureBoss(b.stat);
+    const boss=pickBreachRuptureBoss(b.id);
     if(!boss){
       setState(s=>s.activeBreach&&Date.now()>=(s.activeBreach.expiresAt||0)?{...s,activeBreach:null}:s);
       return;
@@ -2238,7 +2339,7 @@ function App(){
       if(!cur||cur.ruptureBoss||t<(cur.expiresAt||0))return s;
       return {...s,activeBreach:{...cur,progress:0,rupturedAt:t,ruptureBoss,expiresAt:ruptureBoss.expiresAt}};
     });
-    setRuptureUp({dungeonTitle:"Brèche en Rupture",icon:"⚡",name:boss.name,objective:boss.objective,ruptureColor:"#ef4444"});
+    setRuptureUp({dungeonTitle:"Brèche en Rupture",icon:"⚡",name:boss.name,objective:b.desc,ruptureColor:"#ef4444"});
   },[now,state.activeBreach?.expiresAt,state.activeBreach?.ruptureBoss?.id]);
 
   // Échec automatique d’une dette non remboursée après son jour d’échéance
@@ -3423,14 +3524,34 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function BreachCard({compact=false}={}){
     const b=activeBreach;if(!b)return null;
     const remaining=Math.max(0,b.expiresAt-now);
-    const pct=Math.min(100,((Number(b.progress)||0)/Math.max(1,b.target))*100);
+    const isRupture=!!b.ruptureBoss;
+    const rupture=b.ruptureBoss;
+    const guards=isRupture&&Array.isArray(rupture.guards)?rupture.guards:[];
+    const target=Math.max(1,Number(b.target)||1);
+    const mainProgress=Math.max(0,Math.min(target,Number(b.progress)||0));
+    const mainDone=mainProgress>=target;
+    const guardFraction=g=>Math.min(1,(Number(g.progress)||0)/Math.max(1,Number(g.target)||1));
+    const guardDone=g=>guardFraction(g)>=1;
+    const guardDoneCount=guards.filter(guardDone).length;
+    const ruptureComplete=isRupture&&mainDone&&guards.length===3&&guardDoneCount===guards.length;
+    const pct=isRupture
+      ? Math.min(100,((mainProgress/target)+guards.reduce((sum,g)=>sum+guardFraction(g),0))/Math.max(1,1+guards.length)*100)
+      : Math.min(100,(mainProgress/target)*100);
     const pairs=[{xp:b.xp,stat:b.stat},b.xp2&&b.stat2?{xp:b.xp2,stat:b.stat2}:null].filter(Boolean);
+
     const finish=()=>{
       const current=state.activeBreach;
       if(!current||current.breachId!==b.breachId||completedBreachRef.current===b.breachId)return;
+      if(current.ruptureBoss){
+        const currentTarget=Math.max(1,Number(current.target)||1);
+        const currentMainDone=(Number(current.progress)||0)>=currentTarget;
+        const currentGuards=Array.isArray(current.ruptureBoss.guards)?current.ruptureBoss.guards:[];
+        const currentGuardsDone=currentGuards.length===3&&currentGuards.every(g=>(Number(g.progress)||0)>=Math.max(1,Number(g.target)||1));
+        if(!currentMainDone||!currentGuardsDone)return;
+      }
       completedBreachRef.current=b.breachId;
       pairs.forEach(p=>addXp(p.xp,p.stat,null,true));
-      triggerUrgentUp({...b,isBreach:true,isRupture:!!b.ruptureBoss},pairs);
+      triggerUrgentUp({...b,name:isRupture?rupture.name:b.name,isBreach:true,isRupture},pairs);
       setState(s=>{
         if(!s.activeBreach||s.activeBreach.breachId!==b.breachId)return s;
         const day=todayStr(),daily={...(s.dailyExtraXp||{})},row={...(daily[day]||{})};
@@ -3439,14 +3560,47 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       });
       awardRandomBreachLoot();
     };
-    const add=n=>{
-      const next=Math.min(b.target,(Number(b.progress)||0)+n);
-      if(next>=b.target){setState(s=>s.activeBreach&&s.activeBreach.breachId===b.breachId?{...s,activeBreach:{...s.activeBreach,progress:next}}:s);setTimeout(finish,0);}
-      else setState(s=>s.activeBreach&&s.activeBreach.breachId===b.breachId?{...s,activeBreach:{...s.activeBreach,progress:next}}:s);
+
+    const addMain=n=>{
+      const next=Math.min(target,mainProgress+n);
+      setState(s=>s.activeBreach&&s.activeBreach.breachId===b.breachId
+        ? {...s,activeBreach:{...s.activeBreach,progress:next}}
+        : s
+      );
+      if(!isRupture&&next>=target)setTimeout(finish,0);
     };
-    const isRupture=!!b.ruptureBoss;
-    const rupture=b.ruptureBoss;
-    const progressText=isRupture?"Boss à maîtriser":(b.binary?"À accomplir":fmtNum(b.progress||0)+"/"+b.target+" "+b.unit);
+
+    const completeMain=()=>{
+      if(!isRupture){finish();return;}
+      setState(s=>s.activeBreach&&s.activeBreach.breachId===b.breachId
+        ? {...s,activeBreach:{...s.activeBreach,progress:target}}
+        : s
+      );
+    };
+
+    const updateGuard=(guardId,amount,complete=false)=>{
+      setState(s=>{
+        const current=s.activeBreach;
+        if(!current||current.breachId!==b.breachId||!current.ruptureBoss)return s;
+        const nextGuards=(current.ruptureBoss.guards||[]).map(g=>{
+          if(g.id!==guardId)return g;
+          const guardTarget=Math.max(1,Number(g.target)||1);
+          const next=complete?guardTarget:Math.min(guardTarget,(Number(g.progress)||0)+amount);
+          return {...g,progress:next};
+        });
+        return {...s,activeBreach:{...current,ruptureBoss:{...current.ruptureBoss,guards:nextGuards}}};
+      });
+    };
+
+    const mainProgressText=b.binary
+      ? (mainDone?"OBJECTIF DU BOSS VALIDÉ":"OBJECTIF DU BOSS À ACCOMPLIR")
+      : fmtNum(mainProgress)+"/"+target+" "+b.unit;
+    const progressText=isRupture
+      ? "Boss "+(mainDone?"✓":Math.round((mainProgress/target)*100)+" %")+" · Garde "+guardDoneCount+"/"+guards.length
+      : (b.binary?"À accomplir":fmtNum(mainProgress)+"/"+target+" "+b.unit);
+
+    const standardButtonStyle="flex:1;padding:9px;border-radius:8px;border:1px solid rgba(255,255,255,.38);background:rgba(255,255,255,.05);color:#fff;font-family:Orbitron,sans-serif;font-size:9px;cursor:pointer";
+
     return h("div",{class:"card sq-urgent",style:"position:relative;overflow:hidden;border-color:#8dbbff;background:linear-gradient(145deg,#07162f,#102e5c);box-shadow:0 0 18px rgba(141,187,255,.32),inset 0 0 24px rgba(255,255,255,.035)"},
       [["top:-10px;left:8px"],["top:-10px;right:8px"],["bottom:-11px;left:10px"],["bottom:-11px;right:10px"]].map((p,i)=>h("span",{key:i,style:"position:absolute;"+p[0]+";color:#fff;font-size:17px;filter:drop-shadow(0 0 7px #fff);pointer-events:none"},"⚡")),
       h("div",{style:"position:relative;z-index:2"},
@@ -3455,11 +3609,68 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#fff;border:1px solid rgba(255,255,255,.45);border-radius:999px;padding:4px 7px;white-space:nowrap"},"⏱ "+fmtCD(remaining))
         ),
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px"},
-          h("div",{style:"display:flex;align-items:center;gap:9px;min-width:0"},QuestIcon(b.id,isRupture?"☠️":b.icon,18,"min-width:26px"),h("div",{style:"min-width:0"},h("div",{style:"font-size:13px;font-weight:800;color:#fff;line-height:1.25"},isRupture?rupture.name:b.name),!compact&&h("div",{style:"font-size:10px;color:#cbd5e1;line-height:1.4;margin-top:3px"},isRupture?rupture.objective:b.desc))),
+          h("div",{style:"display:flex;align-items:center;gap:9px;min-width:0"},
+            QuestIcon(b.id,isRupture?"☠️":b.icon,18,"min-width:26px"),
+            h("div",{style:"min-width:0"},
+              h("div",{style:"font-size:13px;font-weight:800;color:#fff;line-height:1.25"},isRupture?rupture.name:b.name),
+              !compact&&h("div",{style:"font-size:10px;color:#cbd5e1;line-height:1.4;margin-top:3px"},isRupture?b.desc:b.desc)
+            )
+          ),
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#dbeafe;line-height:1.35;text-align:right;white-space:nowrap"},pairs.map((p,i)=>h("div",{key:i},questRewardText(p.xp,p.stat,b.binary,b.target,b.unit))))
         ),
-        h("div",{class:"qrow",style:"align-items:center;margin-top:9px"},h("div",{class:"qbar"},h("div",{class:"qfill partial",style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,#274f88,#274f88 5px,#7aa7df 5px,#7aa7df 10px);background-size:14px 14px;opacity:.95"})),h("div",{class:"qxp",style:"color:#dbeafe;white-space:nowrap;min-width:86px;text-align:right"},progressText)),
-        !compact&&h("div",{style:"margin-top:9px"},(isRupture||b.binary)?h("button",{onClick:finish,style:"width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.07);color:#fff;font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px"},isRupture?"MAÎTRISER LE BOSS ✓":"REFERMER LA BRÈCHE ✓"):h("div",{style:"display:flex;gap:8px"},h("button",{onClick:()=>add(1),style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.05);color:#fff;font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},"+1 "+b.unit),h("button",{onClick:()=>add(b.step||10),style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.08);color:#fff;font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},"+"+(b.step||10)+" "+b.unit))),
+        h("div",{class:"qrow",style:"align-items:center;margin-top:9px"},
+          h("div",{class:"qbar"},h("div",{class:"qfill partial",style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,#274f88,#274f88 5px,#7aa7df 5px,#7aa7df 10px);background-size:14px 14px;opacity:.95"})),
+          h("div",{class:"qxp",style:"color:#dbeafe;white-space:nowrap;min-width:118px;text-align:right"},progressText)
+        ),
+
+        !compact&&!isRupture&&h("div",{style:"margin-top:9px"},
+          b.binary
+            ? h("button",{onClick:finish,style:"width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.07);color:#fff;font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px"},"REFERMER LA BRÈCHE ✓")
+            : h("div",{style:"display:flex;gap:8px"},
+                h("button",{onClick:()=>addMain(1),style:standardButtonStyle},"+1 "+b.unit),
+                h("button",{onClick:()=>addMain(b.step||10),style:standardButtonStyle},"+"+(b.step||10)+" "+b.unit)
+              )
+        ),
+
+        !compact&&isRupture&&h("div",{style:"margin-top:10px"},
+          h("div",{style:"padding:9px;border-radius:9px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.035)"},
+            h("div",{style:"display:flex;justify-content:space-between;gap:8px;align-items:center"},
+              h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#fff;letter-spacing:1px;text-transform:uppercase"},"OBJECTIF DU BOSS"),
+              h("div",{style:"font-family:Orbitron,sans-serif;font-size:8.5px;color:"+(mainDone?"#4ade80":"#dbeafe")},mainProgressText)
+            ),
+            !mainDone&&h("div",{style:"display:flex;gap:7px;margin-top:8px"},
+              b.binary
+                ? h("button",{onClick:completeMain,style:"width:100%;padding:9px;border-radius:8px;border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.06);color:#fff;font-family:Orbitron,sans-serif;font-size:9px;cursor:pointer"},"VALIDER LE BOSS ✓")
+                : h(Fragment,null,
+                    h("button",{onClick:()=>addMain(1),style:standardButtonStyle},"+1 "+b.unit),
+                    h("button",{onClick:()=>addMain(b.step||10),style:standardButtonStyle},"+"+(b.step||10)+" "+b.unit)
+                  )
+            )
+          ),
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#fff;letter-spacing:1px;text-transform:uppercase;margin:11px 0 7px"},"GARDE RAPPROCHÉE — "+guardDoneCount+"/"+guards.length),
+          h("div",{style:"display:flex;flex-direction:column;gap:7px"},guards.map(g=>{
+            const done=guardDone(g);
+            const progress=Math.max(0,Math.min(Number(g.target)||1,Number(g.progress)||0));
+            return h("div",{key:g.id,style:"padding:9px;border-radius:9px;border:1px solid "+(done?"#4ade8044":"rgba(255,255,255,.09)")+";background:"+(done?"rgba(74,222,128,.055)":"rgba(255,255,255,.025)")},
+              h("div",{style:"display:flex;justify-content:space-between;gap:8px;align-items:flex-start"},
+                h("div",{style:"min-width:0"},
+                  h("div",{style:"font-size:10px;font-weight:800;color:#fff;line-height:1.25"},g.name),
+                  h("div",{style:"font-size:9.5px;color:var(--td);line-height:1.4;margin-top:3px"},g.objective)
+                ),
+                h("div",{style:"font-family:Orbitron,sans-serif;font-size:8.5px;color:"+(done?"#4ade80":"#dbeafe")+";white-space:nowrap"},done?"✓":fmtNum(progress)+"/"+g.target+" "+g.unit)
+              ),
+              !done&&h("div",{style:"display:flex;gap:7px;margin-top:8px"},
+                h("button",{onClick:()=>updateGuard(g.id,Number(g.step)||1),style:standardButtonStyle},"+"+fmtNum(g.step||1)+" "+g.unit),
+                h("button",{onClick:()=>updateGuard(g.id,0,true),style:standardButtonStyle},"TERMINER ✓")
+              )
+            );
+          })),
+          h("button",{
+            disabled:!ruptureComplete,
+            onClick:finish,
+            style:"width:100%;margin-top:10px;padding:11px;border-radius:8px;border:1px solid "+(ruptureComplete?"#4ade8088":"rgba(255,255,255,.12)")+";background:"+(ruptureComplete?"rgba(74,222,128,.12)":"rgba(255,255,255,.025)")+";color:"+(ruptureComplete?"#4ade80":"var(--td)")+";font-family:Orbitron,sans-serif;font-size:10px;cursor:"+(ruptureComplete?"pointer":"default")+";letter-spacing:1px;text-transform:uppercase"
+          },ruptureComplete?"MAÎTRISER LA RUPTURE ✓":"4 OBJECTIFS À ACCOMPLIR")
+        ),
         !compact&&h("div",{style:"font-size:9px;color:#bfdbfe;font-family:Orbitron,sans-serif;line-height:1.45;margin-top:9px;text-align:center"},"OBJET ALÉATOIRE GARANTI À LA RÉUSSITE")
       )
     );
@@ -5703,12 +5914,16 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
     function renderBreachBossCodex(rb){
       const color=STAT_COLOR[rb.stat]||"var(--rc)";
-      return h("div",{key:rb.id,style:"margin-bottom:7px;padding:8px 9px;border-radius:9px;border:1px solid "+color+"33;background:"+color+"08"},
+      return h("div",{key:rb.id,style:"margin-bottom:9px;padding:9px 10px;border-radius:9px;border:1px solid "+color+"33;background:"+color+"08"},
         h("div",{style:"font-size:11px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;line-height:1.3"},rb.name),
-        h("div",{style:"font-size:10px;color:var(--td);line-height:1.4;margin-top:4px"},rb.objective)
+        h("div",{style:"font-size:10px;color:var(--td);line-height:1.4;margin-top:4px"},"Objectif du Boss : "+rb.objective),
+        h("div",{style:"font-size:8.5px;color:#fff;font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin-top:9px;margin-bottom:5px"},"Garde rapprochée"),
+        h("div",{style:"display:flex;flex-direction:column;gap:5px"},(rb.guards||[]).map(g=>h("div",{key:g.id,style:"padding:6px 7px;border-radius:7px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02)"},
+          h("div",{style:"font-size:9.5px;color:#fff;font-weight:700;line-height:1.3"},g.name),
+          h("div",{style:"font-size:9.5px;color:var(--td);line-height:1.4;margin-top:2px"},g.objective)
+        )))
       );
     }
-
     function Section({id,title,count,children}){
       const open=!!codexOpen[id];
       return h("div",{class:"card"},
@@ -5805,14 +6020,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const hiddenBonus = objs.filter(o=>o.optional&&!o.weekly&&o.bonusHidden);
     const specialList = STATS.flatMap(stat=>(SP[stat]||[]).map(q=>({...q,stat:q.stat||stat})));
     const breachList=BREACH_POOL.map(q=>({...q,isBreach:true}));
-    const breachBossList=[
-      ...((DUNGEON_RUPTURE_BOSSES.alchemist||[]).map(rb=>({...rb,stat:"Sante"}))),
-      ...((DUNGEON_RUPTURE_BOSSES.warrior||[]).map(rb=>({...rb,stat:"Force"}))),
-      ...((DUNGEON_RUPTURE_BOSSES.monk||[]).map(rb=>({...rb,stat:"Esprit"}))),
-      ...((DUNGEON_RUPTURE_BOSSES.pilgrim||[]).map(rb=>({...rb,stat:"Endurance"}))),
-      ...((DUNGEON_RUPTURE_BOSSES.hunter||[]).map(rb=>({...rb,stat:"Agilite"}))),
-      ...((DUNGEON_RUPTURE_BOSSES.guardian||[]).map(rb=>({...rb,stat:"Discipline"})))
-    ];
+    const breachBossList=BREACH_POOL.map(b=>{
+      const boss=buildBreachRuptureBoss(b.id);
+      return boss?{...boss,stat:b.stat,breachId:b.id}:null;
+    }).filter(Boolean);
     const elanList=EVENT_BONUSES.filter(e=>!e.disabled).map(e=>({...e,type:"bonus"}));
 
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setInventoryItem(null)}},
@@ -5825,7 +6036,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;text-align:center;margin-bottom:15px"},"Catalogue complet des quêtes et systèmes de l’application."),
         h(Section,{id:"breach",title:"Brèches",count:breachList.length+breachBossList.length},
           h(Fragment,null,
-            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Une Brèche a 1 % de chance d’apparaître au reset quotidien. Elle remplace la quête urgente du jour et reste ouverte 72 h. Si elle n’est pas refermée, elle entre en Rupture : un Boss apparaît pendant 24 h. Le maîtriser accorde l’XP initiale de la Brèche et un objet aléatoire garanti. En cas d’échec, un malus de −25 % d’XP s’applique pendant 24 h."),
+            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Une Brèche a 1 % de chance d’apparaître au reset quotidien. Elle remplace la quête urgente du jour et reste ouverte 72 h. Si elle n’est pas refermée, elle entre en Rupture pendant 24 h : son Boss reprend l’objectif initial et invoque une garde rapprochée composée de 3 sous-quêtes. Les 4 objectifs doivent être accomplis pour obtenir l’XP initiale de la Brèche et un objet aléatoire garanti. En cas d’échec, un malus de −25 % d’XP s’applique pendant 24 h."),
             groupByDominantStat(breachList,renderSpecial),
             h("div",{style:"margin-top:13px;padding-top:11px;border-top:1px solid rgba(255,255,255,0.08)"},
               h("div",{style:"font-size:9px;color:#fff;font-family:Orbitron,sans-serif;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:9px"},"Boss de Rupture"),
