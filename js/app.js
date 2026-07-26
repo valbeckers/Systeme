@@ -5723,8 +5723,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{style:"font-size:11px;color:"+meta.color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;line-height:1.3"},rb.name),
           h("div",{style:"font-size:8px;color:"+meta.color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;white-space:nowrap;border:1px solid "+meta.color+"44;border-radius:999px;padding:3px 6px"},meta.label)
         ),
-        h("div",{style:"font-size:10px;color:var(--td);line-height:1.4;margin-top:4px"},rb.objective),
-        h("div",{style:"font-size:8.5px;color:"+meta.color+";font-family:Orbitron,sans-serif;letter-spacing:.7px;text-transform:uppercase;margin-top:6px"},"Récompense : XP initiale de la Brèche + objet aléatoire garanti")
+        h("div",{style:"font-size:10px;color:var(--td);line-height:1.4;margin-top:4px"},rb.objective)
       );
     }
 
