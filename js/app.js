@@ -4342,7 +4342,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function InventoryItemIcon(id,size){
     if(id==="dungeonKey")return EmojiStyleItemImage(DUNGEON_KEY_ICON_DATA,size);
     if(id==="debtAcknowledgement")return EmojiStyleItemImage(DEBT_ACKNOWLEDGEMENT_ICON_DATA,size);
-    if(id==="regressionOrb")return EmojiStyleItemImage(REGRESSION_ORB_ICON_DATA,size);
+    if(id==="regressionOrb")return EmojiStyleItemImage(REGRESSION_ORB_ICON_DATA,size,1.25);
     if(id==="majorElixir"||id==="minorElixir"||id==="supremeElixir")return ElixirIcon(id,size);
     if(id==="transmutationGrimoire")return GrimoireIcon(size);
     if(id==="invisibilityCape"&&NEW_ITEM_ICON_DATA[id])return EmojiStyleItemImage(NEW_ITEM_ICON_DATA[id],size);
