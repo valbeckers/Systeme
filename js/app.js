@@ -250,7 +250,7 @@ function normalizeActiveBreach(entry){
   const ruptureBoss=entry.ruptureBoss
     ? buildBreachRuptureBoss(tpl.id,entry.ruptureBoss)
     : null;
-  return {...tpl,breachId:entry.breachId||("breach_"+(entry.startedAt||Date.now())),progress:Math.max(0,Math.min(tpl.target,Number(entry.progress)||0)),startedAt:Number(entry.startedAt)||Date.now(),expiresAt:ruptureBoss?ruptureBoss.expiresAt:(Number(entry.expiresAt)||((Number(entry.startedAt)||Date.now())+72*60*60*1000)),completedAt:entry.completedAt||null,ruptureBoss,rupturedAt:entry.rupturedAt||null,isBreach:true};
+  return {...tpl,breachId:entry.breachId||("breach_"+(entry.startedAt||Date.now())),progress:Math.max(0,Math.min(tpl.target,Number(entry.progress)||0)),startedAt:Number(entry.startedAt)||Date.now(),expiresAt:ruptureBoss?ruptureBoss.expiresAt:(Number(entry.expiresAt)||((Number(entry.startedAt)||Date.now())+72*60*60*1000)),completedAt:entry.completedAt||null,ruptureBoss,rupturedAt:entry.rupturedAt||null,isBreach:true,alliedTeleport:entry.alliedTeleport===true};
 }
 function processDailyBreachRoll(state,now=Date.now()){
   const day=eventDayStr(now);
@@ -1150,6 +1150,11 @@ function cleanSystemState(raw){
     specialQuests,
     sqCooldownUntil:data.sqCooldownUntil||null,
     activeBreach:normalizeActiveBreach(data.activeBreach),
+    alliedGiftPending:(data.alliedGiftPending&&data.alliedGiftPending.breachId)?{
+      breachId:String(data.alliedGiftPending.breachId),
+      breachName:String(data.alliedGiftPending.breachName||"Brèche alliée"),
+      createdAt:Number(data.alliedGiftPending.createdAt)||Date.now()
+    }:null,
     breachRollDay:data.breachRollDay||null,
     breachTriggeredDay:data.breachTriggeredDay||null,
     activeDungeon:data.activeDungeon||null,
@@ -1305,6 +1310,7 @@ const IMPORTED = {
   specialQuests:[],
   sqCooldownUntil:null,
   activeBreach:null,
+  alliedGiftPending:null,
   breachRollDay:null,
   breachTriggeredDay:null,
   activeDungeon:null,
@@ -1391,6 +1397,7 @@ function buildState(){
     specialQuests:saved.specialQuests||[],
     sqCooldownUntil:saved.sqCooldownUntil||null,
     activeBreach:normalizeActiveBreach(saved.activeBreach),
+    alliedGiftPending:saved.alliedGiftPending||null,
     breachRollDay:saved.breachRollDay||null,
     breachTriggeredDay:saved.breachTriggeredDay||null,
     sqRerollDay:saved.sqRerollDay||null,
@@ -1644,6 +1651,9 @@ function App(){
   const [keyLootQueue,setKeyLootQueue] = useState([]);
   const [itemLootUp,setItemLootUp] = useState(null);
   const [itemLootQueue,setItemLootQueue] = useState([]);
+  const [alliedGiftUp,setAlliedGiftUp] = useState(null);
+  const [alliedGiftChoiceOpen,setAlliedGiftChoiceOpen] = useState(false);
+  const [confirmAlliedGift,setConfirmAlliedGift] = useState(null);
   const [itemUseUp,setItemUseUp] = useState(null);
   const [inventoryItem,setInventoryItem] = useState(null);
   const [confirmItemUse,setConfirmItemUse] = useState(null);
@@ -1709,6 +1719,28 @@ function App(){
     const won=eligible[Math.floor(Math.random()*eligible.length)];
     if(won==="dungeonKey")awardDungeonKey("guaranteed");else awardInventoryItem(won,"guaranteed");
     return won;
+  }
+
+  function alliedGiftEligibleIds(){
+    return Object.entries(INVENTORY_ITEMS)
+      .filter(([id,item])=>!item.permanent)
+      .map(([id])=>id)
+      .sort((a,b)=>(INVENTORY_ITEMS[a].short||"").localeCompare(INVENTORY_ITEMS[b].short||"","fr",{sensitivity:"base"}));
+  }
+
+  function grantAlliedGift(id){
+    if(!alliedGiftEligibleIds().includes(id))return;
+    setState(s=>{
+      if(!s.alliedGiftPending)return s;
+      if(id==="dungeonKey"){
+        return {...s,dungeonKeys:Math.max(0,Math.floor(Number(s.dungeonKeys)||0))+1,alliedGiftPending:null};
+      }
+      return {
+        ...s,
+        inventory:{...(s.inventory||{}),[id]:Math.max(0,Math.floor(Number(s.inventory&&s.inventory[id])||0))+1},
+        alliedGiftPending:null
+      };
+    });
   }
 
   function applyRegression(){
@@ -2386,19 +2418,48 @@ function App(){
 
   useEffect(()=>{
     if(keyLootUp || !keyLootQueue.length) return;
-    if(rankUp || levelUp || statDecadeUp || completionUp || streakUp || recordUp || dungeonUp || ruptureUp || urgentUp || debtUp || prestigeUp) return;
+    if(rankUp || levelUp || statDecadeUp || completionUp || streakUp || recordUp || dungeonUp || ruptureUp || urgentUp || debtUp || prestigeUp || alliedGiftUp || alliedGiftChoiceOpen || confirmAlliedGift) return;
     const [next,...rest]=keyLootQueue;
     setKeyLootQueue(rest);
     setKeyLootUp(next);
-  },[keyLootQueue,keyLootUp,rankUp,levelUp,statDecadeUp,completionUp,streakUp,recordUp,dungeonUp,ruptureUp,urgentUp,debtUp,prestigeUp]);
+  },[keyLootQueue,keyLootUp,rankUp,levelUp,statDecadeUp,completionUp,streakUp,recordUp,dungeonUp,ruptureUp,urgentUp,debtUp,prestigeUp,alliedGiftUp,alliedGiftChoiceOpen,confirmAlliedGift]);
 
   useEffect(()=>{
     if(itemLootUp || !itemLootQueue.length) return;
-    if(rankUp || levelUp || statDecadeUp || completionUp || streakUp || recordUp || keyLootUp || dungeonUp || ruptureUp || urgentUp || debtUp || prestigeUp || itemUseUp) return;
+    if(rankUp || levelUp || statDecadeUp || completionUp || streakUp || recordUp || keyLootUp || dungeonUp || ruptureUp || urgentUp || debtUp || prestigeUp || itemUseUp || alliedGiftUp || alliedGiftChoiceOpen || confirmAlliedGift) return;
     const [next,...rest]=itemLootQueue;
     setItemLootQueue(rest);
     setItemLootUp(next);
-  },[itemLootQueue,itemLootUp,rankUp,levelUp,statDecadeUp,completionUp,streakUp,recordUp,keyLootUp,dungeonUp,ruptureUp,urgentUp,debtUp,prestigeUp,itemUseUp]);
+  },[itemLootQueue,itemLootUp,rankUp,levelUp,statDecadeUp,completionUp,streakUp,recordUp,keyLootUp,dungeonUp,ruptureUp,urgentUp,debtUp,prestigeUp,itemUseUp,alliedGiftUp,alliedGiftChoiceOpen,confirmAlliedGift]);
+
+  useEffect(()=>{
+    const pending=state.alliedGiftPending;
+    if(!pending||alliedGiftUp||alliedGiftChoiceOpen||confirmAlliedGift)return;
+    if(rankUp||levelUp||statDecadeUp||completionUp||streakUp||recordUp||keyLootUp||itemLootUp||dungeonUp||ruptureUp||urgentUp||debtUp||prestigeUp||itemUseUp)return;
+    if(keyLootQueue.length||itemLootQueue.length)return;
+    setAlliedGiftUp(pending);
+  },[
+    state.alliedGiftPending,
+    alliedGiftUp,
+    alliedGiftChoiceOpen,
+    confirmAlliedGift,
+    rankUp,
+    levelUp,
+    statDecadeUp,
+    completionUp,
+    streakUp,
+    recordUp,
+    keyLootUp,
+    itemLootUp,
+    dungeonUp,
+    ruptureUp,
+    urgentUp,
+    debtUp,
+    prestigeUp,
+    itemUseUp,
+    keyLootQueue.length,
+    itemLootQueue.length
+  ]);
 
   useEffect(()=>{
     if(!allDailyDone || state.dailyCompletionAnimDay===today) return;
@@ -3562,14 +3623,20 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         const currentGuardsDone=currentGuards.length===3&&currentGuards.every(g=>(Number(g.progress)||0)>=Math.max(1,Number(g.target)||1));
         if(!currentMainDone||!currentGuardsDone)return;
       }
+      const allied=!!current.alliedTeleport;
       completedBreachRef.current=b.breachId;
       pairs.forEach(p=>addXp(p.xp,p.stat,null,true));
-      triggerUrgentUp({...b,name:isRupture?rupture.name:b.name,isBreach:true,isRupture},pairs);
+      triggerUrgentUp({...b,name:isRupture?rupture.name:b.name,isBreach:true,isRupture,forceBreachClosed:allied},pairs);
       setState(s=>{
         if(!s.activeBreach||s.activeBreach.breachId!==b.breachId)return s;
         const day=todayStr(),daily={...(s.dailyExtraXp||{})},row={...(daily[day]||{})};
         row.breach=(row.breach||0)+pairs.reduce((sum,p)=>sum+(p.xp||0),0);daily[day]=row;
-        return {...s,activeBreach:null,dailyExtraXp:daily};
+        return {
+          ...s,
+          activeBreach:null,
+          dailyExtraXp:daily,
+          alliedGiftPending:allied?{breachId:b.breachId,breachName:b.name,createdAt:Date.now()}:s.alliedGiftPending
+        };
       });
       awardRandomBreachLoot();
     };
@@ -3618,7 +3685,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       [["top:-10px;left:8px"],["top:-10px;right:8px"],["bottom:-11px;left:10px"],["bottom:-11px;right:10px"]].map((p,i)=>h("span",{key:i,style:"position:absolute;"+p[0]+";color:#fff;font-size:17px;filter:drop-shadow(0 0 7px #fff);pointer-events:none"},"⚡")),
       h("div",{style:"position:relative;z-index:2"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:9px"},
-          h("div",{class:"ctitle",style:"margin:0;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE"),
+          h("div",{class:"ctitle",style:"margin:0;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"BRÈCHE ALLIÉE EN RUPTURE":"BRÈCHE ALLIÉE"):(isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE")),
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#fff;border:1px solid rgba(255,255,255,.45);border-radius:999px;padding:4px 7px;white-space:nowrap"},"⏱ "+fmtCD(remaining))
         ),
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px"},
@@ -4297,7 +4364,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     alchemicalCatalyst:{name:"CATALYSEUR ALCHIMIQUE",short:"CATALYSEUR ALCHIMIQUE",emoji:"⚗️",action:"PRÉPARER",desc:"Lors de la prochaine utilisation du Grimoire de transmutation, réduit le coût de cinq à trois Élixirs d’expérience mineurs. Le Catalyseur et le Grimoire sont tous les deux consommés au moment de la transmutation.",obtain:["Après avoir complété un Donjon de l’Alchimiste (Taux : 10 %).","Après avoir créé un Élixir d’expérience magistral (Taux : 5 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %)."]},
     masterContract:{name:"CONTRAT DU MAÎTRE",short:"CONTRAT DU MAÎTRE",emoji:"📜",action:"UTILISER",desc:"Au lancement du prochain donjon, choisissez une contrainte supplémentaire parmi trois. Si le donjon est terminé, la récompense finale augmente de 20 %. Contraintes : délai réduit à 12 heures, objectifs multipliés par 1,5, ou boss remplacé par un Boss de Rupture.",obtain:["Après avoir complété un donjon (Taux : 10 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %)."]},
     recordHammer:{name:"MARQUE DU DÉPASSEMENT",short:"MARQUE DU DÉPASSEMENT",emoji:"✨",action:"UTILISER",desc:"Permet de marquer un record comme objectif officiel de la semaine. Le battre avant la fin de semaine rapporte +500 XP. L’objet est perdu en cas d’échec.",obtain:["Après avoir complété un donjon (Taux : 10 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 10 %)."]},
-    teleportCrystal:{name:"CRISTAL DE TÉLÉPORTATION",short:"CRISTAL DE TÉLÉPORTATION",emoji:"💠",action:"UTILISER",desc:"Permet de quitter un donjon en cours de route. L’XP acquise jusque-là est conservée et le donjon se referme sans rupture.",obtain:["Après avoir complété un donjon (Taux : 10 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %)."]},
+    teleportCrystal:{name:"CRISTAL DE TÉLÉPORTATION",short:"CRISTAL DE TÉLÉPORTATION",emoji:"💠",action:"BRISER",desc:"Permet d’aller aider un pays voisin en se téléportant à la Brèche la plus proche. Si elle est refermée, vous obtenez l’XP et le butin habituels de la Brèche, puis choisissez un objet supplémentaire offert par le pays allié.",obtain:["Après avoir complété un donjon (Taux : 10 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %)."]},
     invisibilityCape:{name:"POTION D’INVISIBILITÉ ÉPHÉMÈRE",short:"POTION D’INVISIBILITÉ",emoji:"🧪",action:"UTILISER",desc:"Permet de devenir invisible le temps de traverser une salle de donjon. La salle est considérée comme terminée, sans gain d’XP.",obtain:["Après avoir complété un donjon (Taux : 10 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %)."]},
     recoveryOintment:{name:"ONGUENT DE RÉCUPÉRATION",short:"ONGUENT DE RÉCUPÉRATION",emoji:"🧴",action:"UTILISER",desc:"Permet de passer une quête journalière ou bonus en cas de blessure ou de repos forcé. La quête est considérée comme validée, sans gain d’XP.",obtain:["Après avoir complété un donjon (Taux : 10 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %)."]}
   };
@@ -4387,7 +4454,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }else if(id==="recoveryOintment"){
       const regularEligible=objs.some(o=>o.daily&&(Number(tLog[o.id])||0)<getEffectiveTarget(o.id));
       if(!regularEligible){disabled=true;reason="Aucune quête journalière ou bonus active et incomplète ne peut être passée.";}
-    }else if(id==="teleportCrystal"||id==="invisibilityCape"){
+    }else if(id==="teleportCrystal"){
+      if(activeBreach){disabled=true;reason="Une Brèche est déjà active.";}
+      else if(state.alliedGiftPending){disabled=true;reason="Choisissez d’abord l’objet offert par le pays allié.";}
+    }else if(id==="invisibilityCape"){
       if(!activeDungeon){disabled=true;reason="Aucun donjon n’est actuellement actif.";}
     }else if(activeElixir||suspendedElixir){
       disabled=true;
@@ -4416,7 +4486,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const id=confirmItemUse.id,it=INVENTORY_ITEMS[id];
     return h("div",{class:"ruov",style:"--rc:"+rank.color+";--rg:"+rank.glow},h("div",{class:"rucont",style:"width:min(500px,calc(100vw - 34px));background:rgba(15,15,18,.97);border:1px solid "+rank.color+"88;border-radius:18px;padding:22px;box-shadow:0 0 30px "+rank.color+"22"},
       h("div",{class:"ruevol",style:"color:"+rank.color},"CONFIRMATION"),
-      h("div",{style:"font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:#fff;text-align:center;line-height:1.4;max-width:340px"},id==="etherStopper"&&suspendedElixir?"Réactiver l’élixir suspendu avec exactement "+fmtCD(suspendedElixir.remainingMs)+" restants ?":"Êtes-vous certain de vouloir "+(id==="regressionOrb"?"activer l’":id==="dungeonKey"?"utiliser une ":id==="transmutationGrimoire"?"utiliser le ":id==="destinyCompass"?"orienter la ":id==="alchemicalCatalyst"?"préparer le ":"consommer un ")+it.name+" ?"),
+      h("div",{style:"font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:#fff;text-align:center;line-height:1.4;max-width:340px"},id==="etherStopper"&&suspendedElixir
+        ?"Réactiver l’élixir suspendu avec exactement "+fmtCD(suspendedElixir.remainingMs)+" restants ?"
+        :id==="teleportCrystal"
+          ?"Briser le Cristal de téléportation pour rejoindre un pays voisin et ouvrir une Brèche aléatoire ?"
+          :"Êtes-vous certain de vouloir "+(id==="regressionOrb"?"activer l’":id==="dungeonKey"?"utiliser une ":id==="transmutationGrimoire"?"utiliser le ":id==="destinyCompass"?"orienter la ":id==="alchemicalCatalyst"?"préparer le ":"consommer un ")+it.name+" ?"),
       h("div",{style:"display:flex;gap:10px;margin-top:22px"},
         h("button",{class:"rudis",style:"min-width:110px;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>setConfirmItemUse(null)},"Non"),
         h("button",{class:"rudis",style:"min-width:110px",onClick:()=>{
@@ -4462,9 +4536,21 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           }else if(id==="recordHammer"||id==="invisibilityCape"){
             setSpecialItemChoice({type:id});
           }else if(id==="teleportCrystal"){
-            setSpecialItemChoice({type:"teleport"});
+            const t=Date.now();
+            const tpl=BREACH_POOL.length?BREACH_POOL[Math.floor(Math.random()*BREACH_POOL.length)]:null;
+            if(tpl){
+              setState(s=>{
+                if(s.activeBreach||s.alliedGiftPending||(Number(s.inventory&&s.inventory.teleportCrystal)||0)<1)return s;
+                return {
+                  ...s,
+                  inventory:{...(s.inventory||{}),teleportCrystal:Math.max(0,(Number(s.inventory&&s.inventory.teleportCrystal)||0)-1)},
+                  activeBreach:{...tpl,breachId:"allied_breach_"+t,progress:0,startedAt:t,expiresAt:t+72*60*60*1000,completedAt:null,ruptureBoss:null,isBreach:true,alliedTeleport:true}
+                };
+              });
+              setItemUseUp({id:"teleportCrystal",alliedTeleport:true,breachName:tpl.name});
+            }
           }else setElixirStatChoice({id});
-        }},id==="dungeonKey"||id==="transmutationGrimoire"||id==="supremeElixir"?"Oui":"Continuer")
+        }},id==="teleportCrystal"?"Briser":id==="dungeonKey"||id==="transmutationGrimoire"||id==="supremeElixir"?"Oui":"Continuer")
       )
     ));
   }
@@ -4513,7 +4599,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function recordOptions(){return DEFS.filter(o=>!o.binary&&!o.weekly).map(o=>{let best=0;Object.values(state.dailyLog||{}).forEach(log=>{const v=Number(log&&log[o.id])||0;if(v>best)best=v;});return best>0?{obj:o,best}:null;}).filter(Boolean);}
   function SpecialItemChoiceModal(){
     if(!specialItemChoice)return null;const type=specialItemChoice.type;
-    if(type==="teleport")return h("div",{class:"modal-ov"},h("div",{class:"modal",style:"max-width:390px;width:calc(100% - 28px)"},h("div",{class:"mtitle"},"QUITTER LE DONJON ?"),h("div",{style:"font-size:11px;color:var(--td);line-height:1.5"},"L’XP déjà acquise sera conservée. Le donjon se refermera sans rupture."),h("div",{style:"display:flex;gap:8px;margin-top:14px"},h("button",{onClick:()=>setSpecialItemChoice(null),style:"flex:1;padding:10px"},"Annuler"),h("button",{onClick:()=>{setState(s=>({...s,inventory:{...(s.inventory||{}),teleportCrystal:Math.max(0,(Number(s.inventory&&s.inventory.teleportCrystal)||0)-1)},activeDungeon:null}));setSpecialItemChoice(null);setItemUseUp({id:"teleportCrystal"});},style:"flex:1;padding:10px"},"Téléporter"))));
     let options=[];
     if(type==="recordHammer")options=recordOptions().map(x=>({id:x.obj.id,label:x.obj.icon+" "+x.obj.name+" — "+fmtNum(x.best)+" "+x.obj.unit,obj:x.obj,best:x.best}));
     if(type==="debtAcknowledgement")options=objs.filter(o=>o.daily&&!o.optional&&isDebtEligibleQuest(o)&&(Number(tLog[o.id])||0)<getEffectiveTarget(o.id)).map(o=>({id:o.id,label:o.icon+" "+o.name+" — "+fmtNum(getEffectiveTarget(o.id)-(Number(tLog[o.id])||0))+" "+o.unit+" manquants",obj:o}));
@@ -5078,7 +5163,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function triggerUrgentUp(sq,pairs){
     if(!sq || !pairs || !pairs.length) return;
     setTimeout(()=>setUrgentUp({
-      title:sq.isRupture?"RUPTURE MAÎTRISÉE":(sq.isBreach?"BRÈCHE REFERMÉE":"QUÊTE URGENTE COMPLÉTÉE"),
+      title:sq.forceBreachClosed?"BRÈCHE REFERMÉE":sq.isRupture?"RUPTURE MAÎTRISÉE":(sq.isBreach?"BRÈCHE REFERMÉE":"QUÊTE URGENTE COMPLÉTÉE"),
       name:sq.name,
       color:rank.color||"#fbbf24",
       glow:rank.glow||"#fbbf2455",
@@ -5726,12 +5811,82 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
+  function AlliedGiftUp(){
+    if(!alliedGiftUp)return null;
+    const blue="#60a5fa";
+    const gold="#fbbf24";
+    const particles=Array.from({length:48},(_,i)=>({
+      id:i,
+      left:Math.random()*100,
+      delay:Math.random()*2.6,
+      dur:1.05+Math.random()*1.9,
+      size:2+Math.random()*5,
+      accent:Math.random()>.55
+    }));
+    return h("div",{class:"ruov",style:"--rc:"+blue+";--rg:"+blue+"88"},
+      h("div",{class:"ruparts"},particles.map(p=>
+        h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?gold:"#dbeafe")+";box-shadow:0 0 10px "+(p.accent?gold+"99":blue+"99")+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
+      )),
+      h("div",{class:"rucont"},
+        h(NotificationHeader,null),
+        h("div",{class:"ruevol",style:"color:"+gold+";text-shadow:0 0 16px "+gold+"88"},"CADEAU DU PAYS ALLIÉ"),
+        h("div",{class:"rulabel",style:"margin-top:14px;max-width:360px;line-height:1.6;color:#dbeafe;font-size:clamp(15px,4vw,20px);text-align:center"},"Pour vous remercier, le pays allié vous offre l’objet de votre choix."),
+        h("button",{class:"rudis",style:"--rc:"+blue+";--rg:"+blue+"88",onClick:()=>{setAlliedGiftUp(null);setAlliedGiftChoiceOpen(true);}},"Continuer")
+      )
+    );
+  }
+
+  function AlliedGiftChoiceModal(){
+    if(!alliedGiftChoiceOpen)return null;
+    const ids=alliedGiftEligibleIds();
+    return h("div",{class:"modal-ov"},
+      h("div",{class:"modal",style:"position:relative;max-width:470px;width:calc(100% - 24px);max-height:88vh;overflow:auto"},
+        h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:12px"},
+          h("div",{class:"mtitle",style:"margin:0;line-height:1.2"},"OBJET OFFERT"),
+          h("button",{onClick:()=>setAlliedGiftChoiceOpen(false),style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
+        ),
+        h("div",{style:"font-size:11px;color:var(--td);line-height:1.55;margin:12px 0 14px;text-align:center"},"Choisissez librement un objet non permanent offert par le pays allié."),
+        h("div",{style:"display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px"},ids.map(id=>{
+          const it=INVENTORY_ITEMS[id];
+          return h("button",{key:id,onClick:()=>{setAlliedGiftChoiceOpen(false);setConfirmAlliedGift(id);},style:"min-height:112px;padding:10px 8px;border-radius:11px;border:1px solid rgba(96,165,250,.26);background:rgba(96,165,250,.045);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer"},
+            h("div",{style:"height:54px;display:flex;align-items:center;justify-content:center"},InventoryItemIcon(id,48)),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;line-height:1.3;letter-spacing:.5px;text-transform:uppercase;text-align:center"},it.short)
+          );
+        }))
+      )
+    );
+  }
+
+  function ConfirmAlliedGiftModal(){
+    if(!confirmAlliedGift)return null;
+    const id=confirmAlliedGift;
+    const it=INVENTORY_ITEMS[id];
+    const color="#60a5fa";
+    return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+color+"88"},
+      h("div",{class:"rucont",style:"width:min(500px,calc(100vw - 34px));background:rgba(15,15,18,.97);border:1px solid "+color+"88;border-radius:18px;padding:22px;box-shadow:0 0 30px "+color+"22"},
+        h("div",{class:"ruevol",style:"color:"+color},"CONFIRMATION"),
+        h("div",{style:"margin:10px 0 14px;filter:drop-shadow(0 0 12px "+color+"88)"},InventoryItemIcon(id,96)),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:17px;font-weight:900;color:#fff;text-align:center;line-height:1.45;max-width:360px"},"Choisir définitivement « "+it.name+" » comme cadeau du pays allié ?"),
+        h("div",{style:"display:flex;gap:10px;margin-top:22px"},
+          h("button",{class:"rudis",style:"min-width:110px;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>{setConfirmAlliedGift(null);setAlliedGiftChoiceOpen(true);}},"Retour"),
+          h("button",{class:"rudis",style:"min-width:110px;--rc:"+color+";--rg:"+color+"88",onClick:()=>{
+            grantAlliedGift(id);
+            setConfirmAlliedGift(null);
+            const floatId=Date.now()+Math.random();
+            setFloats(f=>[...f,{id:floatId,y:"35%",txt:"CADEAU ALLIÉ REÇU"}]);
+            setTimeout(()=>setFloats(f=>f.filter(x=>x.id!==floatId)),1800);
+          }},"Confirmer")
+        )
+      )
+    );
+  }
+
   function ItemUseUp(){
     if(!itemUseUp)return null;
     const it=INVENTORY_ITEMS[itemUseUp.id];
     return h("div",{class:"ruov",style:"--rc:"+rank.color+";--rg:"+rank.glow},h("div",{class:"rucont"},
       h(NotificationHeader,null),
-      h("div",{class:"ruevol",style:"color:"+rank.color},itemUseUp.id==="dungeonKey"?"Vous avez utilisé une":itemUseUp.id==="debtAcknowledgement"?"Dette créée avec une":itemUseUp.id==="transmutationGrimoire"?"Transmutation accomplie":itemUseUp.id==="destinyCompass"?"Boussole orientée":itemUseUp.id==="etherStopper"?(itemUseUp.resumed?"Élixir réactivé":"Élixir suspendu"):itemUseUp.id==="rerollToken"?"Quête urgente invoquée":itemUseUp.id==="alchemicalCatalyst"?"Catalyseur préparé":"Vous avez consommé un"),
+      h("div",{class:"ruevol",style:"color:"+rank.color},itemUseUp.id==="teleportCrystal"&&itemUseUp.alliedTeleport?"ALLIANCE SCELLÉE":itemUseUp.id==="dungeonKey"?"Vous avez utilisé une":itemUseUp.id==="debtAcknowledgement"?"Dette créée avec une":itemUseUp.id==="transmutationGrimoire"?"Transmutation accomplie":itemUseUp.id==="destinyCompass"?"Boussole orientée":itemUseUp.id==="etherStopper"?(itemUseUp.resumed?"Élixir réactivé":"Élixir suspendu"):itemUseUp.id==="rerollToken"?"Quête urgente invoquée":itemUseUp.id==="alchemicalCatalyst"?"Catalyseur préparé":"Vous avez consommé un"),
       h("div",{class:"rurank",style:responsiveItemAnimationTitleStyle(it.name,56),"data-r":it.name},it.name),
       itemUseUp.stat&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Vous bénéficiez de +"+Math.round(itemUseUp.pct*100)+" % d’XP dans ",h("span",{style:"color:"+(STAT_COLOR[itemUseUp.stat]||rank.color)},STAT_LBL[itemUseUp.stat]||itemUseUp.stat)," pendant 24 h."),
       itemUseUp.global&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:#c084fc"},"Vous bénéficiez de +"+Math.round(itemUseUp.pct*100)+" % d’XP sur toutes les statistiques pendant 24 h."),
@@ -5740,6 +5895,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       itemUseUp.paused&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Le temps restant de l’élixir est conservé pendant 24 h maximum."),
       itemUseUp.resumed&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"L’élixir reprend avec exactement le temps qui lui restait."),
       itemUseUp.summoned&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Une seconde quête urgente a été invoquée. Elle accorde ses XP et ses objets normaux, mais ne peut pas être relancée."),
+      itemUseUp.alliedTeleport&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:350px;line-height:1.55;color:#dbeafe"},"Vous choisissez de vous allier à un pays voisin pour l’aider à refermer une Brèche."),
+      itemUseUp.alliedTeleport&&itemUseUp.breachName&&h("div",{class:"rulabel",style:"margin-top:8px;max-width:350px;line-height:1.45;color:#60a5fa"},"Brèche la plus proche : "+itemUseUp.breachName),
       itemUseUp.armed&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:#5eead4"},"La prochaine transmutation ne coûtera que 3 Élixirs d’expérience mineurs."),
       itemUseUp.recordWon&&h("div",{class:"rulabel",style:"margin-top:12px"},"Record officiel battu : +500 XP."),
       h("button",{class:"rudis",onClick:()=>setItemUseUp(null)},"Continuer")
@@ -6165,6 +6322,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(RecordUp,null),
       h(DungeonKeyLootUp,null),
       h(ItemLootUp,null),
+      h(AlliedGiftUp,null),
+      h(AlliedGiftChoiceModal,null),
+      h(ConfirmAlliedGiftModal,null),
       h(ItemUseUp,null),
       h(InventoryItemModal,null),
       h(ConfirmItemUseModal,null),
