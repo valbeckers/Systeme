@@ -6081,7 +6081,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("div",{style:"margin-top:7px"},renderXpPills(q)),
             h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:6px"},
               h("div",{style:detailStyle},"▸ Objectif : "+targetForSpecial(q)),
-              h("div",{style:detailStyle},"▸ Délai : "+(q.days||1)+" jour"+((q.days||1)>1?"s":""))
+              h("div",{style:detailStyle},"▸ Délai : 72 heures.")
             )
           )
         )
