@@ -137,7 +137,8 @@ const BREACH_POOL=[
   {id:"breach_run10",name:"Running 10 km",icon:"🏃🏻",unit:"épreuve",target:1,binary:true,xp:2000,stat:"Endurance",desc:"Courir 10 km"},
   {id:"breach_sprint10",name:"Running fractionné 10 × 100 m",icon:"⚡",unit:"sér.",target:10,step:1,xp:1500,stat:"Endurance",xp2:500,stat2:"Agilite",desc:"10 séries de 100 mètres"},
   {id:"breach_rope30",name:"Corde à sauter 30 minutes",icon:"💦",unit:"min",target:30,step:5,xp:1500,stat:"Endurance",xp2:500,stat2:"Agilite",desc:"30 minutes cumulées de corde à sauter"},
-  {id:"breach_flex60",name:"Souplesse / Animal Flow pendant 1 heure",icon:"🤸🏻",unit:"min",target:60,step:10,xp:1500,stat:"Agilite",xp2:500,stat2:"Endurance",desc:"1 heure cumulée de souplesse ou d’Animal Flow"}
+  {id:"breach_flex60",name:"Animal flow pendant 1 heure",icon:"🤸🏻",unit:"min",target:60,step:10,xp:1500,stat:"Agilite",xp2:500,stat2:"Endurance",desc:"1 heure cumulée d’Animal flow"},
+  {id:"breach_martialflow60",name:"Flow martial pendant 1 heure",icon:"🌊",unit:"min",target:60,step:10,xp:1500,stat:"Agilite",xp2:500,stat2:"Endurance",desc:"1 heure cumulée de flow martial"}
 ];
 
 // Chaque Brèche possède un Boss de Rupture attitré. En Rupture, le Boss reprend
@@ -227,6 +228,13 @@ const BREACH_RUPTURE_BOSSES = {
       {id:"funambule",name:"Le Funambule",objective:"Réaliser 10 minutes d’exercices d’équilibre et de coordination",unit:"min",target:10,step:5},
     ]
   },
+  breach_martialflow60:{
+    id:"breach_boss_acrobate_martial",name:"L’Acrobate",guards:[
+      {id:"delieur_martial",name:"Le Délieur",objective:"Faire 5 minutes de mobilité corporelle",unit:"min",target:5,step:1},
+      {id:"ombre_martiale",name:"L’Ombre",objective:"Réaliser 10 minutes de déplacement silencieux",unit:"min",target:10,step:5},
+      {id:"funambule_martial",name:"Le Funambule",objective:"Réaliser 10 minutes d’exercices d’équilibre et de coordination",unit:"min",target:10,step:5},
+    ]
+  },
 };
 
 function breachTemplateById(id){return BREACH_POOL.find(b=>b.id===id)||null;}
@@ -303,7 +311,7 @@ const DUNGEONS = [
     {name:"Footwork rapide", desc:"10 min"},
     {name:"Équilibre sur un pied", desc:"10 min"},
     {name:"Déplacements silencieux", desc:"10 min"},
-    {name:"Souplesse active / Animal flow", desc:"30 min"},
+    {name:"Animal flow", desc:"30 min"},
   ]},
   {id:"guardian", title:"Donjon du Gardien", short:"Gardien", stat:"Discipline", icon:"🛡️", color:"#c084fc", reward:{xp:2250,stat:"Discipline",xp2:450,stat2:"Esprit"}, rooms:[
     {name:"Capture mentale", desc:"Traiter, planifier ou supprimer 5 éléments de ta charge mentale"},
