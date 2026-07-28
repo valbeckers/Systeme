@@ -3327,6 +3327,17 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       ),
       (!obj.optional&&!obj.weekly&&isDebtEligibleQuest(obj)&&d<effectiveT&&state.questDebt&&state.questDebt.status==="active"&&state.questDebt.id===obj.id)&&h("div",{style:"margin-top:8px;font-family:Orbitron,sans-serif;font-size:9px;color:#f59e0b;letter-spacing:.8px;text-transform:uppercase"},"Dette active : "+fmtNum(state.questDebt.paid||0)+"/"+fmtNum(state.questDebt.amount)+" "+state.questDebt.unit),
       (()=>{
+        // Repas sans stimulation : un seul bouton +1 repas
+        if(obj.id==="sp_mealnostim"){
+          const isMax = d >= (obj.target||2);
+          if(isMax) return null;
+          return h("div",{style:"display:flex;gap:8px;margin-top:8px"},
+            h("button",{
+              onClick:e=>{inputs.current[obj.id]="1";validate(obj,e);},
+              style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px;transition:all .2s"
+            },"+1 repas")
+          );
+        }
         // Quête avec tiers (ex: protein x/2) : bouton unique +1 unité
         if(obj.tiers && obj.tiers.length>0){
           const isMax = !obj.overGoalXpPer && d >= (obj.target||obj.tiers[obj.tiers.length-1].at);
