@@ -2317,7 +2317,8 @@ function App(){
       });
       tryRareDungeonKeyDrop("record");
       const challenge=state.recordChallenge;
-      if(challenge&&challenge.week===wkStr()&&challenge.questId===obj.id&&nextNumber>Number(challenge.target||0)){
+      const challengeRotationOk=!challenge||!challenge.rotationId||recordRotationIdForDay(today,challenge.family)===challenge.rotationId;
+      if(challenge&&challenge.week===wkStr()&&challenge.questId===obj.id&&challengeRotationOk&&nextNumber>Number(challenge.target||0)){
         addXp(500,obj.stat,null,true);
         setState(s=>({...s,recordChallenge:null}));
         setTimeout(()=>setItemUseUp({id:"recordHammer",recordWon:true}),250);
@@ -3986,10 +3987,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const currentObj=objs.find(o=>o.id===challenge.questId)
       || DEFS.find(o=>o.id===challenge.questId)
       || null;
-    const name=(currentObj&&currentObj.name)||challenge.name||"Record officiel";
-    const icon=(currentObj&&currentObj.icon)||challenge.icon||"✨";
-    const unit=(currentObj&&currentObj.unit)||challenge.unit||"";
-    const stat=(currentObj&&currentObj.stat)||challenge.stat||null;
+    const name=challenge.rotationId?(challenge.name||"Record officiel"):((currentObj&&currentObj.name)||challenge.name||"Record officiel");
+    const icon=challenge.rotationId?(challenge.icon||"✨"):((currentObj&&currentObj.icon)||challenge.icon||"✨");
+    const unit=challenge.rotationId?(challenge.unit||""):((currentObj&&currentObj.unit)||challenge.unit||"");
+    const stat=challenge.rotationId?(challenge.stat||null):((currentObj&&currentObj.stat)||challenge.stat||null);
     const color=STAT_COLOR[stat]||"#a78bfa";
     const target=Math.max(0,Number(challenge.target)||0);
 
@@ -3997,7 +3998,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     Object.entries(state.dailyLog||{}).forEach(([day,log])=>{
       const date=new Date(day+"T12:00:00");
       if(Number.isNaN(date.getTime()) || wkStr(date)!==challenge.week) return;
-      const value=Number(log&&log[challenge.questId]);
+      const value=challenge.rotationId
+        ? (recordRotationIdForDay(day,challenge.family)===challenge.rotationId ? Number(log&&log[challenge.questId]) : 0)
+        : Number(log&&log[challenge.questId]);
       if(Number.isFinite(value)&&value>bestThisWeek) bestThisWeek=value;
     });
 
@@ -4595,7 +4598,27 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     ));
   }
 
-  function recordOptions(){return DEFS.filter(o=>!o.binary&&!o.weekly).map(o=>{let best=0;Object.values(state.dailyLog||{}).forEach(log=>{const v=Number(log&&log[o.id])||0;if(v>best)best=v;});return best>0?{obj:o,best}:null;}).filter(Boolean);}
+  function recordExerciseDefs(){return [
+    {id:"ex_pushups",name:"Pompes",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"push",family:"push",rotationId:"pushups"},
+    {id:"ex_dips",name:"Dips",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"push",family:"push",rotationId:"dips"},
+    {id:"ex_negative_pullups",name:"Tractions négatives",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"negative_pullups",family:"back",rotationId:"negative_pullups"},
+    {id:"ex_australian_pullups",name:"Tractions australiennes",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"negative_pullups",family:"back",rotationId:"australian_pullups"},
+    {id:"ex_crunches",name:"Crunches",icon:"🧎🏻",unit:"rep",stat:"Force",sourceId:"abs",family:"abs",rotationId:"crunches"},
+    {id:"ex_leg_raises",name:"Levées de jambes",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"abs",family:"abs",rotationId:"leg_raises"},
+    {id:"ex_plank",name:"Gainage",icon:"🫳🏼",unit:"min",stat:"Force",sourceId:"abs",family:"abs",rotationId:"plank"},
+    {id:"ex_side_plank",name:"Gainage obliques",icon:"🧎🏻‍♂️‍➡️",unit:"rep",stat:"Force",sourceId:"abs",family:"abs",rotationId:"side_plank"},
+    {id:"ex_squats",name:"Squats",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"squats",family:"legs",rotationId:"squats"},
+    {id:"ex_calves",name:"Mollets",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"squats",family:"legs",rotationId:"calves",legacySourceId:"calves"},
+    {id:"ex_lunges",name:"Fentes",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"squats",family:"legs",rotationId:"lunges"}
+  ];}
+  function recordRotationIdForDay(day,family){return ((state.exerciseRotationByDay||{})[day]||{})[family]||LEGACY_EXERCISE_DEFAULTS[family];}
+  function recordExerciseValueForDay(def,day,log){let value=0;const row=log||{};if(recordRotationIdForDay(day,def.family)===def.rotationId)value+=Number(row[def.sourceId])||0;if(def.legacySourceId)value+=Number(row[def.legacySourceId])||0;return value;}
+  function recordOptions(){
+    const exerciseIds=new Set(["push","negative_pullups","abs","squats","calves"]);
+    const exerciseOptions=recordExerciseDefs().map(def=>{let best=0;Object.entries(state.dailyLog||{}).forEach(([day,log])=>{const v=recordExerciseValueForDay(def,day,log);if(v>best)best=v;});return best>0?{obj:{id:def.sourceId,name:def.name,icon:def.icon,unit:def.unit,stat:def.stat,recordRotationId:def.rotationId,recordFamily:def.family},best}:null;}).filter(Boolean);
+    const standardOptions=DEFS.filter(o=>!o.binary&&!o.weekly&&!exerciseIds.has(o.id)).map(o=>{let best=0;Object.values(state.dailyLog||{}).forEach(log=>{const v=Number(log&&log[o.id])||0;if(v>best)best=v;});return best>0?{obj:o,best}:null;}).filter(Boolean);
+    return [...exerciseOptions,...standardOptions];
+  }
   function SpecialItemChoiceModal(){
     if(!specialItemChoice)return null;const type=specialItemChoice.type;
     let options=[];
@@ -4645,7 +4668,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       if(type==="debtAcknowledgement"){
         createQuestDebt(choice.obj);
       }else if(type==="recordHammer"){
-        setState(s=>({...s,inventory:{...(s.inventory||{}),recordHammer:Math.max(0,(Number(s.inventory&&s.inventory.recordHammer)||0)-1)},recordChallenge:{questId:choice.obj.id,target:choice.best,week:wk,startedAt:Date.now(),name:choice.obj.name,icon:choice.obj.icon,unit:choice.obj.unit,stat:choice.obj.stat}}));
+        setState(s=>({...s,inventory:{...(s.inventory||{}),recordHammer:Math.max(0,(Number(s.inventory&&s.inventory.recordHammer)||0)-1)},recordChallenge:{questId:choice.obj.id,target:choice.best,week:wk,startedAt:Date.now(),name:choice.obj.name,icon:choice.obj.icon,unit:choice.obj.unit,stat:choice.obj.stat,rotationId:choice.obj.recordRotationId||null,family:choice.obj.recordFamily||null}}));
         setItemUseUp({id:"recordHammer"});
       }else if(type==="destinyCompass"){
         const stat=pending.stat;
