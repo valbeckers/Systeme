@@ -394,7 +394,7 @@ const EVENT_BONUSES = [
 
 function eventDayStr(from=Date.now()){
   const d=new Date(from);
-  if(d.getHours()<7) d.setDate(d.getDate()-1);
+  if(d.getHours()<5) d.setDate(d.getDate()-1);
   const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");
   return y+"-"+m+"-"+day;
 }
@@ -562,18 +562,18 @@ function applyDailyEventReset(s,now=Date.now()){
 }
 
 // Quêtes urgentes : fonctions de délai
-// Prochain 7h00 (aujourd'hui si on est avant 7h, sinon demain)
+// Prochain reset quotidien à 5h00 (aujourd’hui si on est avant 5h, sinon demain)
 function next7AM(from){
   const d = new Date(from||Date.now());
-  const result = new Date(d.getFullYear(),d.getMonth(),d.getDate(),7,0,0,0);
-  if(d.getHours()<7) return result.getTime();
+  const result = new Date(d.getFullYear(),d.getMonth(),d.getDate(),5,0,0,0);
+  if(d.getHours()<5) return result.getTime();
   result.setDate(result.getDate()+1);
   return result.getTime();
 }
 function current7AMStart(from){
   const d=new Date(from||Date.now());
-  const result=new Date(d.getFullYear(),d.getMonth(),d.getDate(),7,0,0,0);
-  if(d.getHours()<7) result.setDate(result.getDate()-1);
+  const result=new Date(d.getFullYear(),d.getMonth(),d.getDate(),5,0,0,0);
+  if(d.getHours()<5) result.setDate(result.getDate()-1);
   return result.getTime();
 }
 
@@ -691,7 +691,7 @@ function getRankBase(objId, rankIdx, prestige, stats){
 const ROMAN = ["I","II","III","IV","V","VI","VII","VIII","IX","X"];
 const MAX_PRESTIGE = 10;
 const getTarget  = base => base; // pas de scaling rang pour l'instant
-const todayStr   = () => { const d=new Date(); const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0"); return y+"-"+m+"-"+day; };
+const todayStr   = (from=Date.now()) => { const d=new Date(from); if(d.getHours()<5)d.setDate(d.getDate()-1); const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0"); return y+"-"+m+"-"+day; };
 const wkStr      = (d=new Date()) => {
   // Semaine ISO : commence le lundi
   const dt=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
@@ -2137,7 +2137,7 @@ function App(){
   const sqRerollUsed = state.sqRerollDay===today;
 
   // Réparation immédiate d'une carte urgente vide :
-  // aucune quête active ni complétée depuis le dernier reset de 7 h.
+  // aucune quête active ni complétée depuis le dernier reset de 5 h.
   useEffect(()=>{
     const resetStart=current7AMStart(now);
     const resetEnd=next7AM(resetStart);
@@ -2215,9 +2215,7 @@ function App(){
 
   const urgentDoneToday = (state.specialQuests||[]).some(q=>{
     if(!q || !q.completedAt) return false;
-    const d=new Date(q.completedAt);
-    const day=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
-    return day===today;
+    return todayStr(q.completedAt)===today;
   });
   const dungeonLootConditionsMet = allDailyDone && allBonusDone && urgentDoneToday;
   const dungeonCanStart = !state.activeDungeon && !dungeonDailyUsed && dungeonWeekCount<3 && dungeonAccessOpen;
