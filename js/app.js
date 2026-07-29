@@ -6093,15 +6093,13 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},q.name),
             q.desc&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},q.desc),
-            h("div",{style:"margin-top:7px"},renderXpPills(q)),
-            h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:6px"},
-              h("div",{style:detailStyle},"▸ Objectif : "+targetForSpecial(q)),
-              h("div",{style:detailStyle},"▸ Délai : 72 heures.")
-            )
+            h("div",{style:"margin-top:7px"},renderXpPills(q))
           )
         )
       );
     }
+    function renderUrgentSpecial(q){ return renderSpecial(q); }
+    function renderBreachSpecial(q){ return renderSpecial(q); }
 
     function renderElanCodex(ev){
       const color=STAT_COLOR[ev.stat]||"var(--rc)";
@@ -6267,7 +6265,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h(Section,{id:"breach",title:"Brèches",count:breachList.length+breachBossList.length},
           h(Fragment,null,
             h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Une Brèche a 1 % de chance d’apparaître au reset quotidien. Elle remplace la quête urgente du jour et reste ouverte 72 h. Si elle n’est pas refermée, elle entre en Rupture pendant 24 h : son Boss reprend l’objectif initial et invoque une garde rapprochée composée de 3 sous-quêtes. Les 4 objectifs doivent être accomplis pour obtenir l’XP initiale de la Brèche et un objet aléatoire garanti. En cas d’échec, un malus de −25 % d’XP s’applique pendant 24 h."),
-            groupByDominantStat(breachList,renderSpecial),
+            groupByDominantStat(breachList,renderBreachSpecial),
             h("div",{style:"margin-top:13px;padding-top:11px;border-top:1px solid rgba(255,255,255,0.08)"},
               h("div",{style:"font-size:9px;color:#fff;font-family:Orbitron,sans-serif;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:9px"},"Boss de Rupture"),
               groupByDominantStat(breachBossList,renderBreachBossCodex,rb=>rb.stat)
@@ -6288,7 +6286,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           )
         ),
         h(Section,{id:"obl",title:"Quêtes journalières",count:required.length},renderRequiredCodex()),
-        h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderSpecial)),
+        h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderUrgentSpecial)),
 
       )
     );
