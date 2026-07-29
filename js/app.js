@@ -2260,6 +2260,13 @@ function App(){
     return todayStr(q.completedAt)===today;
   });
   const dungeonLootConditionsMet = allDailyDone && allBonusDone && urgentDoneToday;
+
+  // Mémorise l’état observé pendant la session : les animations de complétion
+  // ne doivent se lancer que lors du passage de « incomplet » à « complet »,
+  // jamais simplement parce que l’application est ouverte ou actualisée.
+  const dailyCompletionSeenRef = useRef(allDailyDone);
+  const bonusCompletionSeenRef = useRef(allBonusDone);
+  const allQuestsCompletionSeenRef = useRef(dungeonLootConditionsMet);
   const dungeonCanStart = !state.activeDungeon && !dungeonDailyUsed && dungeonWeekCount<3 && dungeonAccessOpen;
 
   const dailyEvent = state.dailyEvent && state.dailyEvent.type!=="none" && now < (state.dailyEvent.expiresAt||0)
@@ -2511,7 +2518,17 @@ function App(){
   ]);
 
   useEffect(()=>{
+    const wasDone=dailyCompletionSeenRef.current;
+    dailyCompletionSeenRef.current=allDailyDone;
     if(!allDailyDone || state.dailyCompletionAnimDay===today) return;
+
+    // Si l’app démarre alors que les quêtes étaient déjà terminées, on marque
+    // silencieusement l’animation comme traitée sans la rejouer.
+    if(wasDone){
+      setState(s=>s.dailyCompletionAnimDay===today?s:{...s,dailyCompletionAnimDay:today});
+      return;
+    }
+
     setState(s=>s.dailyCompletionAnimDay===today?s:{...s,dailyCompletionAnimDay:today});
     setCompletionQueue(q=>[...q,{
       type:"daily",
@@ -2521,7 +2538,15 @@ function App(){
   },[allDailyDone,today,state.dailyCompletionAnimDay]);
 
   useEffect(()=>{
+    const wasDone=bonusCompletionSeenRef.current;
+    bonusCompletionSeenRef.current=allBonusDone;
     if(!allBonusDone || state.bonusCompletionAnimDay===today) return;
+
+    if(wasDone){
+      setState(s=>s.bonusCompletionAnimDay===today?s:{...s,bonusCompletionAnimDay:today});
+      return;
+    }
+
     setState(s=>s.bonusCompletionAnimDay===today?s:{...s,bonusCompletionAnimDay:today});
     setCompletionQueue(q=>[...q,{
       type:"bonus",
@@ -2532,10 +2557,18 @@ function App(){
 
   // Animation de journée complète : après les animations de groupes, avant les objets.
   useEffect(()=>{
+    const wasDone=allQuestsCompletionSeenRef.current;
+    allQuestsCompletionSeenRef.current=dungeonLootConditionsMet;
     if(!dungeonLootConditionsMet || state.allQuestsCompletionAnimDay===today) return;
     // Laisse d’abord s’enregistrer les animations Journalières/Bonus du même rendu.
     if(allDailyDone && state.dailyCompletionAnimDay!==today) return;
     if(allBonusDone && state.bonusCompletionAnimDay!==today) return;
+
+    if(wasDone){
+      setState(s=>s.allQuestsCompletionAnimDay===today?s:{...s,allQuestsCompletionAnimDay:today});
+      return;
+    }
+
     setState(s=>s.allQuestsCompletionAnimDay===today?s:{...s,allQuestsCompletionAnimDay:today});
     setCompletionQueue(q=>[...q,{
       type:"all",
