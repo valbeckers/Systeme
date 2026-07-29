@@ -3053,6 +3053,20 @@ function App(){
     return Object.entries(totals).map(([stat,xp])=>({stat,xp}));
   }
 
+  function drawRandomDungeonId(){
+    const stats=[...new Set(DUNGEONS.map(d=>d.stat))];
+    if(!stats.length)return null;
+    const drawnStat=stats[Math.floor(Math.random()*stats.length)];
+    const candidates=DUNGEONS.filter(d=>d.stat===drawnStat);
+    if(!candidates.length)return null;
+    return candidates[Math.floor(Math.random()*candidates.length)].id;
+  }
+
+  function startRandomDungeon(){
+    const id=drawRandomDungeonId();
+    if(id)startDungeon(id);
+  }
+
   function startDungeon(id,constraint=null){
     if(state.masterContractArmed && !constraint){setContractDungeonChoice(id);return;}
     setSelectedDungeonRoom(null);
@@ -3913,23 +3927,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const dungeonGold="#f59e0b";
     const subtitle="1 par jour · "+dungeonWeekCount+"/3 cette semaine";
 
-    if(dungeonChoiceOpen && dungeonCanStart){
-      return h("div",{class:"card",style:"border:1px solid rgba(245,158,11,0.55);background:rgba(245,158,11,0.025)"},
-        h("div",{class:"ctitle",style:"margin:0 0 10px;color:"+dungeonGold},"CHOIX DU DONJON"),
-        h("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:8px"},DUNGEONS.map(dg=>h("button",{key:dg.id,onClick:()=>setConfirmDungeonChoice({type:"start",id:dg.id,title:dg.title,short:dg.short,icon:dg.icon,color:dg.color,stat:dg.stat}),style:"padding:10px 8px;border-radius:10px;border:1px solid "+dg.color+"55;background:"+dg.color+"0f;color:"+dg.color+";font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:.7px;text-transform:uppercase;cursor:pointer;text-align:center;line-height:1.25"},
-          h("div",{style:"font-size:16px;margin-bottom:4px"},dg.icon),
-          h("div",null,dg.short),
-          h("div",{style:"font-size:8px;color:var(--td);margin-top:3px"},STAT_LBL[dg.stat]||dg.stat)
-        )))
-      );
-    }
-
     return h("div",{class:"card",style:"border:1px solid rgba(245,158,11,0.55);background:rgba(245,158,11,0.025)"},
       h("div",{class:"ctitle",style:"margin:0;color:"+dungeonGold},"DONJON"),
       h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},subtitle+" · 🗝️ "+dungeonKeys),
       dungeonAccessOpen&&h("div",{style:"margin-top:8px;color:#4ade80;font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:1px"},"ACCÈS AU DONJON OUVERT"),
       dungeonCanStart
-        ? h("button",{onClick:()=>setConfirmDungeonChoice({type:"enter",color:dungeonGold}),style:"width:100%;margin-top:12px;padding:11px;border-radius:9px;border:1px solid "+dungeonGold+"88;background:"+dungeonGold+"12;color:"+dungeonGold+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.35px;text-transform:uppercase;cursor:pointer"},"ENTRER DANS UN DONJON")
+        ? h("button",{onClick:()=>setConfirmDungeonChoice({type:"enter",color:dungeonGold}),style:"width:100%;margin-top:12px;padding:11px;border-radius:9px;border:1px solid "+dungeonGold+"88;background:"+dungeonGold+"12;color:"+dungeonGold+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.35px;text-transform:uppercase;cursor:pointer"},"ENTRER DANS LE DONJON")
         : h("div",{style:"text-align:center;padding:10px 0 2px;color:var(--td);font-size:11px;line-height:1.45"},
             dungeonDailyUsed
               ? "Tu as déjà lancé un donjon aujourd’hui. Prochain lancement disponible demain."
@@ -5449,10 +5452,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     if(!confirmDungeonChoice)return null;
     const isEnter=confirmDungeonChoice.type==="enter";
     const color=isEnter ? "#f59e0b" : (confirmDungeonChoice.color||"var(--rc)");
-    const title=isEnter ? "ENTRER DANS UN DONJON ?" : "ACTIVER CE DONJON ?";
+    const title=isEnter ? "ENTRER DANS LE DONJON ?" : "ACTIVER CE DONJON ?";
     const main=isEnter ? null : ((confirmDungeonChoice.icon||"")+" "+(confirmDungeonChoice.title||"Donjon"));
     const desc=isEnter
-      ? "Vous vous retrouverez devant la porte d’un donjon, êtes-vous certain de vouloir y entrer ?"
+      ? "La statistique sera tirée au sort, puis le donjon sera tiré parmi ceux de cette statistique. Êtes-vous certain de vouloir entrer ?"
       : "Ce choix consommera ton lancement de donjon du jour et comptera dans la limite hebdomadaire.";
     return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+color+"55;background:rgba(0,0,0,0.92)"},
       h("div",{class:"rucont",style:"width:min(330px,calc(100vw - 38px));background:rgba(15,15,18,0.96);border:1px solid "+color+"66;border-radius:18px;padding:20px;box-shadow:0 0 30px "+color+"22"},
@@ -5470,7 +5473,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             onClick:()=>{
               const choice=confirmDungeonChoice;
               setConfirmDungeonChoice(null);
-              if(choice.type==="enter") setDungeonChoiceOpen(true);
+              if(choice.type==="enter"){ setDungeonChoiceOpen(false); startRandomDungeon(); }
               else { setDungeonChoiceOpen(false); startDungeon(choice.id); }
             },
             style:"flex:1;padding:11px;border-radius:9px;border:1px solid "+color+";background:"+color+"1a;color:"+color+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"
