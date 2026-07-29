@@ -111,7 +111,7 @@ const SP = {
   ],
   Agilite:[
     {id:"sp_flow20",  name:"Animal flow", icon:"\uD83D\uDC0A",                                         unit:"min",  target:30, xp:1500, days:1, tiers:[{at:15,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"},{at:30,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"}], desc:"30 min d'animal flow (palier à 15 min)"},
-    {id:"sp_fluide",  name:"Flow martial", icon:"\uD83C\uDF0A",                              unit:"min",  target:30, xp:1500, days:1, tiers:[{at:15,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"},{at:30,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"}], desc:"30 min de flow martial / mouvement continu sans rupture"},
+    {id:"sp_fluide",  name:"Flow martial", icon:"\uD83C\uDF0A",                              unit:"min",  target:30, xp:1500, days:1, tiers:[{at:15,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"},{at:30,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"}], desc:"30 min de Flow martial / mouvement continu sans rupture"},
     {id:"sp_silent",  name:"Déplacements silencieux", icon:"\uD83D\uDC08",                          unit:"min",  target:10, xp:500, days:1, desc:"Marcher sans bruit (escaliers, pièces)"},
         {id:"sp_footwork", name:"Footwork rapide", icon:"\u26A1",                                            unit:"min",  target:10, xp:500, step:5, days:1, desc:"Footwork rapide (carrelage, devant/derrière/côtés)"},
   ],
@@ -138,7 +138,7 @@ const BREACH_POOL=[
   {id:"breach_sprint10",name:"Running fractionné 10 × 100 m",icon:"⚡",unit:"sér.",target:10,step:1,xp:1500,stat:"Endurance",xp2:500,stat2:"Agilite",desc:"10 séries de 100 mètres"},
   {id:"breach_rope30",name:"Corde à sauter 30 minutes",icon:"💦",unit:"min",target:30,step:5,xp:1500,stat:"Endurance",xp2:500,stat2:"Agilite",desc:"30 minutes cumulées de corde à sauter"},
   {id:"breach_flex60",name:"Animal flow pendant 1 heure",icon:"🤸🏻",unit:"min",target:60,step:10,xp:1500,stat:"Agilite",xp2:500,stat2:"Endurance",desc:"1 heure cumulée d’Animal flow"},
-  {id:"breach_martialflow60",name:"Flow martial pendant 1 heure",icon:"🌊",unit:"min",target:60,step:10,xp:1500,stat:"Agilite",xp2:500,stat2:"Endurance",desc:"1 heure cumulée de flow martial"}
+  {id:"breach_martialflow60",name:"Flow martial pendant 1 heure",icon:"🌊",unit:"min",target:60,step:10,xp:1500,stat:"Agilite",xp2:500,stat2:"Endurance",desc:"1 heure cumulée de Flow martial"}
 ];
 
 // Chaque Brèche possède un Boss de Rupture attitré. En Rupture, le Boss reprend
@@ -222,14 +222,14 @@ const BREACH_RUPTURE_BOSSES = {
     ]
   },
   breach_flex60:{
-    id:"breach_boss_acrobate",name:"L’Acrobate",guards:[
+    id:"breach_boss_acrobate",name:"Le Métamorphe",guards:[
       {id:"delieur",name:"Le Délieur",objective:"Faire 5 minutes de mobilité corporelle",unit:"min",target:5,step:1},
       {id:"ombre",name:"L’Ombre",objective:"Réaliser 10 minutes de déplacement silencieux",unit:"min",target:10,step:5},
       {id:"funambule",name:"Le Funambule",objective:"Réaliser 10 minutes d’exercices d’équilibre et de coordination",unit:"min",target:10,step:5},
     ]
   },
   breach_martialflow60:{
-    id:"breach_boss_acrobate_martial",name:"L’Acrobate",guards:[
+    id:"breach_boss_acrobate_martial",name:"Le Shinobi",guards:[
       {id:"delieur_martial",name:"Le Délieur",objective:"Faire 5 minutes de mobilité corporelle",unit:"min",target:5,step:1},
       {id:"ombre_martiale",name:"L’Ombre",objective:"Réaliser 10 minutes de déplacement silencieux",unit:"min",target:10,step:5},
       {id:"funambule_martial",name:"Le Funambule",objective:"Réaliser 10 minutes d’exercices d’équilibre et de coordination",unit:"min",target:10,step:5},
