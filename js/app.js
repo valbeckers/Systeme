@@ -2428,19 +2428,27 @@ function App(){
 
   useEffect(()=>{
     if(keyLootUp || !keyLootQueue.length) return;
+    // Les animations de complétion passent toujours avant les objets.
+    if(allDailyDone && state.dailyCompletionAnimDay!==today) return;
+    if(dungeonLootConditionsMet && state.allQuestsCompletionAnimDay!==today) return;
+    if(completionQueue.length) return;
     if(rankUp || levelUp || statDecadeUp || completionUp || streakUp || recordUp || dungeonUp || ruptureUp || urgentUp || debtUp || prestigeUp || alliedGiftUp || alliedGiftChoiceOpen || confirmAlliedGift) return;
     const [next,...rest]=keyLootQueue;
     setKeyLootQueue(rest);
     setKeyLootUp(next);
-  },[keyLootQueue,keyLootUp,rankUp,levelUp,statDecadeUp,completionUp,streakUp,recordUp,dungeonUp,ruptureUp,urgentUp,debtUp,prestigeUp,alliedGiftUp,alliedGiftChoiceOpen,confirmAlliedGift]);
+  },[keyLootQueue,keyLootUp,rankUp,levelUp,statDecadeUp,completionUp,completionQueue.length,streakUp,recordUp,dungeonUp,ruptureUp,urgentUp,debtUp,prestigeUp,alliedGiftUp,alliedGiftChoiceOpen,confirmAlliedGift,allDailyDone,dungeonLootConditionsMet,state.dailyCompletionAnimDay,state.allQuestsCompletionAnimDay,today]);
 
   useEffect(()=>{
     if(itemLootUp || !itemLootQueue.length) return;
+    // Les animations de complétion passent toujours avant les objets.
+    if(allDailyDone && state.dailyCompletionAnimDay!==today) return;
+    if(dungeonLootConditionsMet && state.allQuestsCompletionAnimDay!==today) return;
+    if(completionQueue.length) return;
     if(rankUp || levelUp || statDecadeUp || completionUp || streakUp || recordUp || keyLootUp || dungeonUp || ruptureUp || urgentUp || debtUp || prestigeUp || itemUseUp || alliedGiftUp || alliedGiftChoiceOpen || confirmAlliedGift) return;
     const [next,...rest]=itemLootQueue;
     setItemLootQueue(rest);
     setItemLootUp(next);
-  },[itemLootQueue,itemLootUp,rankUp,levelUp,statDecadeUp,completionUp,streakUp,recordUp,keyLootUp,dungeonUp,ruptureUp,urgentUp,debtUp,prestigeUp,itemUseUp,alliedGiftUp,alliedGiftChoiceOpen,confirmAlliedGift]);
+  },[itemLootQueue,itemLootUp,rankUp,levelUp,statDecadeUp,completionUp,completionQueue.length,streakUp,recordUp,keyLootUp,dungeonUp,ruptureUp,urgentUp,debtUp,prestigeUp,itemUseUp,alliedGiftUp,alliedGiftChoiceOpen,confirmAlliedGift,allDailyDone,dungeonLootConditionsMet,state.dailyCompletionAnimDay,state.allQuestsCompletionAnimDay,today]);
 
   useEffect(()=>{
     const pending=state.alliedGiftPending;
@@ -2490,6 +2498,19 @@ function App(){
     }]);
     tryRareDungeonKeyDrop();
   },[allBonusDone,today,state.bonusCompletionAnimDay]);
+
+  // Animation de journée complète : après les animations de groupes, avant les objets.
+  useEffect(()=>{
+    if(!dungeonLootConditionsMet || state.allQuestsCompletionAnimDay===today) return;
+    // Laisse d’abord s’enregistrer les animations Journalières/Bonus du même rendu.
+    if(allDailyDone && state.dailyCompletionAnimDay!==today) return;
+    if(allBonusDone && state.bonusCompletionAnimDay!==today) return;
+    setState(s=>s.allQuestsCompletionAnimDay===today?s:{...s,allQuestsCompletionAnimDay:today});
+    setCompletionQueue(q=>[...q,{
+      type:"all",
+      text:"L'ensemble des quêtes disponibles a été complété."
+    }]);
+  },[dungeonLootConditionsMet,allDailyDone,allBonusDone,today,state.dailyCompletionAnimDay,state.bonusCompletionAnimDay,state.allQuestsCompletionAnimDay]);
 
   // Bonus streak + increment streak au moment ou toutes les quetes sont faites
   useEffect(()=>{
