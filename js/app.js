@@ -1574,11 +1574,14 @@ function rotatedQuestObjects(baseObjs,rotation,stats,totalXp){
   const legs=byId("legs",rotation&&rotation.legs);
   return (baseObjs||[]).map(obj=>{
     if(obj.id==="push") return {...obj,name:"Pecs & Triceps - "+chest.label,icon:"🦾",exerciseIcon:chest.icon,rotationExercise:chest.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3,stat2:null,xpPer2:null};
-    if(obj.id==="negative_pullups") return {...obj,name:"Dos & Biceps - "+back.label,icon:"🦾",exerciseIcon:back.icon,rotationExercise:back.label,target:getStatLevelTarget("negative_pullups",stats),unit:"rep",xpPer:12,stat2:null,xpPer2:null};
+    if(obj.id==="negative_pullups"){
+      if(back.id==="australian_pullups") return {...obj,name:"Dos & Biceps - Tractions australiennes",icon:"🦾",exerciseIcon:back.icon,rotationExercise:back.label,target:getStatLevelTarget("squats",stats),unit:"rep",xpPer:6,stat2:null,xpPer2:null};
+      return {...obj,name:"Dos & Biceps - Tractions négatives",icon:"🦾",exerciseIcon:back.icon,rotationExercise:back.label,target:getStatLevelTarget("negative_pullups",stats),unit:"rep",xpPer:12,stat2:null,xpPer2:null};
+    }
     if(obj.id==="abs"){
       if(abs.id==="crunches") return {...obj,name:"Abdos - Crunches",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:getStatLevelTarget("abs",stats),unit:"rep",xpPer:1.5};
       if(abs.id==="leg_raises") return {...obj,name:"Abdos - Levées de jambes",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:legRaiseTargetForForceLevel(force),unit:"rep",xpPer:3};
-      if(abs.id==="side_plank") return {...obj,name:"Abdos - Gainage obliques",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:Math.min(60,24+tier*2),unit:"rep",xpPer:6};
+      if(abs.id==="side_plank") return {...obj,name:"Abdos - Gainage obliques",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3};
       return {...obj,name:"Abdos - Gainage",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:Math.max(1,Math.ceil(force/10)),unit:"min",xpPer:50};
     }
     if(obj.id==="squats"){
@@ -6022,10 +6025,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       }
       const pushTarget=getStatLevelTarget("push",state.stats);
       const backTarget=getStatLevelTarget("negative_pullups",state.stats);
+      const australianTarget=getStatLevelTarget("squats",state.stats);
       const absTarget=getStatLevelTarget("abs",state.stats);
       const legRaiseTarget=legRaiseTargetForForceLevel(force);
       const plankTarget=Math.max(1,Math.ceil(force/10));
-      const sideTarget=Math.min(60,24+tier*2);
+      const sideTarget=pushTarget;
       const squatTarget=getStatLevelTarget("squats",state.stats);
       const calvesTarget=getStatLevelTarget("calves",state.stats);
       return h(Fragment,null,
@@ -6037,14 +6041,14 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{style:familyStyle},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px"},"🦾 DOS & BICEPS"),
           h(Exercise,{icon:"💪🏼",name:"Tractions négatives",target:backTarget,unit:"reps",rewards:[{stat:"Force",xp:"12/rep"}]}),
-          h(Exercise,{icon:"💪🏼",name:"Tractions australiennes",target:backTarget,unit:"reps",rewards:[{stat:"Force",xp:"12/rep"}]})
+          h(Exercise,{icon:"💪🏼",name:"Tractions australiennes",target:australianTarget,unit:"reps",rewards:[{stat:"Force",xp:"6/rep"}]})
         ),
         h("div",{style:familyStyle},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px"},"🧱 ABDOS"),
           h(Exercise,{icon:"🧎🏻",name:"Crunches",target:absTarget,unit:"reps",rewards:[{stat:"Force",xp:"1,5/rep"}]}),
           h(Exercise,{icon:"🦵🏻",name:"Levées de jambes",target:legRaiseTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
           h(Exercise,{icon:"🫳🏼",name:"Gainage",target:plankTarget,unit:"min",rewards:[{stat:"Force",xp:"50/min"}]}),
-          h(Exercise,{icon:"🧎🏻‍♂️‍➡️",name:"Gainage obliques",target:sideTarget,unit:"reps",rewards:[{stat:"Force",xp:"6/rep"}]}),
+          h(Exercise,{icon:"🧎🏻‍♂️‍➡️",name:"Gainage obliques",target:sideTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
         ),
         h("div",{style:familyStyle},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px"},"🦿 JAMBES"),
