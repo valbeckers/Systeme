@@ -6064,10 +6064,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       if(item.xp3&&item.stat3) pairs.push({stat:item.stat3,xp:item.xp3});
       if(item.xpPer2&&item.stat2) pairs.push({stat:item.stat2,xp:item.xpPer2+"/"+item.unit});
       if(item.tiers){
-        return h("div",null,item.tiers.map(t=>{
+        return h("div",null,item.tiers.map((t,index)=>{
           const ps=[h(StatPill,{stat:t.stat,xp:t.xp})];
           if(t.xp2&&t.stat2) ps.push(h(StatPill,{stat:t.stat2,xp:t.xp2}));
-          return h("div",{key:t.at,style:"margin-top:3px"},"Palier "+t.at+" : ",...ps);
+          return h("div",{key:t.at,style:"margin-top:3px"},"Palier "+(index+1)+" : ",...ps);
         }));
       }
       return h("div",null,pairs.map((p,i)=>h(StatPill,{key:i,stat:p.stat,xp:p.xp})));
