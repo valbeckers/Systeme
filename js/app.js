@@ -108,6 +108,7 @@ const SP = {
   Endurance:[
     {id:"sp_stairs",  name:"Montées d'escaliers", icon:"\uD83E\uDE9C",                                 unit:"A/R",  target:30, xp:500, xp2:250, stat2:"Agilite", days:1, desc:"30 montées/descentes"},
     {id:"sp_walk30",  name:"Sortie marche",     icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F",           unit:"min",  target:30, xp:500, days:1, desc:"30 min de marche"},
+    {id:"sp_shadow_boxing", name:"Shadow boxing", icon:"🥊", unit:"min", target:30, xp:1500, days:1, tiers:[{at:15,xp:750,stat:"Endurance"},{at:30,xp:750,stat:"Endurance"}], desc:"30 min de Shadow boxing (palier à 15 min)"},
   ],
   Agilite:[
     {id:"sp_flow20",  name:"Animal flow", icon:"\uD83D\uDC0A",                                         unit:"min",  target:30, xp:1500, days:1, tiers:[{at:15,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"},{at:30,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"}], desc:"30 min d'animal flow (palier à 15 min)"},
