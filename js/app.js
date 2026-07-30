@@ -6067,7 +6067,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         return h("div",null,item.tiers.map((t,index)=>{
           const ps=[h(StatPill,{stat:t.stat,xp:t.xp})];
           if(t.xp2&&t.stat2) ps.push(h(StatPill,{stat:t.stat2,xp:t.xp2}));
-          return h("div",{key:t.at,style:"margin-top:3px"},"Palier "+(index+1)+" : ",...ps);
+          return h("div",{key:t.at,style:"margin-top:3px"},
+            h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:#fff"},"Palier "+(index+1)+" : "),
+            ...ps
+          );
         }));
       }
       return h("div",null,pairs.map((p,i)=>h(StatPill,{key:i,stat:p.stat,xp:p.xp})));
