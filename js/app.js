@@ -4460,7 +4460,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     rerollToken:{name:"JETON DE RELANCE",short:"JETON DE RELANCE",emoji:"🔄",action:"INVOQUER",desc:"Après avoir terminé la quête urgente du jour, invoque immédiatement une seconde quête urgente. Cette quête accorde ses XP et ses objets normaux, ne peut pas être relancée et ne peut être invoquée qu’une fois par jour.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %)."]},
     alchemicalCatalyst:{name:"CATALYSEUR ALCHIMIQUE",short:"CATALYSEUR ALCHIMIQUE",emoji:"⚗️",action:"PRÉPARER",desc:"Lors de la prochaine utilisation du Grimoire de transmutation, réduit le coût de cinq à trois Élixirs d’expérience mineurs. Le Catalyseur et le Grimoire sont tous les deux consommés au moment de la transmutation.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon de l’Alchimiste (Taux : 10 %)."]},
     masterContract:{name:"CONTRAT DU MAÎTRE",short:"CONTRAT DU MAÎTRE",emoji:"📜",action:"UTILISER",desc:"Au lancement du prochain donjon, choisissez une contrainte supplémentaire parmi trois. Si le donjon est terminé, la récompense finale augmente de 20 %. Contraintes : délai réduit à 12 heures, objectifs multipliés par 1,5, ou boss remplacé par un Boss de Rupture.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon du Guerrier (Taux : 10 %)."]},
-    recordHammer:{name:"MARQUE DU DÉPASSEMENT",short:"MARQUE DU DÉPASSEMENT",emoji:"✨",action:"UTILISER",desc:"Permet de marquer un record comme objectif officiel de la semaine. Le battre avant la fin de semaine rapporte +500 XP. L’objet est perdu en cas d’échec.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon du Guerrier (Taux : 10 %)."]},
+    recordHammer:{name:"MARQUE DU DÉPASSEMENT",short:"MARQUE DU DÉPASSEMENT",emoji:"✨",action:"DESSINER",desc:"Permet de marquer un record comme objectif officiel de la semaine. Le battre avant la fin de semaine rapporte +500 XP. L’objet est perdu en cas d’échec.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon du Guerrier (Taux : 10 %)."]},
     teleportCrystal:{name:"CRISTAL DE TÉLÉPORTATION",short:"CRISTAL DE TÉLÉPORTATION",emoji:"💠",action:"BRISER",desc:"Permet d’aller aider un pays voisin en se téléportant à la Brèche la plus proche. Si elle est refermée, vous obtenez l’XP et le butin habituels de la Brèche, puis choisissez un objet supplémentaire offert par le pays allié.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon du Chasseur (Taux : 10 %)."]},
     invisibilityCape:{name:"POTION D’INVISIBILITÉ ÉPHÉMÈRE",short:"POTION D’INVISIBILITÉ",emoji:"🧪",action:"UTILISER",desc:"Permet de devenir invisible le temps de traverser une salle de donjon. La salle est considérée comme terminée, sans gain d’XP.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon de l’Alchimiste (Taux : 10 %)."]},
     recoveryOintment:{name:"ONGUENT DE RÉCUPÉRATION",short:"ONGUENT DE RÉCUPÉRATION",emoji:"🧴",action:"UTILISER",desc:"Permet de passer une quête journalière ou bonus en cas de blessure ou de repos forcé. La quête est considérée comme validée, sans gain d’XP.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon du Moine (Taux : 10 %)."]},
@@ -4494,7 +4494,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       });
     return h("div",{class:"tab"},
       h("div",{style:"display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px"},ids.map(id=>{
-        const it=INVENTORY_ITEMS[id], qty=itemQty(id), grey=!["codex","regressionOrb"].includes(id)&&!(id==="etherStopper"&&suspendedElixir)&&(qty<1||(["majorElixir","minorElixir","supremeElixir"].includes(id)&&(!!activeElixir||!!suspendedElixir)));
+        const it=INVENTORY_ITEMS[id], qty=itemQty(id), grey=!["codex","regressionOrb"].includes(id)&&!(id==="etherStopper"&&suspendedElixir)&&!(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk)&&(qty<1||(["majorElixir","minorElixir","supremeElixir"].includes(id)&&(!!activeElixir||!!suspendedElixir)));
         return h("button",{key:id,onClick:()=>setInventoryItem(id),style:"position:relative;aspect-ratio:1/1;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.025);padding:8px;color:var(--tx);cursor:pointer;opacity:"+(grey?".48":"1")+";display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px"},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;line-height:1.25;letter-spacing:.5px;text-transform:uppercase;text-align:center;min-height:20px"},it.short),
           h("div",{style:"line-height:1"},InventoryItemIcon(id,38)),
@@ -4547,7 +4547,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       else if(state.debtUseDay===today){disabled=true;reason="Une reconnaissance de dette a déjà été utilisée aujourd’hui.";}
       else if(!objs.some(o=>o.daily&&!o.optional&&isDebtEligibleQuest(o)&&(Number(tLog[o.id])||0)<getEffectiveTarget(o.id))){disabled=true;reason="Aucune quête éligible incomplète aujourd’hui.";}
     }else if(id==="recordHammer"){
-      if(state.recordChallenge&&state.recordChallenge.week===wk){disabled=true;reason="Un record officiel est déjà actif cette semaine.";}
+      if(state.recordChallenge&&state.recordChallenge.week===wk){disabled=false;reason="Une Marque du dépassement est actuellement dessinée sur « "+(state.recordChallenge.name||"ce record")+" ».";}
     }else if(id==="recoveryOintment"){
       const regularEligible=objs.some(o=>o.daily&&(Number(tLog[o.id])||0)<getEffectiveTarget(o.id));
       if(!regularEligible){disabled=true;reason="Aucune quête journalière ou bonus active et incomplète ne peut être passée.";}
@@ -4567,32 +4567,39 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("button",{onClick:()=>setInventoryItem(null),style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
         ),
         h("div",{style:"display:flex;justify-content:center;align-items:center;margin:14px 0 8px"},InventoryItemIcon(id,128)),
-        h("div",{style:"text-align:center;font-family:Orbitron,sans-serif;font-size:10px;color:var(--td);margin-bottom:16px"},id==="regressionOrb"?"OBJET PERMANENT":id==="etherStopper"&&suspendedElixir?"ÉLIXIR SUSPENDU · "+fmtCD(suspendedElixir.remainingMs):"QUANTITÉ : "+qty),
+        h("div",{style:"text-align:center;font-family:Orbitron,sans-serif;font-size:10px;color:var(--td);margin-bottom:16px"},id==="regressionOrb"?"OBJET PERMANENT":id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"MARQUE EN COURS":id==="etherStopper"&&suspendedElixir?"ÉLIXIR SUSPENDU · "+fmtCD(suspendedElixir.remainingMs):"QUANTITÉ : "+qty),
         h("div",{style:"font-size:12px;line-height:1.6;color:var(--tx);margin-bottom:14px"},it.desc),
         !it.permanent&&h("div",{style:"margin-bottom:16px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);padding:10px 0"},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1px"},"OBTENTION"),
           h("div",{style:"margin-top:9px;display:flex;flex-direction:column;gap:7px"},it.obtain.map((x,i)=>h("div",{key:i,style:"font-size:10px;color:var(--td);line-height:1.5"},ObtainLine(x))))
         ),
         reason&&h("div",{style:"font-size:10px;color:var(--td);text-align:center;margin-bottom:8px"},reason),
-        h("button",{disabled,onClick:()=>{setInventoryItem(null);setConfirmItemUse({id})},style:"width:100%;padding:12px;border-radius:9px;border:1px solid "+(disabled?"rgba(255,255,255,.08)":rank.color)+";background:"+(disabled?"rgba(255,255,255,.03)":rank.color+"18")+";color:"+(disabled?"var(--td)":rank.color)+";font-family:Orbitron,sans-serif;letter-spacing:1.3px;cursor:"+(disabled?"default":"pointer")},id==="etherStopper"&&suspendedElixir?"RÉACTIVER":it.action)
+        h("button",{disabled,onClick:()=>{const eraseRecord=id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk;setInventoryItem(null);setConfirmItemUse({id,eraseRecord})},style:"width:100%;padding:12px;border-radius:9px;border:1px solid "+(disabled?"rgba(255,255,255,.08)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"#ef4444":rank.color))+";background:"+(disabled?"rgba(255,255,255,.03)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"rgba(239,68,68,.10)":rank.color+"18"))+";color:"+(disabled?"var(--td)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"#ef4444":rank.color))+";font-family:Orbitron,sans-serif;letter-spacing:1.3px;cursor:"+(disabled?"default":"pointer")},id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"EFFACER":id==="etherStopper"&&suspendedElixir?"RÉACTIVER":it.action)
       )
     );
   }
   function ConfirmItemUseModal(){
     if(!confirmItemUse)return null;
     const id=confirmItemUse.id,it=INVENTORY_ITEMS[id];
-    return h("div",{class:"ruov",style:"--rc:"+rank.color+";--rg:"+rank.glow},h("div",{class:"rucont",style:"width:min(500px,calc(100vw - 34px));background:rgba(15,15,18,.97);border:1px solid "+rank.color+"88;border-radius:18px;padding:22px;box-shadow:0 0 30px "+rank.color+"22"},
-      h("div",{class:"ruevol",style:"color:"+rank.color},"CONFIRMATION"),
-      h("div",{style:"font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:#fff;text-align:center;line-height:1.4;max-width:340px"},id==="etherStopper"&&suspendedElixir
-        ?"Réactiver l’élixir suspendu avec exactement "+fmtCD(suspendedElixir.remainingMs)+" restants ?"
-        :id==="teleportCrystal"
-          ?"Briser le Cristal de téléportation pour rejoindre un pays voisin et ouvrir une Brèche aléatoire ?"
-          :"Êtes-vous certain de vouloir "+(id==="regressionOrb"?"activer l’":id==="dungeonKey"?"utiliser une ":id==="transmutationGrimoire"?"utiliser le ":id==="destinyCompass"?"orienter la ":id==="alchemicalCatalyst"?"préparer le ":"consommer un ")+it.name+" ?"),
+    const eraseRecord=!!confirmItemUse.eraseRecord;
+    const confirmColor=eraseRecord?"#ef4444":rank.color;
+    const confirmGlow=eraseRecord?"rgba(239,68,68,.55)":rank.glow;
+    return h("div",{class:"ruov",style:"--rc:"+confirmColor+";--rg:"+confirmGlow},h("div",{class:"rucont",style:"width:min(500px,calc(100vw - 34px));background:rgba(15,15,18,.97);border:1px solid "+confirmColor+"88;border-radius:18px;padding:22px;box-shadow:0 0 30px "+confirmColor+"22"},
+      h("div",{class:"ruevol",style:"color:"+confirmColor},eraseRecord?"EFFACER LA MARQUE":"CONFIRMATION"),
+      h("div",{style:"font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:"+(eraseRecord?"#ef4444":"#fff")+";text-align:center;line-height:1.4;max-width:340px"},eraseRecord
+        ?"Effacer la Marque du dépassement actuellement dessinée sur « "+((state.recordChallenge&&state.recordChallenge.name)||"ce record")+" » ? L’objet restera consommé et cet objectif officiel sera abandonné."
+        :id==="etherStopper"&&suspendedElixir
+          ?"Réactiver l’élixir suspendu avec exactement "+fmtCD(suspendedElixir.remainingMs)+" restants ?"
+          :id==="teleportCrystal"
+            ?"Briser le Cristal de téléportation pour rejoindre un pays voisin et ouvrir une Brèche aléatoire ?"
+            :"Êtes-vous certain de vouloir "+(id==="regressionOrb"?"activer l’":id==="dungeonKey"?"utiliser une ":id==="transmutationGrimoire"?"utiliser le ":id==="destinyCompass"?"orienter la ":id==="alchemicalCatalyst"?"préparer le ":"consommer un ")+it.name+" ?"),
       h("div",{style:"display:flex;gap:10px;margin-top:22px"},
         h("button",{class:"rudis",style:"min-width:110px;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>setConfirmItemUse(null)},"Non"),
-        h("button",{class:"rudis",style:"min-width:110px",onClick:()=>{
+        h("button",{class:"rudis",style:"min-width:110px;--rc:"+confirmColor+";--rg:"+confirmGlow,onClick:()=>{
           setConfirmItemUse(null);
-          if(id==="regressionOrb"){
+          if(eraseRecord){
+            setState(s=>({...s,recordChallenge:null}));
+          }else if(id==="regressionOrb"){
             if(REGRESSION_DEFS.length>1)setRegressionChoiceOpen(true);
             else setConfirmRegression(REGRESSION_DEFS[0]);
           }else if(id==="dungeonKey"){
@@ -4646,7 +4653,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               setItemUseUp({id:"teleportCrystal",alliedTeleport:true,breachName:tpl.name});
             }
           }else setElixirStatChoice({id});
-        }},id==="teleportCrystal"?"Briser":id==="dungeonKey"||id==="transmutationGrimoire"||id==="supremeElixir"?"Oui":"Continuer")
+        }},eraseRecord?"Effacer":id==="teleportCrystal"?"Briser":id==="dungeonKey"||id==="transmutationGrimoire"||id==="supremeElixir"?"Oui":"Continuer")
       )
     ));
   }
