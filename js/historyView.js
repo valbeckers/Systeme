@@ -189,29 +189,29 @@ export function HistoryTab({
         h("div",{style:"margin-top:12px"}),
         recordDisplayObjs.map(o=>{
           const rec=records[o.id];
-          if(!rec) return h("div",{key:o.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px;opacity:.35"},
-            QuestIcon(o.id,o.icon,14),
-            h("div",{style:"flex:1"},
-              h("div",{style:"font-size:12px;color:var(--td);display:flex;align-items:center;gap:5px"},
-                o.name,
+          if(!rec) return h("div",{key:o.id,style:"display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;margin-bottom:8px;opacity:.35"},
+            h("div",{style:"display:flex;align-items:center;gap:6px;min-width:0"},
+              QuestIcon(o.id,o.icon,14),
+              h("div",{style:"min-width:0;font-size:12px;color:var(--td);display:flex;align-items:center;gap:5px"},
+                h("span",{style:"overflow:hidden;text-overflow:ellipsis;white-space:nowrap"},o.name),
                 o.weekly&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
                 o.optional&&!o.weekly&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR})
               )
             ),
-            h("span",{style:"font-size:11px;color:var(--td)"},"—")
+            h("span",{style:"font-size:11px;color:var(--td);white-space:nowrap;text-align:right"},"—")
           );
           const fmt2=d=>{if(d.includes("-W"))return d.replace("-W","-S");const p=d.split("-");return p[2]+"/"+p[1];};
-          return h("div",{key:o.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
-            QuestIcon(o.id,o.icon,14),
-            h("div",{style:"flex:1"},
-              h("div",{style:"font-size:12px;color:var(--tx);display:flex;align-items:center;gap:5px"},
-                o.name,
+          return h("div",{key:o.id,style:"display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;margin-bottom:8px"},
+            h("div",{style:"display:flex;align-items:center;gap:6px;min-width:0"},
+              QuestIcon(o.id,o.icon,14),
+              h("div",{style:"min-width:0;font-size:12px;color:var(--tx);display:flex;align-items:center;gap:5px"},
+                h("span",{style:"overflow:hidden;text-overflow:ellipsis;white-space:nowrap"},o.name),
                 o.weekly&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
-                o.optional&&!o.weekly&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR})
-              ),
-              h("div",{style:"font-size:10px;color:var(--td);margin-top:1px"},fmt2(rec.date))
+                o.optional&&!o.weekly&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR}),
+                h("span",{style:"font-size:10px;color:var(--td);white-space:nowrap;flex-shrink:0"},"· "+fmt2(rec.date))
+              )
             ),
-            h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--tx)"},
+            h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--tx);white-space:nowrap;text-align:right"},
               fmtNum(rec.val)+" "+((rec.val>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",contact:"contacts",action:"actions"}[o.unit]||o.unit)
             )
           );

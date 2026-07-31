@@ -2829,7 +2829,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("button",{onClick:()=>setInventoryItem(null),style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
         ),
         h("div",{style:"display:flex;justify-content:center;align-items:center;margin:14px 0 8px"},InventoryItemIcon(id,128)),
-        h("div",{style:"text-align:center;font-family:Orbitron,sans-serif;font-size:10px;color:var(--td);margin-bottom:16px"},["regressionOrb","debtAcknowledgement"].includes(id)?"OBJET PERMANENT":id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"MARQUE EN COURS":id==="etherStopper"&&suspendedElixir?"ÉLIXIR SUSPENDU · "+fmtCD(suspendedElixir.remainingMs):"QUANTITÉ : "+qty),
+        !it.permanent&&h("div",{style:"text-align:center;font-family:Orbitron,sans-serif;font-size:10px;color:var(--td);margin-bottom:16px"},id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"MARQUE EN COURS":id==="etherStopper"&&suspendedElixir?"ÉLIXIR SUSPENDU · "+fmtCD(suspendedElixir.remainingMs):"QUANTITÉ : "+qty),
         h("div",{style:"font-size:12px;line-height:1.6;color:var(--tx);margin-bottom:14px"},it.desc),
         !it.permanent&&h("div",{style:"margin-bottom:16px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);padding:10px 0"},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1px"},"OBTENTION"),
@@ -3945,19 +3945,19 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const cardStyle = "padding:10px;border:1px solid rgba(255,255,255,0.07);border-radius:10px;margin-bottom:7px;background:rgba(255,255,255,0.025)";
     const detailStyle = "font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45";
 
-    function StatPill({stat,xp}){
+    function StatPill({stat,xp,showPlus=true}){
       const color=STAT_COLOR[stat]||"var(--rc)";
       const raw=String(xp);
       const slashIndex=raw.indexOf("/");
       const value=slashIndex>=0 ? raw.slice(0,slashIndex) : raw;
       const perUnit=slashIndex>=0 ? raw.slice(slashIndex+1) : "";
-      const label="+"+value+" XP "+statLabel(stat)+(perUnit?"/"+perUnit:"");
+      const label=(showPlus?"+":"")+value+" XP "+statLabel(stat)+(perUnit?"/"+perUnit:"");
       return h("span",{style:"display:inline-block;border:1px solid "+color+"55;color:"+color+";border-radius:999px;padding:2px 7px;margin:2px 4px 2px 0;font-size:10px;font-family:Orbitron,sans-serif;background:"+color+"11"},
         label
       );
     }
 
-    function renderXpPills(item){
+    function renderXpPills(item,{showPlus=true,separator=false}={}){
       const pairs=[];
       if(item.binary && item.binaryXp){ pairs.push({stat:item.stat,xp:item.binaryXp}); }
       else if(item.xp){ pairs.push({stat:item.stat,xp:item.xp}); }
@@ -3967,15 +3967,20 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       if(item.xpPer2&&item.stat2) pairs.push({stat:item.stat2,xp:item.xpPer2+"/"+item.unit});
       if(item.tiers){
         return h("div",null,item.tiers.map((t,index)=>{
-          const ps=[h(StatPill,{stat:t.stat,xp:t.xp})];
-          if(t.xp2&&t.stat2) ps.push(h(StatPill,{stat:t.stat2,xp:t.xp2}));
+          const ps=[h(StatPill,{stat:t.stat,xp:t.xp,showPlus})];
+          if(t.xp2&&t.stat2) ps.push(h(StatPill,{stat:t.stat2,xp:t.xp2,showPlus}));
           return h("div",{key:t.at,style:"margin-top:3px"},
             h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:#fff"},"Palier "+(index+1)+" : "),
             ...ps
           );
         }));
       }
-      return h("div",null,pairs.map((p,i)=>h(StatPill,{key:i,stat:p.stat,xp:p.xp})));
+      const nodes=[];
+      pairs.forEach((p,i)=>{
+        if(separator&&i>0) nodes.push(h("span",{key:"sep"+i,style:"display:inline-block;color:var(--td);font-family:Orbitron,sans-serif;font-size:10px;margin-right:4px"},"/"));
+        nodes.push(h(StatPill,{key:"xp"+i,stat:p.stat,xp:p.xp,showPlus}));
+      });
+      return h("div",null,nodes);
     }
 
     function targetForQuest(obj){
@@ -3994,15 +3999,20 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const subStyle="padding:9px;border:1px solid rgba(255,255,255,.07);border-radius:8px;background:rgba(255,255,255,.025);margin-top:7px";
       const objective=(value,unit)=>fmtNum(value)+" "+unit+" / jour";
       function Reward({stat,xp}){
-        return h("span",{style:"display:inline-block;border:1px solid "+(STAT_COLOR[stat]||"var(--rc)")+"55;color:"+(STAT_COLOR[stat]||"var(--rc)")+";border-radius:999px;padding:2px 7px;margin:2px 4px 2px 0;font-size:10px;font-family:Orbitron,sans-serif;background:"+(STAT_COLOR[stat]||"var(--rc)")+"11"},"+"+xp+" XP "+statLabel(stat));
+        return h(StatPill,{stat,xp,showPlus:false});
       }
       function Exercise({icon,name,target,unit,rewards}){
+        const rewardNodes=[];
+        (rewards||[]).forEach((r,i)=>{
+          if(i>0) rewardNodes.push(h("span",{key:"sep"+i,style:"display:inline-block;color:var(--td);font-family:Orbitron,sans-serif;font-size:10px;margin-right:4px"},"/"));
+          rewardNodes.push(h(Reward,{key:"reward"+i,stat:r.stat,xp:r.xp}));
+        });
         return h("div",{style:subStyle},
           h("div",{style:"display:flex;align-items:center;gap:8px"},
             h("span",{style:"font-size:15px;line-height:1;min-width:24px;text-align:center;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0"},icon),
             h("div",{style:"flex:1;min-width:0"},
               h("div",{style:"font-size:12px;color:var(--tx);font-weight:800"},name),
-              h("div",{style:"margin-top:5px"},(rewards||[]).map((r,i)=>h(Reward,{key:i,stat:r.stat,xp:r.xp}))),
+              h("div",{style:"margin-top:5px"},rewardNodes),
               h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-top:4px"},"▸ Objectif : "+objective(target,unit))
             )
           )
@@ -4038,14 +4048,15 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{style:familyStyle},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px"},"🦿 JAMBES"),
           h(Exercise,{icon:"🦵🏻",name:"Squats",target:squatTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"},{stat:"Agilite",xp:"3/rep"}]}),
-          h(Exercise,{icon:"🦵🏻",name:"Mollets",target:calvesTarget,unit:"reps",rewards:[{stat:"Force",xp:"1,5/rep"},{stat:"Agilite",xp:"1/rep"}]}),
+          h(Exercise,{icon:"🦵🏻",name:"Mollets",target:calvesTarget,unit:"reps",rewards:[{stat:"Force",xp:"2/rep"},{stat:"Agilite",xp:"1/rep"}]}),
           h(Exercise,{icon:"🦵🏻",name:"Fentes",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]})
         )
       );
     }
 
-    function renderQuest(obj){
+    function renderQuest(obj,dailyXpFormat=false){
 
+      const useDailyXpFormat=dailyXpFormat===true;
       const subtitle = obj.desc || obj.subtitle || "";
       return h("div",{key:obj.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:center;gap:8px"},
@@ -4056,7 +4067,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               (obj.weekly)&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR})
             ),
             subtitle&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},subtitle),
-            h("div",{style:"margin-top:7px"},renderXpPills(obj)),
+            h("div",{style:"margin-top:7px"},renderXpPills(obj,{showPlus:!useDailyXpFormat,separator:useDailyXpFormat})),
             h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:6px"},
               h("div",{style:detailStyle},"▸ Objectif : "+targetForQuest(obj))
             )
@@ -4205,7 +4216,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         return h("div",{key:group.stat,style:"margin-bottom:13px"},
           h("div",{style:"font-size:11px;color:"+(STAT_COLOR[group.stat]||"var(--rc)")+";font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin:2px 0 7px"},statLabel(group.stat)),
           hasExerciseFamilies&&renderExerciseFamiliesCodex(),
-          group.list.map(renderQuest)
+          group.list.map(item=>renderQuest(item,true))
         );
       }).filter(Boolean);
     }
@@ -4228,7 +4239,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("button",{onClick:()=>setInventoryItem(null),style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
         ),
         h("div",{style:"display:flex;justify-content:center;align-items:center;margin:14px 0 8px"},InventoryItemIcon("codex",128)),
-        h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;text-align:center;margin-bottom:15px"},"Catalogue complet des quêtes et systèmes de l’application."),
+        h("div",{style:"font-size:11px;color:#fff;line-height:1.45;text-align:center;margin-bottom:15px"},"Catalogue complet des quêtes et systèmes de l’application."),
         h(Section,{id:"breach",title:"Brèches",count:breachList.length+breachBossList.length},
           h(Fragment,null,
             h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Une Brèche a 1 % de chance d’apparaître au reset quotidien. Elle remplace la quête urgente du jour et reste ouverte 72 h. Si elle n’est pas refermée, elle entre en Rupture pendant 24 h : son Boss reprend l’objectif initial et invoque une garde rapprochée composée de 3 sous-quêtes. Les 4 objectifs doivent être accomplis pour obtenir l’XP initiale de la Brèche et un objet aléatoire garanti. En cas d’échec, un malus de −25 % d’XP s’applique pendant 24 h."),
