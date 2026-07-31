@@ -1,5 +1,6 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
 import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js";
+import { pickRandomSq } from "./urgentQuestEngine.js";
 import { BREACH_COLOR, BREACH_LOOT_TEXT, BREACH_POOL } from "./breachDefs.js";
 import { DUNGEONS } from "./dungeonDefs.js";
 import {
@@ -178,66 +179,6 @@ const fmtNum = (v, max=2) => {
   if(Math.abs(n - Math.round(n)) < 1e-9) return String(Math.round(n));
   return n.toFixed(max).replace(/\.0+$/,"").replace(/(\.\d*?)0+$/,"$1");
 };
-
-function pickRandomSq(usedIds,statCycle,completedLog,forcedStat=null){
-  const stats=["Sante","Force","Esprit","Endurance","Agilite","Discipline"];
-  const cycle = [...new Set((statCycle||[]).filter(s=>stats.includes(s)))];
-  const remaining = stats.filter(s=>!cycle.includes(s));
-  const cycleReset = remaining.length===0;
-  const pool = cycleReset ? stats : remaining;
-
-  // Anti-répétition : une même quête urgente ne peut pas revenir avant 4 cycles complets.
-  const recentWindow = stats.length * 4;
-  const recentIds = (completedLog||[])
-    .slice(-recentWindow)
-    .map(x=>typeof x==="string" ? x : x.id)
-    .filter(Boolean);
-  const lastCompletedId=(completedLog||[]).slice().reverse().map(x=>typeof x==="string"?x:x&&x.id).find(Boolean)||null;
-
-  const availableForStat = (s, respectCooldown=true) => (SP[s]||[]).filter(t =>
-    !(usedIds||[]).includes(t.id) &&
-    (!respectCooldown || !recentIds.includes(t.id))
-  );
-
-  // La Boussole force uniquement la statistique. Le cycle de statistiques reste intact.
-  if(stats.includes(forcedStat)){
-    let avail=availableForStat(forcedStat,true).filter(t=>t.id!==lastCompletedId);
-    if(!avail.length) avail=availableForStat(forcedStat,false).filter(t=>t.id!==lastCompletedId);
-    if(!avail.length) avail=availableForStat(forcedStat,false);
-    if(!avail.length) return null;
-    const chosen=avail[Math.floor(Math.random()*avail.length)];
-    return {tpl:{...chosen,stat:chosen.stat||forcedStat},pickedStat:forcedStat,cycleReset:false,forced:true};
-  }
-
-  let usable = pool.filter(s=>availableForStat(s,true).length>0);
-
-  // Si le filtre 4 cycles bloque toutes les stats restantes, on garde le cycle par stat
-  // et on relâche uniquement l'anti-répétition pour éviter un blocage.
-  let respectCooldown = true;
-  if(usable.length===0){
-    usable = pool.filter(s=>availableForStat(s,false).length>0);
-    respectCooldown = false;
-  }
-
-  if(usable.length===0){
-    // Fallback global, d'abord avec cooldown, puis sans.
-    for(const respect of [true,false]){
-      for(const s of stats){
-        const a=availableForStat(s,respect);
-        if(a.length>0){
-          const chosen=a[Math.floor(Math.random()*a.length)];
-          return {tpl:{stat:s,...chosen}, pickedStat:s, cycleReset, forced:false};
-        }
-      }
-    }
-    return null;
-  }
-
-  const stat = usable[Math.floor(Math.random()*usable.length)];
-  const avail = availableForStat(stat,respectCooldown);
-  const chosen = avail[Math.floor(Math.random()*avail.length)];
-  return {tpl:{...chosen,stat:chosen.stat||stat}, pickedStat:stat, cycleReset, forced:false};
-}
 
 function migrateMergedEspritState(state){
   if(!state || typeof state !== "object") return state;
