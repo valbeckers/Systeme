@@ -1,6 +1,13 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
 import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js";
 import { pickRandomSq } from "./urgentQuestEngine.js";
+import {
+  isDebtEligibleQuest,
+  createQuestDebtState,
+  planQuestDebtRepayment,
+  applyQuestDebtPaymentState,
+  expireQuestDebtState
+} from "./debtEngine.js";
 import { BREACH_COLOR, BREACH_LOOT_TEXT, BREACH_POOL } from "./breachDefs.js";
 import { DUNGEONS } from "./dungeonDefs.js";
 import {
@@ -24,7 +31,6 @@ import {
 } from "./lootEngine.js";
 import {
   eventDayStr,
-  addDaysStr,
   next7AM,
   current7AMStart,
   todayStr,
@@ -208,33 +214,7 @@ const fmtNum = (v, max=2) => {
 const saveState = state => saveStoredState(state,exportSystemState);
 
 
-// ─── SYSTÈME DE DETTE DE QUÊTE ───────────────────────────────────────────
-const DEBT_ELIGIBLE_IDS = new Set(["sleep","push","abs","squats","negative_pullups","calves","reading"]);
 const RUN_RECORD_RESET_DAY = "2026-07-13";
-
-function isDebtEligibleQuest(obj){
-  return !!(obj && obj.daily && !obj.optional && !obj.binary && DEBT_ELIGIBLE_IDS.has(obj.id));
-}
-function debtRewardPairs(obj,current,target){
-  const missing=Math.max(0,(Number(target)||0)-(Number(current)||0));
-  if(missing<=0) return [];
-  let mainXp=0;
-  if(obj.id==="reading"){
-    mainXp=missing*(obj.xpPer||0);
-  }else{
-    const beforeXp=calcXp(obj,current,target);
-    const afterXp=calcXp(obj,target,target);
-    mainXp=Math.max(0,afterXp-beforeXp);
-  }
-  const pairs=[];
-  if(mainXp>0) pairs.push({stat:obj.stat,xp:Math.round(mainXp)});
-  if(obj.stat2){
-    const ratio=(obj.xpPer2||obj.xpPer||0)/(obj.xpPer||1);
-    const xp2=Math.round(mainXp*ratio);
-    if(xp2>0) pairs.push({stat:obj.stat2,xp:xp2});
-  }
-  return pairs;
-}
 
 // ─── COMPOSANT PRINCIPAL ───────────────────────────────────────────────────
 
@@ -959,10 +939,7 @@ function App(){
     const debt=state.questDebt;
     if(!debt || debt.status!=="active") return;
     if(today<=debt.dueDay) return;
-    setState(s=>s.questDebt&&s.questDebt.status==="active"
-      ? {...s,questDebt:{...s.questDebt,status:"failed",failedAt:Date.now()}}
-      : s
-    );
+    setState(s=>expireQuestDebtState(s,today));
   },[today,state.questDebt?.status,state.questDebt?.dueDay]);
 
   // Animations de complétion des groupes de quêtes — une seule fois par jour.
@@ -1229,26 +1206,10 @@ function App(){
   function createQuestDebt(obj){
     if(!obj || !isDebtEligibleQuest(obj)) return;
     setState(s=>{
-      if(s.questDebt && s.questDebt.status==="active") return s;
-      if(s.debtUseDay===today) return s;
       const target=obj.validateAt != null
         ? Number(obj.validateAt)
         : (Number.isFinite(Number(obj.target)) ? Number(obj.target) : getRankBase(obj.id,ri,prestige,s.stats));
-      const current=(s.dailyLog[today]&&s.dailyLog[today][obj.id])||0;
-      const amount=Math.max(0,target-current);
-      if(amount<=0) return s;
-      return {
-        ...s,
-        debtUseDay:today,
-        questDebt:{
-          id:obj.id,name:obj.name,icon:obj.icon,unit:obj.unit,
-          stat:obj.stat,stat2:obj.stat2||null,
-          amount,paid:0,target,current,
-          sourceDay:today,dueDay:addDaysStr(today,1),
-          createdAt:Date.now(),status:"active",
-          rewards:debtRewardPairs(obj,current,target)
-        }
-      };
+      return createQuestDebtState(s,obj,{today,target});
     });
     setSpecialItemChoice(null);
     setConfirmDebt(null);
@@ -1257,31 +1218,11 @@ function App(){
 
   function repayDebtPortion(obj,val){
     const debt=state.questDebt;
-    if(!debt || debt.status!=="active" || debt.id!==obj.id || debt.dueDay!==today) return {used:0,remaining:val};
-    const left=Math.max(0,debt.amount-(debt.paid||0));
-    const used=Math.min(left,val);
-    const remaining=Math.max(0,val-used);
-    if(used<=0) return {used:0,remaining:val};
-    const willComplete=(debt.paid||0)+used>=debt.amount;
-    setState(s=>{
-      const current=s.questDebt;
-      if(!current || current.status!=="active") return s;
-      const paid=Math.min(current.amount,(current.paid||0)+used);
-      if(paid<current.amount) return {...s,questDebt:{...current,paid}};
-      const resolved={...(s.debtResolvedDays||{}),[current.sourceDay]:true};
-      const daily={...(s.dailyExtraXp||{})};
-      const dayLog={...(daily[today]||{})};
-      const totalDebtXp=(current.rewards||[]).reduce((sum,r)=>sum+(r.xp||0),0);
-      if(totalDebtXp>0) dayLog.debt=(dayLog.debt||0)+totalDebtXp;
-      daily[today]=dayLog;
-      return {
-        ...s,
-        questDebt:{...current,paid,status:"paid",completedAt:Date.now()},
-        debtResolvedDays:resolved,
-        dailyExtraXp:daily
-      };
-    });
-    if(willComplete){
+    const plan=planQuestDebtRepayment(debt,obj,val,today);
+    if(plan.used<=0) return {used:0,remaining:plan.remaining};
+
+    setState(s=>applyQuestDebtPaymentState(s,plan.used,today));
+    if(plan.willComplete){
       (debt.rewards||[]).forEach(r=>addXp(r.xp,r.stat,null,true,null,true));
       setTimeout(()=>setDebtUp({
         name:debt.name,
@@ -1290,7 +1231,7 @@ function App(){
         glow:(STAT_COLOR[debt.stat]||rank.color)+"66"
       }),500);
     }
-    return {used,remaining};
+    return {used:plan.used,remaining:plan.remaining};
   }
 
   function validate(obj,e,forceVal){
