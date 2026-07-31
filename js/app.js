@@ -4794,9 +4794,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h("div",{class:"rucont",style:"width:min(500px,calc(100vw - 34px));background:rgba(15,15,18,.97);border:1px solid "+color+"88;border-radius:18px;padding:22px;box-shadow:0 0 30px "+color+"22"},
         h("div",{class:"ruevol",style:"color:"+color},"CONFIRMATION"),
         h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:#fff;text-align:center;line-height:1.5;max-width:360px"},text),
-        h("div",{style:"display:flex;gap:10px;margin-top:22px"},
-          h("button",{class:"rudis",style:"min-width:110px;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>setConfirmTargetedItemUse(null)},"Annuler"),
-          h("button",{class:"rudis",style:"min-width:110px;--rc:"+color+";--rg:"+color+"66",onClick:confirmTarget},confirmLabel)
+        h("div",{style:"display:flex;gap:10px;margin-top:22px;width:100%"},
+          h("button",{class:"rudis",style:"flex:1;min-width:0;display:flex;align-items:center;justify-content:center;text-align:center;box-sizing:border-box;padding-left:10px;padding-right:10px;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>setConfirmTargetedItemUse(null)},"Annuler"),
+          h("button",{class:"rudis",style:"flex:1;min-width:0;display:flex;align-items:center;justify-content:center;text-align:center;box-sizing:border-box;padding-left:10px;padding-right:10px;--rc:"+color+";--rg:"+color+"66",onClick:confirmTarget},confirmLabel)
         )
       )
     );
