@@ -19,7 +19,7 @@ import {
   urgentQuestCompletedOnDay,
   applyDailyStreakRewardState
 } from "./dailyEngine.js";
-import { BREACH_COLOR, BREACH_LOOT_TEXT, BREACH_POOL } from "./breachDefs.js";
+import { BREACH_POOL } from "./breachDefs.js";
 import { DUNGEONS } from "./dungeonDefs.js";
 import {
   dungeonRoomRewardPairs,
@@ -45,12 +45,9 @@ import {
   next7AM,
   current7AMStart,
   todayStr,
-  wkStr,
-  prevWkStr
+  wkStr
 } from "./dayCycle.js";
 import {
-  xpForLvl,
-  totForLvl,
   getLvl,
   getGlobalLevelInfo,
   calcXp,
@@ -60,18 +57,14 @@ import { StatsTab } from "./statsView.js";
 import { HistoryTab } from "./historyView.js";
 import {
   RANK_BASES,
-  STAT_LEVEL_BASES,
-  STAT_LEVEL_TABLES,
   ROMAN,
   MAX_PRESTIGE,
   countStatsAtLevel,
-  meetsStatRequirement,
   statLevelTier,
   legRaiseTargetForForceLevel,
   getStatLevelTarget,
   getAscensionXpRequired,
   getRankBase,
-  getTarget,
   sortStat
 } from "./progression.js";
 import {
