@@ -88,173 +88,6 @@ const REGRESSION_DEFS = [{
 const REGRESSION_DEF = REGRESSION_DEFS[0];
 
 
-// Élans — V2 : récompense différée après complétion d’un donjon normal.
-const EVENT_BONUSES = [
-  {id:"ev_force",title:"Élan de Force",desc:"Les gains Force sont augmentés de 15% aujourd’hui.",stat:"Force",bonusPct:0.15},
-  {id:"ev_sante",title:"Élan de Vitalité",desc:"Les gains Santé sont augmentés de 15% aujourd’hui.",stat:"Sante",bonusPct:0.15},
-  {id:"ev_esprit",title:"Élan d’Esprit",desc:"Les gains Esprit sont augmentés de 15% aujourd’hui.",stat:"Esprit",bonusPct:0.15},
-  {id:"ev_endurance",title:"Élan d’Endurance",desc:"Les gains Endurance sont augmentés de 15% aujourd’hui.",stat:"Endurance",bonusPct:0.15},
-  {id:"ev_agilite",title:"Élan d’Agilité",desc:"Les gains Agilité sont augmentés de 15% aujourd’hui.",stat:"Agilite",bonusPct:0.15},
-  {id:"ev_discipline",title:"Élan de Discipline",desc:"Les gains Discipline sont augmentés de 15% aujourd’hui.",stat:"Discipline",bonusPct:0.15,disabled:true},
-];
-
-function pickFrom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-function twoWeakestStatsFromState(s){
-  const stats=s?.stats||{};
-  return [...STATS].sort((a,b)=>(stats[a]||0)-(stats[b]||0)).slice(0,2);
-}
-function strongestStatFromState(s){
-  const stats=s?.stats||{};
-  return [...STATS].sort((a,b)=>(stats[b]||0)-(stats[a]||0))[0];
-}
-function lastBonusStatFromHistory(s){
-  const h=[...((s&&s.eventHistory)||[])].reverse();
-  const last=h.find(e=>e&&e.type==="bonus");
-  if(!last) return null;
-  const ev=EVENT_BONUSES.find(e=>e.id===last.id);
-  return ev ? ev.stat : null;
-}
-function addElanXpPair(out,stat,xp){
-  if(!stat || !xp || xp<=0) return;
-  out[stat]=(out[stat]||0)+xp;
-}
-function estimateQuestXpForElan(s,obj,val,day){
-  const out={};
-  const n=Number(val)||0;
-  if(n<=0 || !obj) return out;
-  const b=eventQuestTarget(s,obj,day);
-  if(obj.tiers && obj.tiers.length>0){
-    obj.tiers.filter(t=>n>=t.at).forEach(t=>{
-      addElanXpPair(out,t.stat,t.xp||0);
-      if(t.xp2&&t.stat2) addElanXpPair(out,t.stat2,t.xp2);
-    });
-    if(obj.overGoalXpPer){
-      const overTarget=obj.target || obj.tiers[obj.tiers.length-1].at || obj.base || 0;
-      const overUnits=Math.max(0,n-overTarget);
-      addElanXpPair(out,obj.overGoalStat||obj.stat,overUnits*obj.overGoalXpPer);
-    }
-    return out;
-  }
-  let xp=0;
-  if(obj.id==="reading"){
-    xp=n*(obj.xpPer||0);
-  } else if(obj.binary){
-    xp=n>=1 ? (obj.binaryXp||0) : 0;
-  } else if(obj.base && obj.id!=="water" && obj.id!=="run"){
-    if(obj.optional){
-      xp=n*(obj.xpPer||0);
-      const mult=Math.floor(n/Math.max(1,b));
-      for(let m=2;m<=mult;m++) xp+=b*(obj.xpPer||0);
-    } else {
-      if(n<b) xp=0;
-      else {
-        xp=n*(obj.xpPer||0);
-        const mult=Math.floor(n/Math.max(1,b));
-        for(let m=2;m<=mult;m++) xp+=b*(obj.xpPer||0);
-      }
-    }
-  } else if(obj.id==="run"){
-    xp=n*(obj.xpPer||0);
-    if(n>=b*2) xp+=Math.round(n*(obj.xpPer||0)*0.5);
-  } else if(obj.xpPer){
-    xp=n*obj.xpPer;
-  } else if(obj.xp){
-    xp=obj.xp;
-  }
-  if(xp>0){
-    addElanXpPair(out,obj.stat,xp);
-    if(obj.stat2&&obj.xpPer2&&obj.xpPer){
-      addElanXpPair(out,obj.stat2,Math.round(xp*(obj.xpPer2/obj.xpPer)));
-    } else if(obj.stat2){
-      addElanXpPair(out,obj.stat2,xp);
-    }
-    if(obj.stat3&&obj.xp3) addElanXpPair(out,obj.stat3,obj.xp3);
-  }
-  return out;
-}
-function yesterdayStatXpForElan(s,day){
-  const out={};
-  STATS.forEach(stat=>{out[stat]=0;});
-  const log=(s.dailyLog&&s.dailyLog[day])||{};
-  DEFS.forEach(obj=>{
-    if(log[obj.id]==null) return;
-    const pairs=estimateQuestXpForElan(s,obj,log[obj.id],day);
-    Object.entries(pairs).forEach(([stat,xp])=>addElanXpPair(out,stat,xp));
-  });
-  return out;
-}
-function elanBaseScoreFromXp(xp){
-  if(xp<=0) return 90;
-  if(xp<250) return 70;
-  if(xp<600) return 50;
-  if(xp<1000) return 30;
-  return 15;
-}
-function weightedPickElan(scored){
-  const total=scored.reduce((sum,r)=>sum+Math.max(1,r.score||1),0);
-  let roll=Math.random()*total;
-  for(const row of scored){
-    roll-=Math.max(1,row.score||1);
-    if(roll<=0) return row.event;
-  }
-  return scored[scored.length-1]?.event || pickFrom(EVENT_BONUSES);
-}
-function requiredDailyForEvent(s,day){
-  return DEFS.filter(o=>o.daily&&!o.optional&&(!o.startDate||o.startDate<=day));
-}
-function eventQuestTarget(s,o,day){
-  const prestige=s.prestige||0;
-  const rank=getRankWithStats(s.totalXp||0,s.stats||{});
-  const ri=RANKS.findIndex(r=>r.id===rank.id);
-  return o.validateAt != null ? o.validateAt : getRankBase(o.id,ri,prestige,s.stats);
-}
-function missedRequiredQuestsForEvent(s,day){
-  const log=(s.dailyLog&&s.dailyLog[day])||{};
-  return requiredDailyForEvent(s,day).filter(o=>(log[o.id]||0)<eventQuestTarget(s,o,day));
-}
-function wasDayCompleteForEvent(s,day){
-  const required=requiredDailyForEvent(s,day);
-  if(required.length===0) return false;
-  return missedRequiredQuestsForEvent(s,day).length===0;
-}
-function completedNormalDungeonForEvent(s,day){
-  return [...(s.dungeonLog||[])].some(entry=>{
-    if(!entry || entry.rupture || !entry.completedAt) return false;
-    return eventDayStr(entry.completedAt)===day;
-  });
-}
-function buildBonusEvent(s,now=Date.now()){
-  const day=eventDayStr(now);
-  const prev=addDaysStr(day,-1);
-  const xpByStat=yesterdayStatXpForElan(s,prev);
-  const weakest=twoWeakestStatsFromState(s);
-  const strongest=strongestStatFromState(s);
-  const lastBonus=lastBonusStatFromHistory(s);
-  const scored=EVENT_BONUSES.filter(e=>!e.disabled).map(e=>{
-    let score=elanBaseScoreFromXp(xpByStat[e.stat]||0);
-    if(weakest.includes(e.stat)) score+=15;
-    if(strongest===e.stat) score-=10;
-    if(lastBonus===e.stat) score-=10;
-    return {event:e,score:Math.max(1,score),xp:xpByStat[e.stat]||0};
-  });
-  const e=weightedPickElan(scored);
-  return {...e,type:"bonus",day,startedAt:now,expiresAt:next7AM(now),source:"dungeon_completion_reward"};
-}
-function buildDailyEvent(s,now=Date.now()){
-  const day=eventDayStr(now);
-  const prev=addDaysStr(day,-1);
-  if(completedNormalDungeonForEvent(s,prev)) return buildBonusEvent(s,now);
-  return null;
-}
-function applyDailyEventReset(s,now=Date.now()){
-  const day=eventDayStr(now);
-  if(s.eventDay===day) return s;
-  const ev=buildDailyEvent(s,now);
-  const oldHistory=s.eventHistory||[];
-  const eventHistory=ev ? [...oldHistory,{day,id:ev.id,type:ev.type,source:ev.source}].slice(-12) : oldHistory.slice(-12);
-  return {...s,eventDay:day,dailyEvent:ev,eventHistory};
-}
-
 const getRank    = xp => { for(let i=RANKS.length-1;i>=0;i--)if(xp>=RANKS[i].xpRequired)return RANKS[i]; return RANKS[0]; };
 const getNext    = id => { const i=RANKS.findIndex(r=>r.id===id); return i<RANKS.length-1?RANKS[i+1]:null; };
 
@@ -455,11 +288,6 @@ function activeSpecialQuestMap(){
   Object.entries(SP).forEach(([stat,list])=>(list||[]).forEach(q=>{ map[q.id]={...q,stat:q.stat||stat}; }));
   return map;
 }
-function currentEventMap(){
-  const map={};
-  (EVENT_BONUSES||[]).forEach(e=>{ map[e.id]=e; });
-  return map;
-}
 function cleanQuestLogByIds(log,allowedIds){
   const out={};
   Object.entries(log||{}).forEach(([day,items])=>{
@@ -521,27 +349,6 @@ function cleanCompletedSqLogEntry(q,map){
     stat:normalizeLegacyStat(tpl.stat),
     completedAt:q.completedAt
   };
-}
-function cleanDailyEvent(ev){
-  if(!ev || !ev.id) return null;
-  const map=currentEventMap();
-  const tpl=map[ev.id];
-  if(!tpl || tpl.disabled) return null;
-  return {
-    ...tpl,
-    type:"bonus",
-    day:ev.day || eventDayStr(),
-    startedAt:ev.startedAt || Date.now(),
-    expiresAt:ev.expiresAt || next7AM(),
-    source:ev.source || null
-  };
-}
-function cleanEventHistory(history){
-  const map=currentEventMap();
-  return (history||[])
-    .filter(e=>e && e.id && map[e.id])
-    .map(e=>({day:e.day,id:e.id,type:"bonus",source:e.source}))
-    .slice(-12);
 }
 function cleanDailyExtraXp(extra){
   const allowed=new Set(["eventBonus","sq","breach","dungeon","streak","debt"]);
@@ -674,9 +481,6 @@ function cleanSystemState(raw){
     dungeonKeyRollWon:data.dungeonKeyRollWon===true,
     dungeonLog:cleanDungeonLog(data.dungeonLog),
     dailyExtraXp:cleanDailyExtraXp(data.dailyExtraXp),
-    dailyEvent:cleanDailyEvent(data.dailyEvent),
-    eventDay:data.eventDay||null,
-    eventHistory:cleanEventHistory(data.eventHistory),
     sqRerollDay:data.sqRerollDay||null,
     questDebt:data.questDebt||null,
     debtUsesByWeek:data.debtUsesByWeek||{},
@@ -763,9 +567,6 @@ const IMPORTED = {
   dungeonLog:[],
   ruptureMalus:null,
   dailyExtraXp:{},
-  dailyEvent:null,
-  eventDay:null,
-  eventHistory:[],
   sqRerollDay:null,
   completedSqLog:[],
   sqStatCycle:[],
@@ -860,9 +661,6 @@ function buildState(){
     activeElixir:saved.activeElixir||null,
     ruptureMalus:saved.ruptureMalus||null,
     dailyExtraXp:saved.dailyExtraXp||IMPORTED.dailyExtraXp||{},
-    dailyEvent:saved.dailyEvent||IMPORTED.dailyEvent||null,
-    eventDay:saved.eventDay||IMPORTED.eventDay||null,
-    eventHistory:saved.eventHistory||IMPORTED.eventHistory||[],
     regressionLog:saved.regressionLog||{},
     enduranceChoiceByDay:saved.enduranceChoiceByDay||{},
     exerciseRotationByDay:saved.exerciseRotationByDay||{},
@@ -950,7 +748,7 @@ function debtRewardPairs(obj,current,target){
 function App(){
   const [state,setState]   = useState(()=>{
     const now=Date.now();
-    let base=applyDailyEventReset(buildState(),now);
+    let base=buildState();
     base=ensureExerciseRotationForDay(base,todayStr());
     base=processDailyBreachRoll(base,now);
     // Auto-init quête urgente si aucune Brèche ne la remplace aujourd’hui
@@ -1446,11 +1244,7 @@ function App(){
     });
   },[now]);
   useEffect(()=>{
-    const day=eventDayStr(now);
-    setState(s=>{
-      let next=s.eventDay!==day?applyDailyEventReset(s,now):s;
-      return processDailyBreachRoll(next,now);
-    });
+    setState(s=>processDailyBreachRoll(s,now));
   },[now]);
   const sqs         = state.specialQuests||[];
   const activeSq    = sqs.find(q=>!q.completedAt&&now<q.expiresAt)||null;
@@ -1553,9 +1347,6 @@ function App(){
   const allQuestsCompletionSeenRef = useRef(dungeonLootConditionsMet);
   const dungeonCanStart = !state.activeDungeon && !dungeonDailyUsed && dungeonWeekCount<3 && dungeonAccessOpen;
 
-  const dailyEvent = state.dailyEvent && state.dailyEvent.type!=="none" && now < (state.dailyEvent.expiresAt||0)
-    ? state.dailyEvent
-    : null;
 
   // Flags bonus
   const bonusGiven       = state.streakBonusDay===today;
@@ -3302,18 +3093,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       ),
       h("div",{class:"qbar",style:"margin-top:9px"},h("div",{class:"qfill"+(pct>=100?" done":pct>0?" partial":""),style:"width:"+pct+"%"})),
       h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;margin-top:8px;letter-spacing:.7px;text-transform:uppercase"},"Échéance : "+debt.dueDay+" · priorité avant la quête du jour")
-    );
-  }
-
-  function DailyEventCard(){
-    const ev=dailyEvent;
-    if(!ev || ev.type!=="bonus") return null;
-    const color=STAT_COLOR[ev.stat]||rank.color;
-    return h("div",{class:"card",style:"border-color:"+color+"66;background:linear-gradient(135deg,"+color+"14,rgba(255,255,255,0.025))"},
-      h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:10px"},
-        h("div",{class:"ctitle",style:"margin:0;color:"+color},"ÉLAN DU JOUR"),
-        h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap;text-transform:uppercase"},"+15% XP "+(STAT_LBL[ev.stat]||ev.stat))
-      )
     );
   }
 
@@ -5539,7 +5318,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const boss=buildBreachRuptureBoss(b.id);
       return boss?{...boss,stat:b.stat,breachId:b.id}:null;
     }).filter(Boolean);
-    const elanList=EVENT_BONUSES.filter(e=>!e.disabled).map(e=>({...e,type:"bonus"}));
 
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setInventoryItem(null)}},
       h("div",{class:"modal",style:"position:relative;max-width:470px;width:calc(100% - 24px);max-height:88vh;overflow:auto;padding-top:16px"},
