@@ -28,10 +28,12 @@ function QuestIcon(id, fallback, size=14, extraStyle=""){
 const REGRESSION_DEFS = [{
   id:"reg_red",
   name:"Régression actuelle",
- r 10 minutes d’exercices d’équilibre et de coordination",unit:"min",target:10,step:5},
-    ]
-  },
-};
+  icon:"🔴",
+  statPenalty:2000,
+  globalPenalty:12000
+}];
+const REGRESSION_DEF = REGRESSION_DEFS[0];
+
 
 function breachTemplateById(id){return BREACH_POOL.find(b=>b.id===id)||null;}
 function breachRuptureTemplateById(id){return BREACH_RUPTURE_BOSSES[id]||null;}
