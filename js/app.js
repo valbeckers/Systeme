@@ -52,6 +52,13 @@ import {
   cleanExerciseRotationByDay,
   rotatedQuestObjects
 } from "./exerciseRotation.js";
+import {
+  RECORD_EXERCISE_DEFS,
+  questRecordUnit,
+  recordRotationIdForDay,
+  recordExerciseValueForDay,
+  buildRecordOptions
+} from "./records.js";
 
 const { h, render, Fragment } = window.preact;
 const { useState, useEffect, useRef } = window.preactHooks;
@@ -1647,13 +1654,6 @@ function App(){
     },delay);
   }
 
-  function questRecordUnit(unit,value){
-    const n=Number(value)||0;
-    const plurals={rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",km:"km",contact:"contacts",action:"actions",objet:"objets","sér.":"sér."};
-    if(n>1 && plurals[unit]) return plurals[unit];
-    return unit || "";
-  }
-
   function maybeTriggerQuestRecord(obj,prevVal,nextVal,delay=850){
     if(!obj || obj.binary || obj.weekly) return;
     const nextNumber=Number(nextVal)||0;
@@ -1684,7 +1684,7 @@ function App(){
       });
       tryRareDungeonKeyDrop("record");
       const challenge=state.recordChallenge;
-      const challengeRotationOk=!challenge||!challenge.rotationId||recordRotationIdForDay(today,challenge.family)===challenge.rotationId;
+      const challengeRotationOk=!challenge||!challenge.rotationId||recordRotationIdForDay(state.exerciseRotationByDay,today,challenge.family)===challenge.rotationId;
       if(challenge&&challenge.week===wkStr()&&challenge.questId===obj.id&&challengeRotationOk&&nextNumber>Number(challenge.target||0)){
         addXp(500,obj.stat,null,true);
         setState(s=>({...s,recordChallenge:null}));
@@ -3402,7 +3402,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const date=new Date(day+"T12:00:00");
       if(Number.isNaN(date.getTime()) || wkStr(date)!==challenge.week) return;
       const value=challenge.rotationId
-        ? (recordRotationIdForDay(day,challenge.family)===challenge.rotationId ? Number(log&&log[challenge.questId]) : 0)
+        ? (recordRotationIdForDay(state.exerciseRotationByDay,day,challenge.family)===challenge.rotationId ? Number(log&&log[challenge.questId]) : 0)
         : Number(log&&log[challenge.questId]);
       if(Number.isFinite(value)&&value>bestThisWeek) bestThisWeek=value;
     });
@@ -3985,26 +3985,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     ));
   }
 
-  function recordExerciseDefs(){return [
-    {id:"ex_pushups",name:"Pompes",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"push",family:"push",rotationId:"pushups"},
-    {id:"ex_dips",name:"Dips",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"push",family:"push",rotationId:"dips"},
-    {id:"ex_negative_pullups",name:"Tractions négatives",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"negative_pullups",family:"back",rotationId:"negative_pullups"},
-    {id:"ex_australian_pullups",name:"Tractions australiennes",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"negative_pullups",family:"back",rotationId:"australian_pullups"},
-    {id:"ex_crunches",name:"Crunches",icon:"🧎🏻",unit:"rep",stat:"Force",sourceId:"abs",family:"abs",rotationId:"crunches"},
-    {id:"ex_leg_raises",name:"Levées de jambes",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"abs",family:"abs",rotationId:"leg_raises"},
-    {id:"ex_plank",name:"Gainage",icon:"🫳🏼",unit:"min",stat:"Force",sourceId:"abs",family:"abs",rotationId:"plank"},
-    {id:"ex_side_plank",name:"Gainage obliques",icon:"🧎🏻‍♂️‍➡️",unit:"rep",stat:"Force",sourceId:"abs",family:"abs",rotationId:"side_plank"},
-    {id:"ex_squats",name:"Squats",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"squats",family:"legs",rotationId:"squats"},
-    {id:"ex_calves",name:"Mollets",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"squats",family:"legs",rotationId:"calves",legacySourceId:"calves"},
-    {id:"ex_lunges",name:"Fentes",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"squats",family:"legs",rotationId:"lunges"}
-  ];}
-  function recordRotationIdForDay(day,family){return ((state.exerciseRotationByDay||{})[day]||{})[family]||LEGACY_EXERCISE_DEFAULTS[family];}
-  function recordExerciseValueForDay(def,day,log){let value=0;const row=log||{};if(recordRotationIdForDay(day,def.family)===def.rotationId)value+=Number(row[def.sourceId])||0;if(def.legacySourceId)value+=Number(row[def.legacySourceId])||0;return value;}
   function recordOptions(){
-    const exerciseIds=new Set(["push","negative_pullups","abs","squats","calves"]);
-    const exerciseOptions=recordExerciseDefs().map(def=>{let best=0;Object.entries(state.dailyLog||{}).forEach(([day,log])=>{const v=recordExerciseValueForDay(def,day,log);if(v>best)best=v;});return best>0?{obj:{id:def.sourceId,name:def.name,icon:def.icon,unit:def.unit,stat:def.stat,recordRotationId:def.rotationId,recordFamily:def.family},best}:null;}).filter(Boolean);
-    const standardOptions=DEFS.filter(o=>!o.binary&&!o.weekly&&!exerciseIds.has(o.id)).map(o=>{let best=0;Object.values(state.dailyLog||{}).forEach(log=>{const v=Number(log&&log[o.id])||0;if(v>best)best=v;});return best>0?{obj:o,best}:null;}).filter(Boolean);
-    return [...exerciseOptions,...standardOptions];
+    return buildRecordOptions({
+      questDefs:DEFS,
+      dailyLog:state.dailyLog,
+      exerciseRotationByDay:state.exerciseRotationByDay
+    });
   }
   function SpecialItemChoiceModal(){
     if(!specialItemChoice)return null;const type=specialItemChoice.type;
@@ -4219,32 +4205,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const lbl=wkOff===0?"Cette semaine":wkOff===1?"Semaine derni\u00e8re":fmt(ws)+" \u2013 "+fmt(we);
     const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional)),...sortStat(objs.filter(o=>o.weekly)),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden))];
 
-    const exerciseHistoryDefs=[
-      {id:"ex_pushups",name:"Pompes",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"push",family:"push",rotationId:"pushups"},
-      {id:"ex_dips",name:"Dips",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"push",family:"push",rotationId:"dips"},
-      {id:"ex_negative_pullups",name:"Tractions négatives",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"negative_pullups",family:"back",rotationId:"negative_pullups"},
-      {id:"ex_australian_pullups",name:"Tractions australiennes",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"negative_pullups",family:"back",rotationId:"australian_pullups"},
-      {id:"ex_crunches",name:"Crunches",icon:"🧎🏻",unit:"rep",stat:"Force",sourceId:"abs",family:"abs",rotationId:"crunches"},
-      {id:"ex_leg_raises",name:"Levées de jambes",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"abs",family:"abs",rotationId:"leg_raises"},
-      {id:"ex_plank",name:"Gainage",icon:"🫳🏼",unit:"min",stat:"Force",sourceId:"abs",family:"abs",rotationId:"plank"},
-      {id:"ex_side_plank",name:"Gainage obliques",icon:"🧎🏻‍♂️‍➡️",unit:"rep",stat:"Force",sourceId:"abs",family:"abs",rotationId:"side_plank"},
-      {id:"ex_squats",name:"Squats",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"squats",family:"legs",rotationId:"squats"},
-      {id:"ex_calves",name:"Mollets",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"squats",family:"legs",rotationId:"calves",legacySourceId:"calves"},
-      {id:"ex_lunges",name:"Fentes",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"squats",family:"legs",rotationId:"lunges"},
-    ];
-    const rotatingSourceIds=new Set(["push","negative_pullups","abs","squats","calves"]);
-    function exerciseRotationIdForDay(day,family){
-      return ((state.exerciseRotationByDay||{})[day]||{})[family] || LEGACY_EXERCISE_DEFAULTS[family];
-    }
-    function exerciseValueForDay(def,day,log){
-      const row=log||{};
-      let value=0;
-      if(exerciseRotationIdForDay(day,def.family)===def.rotationId){
-        value+=Number(row[def.sourceId])||0;
-      }
-      if(def.legacySourceId) value+=Number(row[def.legacySourceId])||0;
-      return value;
-    }
+    const exerciseHistoryDefs=RECORD_EXERCISE_DEFS;
     function dailyQuestForHistoryDay(obj,day){
       if(!isExerciseFamilyQuestId(obj.id)) return obj;
       const rotation=(state.exerciseRotationByDay||{})[day]||{
@@ -4324,7 +4285,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     });
     exerciseHistoryDefs.forEach(def=>{
       Object.entries(state.dailyLog||{}).forEach(([date,log])=>{
-        const val=exerciseValueForDay(def,date,log);
+        const val=recordExerciseValueForDay(def,date,log,state.exerciseRotationByDay);
         if(val>0 && (!records[def.id]||val>records[def.id].val)) records[def.id]={val,date};
       });
     });
@@ -4444,7 +4405,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           Object.entries(log).forEach(([id,val])=>{totals[id]=(totals[id]||0)+val;});
         });
         exerciseHistoryDefs.forEach(def=>{
-          totals[def.id]=Object.entries(state.dailyLog||{}).reduce((sum,[day,log])=>sum+exerciseValueForDay(def,day,log),0);
+          totals[def.id]=Object.entries(state.dailyLog||{}).reduce((sum,[day,log])=>sum+recordExerciseValueForDay(def,day,log,state.exerciseRotationByDay),0);
         });
         const displayObjs=recordDisplayObjs;
         return h("div",{class:"card"},
