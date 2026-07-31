@@ -1,37 +1,9 @@
+import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
 
 const { h, render, Fragment } = window.preact;
 const { useState, useEffect, useRef } = window.preactHooks;
 
-// ─── CONSTANTES GLOBALES ────────────────────────────────────────────────────
-
-const RANKS = [
-  {id:"E",label:"\u00c9veill\u00e9",  color:"#9ca3af",glow:"#9ca3af11",bg:"#0f0f12",accent:"#6b7280",xpRequired:0},
-  {id:"D",label:"Disciple",   color:"#8b82c4",glow:"#8b82c422",bg:"#0f0e14",accent:"#7068b0",xpRequired:120000},
-  {id:"C",label:"Catalyseur", color:"#9070d4",glow:"#9070d433",bg:"#100e18",accent:"#7858c0",xpRequired:360000},
-  {id:"B",label:"B\u00e2tisseur", color:"#8a5fd8",glow:"#8a5fd855",bg:"#0e0c1c",accent:"#7248c4",xpRequired:840000},
-  {id:"A",label:"Ascendant",  color:"#9040e8",glow:"#9040e877",bg:"#0c0a1e",accent:"#7828d0",xpRequired:1800000},
-  {id:"S",label:"Souverain",  color:"#8b2fff",glow:"#8b2fff99",bg:"#0a0820",accent:"#6d10f0",xpRequired:3720000},
-];
-
-// Conditions de stats pour débloquer chaque palier (rang ou ascension)
-// rankId : id de RANKS pour D-S, ou "ASC_N" pour Ascension N (1-10)
-const RANK_STAT_REQUIREMENTS = {
-  D:      {count:3, level:10},
-  C:      {count:3, level:20},
-  B:      {count:4, level:25},
-  A:      {count:5, level:30},
-  S:      {count:5, level:37},
-  ASC_1:  {count:5, level:42},
-  ASC_2:  {count:5, level:45},
-  ASC_3:  {count:5, level:49},
-  ASC_4:  {count:5, level:52},
-  ASC_5:  {count:5, level:55},
-  ASC_6:  {count:6, level:56},
-  ASC_7:  {count:6, level:58},
-  ASC_8:  {count:6, level:60},
-  ASC_9:  {count:6, level:63},
-  ASC_10: {count:6, level:65},
-};
+// ─── FONCTIONS GLOBALES ─────────────────────────────────────────────────────
 
 // Compte combien de stats atteignent un niveau seuil
 function countStatsAtLevel(stats, threshold){
@@ -45,9 +17,6 @@ function meetsStatRequirement(stats, reqKey){
   return countStatsAtLevel(stats, req.level) >= req.count;
 }
 
-const STATS      = ["Sante","Force","Esprit","Endurance","Agilite","Discipline"];
-const STAT_COLOR = {Sante:"#ef4444",Force:"#fb923c",Esprit:"#ec4899",Endurance:"#22d3ee",Agilite:"#4ade80",Discipline:"#c084fc"};
-const STAT_LBL   = {Sante:"Sant\u00e9",Force:"Force",Esprit:"Esprit",Endurance:"Endurance",Agilite:"Agilit\u00e9",Discipline:"Discipline"};
 function QuestIcon(id, fallback, size=14, extraStyle=""){
   return h("span",{
     style:"font-size:"+size+"px;line-height:1;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;flex-shrink:0;"+extraStyle
@@ -1224,7 +1193,6 @@ function exportSystemState(s){
 }
 
 
-
 // Lecture : essaie la clé principale, sinon fallback automatique sur les backups
 const loadState  = () => {
   for(const key of BACKUP_KEYS){
@@ -1862,7 +1830,6 @@ function App(){
   },[completionUp,completionQueue]);
 
 
-
   // Penalite jours manques (une seule fois au montage)
   useEffect(()=>{
     const t=todayStr();
@@ -1871,10 +1838,6 @@ function App(){
       if(diff>=2)setState(s=>({...s,totalXp:Math.max(0,s.totalXp-diff*10),streak:0}));
     }
   },[]);
-
-
-
-
 
 
   // ─── CALCULS DERIVES (dans l'ordre, sans circularite) ──────────────────
@@ -2375,8 +2338,6 @@ function App(){
   }
 
 
-
-
   // ─── EFFECTS ──────────────────────────────────────────────────────────
 
   // Couleur CSS du rang
@@ -2667,7 +2628,6 @@ function App(){
   // Épreuves supprimées : pas de détection d'échec.
 
 
-
   function spawnFloat(txt,e){
     const id=Date.now()+Math.random();
     setFloats(f=>[...f,{id,txt}]);
@@ -2705,7 +2665,6 @@ function App(){
       spawnFloat(lbl,e);
     }
   }
-
 
 
   function createQuestDebt(obj){
@@ -3938,7 +3897,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   }
 
 
-
   function DungeonConsultCard(){
     const d=activeDungeon;
     if(!d) return null;
@@ -4045,7 +4003,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   }
 
   // ─── ONGLET ACCUEIL ───────────────────────────────────────────────────
-
 
 
   function CompactCompletedCard({text,prefix,accent,suffix,accentColor,detail}){
@@ -5038,8 +4995,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       });
     });
     // Running et Rando sont désormais quotidiens : ne plus utiliser weeklyLog pour les records
-
-
 
 
     return h("div",{class:"tab"},
