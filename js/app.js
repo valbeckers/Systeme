@@ -66,6 +66,18 @@ import {
   pickDungeonRuptureBoss,
   pickBreachRuptureBoss
 } from "./breachEngine.js";
+import {
+  ELIXIR_STATS,
+  ELIXIR_DURATION_MS,
+  isElixirKind,
+  cleanStoredActiveElixir,
+  cleanStoredSuspendedElixir,
+  currentActiveElixir,
+  currentSuspendedElixir,
+  elixirBonusForStat,
+  buildResumedElixir,
+  buildSuspendedElixir
+} from "./elixirEngine.js";
 
 const { h, render, Fragment } = window.preact;
 const { useState, useEffect, useRef } = window.preactHooks;
@@ -471,11 +483,11 @@ function cleanSystemState(raw){
     masterContractArmed:data.masterContractArmed===true,
     recordChallenge:data.recordChallenge||null,
     urgentCompassStat:STATS.includes(data.urgentCompassStat)?data.urgentCompassStat:null,
-    suspendedElixir:(data.suspendedElixir&&Number(data.suspendedElixir.remainingMs)>0)?data.suspendedElixir:null,
+    suspendedElixir:cleanStoredSuspendedElixir(data.suspendedElixir),
     urgentTokenUseDay:data.urgentTokenUseDay||null,
     alchemicalCatalystArmed:data.alchemicalCatalystArmed===true,
     dungeonAccessOpen:data.dungeonAccessOpen===true,
-    activeElixir:(data.activeElixir&&Number(data.activeElixir.expiresAt)>Date.now()&&(data.activeElixir.kind==="supremeElixir"||["Force","Sante","Esprit","Endurance","Agilite"].includes(data.activeElixir.stat)))?data.activeElixir:null,
+    activeElixir:cleanStoredActiveElixir(data.activeElixir),
     ruptureMalus:(data.ruptureMalus&&Number(data.ruptureMalus.expiresAt)>Date.now())?{pct:-0.25,startedAt:Number(data.ruptureMalus.startedAt)||Date.now(),expiresAt:Number(data.ruptureMalus.expiresAt)}:null,
     dungeonKeyDay:data.dungeonKeyDay||null,
     dungeonKeyRollWon:data.dungeonKeyRollWon===true,
@@ -817,7 +829,7 @@ function App(){
   const [dungeonHelpOpen,setDungeonHelpOpen] = useState({});
   const [selectedDungeonRoom,setSelectedDungeonRoom] = useState(null);
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
-  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,reg:false,sq:false,breach:false,elan:false,debt:false,dj:false,cs:false});
+  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,reg:false,sq:false,breach:false,debt:false,dj:false,cs:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
   const [showStatReqDetail,setShowStatReqDetail] = useState(false);
   const [showRankReqStats,setShowRankReqStats] = useState(false);
@@ -916,7 +928,7 @@ function App(){
     [...genericDrops,...(specificDrops[dungeonId]||[])].forEach(([id,p])=>{
       if(Math.random()<p){
         if(id==="key")awardDungeonKey("rare");
-        else if(id==="minorElixir"||id==="majorElixir"||id==="supremeElixir")awardElixir(id,p>=1?"guaranteed":"rare");
+        else if(isElixirKind(id))awardElixir(id,p>=1?"guaranteed":"rare");
         else awardInventoryItem(id,"rare");
       }
     });
@@ -1318,8 +1330,8 @@ function App(){
   const dungeonKeys = Math.max(0,Math.floor(Number(state.dungeonKeys)||0));
   const dungeonKeyAvailable = dungeonKeys>0;
   const dungeonAccessOpen = state.dungeonAccessOpen===true;
-  const activeElixir = state.activeElixir && now<(state.activeElixir.expiresAt||0) ? state.activeElixir : null;
-  const suspendedElixir = state.suspendedElixir && Number(state.suspendedElixir.remainingMs)>0 ? state.suspendedElixir : null;
+  const activeElixir = currentActiveElixir(state.activeElixir,now);
+  const suspendedElixir = currentSuspendedElixir(state.suspendedElixir);
 
   // Après 24 h de suspension, l'élixir reprend automatiquement avec son temps restant.
   useEffect(()=>{
@@ -1329,7 +1341,7 @@ function App(){
       const cur=s.suspendedElixir;
       if(!cur || Date.now()<(Number(cur.resumeDeadline)||0) || s.activeElixir) return s;
       const t=Date.now();
-      return {...s,suspendedElixir:null,activeElixir:{kind:cur.kind,stat:cur.stat||null,pct:cur.pct,startedAt:t,resumedAt:t,expiresAt:t+Math.max(1,Number(cur.remainingMs)||1)}};
+      return {...s,suspendedElixir:null,activeElixir:buildResumedElixir(cur,t)};
     });
   },[now,state.suspendedElixir?.resumeDeadline,state.activeElixir?.kind]);
 
@@ -1744,7 +1756,7 @@ function App(){
   function xpAdjustment(s,amount,stat,skipEventBonus=false){
     const base=Number(amount)||0;
     const el=s.activeElixir;
-    const bonus=!skipEventBonus&&el&&Date.now()<(el.expiresAt||0)&&(el.kind==="supremeElixir"||el.stat===stat)?Math.round(base*(Number(el.pct)||0)):0;
+    const bonus=skipEventBonus?0:elixirBonusForStat(el,stat,base,Date.now());
     const malus=s.ruptureMalus&&Date.now()<(s.ruptureMalus.expiresAt||0)?-Math.round(base*0.25):0;
     return {bonus,malus,gain:Math.max(0,base+bonus+malus)};
   }
@@ -2303,7 +2315,7 @@ function App(){
       const roomRewards=dungeonRoomRewardPairs(dungeon,nextIdx);
       roomRewards.forEach(r=>{
         const el=s.activeElixir;
-        const bonus=el&&Date.now()<(el.expiresAt||0)&&(el.kind==="supremeElixir"||el.stat===r.stat)?Math.round((r.xp||0)*(Number(el.pct)||0)):0;
+        const bonus=elixirBonusForStat(el,r.stat,r.xp||0,Date.now());
         const gain=(r.xp||0)+bonus;
         totalXp+=gain;
         statXp[r.stat]=(statXp[r.stat]||0)+gain;
@@ -3485,7 +3497,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     if(id==="dungeonKey")return EmojiStyleItemImage(DUNGEON_KEY_ICON_DATA,size);
     if(id==="debtAcknowledgement")return EmojiStyleItemImage(DEBT_ACKNOWLEDGEMENT_ICON_DATA,size);
     if(id==="regressionOrb")return EmojiStyleItemImage(REGRESSION_ORB_ICON_DATA,size,1.25);
-    if(id==="majorElixir"||id==="minorElixir"||id==="supremeElixir")return ElixirIcon(id,size);
+    if(isElixirKind(id))return ElixirIcon(id,size);
     if(id==="transmutationGrimoire")return GrimoireIcon(size);
     if(id==="invisibilityCape"&&NEW_ITEM_ICON_DATA[id])return EmojiStyleItemImage(NEW_ITEM_ICON_DATA[id],size);
     if(id==="teleportCrystal"&&NEW_ITEM_ICON_DATA[id])return EmojiStyleItemImage(NEW_ITEM_ICON_DATA[id],size,1.25);
@@ -3518,7 +3530,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       });
     return h("div",{class:"tab"},
       h("div",{style:"display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px"},ids.map(id=>{
-        const it=INVENTORY_ITEMS[id], qty=itemQty(id), grey=!["codex","regressionOrb","debtAcknowledgement"].includes(id)&&!(id==="etherStopper"&&suspendedElixir)&&!(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk)&&(qty<1||(["majorElixir","minorElixir","supremeElixir"].includes(id)&&(!!activeElixir||!!suspendedElixir)));
+        const it=INVENTORY_ITEMS[id], qty=itemQty(id), grey=!["codex","regressionOrb","debtAcknowledgement"].includes(id)&&!(id==="etherStopper"&&suspendedElixir)&&!(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk)&&(qty<1||(isElixirKind(id)&&(!!activeElixir||!!suspendedElixir)));
         return h("button",{key:id,onClick:()=>setInventoryItem(id),style:"position:relative;aspect-ratio:1/1;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.025);padding:8px;color:var(--tx);cursor:pointer;opacity:"+(grey?".48":"1")+";display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px"},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;line-height:1.25;letter-spacing:.5px;text-transform:uppercase;text-align:center;min-height:20px"},it.short),
           h("div",{style:"line-height:1"},InventoryItemIcon(id,38)),
@@ -3537,7 +3549,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     if(!inventoryItem)return null;
     if(inventoryItem==="codex")return h(Codex,null);
     const id=inventoryItem,it=INVENTORY_ITEMS[id],qty=itemQty(id);
-    const isElixir=["majorElixir","minorElixir","supremeElixir"].includes(id);
+    const isElixir=isElixirKind(id);
     let disabled=(["regressionOrb","debtAcknowledgement"].includes(id)||(id==="etherStopper"&&suspendedElixir))?false:qty<1;
     let reason=(!["regressionOrb","debtAcknowledgement"].includes(id)&&!(id==="etherStopper"&&suspendedElixir)&&qty<1)?"Aucun exemplaire disponible.":"";
     if(id==="regressionOrb"){
@@ -3636,17 +3648,17 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             enqueueItemLoot("supremeElixir","guaranteed");
             setItemUseUp({id,transmuted:true,catalystUsed,minorCost});
           }else if(id==="supremeElixir"){
-            const expiresAt=Date.now()+86400000;
+            const expiresAt=Date.now()+ELIXIR_DURATION_MS;
             setState(s=>{if(s.activeElixir||s.suspendedElixir)return s;return {...s,inventory:{...(s.inventory||{}),supremeElixir:Math.max(0,(Number(s.inventory&&s.inventory.supremeElixir)||0)-1)},activeElixir:{kind:id,pct:it.pct,startedAt:Date.now(),expiresAt}};});
             setItemUseUp({id,pct:it.pct,global:true});
           }else if(id==="destinyCompass"){
             setCompassStatChoice(true);
           }else if(id==="etherStopper"){
             if(state.suspendedElixir){
-              setState(s=>{const cur=s.suspendedElixir;if(!cur||s.activeElixir)return s;const t=Date.now();return {...s,suspendedElixir:null,activeElixir:{kind:cur.kind,stat:cur.stat||null,pct:cur.pct,startedAt:t,resumedAt:t,expiresAt:t+Math.max(1,Number(cur.remainingMs)||1)}};});
+              setState(s=>{const cur=s.suspendedElixir;if(!cur||s.activeElixir)return s;const t=Date.now();return {...s,suspendedElixir:null,activeElixir:buildResumedElixir(cur,t)};});
               setItemUseUp({id,resumed:true});
             }else{
-              setState(s=>{const el=s.activeElixir;if(!el||Date.now()>=(el.expiresAt||0)||(Number(s.inventory&&s.inventory.etherStopper)||0)<1)return s;const t=Date.now();const remainingMs=Math.max(1,(Number(el.expiresAt)||t)-t);return {...s,inventory:{...(s.inventory||{}),etherStopper:Math.max(0,(Number(s.inventory&&s.inventory.etherStopper)||0)-1)},activeElixir:null,suspendedElixir:{kind:el.kind,stat:el.stat||null,pct:el.pct,remainingMs,suspendedAt:t,resumeDeadline:t+86400000}};});
+              setState(s=>{const el=s.activeElixir;if(!el||Date.now()>=(el.expiresAt||0)||(Number(s.inventory&&s.inventory.etherStopper)||0)<1)return s;const t=Date.now();return {...s,inventory:{...(s.inventory||{}),etherStopper:Math.max(0,(Number(s.inventory&&s.inventory.etherStopper)||0)-1)},activeElixir:null,suspendedElixir:buildSuspendedElixir(el,t)};});
               setItemUseUp({id,paused:true});
             }
           }else if(id==="rerollToken"){
@@ -3698,7 +3710,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function ElixirStatModal(){
     if(!elixirStatChoice)return null;
     const id=elixirStatChoice.id,it=INVENTORY_ITEMS[id];
-    const choices=["Force","Sante","Esprit","Endurance","Agilite"];
+    const choices=ELIXIR_STATS;
     return h("div",{class:"modal-ov"},h("div",{class:"modal",style:"max-width:390px;width:calc(100% - 28px)"},
       h("div",{class:"mtitle"},"CHOISIR UNE STATISTIQUE"),
       h("div",{style:"font-size:11px;color:var(--td);line-height:1.5;margin-bottom:12px"},"Appliquer "+Math.round(it.pct*100)+" % d’XP supplémentaires pendant 24 h."),
@@ -3715,7 +3727,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h("div",{style:"display:flex;gap:10px;margin-top:22px"},
         h("button",{class:"rudis",style:"min-width:110px;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>setConfirmElixirUse(null)},"Annuler"),
         h("button",{class:"rudis",style:"min-width:110px;--rc:"+c+";--rg:"+c+"66",onClick:()=>{
-          const expiresAt=Date.now()+86400000;
+          const expiresAt=Date.now()+ELIXIR_DURATION_MS;
           setState(s=>{if(s.activeElixir||s.suspendedElixir)return s;return {...s,inventory:{...(s.inventory||{}),[id]:Math.max(0,(Number(s.inventory&&s.inventory[id])||0)-1)},activeElixir:{kind:id,stat,pct:it.pct,startedAt:Date.now(),expiresAt}};});
           setConfirmElixirUse(null);setItemUseUp({id,stat,pct:it.pct});
         }},"Consommer")
@@ -5166,23 +5178,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }
     function renderUrgentSpecial(q){ return renderSpecial(q); }
     function renderBreachSpecial(q){ return renderSpecial(q); }
-
-    function renderElanCodex(ev){
-      const color=STAT_COLOR[ev.stat]||"var(--rc)";
-      return h("div",{key:ev.id,style:cardStyle},
-        h("div",{style:"display:flex;align-items:flex-start;gap:8px"},
-          h("div",{style:"font-size:16px;line-height:1;min-width:24px;text-align:center"},"✦"),
-          h("div",{style:"flex:1;min-width:0"},
-            h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},ev.title),
-            h("div",{style:"font-size:9px;color:"+color+";margin-top:3px;font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase"},"Bonus de stat"),
-            h("div",{style:"font-size:10px;color:var(--td);margin-top:5px;line-height:1.35"},ev.desc),
-            h("div",{style:"margin-top:7px"},
-              h("span",{style:"display:inline-block;border:1px solid "+color+"55;color:"+color+";border-radius:999px;padding:2px 7px;margin:2px 4px 2px 0;font-size:10px;font-family:Orbitron,sans-serif;background:"+color+"11"},"+15% XP "+statLabel(ev.stat))
-            )
-          )
-        )
-      );
-    }
 
     function renderDungeonCodex(dg){
       const rewards=dungeonRewardPairs(dg);
