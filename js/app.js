@@ -8,6 +8,15 @@ import {
   DUNGEON_GENERIC_DROPS,
   DUNGEON_SPECIFIC_DROPS
 } from "./itemDefs.js";
+import {
+  eventDayStr,
+  addDaysStr,
+  next7AM,
+  current7AMStart,
+  todayStr,
+  wkStr,
+  prevWkStr
+} from "./dayCycle.js";
 
 const { h, render, Fragment } = window.preact;
 const { useState, useEffect, useRef } = window.preactHooks;
@@ -100,18 +109,6 @@ const EVENT_BONUSES = [
   {id:"ev_discipline",title:"Élan de Discipline",desc:"Les gains Discipline sont augmentés de 15% aujourd’hui.",stat:"Discipline",bonusPct:0.15,disabled:true},
 ];
 
-function eventDayStr(from=Date.now()){
-  const d=new Date(from);
-  if(d.getHours()<5) d.setDate(d.getDate()-1);
-  const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");
-  return y+"-"+m+"-"+day;
-}
-function addDaysStr(day,delta){
-  const d=new Date(day+"T12:00:00");
-  d.setDate(d.getDate()+delta);
-  const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),dd=String(d.getDate()).padStart(2,"0");
-  return y+"-"+m+"-"+dd;
-}
 function pickFrom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 function twoWeakestStatsFromState(s){
   const stats=s?.stats||{};
@@ -269,22 +266,6 @@ function applyDailyEventReset(s,now=Date.now()){
   return {...s,eventDay:day,dailyEvent:ev,eventHistory};
 }
 
-// Quêtes urgentes : fonctions de délai
-// Prochain reset quotidien à 5h00 (aujourd’hui si on est avant 5h, sinon demain)
-function next7AM(from){
-  const d = new Date(from||Date.now());
-  const result = new Date(d.getFullYear(),d.getMonth(),d.getDate(),5,0,0,0);
-  if(d.getHours()<5) return result.getTime();
-  result.setDate(result.getDate()+1);
-  return result.getTime();
-}
-function current7AMStart(from){
-  const d=new Date(from||Date.now());
-  const result=new Date(d.getFullYear(),d.getMonth(),d.getDate(),5,0,0,0);
-  if(d.getHours()<5) result.setDate(result.getDate()-1);
-  return result.getTime();
-}
-
 const getRank    = xp => { for(let i=RANKS.length-1;i>=0;i--)if(xp>=RANKS[i].xpRequired)return RANKS[i]; return RANKS[0]; };
 const getNext    = id => { const i=RANKS.findIndex(r=>r.id===id); return i<RANKS.length-1?RANKS[i+1]:null; };
 
@@ -399,17 +380,6 @@ function getRankBase(objId, rankIdx, prestige, stats){
 const ROMAN = ["I","II","III","IV","V","VI","VII","VIII","IX","X"];
 const MAX_PRESTIGE = 10;
 const getTarget  = base => base; // pas de scaling rang pour l'instant
-const todayStr   = (from=Date.now()) => { const d=new Date(from); if(d.getHours()<5)d.setDate(d.getDate()-1); const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0"); return y+"-"+m+"-"+day; };
-const wkStr      = (d=new Date()) => {
-  // Semaine ISO : commence le lundi
-  const dt=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
-  const day=dt.getUTCDay()||7; // dimanche=7
-  dt.setUTCDate(dt.getUTCDate()+4-day); // jeudi de la semaine ISO
-  const yearStart=new Date(Date.UTC(dt.getUTCFullYear(),0,1));
-  const wk=Math.ceil(((dt-yearStart)/86400000+1)/7);
-  return dt.getUTCFullYear()+"-W"+String(wk).padStart(2,"0");
-};
-const prevWkStr  = (d=new Date()) => { const x=new Date(d); x.setDate(x.getDate()-7); return wkStr(x); };
 const sortStat   = arr => [...arr].sort((a,b)=>STATS.indexOf(a.stat)-STATS.indexOf(b.stat));
 // XP pour passer du niveau N au niveau N+1 : 1000 * 1.1^N
 const xpForLvl   = l => Math.round(1000*Math.pow(1.1,l));
