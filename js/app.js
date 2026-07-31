@@ -4,6 +4,16 @@ import { pickRandomSq } from "./urgentQuestEngine.js";
 import { BREACH_COLOR, BREACH_LOOT_TEXT, BREACH_POOL } from "./breachDefs.js";
 import { DUNGEONS } from "./dungeonDefs.js";
 import {
+  dungeonRoomRewardPairs,
+  dungeonRewardPairs,
+  drawRandomDungeonId,
+  activeDungeonView,
+  countDungeonRunsThisWeek,
+  launchDungeonState,
+  expireActiveDungeonState,
+  canValidateDungeonRoom
+} from "./dungeonEngine.js";
+import {
   INVENTORY_ITEMS,
   STANDARD_ITEM_DROPS,
   DUNGEON_GENERIC_DROPS,
@@ -776,21 +786,9 @@ function App(){
     });
   },[now,state.specialQuests,state.sqCooldownUntil,breachReplacesUrgentToday]);
 
-  const activeDungeonTpl = state.activeDungeon ? DUNGEONS.find(d=>d.id===state.activeDungeon.id) : null;
-  const activeDungeon = state.activeDungeon && activeDungeonTpl && !state.activeDungeon.completedAt && now < state.activeDungeon.expiresAt
-    ? {...activeDungeonTpl,...state.activeDungeon,tpl:activeDungeonTpl}
-    : null;
+  const activeDungeon = activeDungeonView(state.activeDungeon,DUNGEONS,now);
   const dungeonRunDay = state.dungeonRunDay||null;
-  const dungeonWeekCount = (()=>{
-    const launched = new Set();
-    (state.dungeonLog||[]).forEach(entry=>{
-      const ts=entry && (entry.startedAt||entry.completedAt);
-      if(ts && wkStr(new Date(ts))===wk) launched.add(entry.runId||("log_"+ts+"_"+(entry.id||"")));
-    });
-    const ad=state.activeDungeon;
-    if(ad && ad.startedAt && wkStr(new Date(ad.startedAt))===wk) launched.add(ad.runId||("active_"+ad.startedAt));
-    return launched.size;
-  })();
+  const dungeonWeekCount = countDungeonRunsThisWeek(state,wk,wkStr);
   const dungeonDailyUsed = dungeonRunDay===today;
   const dungeonSkipDay = state.dungeonSkipDay||null;
   const dungeonSkippedToday = dungeonSkipDay===today;
@@ -947,10 +945,7 @@ function App(){
   useEffect(()=>{
     const ad=state.activeDungeon;
     if(!ad||ad.completedAt||now<(ad.expiresAt||0))return;
-    setState(s=>{
-      const cur=s.activeDungeon;
-      return cur&&!cur.completedAt&&Date.now()>=(cur.expiresAt||0)?{...s,activeDungeon:null}:s;
-    });
+    setState(s=>expireActiveDungeonState(s,Date.now()));
   },[now,state.activeDungeon?.expiresAt]);
 
   // Une Brèche non refermée après 72 h entre en Rupture pendant 24 h.
@@ -1647,38 +1642,8 @@ function App(){
     });
   }
 
-  function dungeonRoomRewardPairs(dungeon,roomIdx){
-    if(!dungeon || !dungeon.reward) return [];
-    const isBoss = roomIdx >= (dungeon.rooms||[]).length-1;
-    const mainXp = isBoss ? 1350 : 225;
-    const secondXp = isBoss ? 270 : 45;
-    return [
-      {xp:mainXp,stat:dungeon.reward.stat},
-      dungeon.reward.stat2 ? {xp:secondXp,stat:dungeon.reward.stat2} : null,
-      dungeon.reward.stat3 ? {xp:secondXp,stat:dungeon.reward.stat3} : null,
-    ].filter(Boolean);
-  }
-
-  function dungeonRewardPairs(dungeon){
-    if(!dungeon || !dungeon.reward) return [];
-    const totals={};
-    (dungeon.rooms||[]).forEach((_,idx)=>{
-      dungeonRoomRewardPairs(dungeon,idx).forEach(r=>{ totals[r.stat]=(totals[r.stat]||0)+(r.xp||0); });
-    });
-    return Object.entries(totals).map(([stat,xp])=>({stat,xp}));
-  }
-
-  function drawRandomDungeonId(){
-    const stats=[...new Set(DUNGEONS.map(d=>d.stat))];
-    if(!stats.length)return null;
-    const drawnStat=stats[Math.floor(Math.random()*stats.length)];
-    const candidates=DUNGEONS.filter(d=>d.stat===drawnStat);
-    if(!candidates.length)return null;
-    return candidates[Math.floor(Math.random()*candidates.length)].id;
-  }
-
   function startRandomDungeon(){
-    const id=drawRandomDungeonId();
+    const id=drawRandomDungeonId(DUNGEONS);
     if(id)startDungeon(id);
   }
 
@@ -1687,23 +1652,17 @@ function App(){
     setSelectedDungeonRoom(null);
     setState(s=>{
       const t=Date.now();
-      const day=todayStr();
-      const week=wkStr();
-      const current=s.activeDungeon;
-      if(current && !current.completedAt) return s;
-      const launched = new Set();
-      (s.dungeonLog||[]).forEach(entry=>{
-        const ts=entry && (entry.startedAt||entry.completedAt);
-        if(ts && wkStr(new Date(ts))===week) launched.add(entry.runId||("log_"+ts+"_"+(entry.id||"")));
+      return launchDungeonState(s,{
+        id,
+        constraint,
+        now:t,
+        day:todayStr(t),
+        week:wkStr(new Date(t)),
+        dungeons:DUNGEONS,
+        nextResetAt:next7AM(t),
+        weekKeyForDate:wkStr,
+        pickContractBoss:pickDungeonRuptureBoss
       });
-      if(current && current.startedAt && wkStr(new Date(current.startedAt))===week) launched.add(current.runId||("active_"+current.startedAt));
-      if(s.dungeonRunDay===day || launched.size>=3) return s;
-      if(s.dungeonAccessOpen!==true) return s;
-      const dungeon=DUNGEONS.find(d=>d.id===id);
-      if(!dungeon) return s;
-      const expiresAt=constraint==="12h"?t+12*3600000:next7AM(t);
-      const contractBoss=constraint==="rupture"?pickDungeonRuptureBoss(id):null;
-      return {...s,activeDungeon:{id,runId:"dg_"+t,startedAt:t,expiresAt,completedRooms:[],completedAt:null,contractConstraint:constraint||null,contractBoss},masterContractArmed:constraint?false:s.masterContractArmed,dungeonRunDay:day,dungeonAccessOpen:false,dungeonKeyDay:null,dungeonKeyRollWon:false,lastActiveDay:day};
     });
   }
 
@@ -1769,11 +1728,7 @@ function App(){
 
       const completed=Array.isArray(ad.completedRooms)?ad.completedRooms:[];
       const nextIdx=selectedIdx;
-      if(!Number.isInteger(nextIdx) || nextIdx<0 || nextIdx>=dungeon.rooms.length) return s;
-      if(completed.includes(nextIdx)) return s;
-      const bossIdx=dungeon.rooms.length-1;
-      const allPreviousRoomsDone=Array.from({length:bossIdx},(_,i)=>i).every(i=>completed.includes(i));
-      if(nextIdx===bossIdx && !allPreviousRoomsDone) return s;
+      if(!canValidateDungeonRoom(ad,dungeon,nextIdx)) return s;
 
       const beforeXp=s.totalXp;
       const beforeStats=s.stats;
