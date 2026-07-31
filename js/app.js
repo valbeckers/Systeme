@@ -4206,6 +4206,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional)),...sortStat(objs.filter(o=>o.weekly)),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden))];
 
     const exerciseHistoryDefs=RECORD_EXERCISE_DEFS;
+    const rotatingSourceIds=new Set(["push","negative_pullups","abs","squats","calves"]);
     function dailyQuestForHistoryDay(obj,day){
       if(!isExerciseFamilyQuestId(obj.id)) return obj;
       const rotation=(state.exerciseRotationByDay||{})[day]||{
