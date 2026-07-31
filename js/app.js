@@ -57,6 +57,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js";
 import { StatsTab } from "./statsView.js";
+import { HistoryTab } from "./historyView.js";
 import {
   RANK_BASES,
   STAT_LEVEL_BASES,
@@ -91,15 +92,12 @@ import {
   LEGACY_EXERCISE_DEFAULTS,
   isExerciseFamilyQuestId,
   exerciseFamilyLabel,
-  exerciseFamilyIcon,
   ensureExerciseRotationForDay,
   rotatedQuestObjects
 } from "./exerciseRotation.js";
 import {
-  RECORD_EXERCISE_DEFS,
   questRecordUnit,
   recordRotationIdForDay,
-  recordExerciseValueForDay,
   buildRecordOptions
 } from "./records.js";
 import {
@@ -3088,258 +3086,20 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   // ─── ONGLET HISTORIQUE ────────────────────────────────────────────────
 
   function History(){
-    const open = historyOpen;
-    const setOpen = setHistoryOpen;
-    const toggle = k => setOpen(o=>({...o,[k]:!o[k]}));
-    const ChevronBtn = ({k}) => h("span",{
-      onClick:(e)=>{e.stopPropagation();toggle(k);},
-      style:"cursor:pointer;color:var(--td);font-size:10px;font-family:Orbitron,sans-serif;font-weight:700;letter-spacing:1px;flex-shrink:0;user-select:none"
-    },open[k]?"\u25B2":"\u25BC");
-    function localDate(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");return y+"-"+m+"-"+day;}
-    function getWS(off){const d=new Date();d.setDate(d.getDate()-((d.getDay()+6)%7)-off*7);d.setHours(0,0,0,0);return d;}
-    const ws=getWS(wkOff);
-    const weekDays=Array.from({length:7},(_,i)=>{const d=new Date(ws);d.setDate(ws.getDate()+i);return localDate(d);});
-    const wKey=wkStr(ws);
-    const dt={};
-    weekDays.forEach(dk=>Object.entries(state.dailyLog[dk]||{}).forEach(([id,v])=>{dt[id]=(dt[id]||0)+v;}));
-    const wkLogEntry=state.weeklyLog[wKey]||{};
-    const tots={...dt,...wkLogEntry};
-    const we=new Date(ws); we.setDate(ws.getDate()+6);
-    const fmt=d=>d.getDate().toString().padStart(2,"0")+"/"+(d.getMonth()+1).toString().padStart(2,"0");
-    const lbl=wkOff===0?"Cette semaine":wkOff===1?"Semaine derni\u00e8re":fmt(ws)+" \u2013 "+fmt(we);
-    const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional)),...sortStat(objs.filter(o=>o.weekly)),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden))];
-
-    const exerciseHistoryDefs=RECORD_EXERCISE_DEFS;
-    const rotatingSourceIds=new Set(["push","negative_pullups","abs","squats","calves"]);
-    function dailyQuestForHistoryDay(obj,day){
-      if(!isExerciseFamilyQuestId(obj.id)) return obj;
-      const rotation=(state.exerciseRotationByDay||{})[day]||{
-        push:LEGACY_EXERCISE_DEFAULTS.push,
-        back:LEGACY_EXERCISE_DEFAULTS.back,
-        abs:LEGACY_EXERCISE_DEFAULTS.abs,
-        legs:LEGACY_EXERCISE_DEFAULTS.legs
-      };
-      return rotatedQuestObjects(baseObjs,rotation,state.stats,state.totalXp).find(q=>q.id===obj.id)||obj;
-    }
-    const standardDailyRecordObjs=[
-      ...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary&&!rotatingSourceIds.has(o.id))),
-      ...sortStat(objs.filter(o=>o.weekly&&!o.binary&&!rotatingSourceIds.has(o.id))),
-      ...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden&&!rotatingSourceIds.has(o.id)))
-    ];
-    const recordDisplayObjs=[...exerciseHistoryDefs,...standardDailyRecordObjs];
-
-    // ── Labels jours de la semaine (lun → dim) ──
-    const weekLbls=["L","M","M","J","V","S","D"];
-
-    function weeklyTargetFor(obj){
-      if(obj.binary) return 7;
-      const target = obj.weekly ? getRankBase(obj.id,ri,prestige,state.stats) : ((obj.target&&!obj.binary?obj.target:getRankBase(obj.id,ri,prestige,state.stats))*7);
-      return target;
-    }
-    function dayTargetFor(obj,day){
-      if(obj.binary) return 1;
-      if(obj.weekly) return getRankBase(obj.id,ri,prestige,state.stats);
-      return obj.target&&!obj.binary ? obj.target : getValidateThreshold(obj,day);
-    }
-    function dayMarkFor(obj,day){
-  const log=state.dailyLog[day]||{};
-  const dayObj=dailyQuestForHistoryDay(obj,day);
-  const value=log[obj.id]||0;
-
-  const target=dayTargetFor(dayObj,day);
-
-  const validationTarget =
-    obj.optional
-      ? Math.ceil(target * 0.5)
-      : target;
-
-  // Pour une quête journalière obligatoire d'une journée passée, le bonus
-  // de streak déjà attribué constitue la preuve que la quête avait atteint
-  // son objectif ce jour-là. On évite ainsi les croix rétroactives lorsque
-  // le niveau actuel augmente le seuil d'une rotation (ex. gainage 2 -> 3 min).
-  const previouslyValidated = day<today && !!obj.daily && !obj.optional && hadValidatedDailyCompletion(day);
-  const ok = previouslyValidated || value >= validationTarget;
-
-  if(ok){
-    return {txt:"✓",color:"#4ade80",opacity:1};
-  }
-
-  if(day>today){
-    return {txt:"·",color:"var(--td)",opacity:.45};
-  }
-
-  if(day===today){
-    return {txt:"·",color:"var(--td)",opacity:.75};
-  }
-
-  return {txt:"✘",color:"#ef4444",opacity:1};
-}
-    function totalLabelFor(obj,val,wt){
-      const unit=((val>1||wt>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[obj.unit]||obj.unit);
-      if(obj.binary) return fmtNum(val)+"/7 "+(obj.id==="sleep"?"nuits":"jours");
-      return fmtNum(val)+"/"+fmtNum(wt)+" "+unit;
-    }
-
-    // ── Records personnels (max par quête sur tout le dailyLog) ──
-    const records={};
-    Object.entries(state.dailyLog).forEach(([date,log])=>{
-      Object.entries(log).forEach(([id,val])=>{
-        if(id==="run" && date<RUN_RECORD_RESET_DAY) return;
-        if(!records[id]||val>records[id].val)records[id]={val,date};
-      });
+    return h(HistoryTab,{
+      state,
+      objs,
+      baseObjs,
+      today,
+      ri,
+      prestige,
+      wkOff,
+      setWkOff,
+      historyOpen,
+      setHistoryOpen,
+      getValidateThreshold,
+      runRecordResetDay:RUN_RECORD_RESET_DAY
     });
-    exerciseHistoryDefs.forEach(def=>{
-      Object.entries(state.dailyLog||{}).forEach(([date,log])=>{
-        const val=recordExerciseValueForDay(def,date,log,state.exerciseRotationByDay);
-        if(val>0 && (!records[def.id]||val>records[def.id].val)) records[def.id]={val,date};
-      });
-    });
-    // Running et Rando sont désormais quotidiens : ne plus utiliser weeklyLog pour les records
-
-
-    return h("div",{class:"tab"},
-      // Navigation semaine
-      h("div",{class:"card",style:"padding:12px 16px"},
-        h("div",{style:"display:flex;align-items:center;justify-content:space-between;gap:8px"},
-          h("button",{style:"background:var(--sf2);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-size:18px;width:40px;height:40px;cursor:pointer;opacity:"+(wkOff>=51?.3:.8),onClick:()=>setWkOff(o=>Math.min(o+1,51))},"\u2039"),
-          h("div",{style:"text-align:center;flex:1"},
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:var(--rc);letter-spacing:1px"},lbl),
-            h("div",{style:"font-size:10px;color:var(--td);margin-top:2px"},fmt(ws)+" \u2013 "+fmt(we))
-          ),
-          h("button",{style:"background:var(--sf2);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-size:18px;width:40px;height:40px;cursor:pointer;opacity:"+(wkOff===0?.3:.8),onClick:()=>setWkOff(o=>Math.max(o-1,0))},"\u203A")
-        ),
-        wkOff>0&&h("button",{style:"width:100%;margin-top:10px;background:rgba(255,255,255,0.03);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:2px;padding:7px;cursor:pointer;text-transform:uppercase",onClick:()=>setWkOff(0)},"Aujourd'hui")
-      ),
-      // Activité de la semaine : tableau quotidien L M M J V S D
-      h("div",{class:"card"},
-        h("div",{class:"ctitle"},"Activité de la semaine"),
-        h("div",{style:"display:grid;grid-template-columns:minmax(0,1fr) repeat(7,22px);gap:5px;align-items:center;margin-top:10px;margin-bottom:8px;font-family:Orbitron,sans-serif;font-size:9px;color:#fff;letter-spacing:1px;text-transform:uppercase"},
-          h("div",null,"Quête"),
-          weekLbls.map((lbl,i)=>h("div",{key:"h"+i,style:"text-align:center;color:#fff"},lbl))
-        ),
-        h("div",{style:"display:flex;flex-direction:column;gap:7px"},
-          ordered.map(obj=>{
-            const marks=weekDays.map(d=>dayMarkFor(obj,d));
-            const isFamily=isExerciseFamilyQuestId(obj.id);
-            const val=isFamily
-              ? marks.filter((m,i)=>weekDays[i]<=today&&m.txt==="✓").length
-              : (obj.binary
-                  ? weekDays.filter(d=>d<=today && (state.dailyLog[d]?.[obj.id]||0)>=1).length
-                  : (tots[obj.id]||0));
-            const wt=isFamily?7:weeklyTargetFor(obj);
-            const displayName=exerciseFamilyLabel(obj.id,obj.name);
-            const displayIcon=exerciseFamilyIcon(obj.id,obj.icon);
-            return h("div",{key:obj.id,style:"display:grid;grid-template-columns:minmax(0,1fr) repeat(7,22px);gap:5px;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,0.04)"},
-              h("div",{style:"display:flex;align-items:center;gap:6px;min-width:0;color:var(--tx);font-size:12px"},
-                QuestIcon(obj.id,displayIcon,14),
-                h("span",{style:"overflow:hidden;text-overflow:ellipsis;white-space:nowrap"},displayName)
-              ),
-              marks.map((m,i)=>h("div",{key:obj.id+"_d"+i,style:"text-align:center;font-family:Orbitron,sans-serif;font-size:12px;font-weight:700;color:"+m.color+";opacity:"+m.opacity},m.txt))
-            );
-          }),
-          h("div",{key:REGRESSION_DEF.id,style:"display:grid;grid-template-columns:minmax(0,1fr) repeat(7,22px);gap:5px;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,0.04)"},
-            h("div",{style:"display:flex;align-items:center;min-width:0;color:var(--tx);font-size:12px"},
-              QuestIcon(REGRESSION_DEF.id,REGRESSION_DEF.icon,14)
-            ),
-            weekDays.map((day,i)=>{
-              const future=day>today;
-              const activated=!!((state.regressionLog||{})[day]);
-              const mark=future
-                ? {txt:"·",color:"var(--td)",opacity:.45}
-                : activated
-                  ? {txt:"✘",color:"#ef4444",opacity:1}
-                  : {txt:"✓",color:"#4ade80",opacity:1};
-              return h("div",{key:REGRESSION_DEF.id+"_d"+i,style:"text-align:center;font-family:Orbitron,sans-serif;font-size:12px;font-weight:700;color:"+mark.color+";opacity:"+mark.opacity},mark.txt);
-            })
-          ),
-          ordered.every(o=>!(tots[o.id]>0))&&h("div",{style:"text-align:center;font-size:13px;color:var(--td);padding:16px 0"},"Aucune activité cette semaine")
-        )
-      ),
-      // Records personnels
-      h("div",{class:"card"},
-        h("div",{style:"display:flex;align-items:center;justify-content:space-between;cursor:pointer",onClick:()=>toggle("records")},
-          h("div",{class:"ctitle",style:"margin:0"},"Records personnels"),
-          h(ChevronBtn,{k:"records"})
-        ),
-        open.records&&h(Fragment,null,
-          h("div",{style:"margin-top:12px"}),
-          recordDisplayObjs.map(o=>{
-          const rec=records[o.id];
-          if(!rec)return h("div",{key:o.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px;opacity:.35"},
-            QuestIcon(o.id,o.icon,14),
-            h("div",{style:"flex:1"},
-              h("div",{style:"font-size:12px;color:var(--td);display:flex;align-items:center;gap:5px"},
-                o.name,
-                (o.weekly)&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
-                o.optional&&!o.weekly&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR})
-              )
-            ),
-            h("span",{style:"font-size:11px;color:var(--td)"},"—")
-          );
-          const fmt2=d=>{if(d.includes("-W"))return d.replace("-W","-S");const p=d.split("-");return p[2]+"/"+p[1];};
-          return h("div",{key:o.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
-            QuestIcon(o.id,o.icon,14),
-            h("div",{style:"flex:1"},
-              h("div",{style:"font-size:12px;color:var(--tx);display:flex;align-items:center;gap:5px"},
-                o.name,
-                (o.weekly)&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
-                o.optional&&!o.weekly&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR}),
-              ),
-              h("div",{style:"font-size:10px;color:var(--td);margin-top:1px"},fmt2(rec.date))
-            ),
-            h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--tx)"},
-              fmtNum(rec.val)+" "+((rec.val>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",contact:"contacts",action:"actions"}[o.unit]||o.unit))
-          );
-        }),
-
-        )// end Fragment
-      ),
-      // Totaux depuis le début
-      (()=>{
-        // Trouver la première date d'utilisation
-        const allDays=Object.keys(state.dailyLog).sort();
-        const allWks=Object.keys(state.weeklyLog).sort();
-        const firstDay=allDays.length>0?allDays[0]:null;
-        const fmtFirst=d=>{if(!d)return"";const p=d.split("-");return p[2]+"/"+p[1]+"/"+p[0];};
-        // Calculer les totaux
-        const totals={};
-        Object.values(state.dailyLog).forEach(log=>{
-          Object.entries(log).forEach(([id,val])=>{totals[id]=(totals[id]||0)+val;});
-        });
-        Object.values(state.weeklyLog).forEach(log=>{
-          Object.entries(log).forEach(([id,val])=>{totals[id]=(totals[id]||0)+val;});
-        });
-        exerciseHistoryDefs.forEach(def=>{
-          totals[def.id]=Object.entries(state.dailyLog||{}).reduce((sum,[day,log])=>sum+recordExerciseValueForDay(def,day,log,state.exerciseRotationByDay),0);
-        });
-        const displayObjs=recordDisplayObjs;
-        return h("div",{class:"card"},
-          h("div",{style:"display:flex;align-items:center;justify-content:space-between;cursor:pointer",onClick:()=>toggle("totals")},
-            h("div",{class:"ctitle",style:"margin:0"},"Totaux depuis le d\u00e9but"+(firstDay?" \u2014 "+fmtFirst(firstDay):"")),
-            h(ChevronBtn,{k:"totals"})
-          ),
-          open.totals&&h(Fragment,null,
-            h("div",{style:"margin-top:12px"}),
-            displayObjs.map(o=>{
-              const total=totals[o.id]||0;
-              const unitLbl=total>1?({rep:"reps",page:"pages",verre:"verres",km:"km",min:"min",contact:"contacts",action:"actions"}[o.unit]||o.unit):o.unit;
-              return h("div",{key:o.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"+(total===0?";opacity:.35":"")},
-                QuestIcon(o.id,o.icon,14),
-                h("div",{style:"flex:1"},
-                  h("div",{style:"font-size:12px;color:var(--tx);display:flex;align-items:center;gap:5px"},
-                    o.name,
-                    (o.weekly)&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
-                    o.optional&&!o.weekly&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR}),
-                      )
-                ),
-                h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--tx)"},
-                  total===0?"—":(total%1===0?total.toLocaleString("fr-FR"):total.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2}))+(total>0?" "+unitLbl:""))
-              );
-            })
-          )// end Fragment
-        );
-      })()
-    );
   }
 
   // ─── REGLAGES ─────────────────────────────────────────────────────────
