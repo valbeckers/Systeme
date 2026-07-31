@@ -13,12 +13,15 @@ import {
   expireActiveDungeonState,
   canValidateDungeonRoom
 } from "./dungeonEngine.js";
+import { INVENTORY_ITEMS } from "./itemDefs.js";
 import {
-  INVENTORY_ITEMS,
-  STANDARD_ITEM_DROPS,
-  DUNGEON_GENERIC_DROPS,
-  DUNGEON_SPECIFIC_DROPS
-} from "./itemDefs.js";
+  incrementLootState,
+  pickRandomBreachLoot,
+  alliedGiftEligibleIds,
+  grantAlliedGiftState,
+  rollStandardItemDrops,
+  rollDungeonItemDrops
+} from "./lootEngine.js";
 import {
   eventDayStr,
   addDaysStr,
@@ -324,7 +327,7 @@ function App(){
   }
 
   function awardDungeonKey(kind){
-    setState(s=>({...s,dungeonKeys:Math.max(0,Math.floor(Number(s.dungeonKeys)||0))+1}));
+    setState(s=>incrementLootState(s,"dungeonKey"));
     enqueueDungeonKeyLoot(kind);
   }
 
@@ -333,41 +336,19 @@ function App(){
   }
 
   function awardInventoryItem(kind,source="rare"){
-    setState(s=>({...s,inventory:{...(s.inventory||{}),[kind]:Math.max(0,Math.floor(Number(s.inventory&&s.inventory[kind])||0))+1}}));
+    setState(s=>incrementLootState(s,kind));
     enqueueItemLoot(kind,source);
   }
 
-  function awardElixir(kind,source="rare"){
-    awardInventoryItem(kind,source);
-  }
   function awardRandomBreachLoot(){
-    const eligible=Object.entries(INVENTORY_ITEMS).filter(([id,item])=>!item.permanent).map(([id])=>id);
-    if(!eligible.length)return null;
-    const won=eligible[Math.floor(Math.random()*eligible.length)];
+    const won=pickRandomBreachLoot();
+    if(!won)return null;
     if(won==="dungeonKey")awardDungeonKey("guaranteed");else awardInventoryItem(won,"guaranteed");
     return won;
   }
 
-  function alliedGiftEligibleIds(){
-    return Object.entries(INVENTORY_ITEMS)
-      .filter(([id,item])=>!item.permanent)
-      .map(([id])=>id)
-      .sort((a,b)=>(INVENTORY_ITEMS[a].short||"").localeCompare(INVENTORY_ITEMS[b].short||"","fr",{sensitivity:"base"}));
-  }
-
   function grantAlliedGift(id){
-    if(!alliedGiftEligibleIds().includes(id))return;
-    setState(s=>{
-      if(!s.alliedGiftPending)return s;
-      if(id==="dungeonKey"){
-        return {...s,dungeonKeys:Math.max(0,Math.floor(Number(s.dungeonKeys)||0))+1,alliedGiftPending:null};
-      }
-      return {
-        ...s,
-        inventory:{...(s.inventory||{}),[id]:Math.max(0,Math.floor(Number(s.inventory&&s.inventory[id])||0))+1},
-        alliedGiftPending:null
-      };
-    });
+    setState(s=>grantAlliedGiftState(s,id));
   }
 
   function applyRegression(){
@@ -395,20 +376,17 @@ function App(){
   }
 
   function tryRareDungeonKeyDrop(source="standard"){
-    const drops=STANDARD_ITEM_DROPS;
-    let won=false;
-    drops.forEach(([id,p])=>{if(Math.random()<p){won=true;if(id==="key")awardDungeonKey("rare");else awardInventoryItem(id,"rare");}});
-    return won;
+    const won=rollStandardItemDrops();
+    won.forEach(({id})=>{
+      if(id==="key")awardDungeonKey("rare");
+      else awardInventoryItem(id,"rare");
+    });
+    return won.length>0;
   }
   function tryDungeonItemDrops(dungeonId){
-    const genericDrops=DUNGEON_GENERIC_DROPS;
-    const specificDrops=DUNGEON_SPECIFIC_DROPS;
-    [...genericDrops,...(specificDrops[dungeonId]||[])].forEach(([id,p])=>{
-      if(Math.random()<p){
-        if(id==="key")awardDungeonKey("rare");
-        else if(isElixirKind(id))awardElixir(id,p>=1?"guaranteed":"rare");
-        else awardInventoryItem(id,"rare");
-      }
+    rollDungeonItemDrops(dungeonId).forEach(({id,kind})=>{
+      if(id==="key")awardDungeonKey(kind);
+      else awardInventoryItem(id,kind);
     });
   }
 
