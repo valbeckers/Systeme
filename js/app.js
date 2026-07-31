@@ -1790,7 +1790,6 @@ function App(){
       ["recordHammer",0.01],
       ["teleportCrystal",0.01],
       ["invisibilityCape",0.01],
-      ["debtAcknowledgement",0.01],
       ["destinyCompass",0.01],
       ["etherStopper",0.01],
       ["rerollToken",0.01],
@@ -1812,7 +1811,6 @@ function App(){
       ["recordHammer",.10],
       ["teleportCrystal",.10],
       ["invisibilityCape",.10],
-      ["debtAcknowledgement",.10],
       ["destinyCompass",.10],
       ["etherStopper",.10],
       ["rerollToken",.10],
@@ -1825,7 +1823,7 @@ function App(){
       warrior:[["masterContract",.10],["recordHammer",.10]],
       hunter:[["teleportCrystal",.10]],
       monk:[["recoveryOintment",.10]],
-      steward:[["debtAcknowledgement",.10]]
+      steward:[]
     };
     [...genericDrops,...(specificDrops[dungeonId]||[])].forEach(([id,p])=>{
       if(Math.random()<p){
@@ -2715,18 +2713,14 @@ function App(){
     setState(s=>{
       if(s.questDebt && s.questDebt.status==="active") return s;
       if(s.debtUseDay===today) return s;
-      const inv={...(s.inventory||{})};
-      if((Number(inv.debtAcknowledgement)||0)<1) return s;
       const target=obj.validateAt != null
         ? Number(obj.validateAt)
         : (Number.isFinite(Number(obj.target)) ? Number(obj.target) : getRankBase(obj.id,ri,prestige,s.stats));
       const current=(s.dailyLog[today]&&s.dailyLog[today][obj.id])||0;
       const amount=Math.max(0,target-current);
       if(amount<=0) return s;
-      inv.debtAcknowledgement=Math.max(0,(Number(inv.debtAcknowledgement)||0)-1);
       return {
         ...s,
-        inventory:inv,
         debtUseDay:today,
         questDebt:{
           id:obj.id,name:obj.name,icon:obj.icon,unit:obj.unit,
@@ -4450,7 +4444,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   const INVENTORY_ITEMS={
     codex:{name:"CODEX",short:"CODEX",emoji:"📖",action:"",desc:"Recueil permanent des règles et contenus de l’application.",obtain:[],permanent:true},
     regressionOrb:{name:"ORBE DE RÉGRESSION",short:"ORBE DE RÉGRESSION",emoji:"🔴",action:"ACTIVER",desc:"Permet de lancer une régression. Si plusieurs régressions existent, vous pourrez choisir laquelle activer.",obtain:[],permanent:true},
-    debtAcknowledgement:{name:"RECONNAISSANCE DE DETTE",short:"RECONNAISSANCE DE DETTE",emoji:"📜",action:"UTILISER",desc:"Permet de créer une dette sur une quête éligible.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon de l’Intendant (Taux : 10 %)."]},
+    debtAcknowledgement:{name:"RECONNAISSANCE DE DETTE",short:"RECONNAISSANCE DE DETTE",emoji:"📜",action:"UTILISER",desc:"Objet permanent permettant de créer une dette sur une quête éligible.",obtain:[],permanent:true},
     dungeonKey:{name:"CLÉ DE DONJON",short:"CLÉ DE DONJON",emoji:"🗝️",action:"UTILISER",desc:"Cette clé vous permet d’entrer dans n’importe quel donjon.",obtain:["Après avoir complété la quête urgente, toutes les quêtes journalières et toutes les quêtes bonus dans la même journée (Taux : 100 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %)."]},
     majorElixir:{name:"ÉLIXIR D’EXPÉRIENCE MAJEUR",short:"ÉLIXIR MAJEUR",emoji:"🧪",action:"CONSOMMER",pct:.20,desc:"Cet élixir vous permet de gagner 20 % d’XP en plus dans la statistique de votre choix pendant 24 h. Utilisez-le à bon escient !",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 0,5 %).","Après avoir complété toutes les quêtes bonus (Taux : 0,5 %).","Après avoir complété une quête urgente (Taux : 0,5 %).","Après avoir accompli un nouveau record (Taux : 0,5 %).","Après avoir complété un donjon (Taux : 5 %).","Après avoir complété le Donjon de l’Alchimiste (Taux : 5 %)."]},
     minorElixir:{name:"ÉLIXIR D’EXPÉRIENCE MINEUR",short:"ÉLIXIR MINEUR",emoji:"🧪",action:"CONSOMMER",pct:.10,desc:"Cet élixir vous permet de gagner 10 % d’XP en plus dans la statistique de votre choix pendant 24 h. Utilisez-le à bon escient !",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 100 %).","Après avoir complété le Donjon de l’Alchimiste (Taux : 10 %)."]},
@@ -4469,12 +4463,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   Object.values(INVENTORY_ITEMS).forEach(item=>{
     if(!item.permanent&&!item.obtain.includes(BREACH_LOOT_TEXT))item.obtain=[...item.obtain,BREACH_LOOT_TEXT];
   });
-  function itemQty(id){ return ["codex","regressionOrb"].includes(id)?1:id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
+  function itemQty(id){ return ["codex","regressionOrb","debtAcknowledgement"].includes(id)?1:id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
   function Inventory(){
     const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","etherStopper","rerollToken","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape","recoveryOintment"]
       .sort((a,b)=>{
-        const permanentA=["codex","regressionOrb"].includes(a);
-        const permanentB=["codex","regressionOrb"].includes(b);
+        const permanentA=["codex","regressionOrb","debtAcknowledgement"].includes(a);
+        const permanentB=["codex","regressionOrb","debtAcknowledgement"].includes(b);
         const qtyA=itemQty(a);
         const qtyB=itemQty(b);
 
@@ -4495,11 +4489,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       });
     return h("div",{class:"tab"},
       h("div",{style:"display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px"},ids.map(id=>{
-        const it=INVENTORY_ITEMS[id], qty=itemQty(id), grey=!["codex","regressionOrb"].includes(id)&&!(id==="etherStopper"&&suspendedElixir)&&!(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk)&&(qty<1||(["majorElixir","minorElixir","supremeElixir"].includes(id)&&(!!activeElixir||!!suspendedElixir)));
+        const it=INVENTORY_ITEMS[id], qty=itemQty(id), grey=!["codex","regressionOrb","debtAcknowledgement"].includes(id)&&!(id==="etherStopper"&&suspendedElixir)&&!(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk)&&(qty<1||(["majorElixir","minorElixir","supremeElixir"].includes(id)&&(!!activeElixir||!!suspendedElixir)));
         return h("button",{key:id,onClick:()=>setInventoryItem(id),style:"position:relative;aspect-ratio:1/1;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.025);padding:8px;color:var(--tx);cursor:pointer;opacity:"+(grey?".48":"1")+";display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px"},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;line-height:1.25;letter-spacing:.5px;text-transform:uppercase;text-align:center;min-height:20px"},it.short),
           h("div",{style:"line-height:1"},InventoryItemIcon(id,38)),
-          h("div",{style:"position:absolute;right:6px;bottom:5px;border-radius:999px;min-width:20px;padding:2px 5px;background:rgba(0,0,0,.55);font-family:Orbitron,sans-serif;font-size:9px;color:#fff"},["codex","regressionOrb"].includes(id)?"∞":id==="etherStopper"&&suspendedElixir?"PAUSE":"×"+qty)
+          h("div",{style:"position:absolute;right:6px;bottom:5px;border-radius:999px;min-width:20px;padding:2px 5px;background:rgba(0,0,0,.55);font-family:Orbitron,sans-serif;font-size:9px;color:#fff"},["codex","regressionOrb","debtAcknowledgement"].includes(id)?"∞":id==="etherStopper"&&suspendedElixir?"PAUSE":"×"+qty)
         );
       }))
     );
@@ -4515,8 +4509,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     if(inventoryItem==="codex")return h(Codex,null);
     const id=inventoryItem,it=INVENTORY_ITEMS[id],qty=itemQty(id);
     const isElixir=["majorElixir","minorElixir","supremeElixir"].includes(id);
-    let disabled=(id==="regressionOrb"||(id==="etherStopper"&&suspendedElixir))?false:qty<1;
-    let reason=(id!=="regressionOrb"&&!(id==="etherStopper"&&suspendedElixir)&&qty<1)?"Aucun exemplaire disponible.":"";
+    let disabled=(["regressionOrb","debtAcknowledgement"].includes(id)||(id==="etherStopper"&&suspendedElixir))?false:qty<1;
+    let reason=(!["regressionOrb","debtAcknowledgement"].includes(id)&&!(id==="etherStopper"&&suspendedElixir)&&qty<1)?"Aucun exemplaire disponible.":"";
     if(id==="regressionOrb"){
       if((state.regressionLog||{})[today]){disabled=true;reason="Une régression a déjà été déclarée aujourd’hui.";}
     }else if(id==="dungeonKey"){
@@ -4568,7 +4562,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("button",{onClick:()=>setInventoryItem(null),style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
         ),
         h("div",{style:"display:flex;justify-content:center;align-items:center;margin:14px 0 8px"},InventoryItemIcon(id,128)),
-        h("div",{style:"text-align:center;font-family:Orbitron,sans-serif;font-size:10px;color:var(--td);margin-bottom:16px"},id==="regressionOrb"?"OBJET PERMANENT":id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"MARQUE EN COURS":id==="etherStopper"&&suspendedElixir?"ÉLIXIR SUSPENDU · "+fmtCD(suspendedElixir.remainingMs):"QUANTITÉ : "+qty),
+        h("div",{style:"text-align:center;font-family:Orbitron,sans-serif;font-size:10px;color:var(--td);margin-bottom:16px"},["regressionOrb","debtAcknowledgement"].includes(id)?"OBJET PERMANENT":id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"MARQUE EN COURS":id==="etherStopper"&&suspendedElixir?"ÉLIXIR SUSPENDU · "+fmtCD(suspendedElixir.remainingMs):"QUANTITÉ : "+qty),
         h("div",{style:"font-size:12px;line-height:1.6;color:var(--tx);margin-bottom:14px"},it.desc),
         !it.permanent&&h("div",{style:"margin-bottom:16px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);padding:10px 0"},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1px"},"OBTENTION"),
@@ -4593,7 +4587,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           ?"Réactiver l’élixir suspendu avec exactement "+fmtCD(suspendedElixir.remainingMs)+" restants ?"
           :id==="teleportCrystal"
             ?"Briser le Cristal de téléportation pour rejoindre un pays voisin et ouvrir une Brèche aléatoire ?"
-            :"Êtes-vous certain de vouloir "+(id==="regressionOrb"?"activer l’":id==="dungeonKey"?"utiliser une ":id==="transmutationGrimoire"?"utiliser le ":id==="destinyCompass"?"orienter la ":id==="alchemicalCatalyst"?"préparer le ":"consommer un ")+it.name+" ?"),
+            :"Êtes-vous certain de vouloir "+(id==="regressionOrb"?"activer l’":id==="debtAcknowledgement"?"utiliser la ":id==="dungeonKey"?"utiliser une ":id==="transmutationGrimoire"?"utiliser le ":id==="destinyCompass"?"orienter la ":id==="alchemicalCatalyst"?"préparer le ":"consommer un ")+it.name+" ?"),
       h("div",{style:"display:flex;gap:10px;margin-top:22px"},
         h("button",{class:"rudis",style:"min-width:110px;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>setConfirmItemUse(null)},"Non"),
         h("button",{class:"rudis",style:"min-width:110px;--rc:"+confirmColor+";--rg:"+confirmGlow,onClick:()=>{
