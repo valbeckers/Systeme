@@ -25,6 +25,7 @@ import {
   calcXp,
   calcQuestTotalXp
 } from "./xp.js";
+import { loadStoredState, saveStoredState } from "./storage.js";
 
 const { h, render, Fragment } = window.preact;
 const { useState, useEffect, useRef } = window.preactHooks;
@@ -506,9 +507,6 @@ function pickRandomSq(usedIds,statCycle,completedLog,forcedStat=null){
   return {tpl:{...chosen,stat:chosen.stat||stat}, pickedStat:stat, cycleReset, forced:false};
 }
 
-const IMPORTED_VERSION = "2026-05-11-v4";
-const BACKUP_KEYS = ["sl_v3","sl_v3_backup1","sl_v3_backup2","sl_v3_backup3"];
-
 function migrateMergedEspritState(state){
   if(!state || typeof state !== "object") return state;
   const merge = obj => {
@@ -812,48 +810,10 @@ function exportSystemState(s){
 }
 
 
-// Lecture : essaie la clé principale, sinon fallback automatique sur les backups
-const loadState  = () => {
-  for(const key of BACKUP_KEYS){
-    try{
-      const r=localStorage.getItem(key);
-      if(!r) continue;
-      const parsed=JSON.parse(r);
-      if(parsed && typeof parsed === "object" && parsed.statXp){
-        // Si on a r\u00e9cup\u00e9r\u00e9 depuis un backup, on r\u00e9-\u00e9crit la cl\u00e9 principale
-        if(key !== "sl_v3"){
-          try{ localStorage.setItem("sl_v3",r); }catch{}
-        }
-        return cleanSystemState(parsed);
-      }
-    }catch{}
-  }
-  return null;
-};
-
-// \u00c9criture : rotation des backups + sauvegarde principale
-const saveState  = s  => {
-  try{
-    // On n\'enregistre que les éléments encore en vigueur dans l\'app
-    const toSave = exportSystemState(s);
-    const json = JSON.stringify(toSave);
-    // Rotation : backup2 \u2192 backup3, backup1 \u2192 backup2, current \u2192 backup1
-    // (uniquement si la valeur courante est valide)
-    try{
-      const current = localStorage.getItem("sl_v3");
-      const b1 = localStorage.getItem("sl_v3_backup1");
-      const b2 = localStorage.getItem("sl_v3_backup2");
-      // On ne fait la rotation que si la valeur change vraiment (pas \u00e0 chaque render)
-      if(current && current !== json){
-        if(b2) localStorage.setItem("sl_v3_backup3", b2);
-        if(b1) localStorage.setItem("sl_v3_backup2", b1);
-        localStorage.setItem("sl_v3_backup1", current);
-      }
-    }catch{}
-    localStorage.setItem("sl_v3", json);
-    localStorage.setItem("sl_version", IMPORTED_VERSION);
-  }catch{}
-};
+// Le nettoyage et les migrations restent définis ici ; storage.js ne gère que
+// localStorage et la rotation des sauvegardes.
+const loadState = () => loadStoredState(cleanSystemState);
+const saveState = state => saveStoredState(state,exportSystemState);
 
 // ─── DONNEES IMPORTEES ─────────────────────────────────────────────────────
 
