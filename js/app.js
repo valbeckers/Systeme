@@ -2766,7 +2766,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{style:"position:relative",onClick:e=>e.stopPropagation()},
           h("button",{
             onClick:()=>setInventorySortOpen(v=>!v),
-            style:"display:flex;align-items:center;gap:7px;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.025);color:var(--tx);font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:.7px;cursor:pointer"
+            style:"width:170px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:7px;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.025);color:var(--tx);font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:.7px;cursor:pointer"
           },"Tri · "+sortLabel,h("span",{style:"font-size:10px;transform:"+(inventorySortOpen?"rotate(180deg)":"rotate(0deg)")+";transition:transform .18s"},"▼")),
           inventorySortOpen&&h("div",{style:"position:absolute;right:0;top:calc(100% + 6px);min-width:170px;padding:6px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:#111318;box-shadow:0 12px 28px rgba(0,0,0,.45);z-index:20"},
             [["name","Par nom"],["quantity","Par quantité"]].map(([value,label])=>h("button",{
