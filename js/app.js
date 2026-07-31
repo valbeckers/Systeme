@@ -1,6 +1,6 @@
 
-const { h, render, Fragment } = preact;
-const { useState, useEffect, useRef } = preactHooks;
+const { h, render, Fragment } = window.preact;
+const { useState, useEffect, useRef } = window.preactHooks;
 
 // ─── CONSTANTES GLOBALES ────────────────────────────────────────────────────
 
