@@ -8,6 +8,17 @@ import {
   applyQuestDebtPaymentState,
   expireQuestDebtState
 } from "./debtEngine.js";
+import {
+  REGRESSION_DEFS,
+  REGRESSION_DEF,
+  applyRegressionState,
+  hasValidatedDailyCompletion,
+  areRequiredDailyQuestsComplete,
+  areBonusQuestsComplete,
+  computeQuestStreak,
+  urgentQuestCompletedOnDay,
+  applyDailyStreakRewardState
+} from "./dailyEngine.js";
 import { BREACH_COLOR, BREACH_LOOT_TEXT, BREACH_POOL } from "./breachDefs.js";
 import { DUNGEONS } from "./dungeonDefs.js";
 import {
@@ -118,16 +129,6 @@ function QuestIcon(id, fallback, size=14, extraStyle=""){
     style:"font-size:"+size+"px;line-height:1;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;flex-shrink:0;"+extraStyle
   },fallback);
 }
-
-const REGRESSION_DEFS = [{
-  id:"reg_red",
-  name:"Régression actuelle",
-  icon:"🔴",
-  statPenalty:2000,
-  globalPenalty:12000
-}];
-const REGRESSION_DEF = REGRESSION_DEFS[0];
-
 
 const getRank    = xp => { for(let i=RANKS.length-1;i>=0;i--)if(xp>=RANKS[i].xpRequired)return RANKS[i]; return RANKS[0]; };
 const getNext    = id => { const i=RANKS.findIndex(r=>r.id===id); return i<RANKS.length-1?RANKS[i+1]:null; };
@@ -334,23 +335,7 @@ function App(){
   function applyRegression(){
     const regression=(confirmRegression&&confirmRegression.id)?confirmRegression:REGRESSION_DEF;
     const day=todayStr();
-    setState(s=>{
-      if((s.regressionLog||{})[day]) return s;
-      const statXp={...(s.statXp||{})};
-      const stats={...(s.stats||{})};
-      STATS.forEach(stat=>{
-        statXp[stat]=Math.max(0,(Number(statXp[stat])||0)-regression.statPenalty);
-        stats[stat]=getLvl(statXp[stat]);
-      });
-      return {
-        ...s,
-        totalXp:Math.max(0,(Number(s.totalXp)||0)-regression.globalPenalty),
-        statXp,
-        stats,
-        regressionLog:{...(s.regressionLog||{}),[day]:regression.id||true},
-        lastActiveDay:day
-      };
-    });
+    setState(s=>applyRegressionState(s,regression,{day,stats:STATS,getLevel:getLvl}));
     setConfirmRegression(false);
     setRegressionUp(true);
   }
@@ -596,56 +581,28 @@ function App(){
   // Cela empêche une hausse ultérieure des objectifs (notamment les rotations
   // d'exercices dépendantes du niveau de Force) d'invalider rétroactivement
   // l'Historique ou la série.
-  const hadValidatedDailyCompletion = day => !!(
-    state.streakBonusDay===day ||
-    (Number(((state.dailyExtraXp||{})[day]||{}).streak)||0)>0
+  const hadValidatedDailyCompletion = day => hasValidatedDailyCompletion(state,day);
+
+  const allDailyDone = areRequiredDailyQuestsComplete(
+    state,
+    reqDailyObjs,
+    tLog,
+    obj=>getEffectiveTarget(obj.id)
   );
 
-  const allDailyDone = (()=>{
-    if(state.questDebt&&state.questDebt.status==="active") return false;
-    return reqDailyObjs.every(o=>(tLog[o.id]||0)>=getEffectiveTarget(o.id));
-  })();
-
   const bonusQuestObjsForCompletion = dailyBonusQuestObjects();
-  const allBonusDone = bonusQuestObjsForCompletion.length>0 && bonusQuestObjsForCompletion.every(o=>{
-    if(o.isEnduranceChoice) return false;
-    const target=(o.target&&!o.binary)?o.target:getEffectiveTarget(o.id);
-    const value=tLog[o.id]||0;
-    return o.binary ? value>=1 : value>=target;
-  });
+  const allBonusDone = areBonusQuestsComplete(
+    bonusQuestObjsForCompletion,
+    tLog,
+    obj=>getEffectiveTarget(obj.id)
+  );
 
   // 8. Streak : on remonte à partir d'hier (aujourd'hui peut être incomplet sans casser le streak)
-  const computedStreak = (()=>{
-    let streak=0;
-    const debt=state.questDebt;
-    const resolved=state.debtResolvedDays||{};
-    const isProtectedDebtDay=day=>!!(
-      resolved[day] ||
-      (debt && debt.sourceDay===day && debt.status==="active")
-    );
-    const d=new Date(today);
-    d.setDate(d.getDate()-1);
-    for(let i=0;i<365;i++){
-      const dk=d.toISOString().slice(0,10);
-      const log=state.dailyLog[dk]||{};
-      const naturallyDone = hadValidatedDailyCompletion(dk) ||
-        activeOn(dk).every(o=>(log[o.id]||0)>=getValidateThreshold(o,dk));
-      if(naturallyDone){
-        streak++;
-      }else if(isProtectedDebtDay(dk)){
-        // Dette active : journée gelée, non comptée mais elle ne casse pas le streak.
-        // Dette remboursée : journée restaurée rétroactivement.
-        if(resolved[dk]) streak++;
-      }else{
-        break;
-      }
-      d.setDate(d.getDate()-1);
-    }
-    const todayLog=state.dailyLog[today]||{};
-    const todayDone=activeOn(today).every(o=>(todayLog[o.id]||0)>=getEffectiveTarget(o.id));
-    if(todayDone && !(debt&&debt.status==="active")) streak++;
-    return streak;
-  })();
+  const computedStreak = computeQuestStreak(state,today,{
+    activeObjectivesOnDay:activeOn,
+    targetForDay:getValidateThreshold,
+    targetForToday:obj=>getEffectiveTarget(obj.id)
+  });
 
   // 9. Bonus hebdo supprimé : Running et Rando sont désormais des quêtes bonus.
   const weeklyDone = false;
@@ -769,10 +726,7 @@ function App(){
     });
   },[now,state.suspendedElixir?.resumeDeadline,state.activeElixir?.kind]);
 
-  const urgentDoneToday = (state.specialQuests||[]).some(q=>{
-    if(!q || !q.completedAt) return false;
-    return todayStr(q.completedAt)===today;
-  });
+  const urgentDoneToday = urgentQuestCompletedOnDay(state.specialQuests,today,todayStr);
   const dungeonLootConditionsMet = allDailyDone && allBonusDone && urgentDoneToday;
 
   // Mémorise l’état observé pendant la session : les animations de complétion
@@ -1076,59 +1030,17 @@ function App(){
   useEffect(()=>{
     if(!allDailyDone)return;
     setState(s=>{
-      const t=todayStr();
-      let next={...s};
-
-      if(s.lastStreakDay!==t)next={...next,lastStreakDay:t};
-
-      if(s.streakBonusDay!==t){
-        const beforeXp = next.totalXp;
-        const beforeStats = {...next.stats};
-
-        let streakXpToday = 250;
-        const sx={...next.statXp,Discipline:(next.statXp.Discipline||0)+250};
-        next={...next,totalXp:next.totalXp+250,statXp:sx,stats:{...next.stats,Discipline:getLvl(sx.Discipline)},streakBonusDay:t};
-
-        // Milestone tous les 7 jours de streak
-        const newStreak=next.streak;
-        const milestones=next.streakMilestones||[];
-        let streakAnim = {
-          title:"STREAK BONUS !",
-          streak:newStreak,
-          xp:250,
-          subtitle:"+250 XP Discipline",
+      const result=applyDailyStreakRewardState(s,{today:todayStr(),getLevel:getLvl});
+      if(result.awarded){
+        const streakAnim={
+          ...result.animation,
           color:STAT_COLOR.Discipline,
           glow:STAT_COLOR.Discipline+"66"
         };
-
-        if(newStreak>0 && newStreak%7===0 && !milestones.includes(newStreak)){
-          const milestoneXp=500;
-          streakXpToday += milestoneXp;
-          const sx2={...sx,Discipline:(sx.Discipline||0)+milestoneXp};
-          next={...next,totalXp:next.totalXp+milestoneXp,statXp:sx2,stats:{...next.stats,Discipline:getLvl(sx2.Discipline)},streakMilestones:[...milestones,newStreak]};
-          streakAnim = {
-            title:"MILESTONE !",
-            streak:newStreak,
-            xp:streakXpToday,
-            subtitle:"+750 XP Discipline",
-            detail:newStreak+" jours de streak",
-            color:STAT_COLOR.Discipline,
-            glow:STAT_COLOR.Discipline+"66"
-          };
-        }
-
         setTimeout(()=>setStreakUp(streakAnim),300);
-
-        const daily={...(next.dailyExtraXp||{})};
-        const dayLog={...(daily[t]||{})};
-        dayLog.streak=(dayLog.streak||0)+streakXpToday;
-        daily[t]=dayLog;
-        next={...next,dailyExtraXp:daily};
-
-        triggerProgressOverlay(beforeXp,beforeStats,next.totalXp,next.stats,1800);
+        triggerProgressOverlay(result.beforeXp,result.beforeStats,result.afterXp,result.afterStats,1800);
       }
-
-      return next;
+      return result.state;
     });
   },[allDailyDone]);
 
