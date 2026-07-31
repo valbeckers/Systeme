@@ -259,6 +259,8 @@ function App(){
   const [confirmAlliedGift,setConfirmAlliedGift] = useState(null);
   const [itemUseUp,setItemUseUp] = useState(null);
   const [inventoryItem,setInventoryItem] = useState(null);
+  const [inventorySort,setInventorySort] = useState("quantity");
+  const [inventorySortOpen,setInventorySortOpen] = useState(false);
   const [confirmItemUse,setConfirmItemUse] = useState(null);
   const [elixirStatChoice,setElixirStatChoice] = useState(null);
   const [compassStatChoice,setCompassStatChoice] = useState(false);
@@ -2731,31 +2733,20 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     return h("span",{style:"font-size:"+size+"px;line-height:1"},INVENTORY_ITEMS[id].emoji);
   }
   function itemQty(id){ return ["codex","regressionOrb","debtAcknowledgement"].includes(id)?1:id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
-  function itemActionLabel(id,fallback){
-    const labels={
-      minorElixir:"BOIRE",
-      majorElixir:"BOIRE",
-      supremeElixir:"BOIRE",
-      etherStopper:"INSÉRER",
-      masterContract:"SIGNER",
-      invisibilityCape:"BOIRE",
-      debtAcknowledgement:"SIGNER",
-      transmutationGrimoire:"LIRE",
-      rerollToken:"LANCER",
-      recoveryOintment:"APPLIQUER"
-    };
-    return labels[id]||fallback;
-  }
   function Inventory(){
     const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","etherStopper","rerollToken","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape","recoveryOintment"]
       .sort((a,b)=>{
+        if(inventorySort==="name"){
+          return INVENTORY_ITEMS[a].name.localeCompare(INVENTORY_ITEMS[b].name,"fr",{sensitivity:"base"});
+        }
+
         const permanentA=["codex","regressionOrb","debtAcknowledgement"].includes(a);
         const permanentB=["codex","regressionOrb","debtAcknowledgement"].includes(b);
         const qtyA=itemQty(a);
         const qtyB=itemQty(b);
 
-        // Ordre :
-        // 1. objets possédés en quantité finie, triés par quantité décroissante ;
+        // Tri par quantité :
+        // 1. objets possédés en quantité finie, quantité décroissante ;
         // 2. objets permanents affichés avec ∞ ;
         // 3. objets non possédés ;
         const groupA=qtyA>0?(permanentA?1:0):2;
@@ -2767,9 +2758,25 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           if(quantityDiff!==0)return quantityDiff;
         }
 
-        return INVENTORY_ITEMS[a].short.localeCompare(INVENTORY_ITEMS[b].short,"fr",{sensitivity:"base"});
+        return INVENTORY_ITEMS[a].name.localeCompare(INVENTORY_ITEMS[b].name,"fr",{sensitivity:"base"});
       });
-    return h("div",{class:"tab"},
+    const sortLabel=inventorySort==="name"?"Par nom":"Par quantité";
+    return h("div",{class:"tab",onClick:()=>inventorySortOpen&&setInventorySortOpen(false)},
+      h("div",{style:"display:flex;justify-content:flex-end;margin-bottom:10px;position:relative;z-index:5"},
+        h("div",{style:"position:relative",onClick:e=>e.stopPropagation()},
+          h("button",{
+            onClick:()=>setInventorySortOpen(v=>!v),
+            style:"display:flex;align-items:center;gap:7px;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.025);color:var(--tx);font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:.7px;cursor:pointer"
+          },"TRI · "+sortLabel,h("span",{style:"font-size:10px;transform:"+(inventorySortOpen?"rotate(180deg)":"rotate(0deg)")+";transition:transform .18s"},"▼")),
+          inventorySortOpen&&h("div",{style:"position:absolute;right:0;top:calc(100% + 6px);min-width:170px;padding:6px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:#111318;box-shadow:0 12px 28px rgba(0,0,0,.45);z-index:20"},
+            [["name","Par nom"],["quantity","Par quantité"]].map(([value,label])=>h("button",{
+              key:value,
+              onClick:()=>{setInventorySort(value);setInventorySortOpen(false);},
+              style:"width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 10px;border:0;border-radius:7px;background:"+(inventorySort===value?"rgba(255,255,255,.06)":"transparent")+";color:"+(inventorySort===value?"var(--rc)":"var(--tx)")+";font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:.6px;text-align:left;cursor:pointer"
+            },h("span",null,label),h("span",{style:"width:14px;text-align:center;color:var(--rc);font-weight:900"},inventorySort===value?"✓":"")))
+          )
+        )
+      ),
       h("div",{style:"display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px"},ids.map(id=>{
         const it=INVENTORY_ITEMS[id], qty=itemQty(id), grey=!["codex","regressionOrb","debtAcknowledgement"].includes(id)&&!(id==="etherStopper"&&suspendedElixir)&&!(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk)&&(qty<1||(isElixirKind(id)&&(!!activeElixir||!!suspendedElixir)));
         return h("button",{key:id,onClick:()=>setInventoryItem(id),style:"position:relative;aspect-ratio:1/1;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.025);padding:8px;color:var(--tx);cursor:pointer;opacity:"+(grey?".48":"1")+";display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px"},
@@ -2851,7 +2858,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{style:"margin-top:9px;display:flex;flex-direction:column;gap:7px"},it.obtain.map((x,i)=>h("div",{key:i,style:"font-size:10px;color:var(--td);line-height:1.5"},ObtainLine(x))))
         ),
         reason&&h("div",{style:"font-size:10px;color:var(--td);text-align:center;margin-bottom:8px"},reason),
-        h("button",{disabled,onClick:()=>{const eraseRecord=id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk;setInventoryItem(null);setConfirmItemUse({id,eraseRecord})},style:"width:100%;padding:12px;border-radius:9px;border:1px solid "+(disabled?"rgba(255,255,255,.08)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"#ef4444":rank.color))+";background:"+(disabled?"rgba(255,255,255,.03)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"rgba(239,68,68,.10)":rank.color+"18"))+";color:"+(disabled?"var(--td)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"#ef4444":rank.color))+";font-family:Orbitron,sans-serif;letter-spacing:1.3px;cursor:"+(disabled?"default":"pointer")},id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"EFFACER":id==="etherStopper"&&suspendedElixir?"RETIRER":itemActionLabel(id,it.action))
+        h("button",{disabled,onClick:()=>{const eraseRecord=id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk;setInventoryItem(null);setConfirmItemUse({id,eraseRecord})},style:"width:100%;padding:12px;border-radius:9px;border:1px solid "+(disabled?"rgba(255,255,255,.08)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"#ef4444":rank.color))+";background:"+(disabled?"rgba(255,255,255,.03)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"rgba(239,68,68,.10)":rank.color+"18"))+";color:"+(disabled?"var(--td)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"#ef4444":rank.color))+";font-family:Orbitron,sans-serif;letter-spacing:1.3px;cursor:"+(disabled?"default":"pointer")},id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"EFFACER":id==="etherStopper"&&suspendedElixir?"RÉACTIVER":it.action)
       )
     );
   }
