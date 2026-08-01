@@ -36,6 +36,7 @@ function StatsRadarCard({ state }){
   const perfectlyBalanced = maxValue === minValue;
 
   const size = 260;
+  const viewHeight = 234;
   const cx = 130;
   const cy = 122;
   const radius = 74;
@@ -45,12 +46,9 @@ function StatsRadarCard({ state }){
 
   return h("div", { class:"card" },
     h("div", { class:"ctitle" }, "Équilibre des stats"),
-    h("div", { style:"font-size:10px;color:var(--td);margin-bottom:8px" },
-      "Diagramme de Kiviat basé sur tes niveaux de statistiques."
-    ),
-    h("div", { style:"display:flex;justify-content:center;align-items:center;margin:6px 0 12px" },
+    h("div", { style:"display:flex;justify-content:center;align-items:center;margin:2px 0 0" },
       h("svg", {
-        viewBox:`0 0 ${size} ${size}`,
+        viewBox:`0 0 ${size} ${viewHeight}`,
         style:"width:100%;max-width:260px;height:auto;overflow:visible"
       },
         Array.from({ length:gridLevels }, (_, idx) => {
