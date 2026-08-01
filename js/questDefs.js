@@ -30,9 +30,9 @@ const DEFS = [
 // Quetes speciales — par stat (23 au total)
 const SP = {
   Sante:[
-    {id:"sp_sun",     name:"10min de lumière naturelle", icon:"\u2600\uFE0F",                              unit:"min",  target:10,  xp:500, xp2:250, stat2:"Esprit", days:1, binary:true},
+    {id:"sp_sun",     name:"Lumière naturelle · 10min", icon:"\u2600\uFE0F",                              unit:"min",  target:10,  xp:500, xp2:250, stat2:"Esprit", days:1, binary:true},
     {id:"sp_fruits",  name:"Manger 5 fruits et légumes",  icon:"\uD83C\uDF4F",                              unit:"portion", target:5, xp:500, days:1, binary:true},
-    {id:"sp_breath",  name:"10min de cohérence cardiaque",icon:"\uD83D\uDC93",                             unit:"min", target:10, xp:500, xp2:250, stat2:"Esprit", days:1, binary:true},
+    {id:"sp_breath",  name:"Cohérence cardiaque · 10min",icon:"\uD83D\uDC93",                             unit:"min", target:10, xp:500, xp2:250, stat2:"Esprit", days:1, binary:true},
     {id:"sp_nojunk",  name:"Pas de junk-food",                icon:"\uD83C\uDF55",                              unit:"jour", target:1, xp:500, days:1, binary:true},
     {id:"sp_balanced_meals", name:"Manger 2 repas équilibrés", icon:"\uD83C\uDF4C", unit:"repas", target:2, xp:750, days:1, tiers:[{at:1,xp:250,stat:"Sante"},{at:2,xp:500,stat:"Sante"}]},
     {id:"sp_no_sugar", name:"Aucun sucre transformé", icon:"\uD83C\uDF6C", unit:"jour", target:1, xp:500, days:1, binary:true},
@@ -40,20 +40,20 @@ const SP = {
   Force:[
   ],
   Esprit:[
-    {id:"sp_memo30",   name:"30min de mémorisation",icon:"\uD83E\uDDE0",                                  unit:"jour", target:1, xp:1000, days:1, binary:true},
-    {id:"sp_silence30",name:"Silence",          icon:"\uD83E\uDD2B",                                  unit:"jour", target:1, xp:500, xp2:250, stat2:"Discipline", days:1, binary:true, desc:"30 min sans parler ni consommer"},
-    {id:"sp_nophone3h", name:"3h sans écran", icon:"\uD83D\uDCF5",                unit:"jour", target:1, xp:500, xp2:250, stat2:"Discipline", days:1, binary:true},
+    {id:"sp_memo30",   name:"Mémorisation · 30min",icon:"\uD83E\uDDE0",                                  unit:"jour", target:1, xp:1000, days:1, binary:true},
+    {id:"sp_silence30",name:"Silence · 30min",          icon:"\uD83E\uDD2B",                                  unit:"jour", target:1, xp:500, xp2:250, stat2:"Discipline", days:1, binary:true},
+    {id:"sp_nophone3h", name:"Pas d'écran · 3h", icon:"\uD83D\uDCF5",                unit:"jour", target:1, xp:500, xp2:250, stat2:"Discipline", days:1, binary:true},
   ],
   Endurance:[
-    {id:"sp_stairs",  name:"30 montées/descentes d'escaliers", icon:"\uD83E\uDE9C",                                 unit:"A/R",  target:30, xp:500, xp2:250, stat2:"Agilite", days:1},
-    {id:"sp_walk30",  name:"30min de marche",     icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F",           unit:"min",  target:30, xp:500, days:1},
-    {id:"sp_shadow_boxing", name:"30min de shadow boxing", icon:"🥊", unit:"min", target:30, xp:1250, days:1, tiers:[{at:15,xp:500,stat:"Endurance"},{at:30,xp:500,stat:"Endurance",xp2:250,stat2:"Force"}]},
+    {id:"sp_stairs",  name:"Montées/descentes d'escaliers · x30", icon:"\uD83E\uDE9C",                                 unit:"A/R",  target:30, xp:500, xp2:250, stat2:"Agilite", days:1},
+    {id:"sp_walk30",  name:"Marche · 30min",     icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F",           unit:"min",  target:30, xp:500, days:1},
+    {id:"sp_shadow_boxing", name:"Shadow boxing · 30min", icon:"🥊", unit:"min", target:30, xp:1250, days:1, tiers:[{at:15,xp:500,stat:"Endurance"},{at:30,xp:500,stat:"Endurance",xp2:250,stat2:"Force"}]},
   ],
   Agilite:[
-    {id:"sp_flow20",  name:"30min d'animal flow", icon:"\uD83D\uDC0A",                                         unit:"min",  target:30, xp:1250, days:1, tiers:[{at:15,xp:500,stat:"Agilite"},{at:30,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"}]},
-    {id:"sp_fluide",  name:"30min de flow martial", icon:"\uD83C\uDF0A",                              unit:"min",  target:30, xp:1250, days:1, tiers:[{at:15,xp:500,stat:"Agilite"},{at:30,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"}]},
-    {id:"sp_silent",  name:"30min de déplacements silencieux", icon:"\uD83D\uDC08",                          unit:"min",  target:10, xp:500, days:1},
-        {id:"sp_footwork", name:"30min de footwork", icon:"\u26A1",                                            unit:"min",  target:10, xp:500, xp2:250, stat2:"Endurance", step:5, days:1},
+    {id:"sp_flow20",  name:"Animal flow · 30min", icon:"\uD83D\uDC0A",                                         unit:"min",  target:30, xp:1250, days:1, tiers:[{at:15,xp:500,stat:"Agilite"},{at:30,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"}]},
+    {id:"sp_fluide",  name:"Flow martial · 30min", icon:"\uD83C\uDF0A",                              unit:"min",  target:30, xp:1250, days:1, tiers:[{at:15,xp:500,stat:"Agilite"},{at:30,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"}]},
+    {id:"sp_silent",  name:"Déplacements silencieux · 30min", icon:"\uD83D\uDC08",                          unit:"min",  target:10, xp:500, days:1},
+        {id:"sp_footwork", name:"Footwork · 30min", icon:"\u26A1",                                            unit:"min",  target:10, xp:500, xp2:250, stat2:"Endurance", step:5, days:1},
   ],
   Discipline:[
     {id:"sp_no_passive", name:"Aucun contenu passif", icon:"\uD83D\uDEAB", unit:"jour", target:1, xp:500, days:1, binary:true},
