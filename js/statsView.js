@@ -120,29 +120,6 @@ function StatsRadarCard({ state }){
         h("circle", { cx, cy, r:"3", fill:"#fff", opacity:"0.9" })
       )
     ),
-    h("div", { style:"display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:10px" },
-      h("div", { style:"padding:8px 10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06)" },
-        h("div", { style:"font-size:9px;color:var(--td);text-transform:uppercase;letter-spacing:1px;font-family:Orbitron,sans-serif" }, "Point fort"),
-        h("div", { style:`margin-top:4px;font-size:12px;font-family:Orbitron,sans-serif;color:${strongest.color}` }, strongest.label),
-        h("div", { style:"margin-top:3px;font-size:10px;color:#fff" }, `Niveau ${strongest.value}`)
-      ),
-      h("div", { style:"padding:8px 10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06)" },
-        h("div", { style:"font-size:9px;color:var(--td);text-transform:uppercase;letter-spacing:1px;font-family:Orbitron,sans-serif" }, perfectlyBalanced ? "Équilibre" : "À renforcer"),
-        h("div", { style:`margin-top:4px;font-size:12px;font-family:Orbitron,sans-serif;color:${weakest.color}` }, perfectlyBalanced ? "Profil équilibré" : weakest.label),
-        h("div", { style:"margin-top:3px;font-size:10px;color:#fff" }, perfectlyBalanced ? `Toutes les stats sont niv. ${maxValue}` : `Niveau ${weakest.value}`)
-      )
-    ),
-    h("div", { style:"display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px" },
-      statLevels.map(stat =>
-        h("div", {
-          key:`legend-${stat.id}`,
-          style:"display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04)"
-        },
-          h("span", { style:`font-size:10px;color:${stat.color}` }, stat.label),
-          h("span", { style:"font-size:10px;color:#fff;font-family:Orbitron,sans-serif" }, `Niv. ${stat.value}`)
-        )
-      )
-    )
   );
 }
 
