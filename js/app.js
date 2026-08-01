@@ -2793,6 +2793,18 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     if(parts.length===1)return "• "+text;
     return h(Fragment,null,"• "+parts[0],h("span",{style:"display:inline-flex;vertical-align:middle;margin:0 3px;transform:translateY(2px)"},GrimoireIcon(14)),parts.slice(1).join(marker));
   }
+  function inventoryActionLabel(id,it){
+    if(id==="minorElixir"||id==="majorElixir"||id==="supremeElixir")return "BOIRE";
+    if(id==="etherStopper")return suspendedElixir?"RETIRER":"INSERER";
+    if(id==="masterContract")return "SIGNER";
+    if(id==="invisibilityCape")return "BOIRE";
+    if(id==="debtAcknowledgement")return "SIGNER";
+    if(id==="transmutationGrimoire")return "LIRE";
+    if(id==="rerollToken")return "LANCER";
+    if(id==="recoveryOintment")return "APPLIQUER";
+    return it.action;
+  }
+
   function InventoryItemModal(){
     if(!inventoryItem)return null;
     if(inventoryItem==="codex")return h(Codex,null);
@@ -2858,7 +2870,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{style:"margin-top:9px;display:flex;flex-direction:column;gap:7px"},it.obtain.map((x,i)=>h("div",{key:i,style:"font-size:10px;color:var(--td);line-height:1.5"},ObtainLine(x))))
         ),
         reason&&h("div",{style:"font-size:10px;color:var(--td);text-align:center;margin-bottom:8px"},reason),
-        h("button",{disabled,onClick:()=>{const eraseRecord=id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk;setInventoryItem(null);setConfirmItemUse({id,eraseRecord})},style:"width:100%;padding:12px;border-radius:9px;border:1px solid "+(disabled?"rgba(255,255,255,.08)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"#ef4444":rank.color))+";background:"+(disabled?"rgba(255,255,255,.03)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"rgba(239,68,68,.10)":rank.color+"18"))+";color:"+(disabled?"var(--td)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"#ef4444":rank.color))+";font-family:Orbitron,sans-serif;letter-spacing:1.3px;cursor:"+(disabled?"default":"pointer")},id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"EFFACER":id==="etherStopper"&&suspendedElixir?"RÉACTIVER":it.action)
+        h("button",{disabled,onClick:()=>{const eraseRecord=id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk;setInventoryItem(null);setConfirmItemUse({id,eraseRecord})},style:"width:100%;padding:12px;border-radius:9px;border:1px solid "+(disabled?"rgba(255,255,255,.08)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"#ef4444":rank.color))+";background:"+(disabled?"rgba(255,255,255,.03)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"rgba(239,68,68,.10)":rank.color+"18"))+";color:"+(disabled?"var(--td)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"#ef4444":rank.color))+";font-family:Orbitron,sans-serif;letter-spacing:1.3px;cursor:"+(disabled?"default":"pointer")},id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"EFFACER":inventoryActionLabel(id,it))
       )
     );
   }
