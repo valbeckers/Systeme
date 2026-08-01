@@ -190,7 +190,25 @@ function cleanEnduranceChoiceByDay(obj){
 function cleanRegressionLog(obj){
   const out={};
   Object.entries(obj||{}).forEach(([day,activated])=>{
-    if(/^\d{4}-\d{2}-\d{2}$/.test(day) && (activated===true || Number(activated)>0)) out[day]=true;
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(day)) return;
+
+    // Anciennes sauvegardes : la valeur était simplement `true`.
+    if(activated===true){
+      out[day]=true;
+      return;
+    }
+
+    // Depuis l'Orbe de régression, le journal mémorise l'identifiant de la
+    // régression (ex. `reg_red`). Il faut conserver cette chaîne : la convertir
+    // avec Number(...) la transformait en NaN et supprimait l'entrée à la
+    // sauvegarde, ce qui faisait disparaître la régression de l'Historique.
+    if(typeof activated==="string" && activated.trim()){
+      out[day]=activated.trim();
+      return;
+    }
+
+    // Compatibilité avec d'éventuelles anciennes valeurs numériques.
+    if(Number(activated)>0) out[day]=true;
   });
   return out;
 }
