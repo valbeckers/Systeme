@@ -4155,7 +4155,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const color=STAT_COLOR[rb.stat]||"var(--rc)";
       return h("div",{key:rb.id,style:"margin-bottom:9px;padding:9px 10px;border-radius:9px;border:1px solid "+color+"33;background:"+color+"08"},
         h("div",{style:"font-size:11px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;line-height:1.3"},rb.name),
-        h("div",{style:"font-size:10px;color:var(--td);line-height:1.4;margin-top:4px"},"Objectif du Boss : "+rb.objective),
+        h("div",{style:"font-size:10px;color:var(--td);line-height:1.4;margin-top:4px"},"Objectif du Boss : "+(rb.objective||((BREACH_POOL.find(b=>b.id===rb.breachId)||{}).name)||"—")),
         h("div",{style:"font-size:8.5px;color:#fff;font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin-top:9px;margin-bottom:5px"},"Garde rapprochée"),
         h("div",{style:"display:flex;flex-direction:column;gap:5px"},(rb.guards||[]).map(g=>h("div",{key:g.id,style:"padding:6px 7px;border-radius:7px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02)"},
           h("div",{style:"font-size:9.5px;color:#fff;font-weight:700;line-height:1.3"},g.name),
