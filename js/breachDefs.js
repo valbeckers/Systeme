@@ -9,9 +9,9 @@ const BREACH_LOOT_TEXT="Après avoir refermé une Brèche (Taux : 100 %, puis ti
 const BREACH_POOL=[
   {id:"breach_cold5",name:"Douche froide · 5min",icon:"🚿",unit:"épreuve",target:1,binary:true,xp:1500,stat:"Sante",xp2:500,stat2:"Discipline",desc:""},
   {id:"breach_wallsit15",name:"Wall sit · 15min",icon:"🪑",unit:"min",target:15,step:5,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
-  {id:"breach_push300",name:"Pompes · x300",icon:"🦾",unit:"rep",target:300,step:25,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
-  {id:"breach_squats150",name:"Squats · x150",icon:"🦿",unit:"rep",target:150,step:10,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
-  {id:"breach_pullups50",name:"Tractions · x50",icon:"🦾",unit:"rep",target:50,step:5,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
+  {id:"breach_push300",name:"Pompes · 300reps",icon:"🦾",unit:"rep",target:300,step:25,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
+  {id:"breach_squats150",name:"Squats · 150reps",icon:"🦿",unit:"rep",target:150,step:10,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
+  {id:"breach_pullups50",name:"Tractions · 50reps",icon:"🦾",unit:"rep",target:50,step:5,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
   {id:"breach_plank15",name:"Gainage · 15min",icon:"🫳🏼",unit:"min",target:15,step:5,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
   {id:"breach_learning2h",name:"Apprentissage actif · 2h",icon:"🎓",unit:"épreuve",target:1,binary:true,xp:1500,stat:"Esprit",xp2:500,stat2:"Discipline",desc:""},
   {id:"breach_reading1h",name:"Lecture · 1h",icon:"📚",unit:"épreuve",target:1,binary:true,xp:1500,stat:"Esprit",xp2:500,stat2:"Discipline",desc:""},
