@@ -7,16 +7,16 @@
 const BREACH_COLOR="#163a70";
 const BREACH_LOOT_TEXT="Après avoir refermé une Brèche (Taux : 100 %, puis tirage aléatoire parmi les objets de l’inventaire).";
 const BREACH_POOL=[
-  {id:"breach_cold5",name:"Douche froide · 5min",icon:"🚿",unit:"épreuve",target:1,binary:true,xp:1500,stat:"Sante",xp2:500,stat2:"Discipline",desc:""},
-  {id:"breach_wallsit15",name:"Wall sit · 15min",icon:"🪑",unit:"min",target:15,step:5,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
-  {id:"breach_push300",name:"Pompes · 300reps",icon:"🦾",unit:"rep",target:300,step:25,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
-  {id:"breach_squats150",name:"Squats · 150reps",icon:"🦿",unit:"rep",target:150,step:10,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
+  {id:"breach_cold5",name:"Douche froide · 10min",icon:"🚿",unit:"épreuve",target:1,binary:true,xp:1500,stat:"Sante",xp2:500,stat2:"Discipline",desc:""},
+  {id:"breach_wallsit15",name:"Wall sit · 20min",icon:"🪑",unit:"min",target:20,step:5,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
+  {id:"breach_push300",name:"Pompes · 500reps",icon:"🦾",unit:"rep",target:500,step:25,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
+  {id:"breach_squats150",name:"Squats · 250reps",icon:"🦿",unit:"rep",target:250,step:10,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
   {id:"breach_pullups50",name:"Tractions · 50reps",icon:"🦾",unit:"rep",target:50,step:5,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
-  {id:"breach_plank15",name:"Gainage · 15min",icon:"🫳🏼",unit:"min",target:15,step:5,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
+  {id:"breach_plank15",name:"Gainage · 20min",icon:"🫳🏼",unit:"min",target:20,step:5,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
   {id:"breach_learning2h",name:"Apprentissage actif · 2h",icon:"🎓",unit:"épreuve",target:1,binary:true,xp:1500,stat:"Esprit",xp2:500,stat2:"Discipline",desc:""},
-  {id:"breach_reading1h",name:"Lecture · 1h",icon:"📚",unit:"épreuve",target:1,binary:true,xp:1500,stat:"Esprit",xp2:500,stat2:"Discipline",desc:""},
+  {id:"breach_reading1h",name:"Lecture · 2h",icon:"📚",unit:"épreuve",target:1,binary:true,xp:1500,stat:"Esprit",xp2:500,stat2:"Discipline",desc:""},
   {id:"breach_run10",name:"Running · 10km",icon:"🏃🏻",unit:"épreuve",target:1,binary:true,xp:2000,stat:"Endurance",desc:""},
-  {id:"breach_sprint10",name:"Running fractionné · 10 × 100 mètres",icon:"⚡",unit:"sér.",target:10,step:1,xp:1500,stat:"Endurance",xp2:500,stat2:"Agilite",desc:""},
+  {id:"breach_sprint10",name:"Running fractionné · 10 × 200 mètres",icon:"⚡",unit:"sér.",target:10,step:1,xp:1500,stat:"Endurance",xp2:500,stat2:"Agilite",desc:""},
   {id:"breach_rope30",name:"Corde à sauter · 30min",icon:"💦",unit:"min",target:30,step:5,xp:1500,stat:"Endurance",xp2:500,stat2:"Agilite",desc:""},
   {id:"breach_flex60",name:"Animal flow · 1h",icon:"🤸🏻",unit:"min",target:60,step:10,xp:1500,stat:"Agilite",xp2:500,stat2:"Endurance",desc:""},
   {id:"breach_martialflow60",name:"Flow martial · 1h",icon:"🌊",unit:"min",target:60,step:10,xp:1500,stat:"Agilite",xp2:500,stat2:"Endurance",desc:""}
