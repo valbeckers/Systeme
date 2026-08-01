@@ -45,7 +45,7 @@ const SP = {
     {id:"sp_nophone3h", name:"Pas d'écran · 3h", icon:"\uD83D\uDCF5",                unit:"jour", target:1, xp:500, xp2:250, stat2:"Discipline", days:1, binary:true},
   ],
   Endurance:[
-    {id:"sp_stairs",  name:"Montées/descentes d'escaliers · x30", icon:"\uD83E\uDE9C",                                 unit:"A/R",  target:30, xp:500, xp2:250, stat2:"Agilite", days:1},
+    {id:"sp_stairs",  name:"Escaliers · 30 montées/descentes", icon:"\uD83E\uDE9C",                                 unit:"A/R",  target:30, xp:500, xp2:250, stat2:"Agilite", days:1},
     {id:"sp_walk30",  name:"Marche · 30min",     icon:"\uD83D\uDEB6\uD83C\uDFFB\u200D\u2642\uFE0F",           unit:"min",  target:30, xp:500, days:1},
     {id:"sp_shadow_boxing", name:"Shadow boxing · 30min", icon:"🥊", unit:"min", target:30, xp:1250, days:1, tiers:[{at:15,xp:500,stat:"Endurance"},{at:30,xp:500,stat:"Endurance",xp2:250,stat2:"Force"}]},
   ],
