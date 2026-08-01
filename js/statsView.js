@@ -4,6 +4,148 @@ import { xpForLvl, totForLvl, getLvl } from "./xp.js";
 
 const { h, Fragment } = window.preact;
 
+function polarPoint(cx, cy, radius, index, total){
+  const angle = (-Math.PI / 2) + (index * Math.PI * 2 / total);
+  return {
+    x: cx + Math.cos(angle) * radius,
+    y: cy + Math.sin(angle) * radius,
+  };
+}
+
+function buildRadarPolygonPoints(values, maxValue, cx, cy, radius){
+  const total = values.length;
+  return values.map((value, index)=>{
+    const ratio = maxValue > 0 ? value / maxValue : 0;
+    const point = polarPoint(cx, cy, radius * ratio, index, total);
+    return `${point.x},${point.y}`;
+  }).join(" ");
+}
+
+function StatsRadarCard({ state }){
+  const statLevels = STATS.map(stat => ({
+    id: stat,
+    label: STAT_LBL[stat] || stat,
+    color: STAT_COLOR[stat] || "#fff",
+    value: Math.max(0, state.stats?.[stat] || 0),
+  }));
+
+  const maxValue = Math.max(1, ...statLevels.map(s => s.value));
+  const minValue = Math.min(...statLevels.map(s => s.value));
+  const strongest = statLevels.reduce((best, cur) => cur.value > best.value ? cur : best, statLevels[0]);
+  const weakest = statLevels.reduce((best, cur) => cur.value < best.value ? cur : best, statLevels[0]);
+  const perfectlyBalanced = maxValue === minValue;
+
+  const size = 260;
+  const cx = 130;
+  const cy = 122;
+  const radius = 74;
+  const gridLevels = 4;
+
+  const polygonPoints = buildRadarPolygonPoints(statLevels.map(s => s.value), maxValue, cx, cy, radius);
+
+  return h("div", { class:"card" },
+    h("div", { class:"ctitle" }, "Équilibre des stats"),
+    h("div", { style:"font-size:10px;color:var(--td);margin-bottom:8px" },
+      "Diagramme de Kiviat basé sur tes niveaux de statistiques."
+    ),
+    h("div", { style:"display:flex;justify-content:center;align-items:center;margin:6px 0 12px" },
+      h("svg", {
+        viewBox:`0 0 ${size} ${size}`,
+        style:"width:100%;max-width:260px;height:auto;overflow:visible"
+      },
+        Array.from({ length:gridLevels }, (_, idx) => {
+          const level = (idx + 1) / gridLevels;
+          const points = STATS.map((_, statIndex) => {
+            const point = polarPoint(cx, cy, radius * level, statIndex, STATS.length);
+            return `${point.x},${point.y}`;
+          }).join(" ");
+          return h("polygon", {
+            key:`grid-${idx}`,
+            points,
+            fill: idx === gridLevels - 1 ? "rgba(255,255,255,0.02)" : "transparent",
+            stroke:"rgba(255,255,255,0.10)",
+            "stroke-width":"1"
+          });
+        }),
+        STATS.map((stat, idx) => {
+          const outer = polarPoint(cx, cy, radius, idx, STATS.length);
+          const labelPoint = polarPoint(cx, cy, radius + 24, idx, STATS.length);
+          const label = STAT_LBL[stat] || stat;
+          const color = STAT_COLOR[stat] || "#fff";
+          return h(Fragment, { key:`axis-${stat}` },
+            h("line", {
+              x1: cx,
+              y1: cy,
+              x2: outer.x,
+              y2: outer.y,
+              stroke:"rgba(255,255,255,0.16)",
+              "stroke-width":"1"
+            }),
+            h("circle", {
+              cx: outer.x,
+              cy: outer.y,
+              r:"2.5",
+              fill: color,
+              opacity:"0.9"
+            }),
+            h("text", {
+              x: labelPoint.x,
+              y: labelPoint.y,
+              fill: color,
+              "font-size":"10",
+              "font-family":"Orbitron, sans-serif",
+              "text-anchor": labelPoint.x < cx - 10 ? "end" : (labelPoint.x > cx + 10 ? "start" : "middle"),
+              "dominant-baseline": labelPoint.y < cy - 30 ? "auto" : (labelPoint.y > cy + 30 ? "hanging" : "middle")
+            }, label)
+          );
+        }),
+        h("polygon", {
+          points: polygonPoints,
+          fill:"rgba(139, 92, 246, 0.22)",
+          stroke:"rgba(192, 132, 252, 0.95)",
+          "stroke-width":"2"
+        }),
+        statLevels.map((stat, idx) => {
+          const point = polarPoint(cx, cy, maxValue > 0 ? radius * (stat.value / maxValue) : 0, idx, STATS.length);
+          return h("circle", {
+            key:`value-${stat.id}`,
+            cx: point.x,
+            cy: point.y,
+            r:"3.5",
+            fill: stat.color,
+            stroke:"#111827",
+            "stroke-width":"1.2"
+          });
+        }),
+        h("circle", { cx, cy, r:"3", fill:"#fff", opacity:"0.9" })
+      )
+    ),
+    h("div", { style:"display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:10px" },
+      h("div", { style:"padding:8px 10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06)" },
+        h("div", { style:"font-size:9px;color:var(--td);text-transform:uppercase;letter-spacing:1px;font-family:Orbitron,sans-serif" }, "Point fort"),
+        h("div", { style:`margin-top:4px;font-size:12px;font-family:Orbitron,sans-serif;color:${strongest.color}` }, strongest.label),
+        h("div", { style:"margin-top:3px;font-size:10px;color:#fff" }, `Niveau ${strongest.value}`)
+      ),
+      h("div", { style:"padding:8px 10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06)" },
+        h("div", { style:"font-size:9px;color:var(--td);text-transform:uppercase;letter-spacing:1px;font-family:Orbitron,sans-serif" }, perfectlyBalanced ? "Équilibre" : "À renforcer"),
+        h("div", { style:`margin-top:4px;font-size:12px;font-family:Orbitron,sans-serif;color:${weakest.color}` }, perfectlyBalanced ? "Profil équilibré" : weakest.label),
+        h("div", { style:"margin-top:3px;font-size:10px;color:#fff" }, perfectlyBalanced ? `Toutes les stats sont niv. ${maxValue}` : `Niveau ${weakest.value}`)
+      )
+    ),
+    h("div", { style:"display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px" },
+      statLevels.map(stat =>
+        h("div", {
+          key:`legend-${stat.id}`,
+          style:"display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04)"
+        },
+          h("span", { style:`font-size:10px;color:${stat.color}` }, stat.label),
+          h("span", { style:"font-size:10px;color:#fff;font-family:Orbitron,sans-serif" }, `Niv. ${stat.value}`)
+        )
+      )
+    )
+  );
+}
+
 export function StatsTab({
   state,
   effectiveXp,
@@ -107,6 +249,7 @@ export function StatsTab({
       ),
       h("div",{class:"xpbar",style:"height:7px"},h("div",{class:"xpfill",style:"width:"+globalLevel.pct+"%"}))
     ),
+    h(StatsRadarCard,{state}),
     h("div",{class:"card"},
       h("div",{class:"ctitle"},"Caractéristiques"),
       STATS.map(s=>{
