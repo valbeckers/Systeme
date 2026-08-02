@@ -79,13 +79,6 @@ function StatsRadarCard({ state }){
               stroke:"rgba(255,255,255,0.16)",
               "stroke-width":"1"
             }),
-            h("circle", {
-              cx: outer.x,
-              cy: outer.y,
-              r:"2.5",
-              fill: color,
-              opacity:"0.9"
-            }),
             h("text", {
               x: labelPoint.x,
               y: labelPoint.y,
@@ -102,6 +95,18 @@ function StatsRadarCard({ state }){
           fill:"rgba(139, 92, 246, 0.22)",
           stroke:"rgba(192, 132, 252, 0.95)",
           "stroke-width":"2"
+        }),
+        statLevels.map((stat, idx) => {
+          const point = polarPoint(cx, cy, maxValue > 0 ? radius * (stat.value / maxValue) : 0, idx, STATS.length);
+          return h("circle", {
+            key:`value-${stat.id}`,
+            cx: point.x,
+            cy: point.y,
+            r:"3.5",
+            fill: stat.color,
+            stroke:"#111827",
+            "stroke-width":"1.2"
+          });
         }),
         h("circle", { cx, cy, r:"3", fill:"#fff", opacity:"0.9" })
       )
