@@ -21,7 +21,7 @@ import {
   applyDailyStreakRewardState
 } from "./dailyEngine.js";
 import { BREACH_POOL } from "./breachDefs.js";
-import { DUNGEONS } from "./dungeonDefs.js";
+import { DUNGEONS, DUNGEON_RUPTURE_BOSSES } from "./dungeonDefs.js";
 import {
   dungeonRoomRewardPairs,
   dungeonRewardPairs,
@@ -286,7 +286,7 @@ function App(){
   const [dungeonHelpOpen,setDungeonHelpOpen] = useState({});
   const [selectedDungeonRoom,setSelectedDungeonRoom] = useState(null);
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
-  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,reg:false,sq:false,breach:false,debt:false,dj:false,cs:false});
+  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,reg:false,sq:false,breach:false,breachRupture:false,debt:false,dj:false,djAlt:false,cs:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
   const [showStatReqDetail,setShowStatReqDetail] = useState(false);
   const [showRankReqStats,setShowRankReqStats] = useState(false);
@@ -4049,7 +4049,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   }
 
   function Codex(){
-    const toggleC = k => setCodexOpen(o=>({obl:false,bonus:false,reg:false,sq:false,ev:false,mm:false,debt:false,ep:false,dj:false,cs:false,[k]:!o[k]}));
+    const toggleC = k => setCodexOpen(o=>({obl:false,bonus:false,reg:false,sq:false,ev:false,mm:false,debt:false,ep:false,breach:false,breachRupture:false,dj:false,djAlt:false,cs:false,[k]:!o[k]}));
     const statLabel = stat => STAT_LBL2[stat] || STAT_LBL[stat] || stat || "";
     const unitPlural = (unit, value) => {
       if(!unit) return "";
@@ -4236,6 +4236,15 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       );
     }
 
+    function renderDungeonAltBossCodex(item){
+      const color=STAT_COLOR[item.stat]||item.color||"var(--rc)";
+      return h("div",{key:item.id,style:"margin-bottom:9px;padding:9px 10px;border-radius:9px;border:1px solid "+color+"33;background:"+color+"08"},
+        h("div",{style:"font-size:11px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;line-height:1.3"},item.name),
+        h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:4px"},item.dungeonTitle),
+        h("div",{style:"font-size:10px;color:#fff;line-height:1.45;margin-top:5px"},item.objective)
+      );
+    }
+
     function renderBreachBossCodex(rb){
       const color=STAT_COLOR[rb.stat]||"var(--rc)";
       return h("div",{key:rb.id,style:"margin-bottom:9px;padding:9px 10px;border-radius:9px;border:1px solid "+color+"33;background:"+color+"08"},
@@ -4348,6 +4357,13 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const boss=buildBreachRuptureBoss(b.id);
       return boss?{...boss,stat:b.stat,breachId:b.id}:null;
     }).filter(Boolean);
+    const dungeonAltBossList=DUNGEONS.flatMap(dg=>(DUNGEON_RUPTURE_BOSSES[dg.id]||[]).map(boss=>({
+      ...boss,
+      id:dg.id+"_"+boss.id,
+      stat:dg.stat,
+      color:dg.color,
+      dungeonTitle:dg.title
+    })));
 
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setInventoryItem(null)}},
       h("div",{class:"modal",style:"position:relative;max-width:470px;width:calc(100% - 24px);max-height:88vh;overflow:auto;padding-top:16px"},
@@ -4357,20 +4373,28 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         ),
         h("div",{style:"display:flex;justify-content:center;align-items:center;margin:14px 0 8px"},InventoryItemIcon("codex",128)),
         h("div",{style:"font-size:12px;line-height:1.6;color:var(--tx);text-align:center;margin-bottom:15px"},"Catalogue complet des quêtes et systèmes de l’application."),
-        h(Section,{id:"breach",title:"Brèches",count:breachList.length+breachBossList.length},
+        h(Section,{id:"breach",title:"Brèches",count:breachList.length},
           h(Fragment,null,
-            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Une Brèche a 1 % de chance d’apparaître au reset quotidien. Elle remplace la quête urgente du jour et reste ouverte 72 h. Si elle n’est pas refermée, elle entre en Rupture pendant 24 h : son Boss reprend l’objectif initial et invoque une garde rapprochée composée de 3 sous-quêtes. Les 4 objectifs doivent être accomplis pour obtenir l’XP initiale de la Brèche et un objet aléatoire garanti. En cas d’échec, un malus de −25 % d’XP s’applique pendant 24 h."),
-            groupByDominantStat(breachList,renderBreachSpecial),
-            h("div",{style:"margin-top:13px;padding-top:11px;border-top:1px solid rgba(255,255,255,0.08)"},
-              h("div",{style:"font-size:9px;color:#fff;font-family:Orbitron,sans-serif;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:9px"},"Boss de Rupture"),
-              groupByDominantStat(breachBossList,renderBreachBossCodex,rb=>rb.stat)
-            )
+            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Une Brèche a 1 % de chance d’apparaître au reset quotidien. Elle remplace la quête urgente du jour et reste ouverte 72 h."),
+            groupByDominantStat(breachList,renderBreachSpecial)
+          )
+        ),
+        h(Section,{id:"breachRupture",title:"Rupture de Brèche",count:breachBossList.length},
+          h(Fragment,null,
+            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Si une Brèche n’est pas refermée après 72 h, elle entre en Rupture pendant 24 h. Son Boss reprend l’objectif initial et invoque une garde rapprochée de 3 sous-quêtes."),
+            groupByDominantStat(breachBossList,renderBreachBossCodex,rb=>rb.stat)
           )
         ),
         h(Section,{id:"dj",title:"Donjons",count:DUNGEONS.length},
           h(Fragment,null,
             h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Un Donjon inachevé se ferme à l’expiration de son délai. Les salles déjà validées et leurs XP restent acquises."),
             groupByDominantStat(DUNGEONS,renderDungeonCodex,dg=>dg.stat)
+          )
+        ),
+        h(Section,{id:"djAlt",title:"Donjons alternatifs",count:dungeonAltBossList.length},
+          h(Fragment,null,
+            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Boss alternatifs accessibles via le Contrat du Maître. Chaque Boss remplace le Boss classique du donjon concerné par un objectif alternatif."),
+            groupByDominantStat(dungeonAltBossList,renderDungeonAltBossCodex,item=>item.stat)
           )
         ),
         h(Section,{id:"bonus",title:"Quêtes bonus",count:bonus.length+hiddenBonus.length},
