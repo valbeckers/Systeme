@@ -1846,6 +1846,27 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
+  function UrgentHomeRow({sq}){
+    const target=Math.max(1,Number(sq.target)||1);
+    const progress=Math.max(0,Number(sq.progress)||0);
+    const pct=Math.min(100,(progress/target)*100);
+    const done=progress>=target;
+    const over=progress>target;
+    const fillStateClass=over ? " over" : (done ? " done" : (pct>0 ? " partial" : ""));
+    const unit=((progress>1||target>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[sq.unit])||sq.unit;
+    const progressText=fmtNum(progress)+"/"+fmtNum(target)+(sq.compactUnit?"":" ")+(unit||"");
+    return h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:0"},
+      QuestIcon(sq.id,sq.icon,14),
+      h("div",{style:"flex:1"},
+        h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center;gap:8px"},
+          h("span",{style:"white-space:normal;line-height:1.25;word-break:normal;min-width:0"},sq.name),
+          h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+(done?"var(--rc)":progress>0?"var(--tx)":"var(--td)")+";white-space:nowrap;flex-shrink:0"},progressText)
+        ),
+        h("div",{class:"qbar"},h("div",{class:"qfill"+fillStateClass,style:"width:"+pct+"%"}))
+      )
+    );
+  }
+
   function EnduranceChoiceItem({mode="quest"}={}){
     if(selectedEnduranceQuest){
       return mode==="home"
@@ -1994,13 +2015,13 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("div",{class:"qbar"},h("div",{class:"qfill"+(done?" done":pct>0?" partial":""),style:sqFillStyle}))
           ),
       !done&&h("div",{style:"font-size:10px;color:"+(urgent?"#ef4444":"#ef4444bb")+";font-family:Orbitron,sans-serif;margin-top:4px;text-align:"+(showInput?"left":"right")},"\u23F1 "+fmtCD(remaining)+" restants"),
-      showInput&&!done&&h("div",{style:"margin-top:8px"},
+      showInput&&!done&&!sqRerollUsed&&(sq.progress||0)<=0&&h("div",{style:"margin-top:8px"},
         h("button",{
-          disabled:sq.summonedByToken || sqRerollUsed || (sq.progress||0)>0,
+          disabled:sq.summonedByToken,
           onClick:()=>setConfirmRerollSq(sq),
-          style:"width:100%;padding:9px;border-radius:8px;border:1px solid "+(sq.summonedByToken || sqRerollUsed || (sq.progress||0)>0 ? "rgba(255,255,255,0.08)" : "#f59e0b66")+";background:"+(sq.summonedByToken || sqRerollUsed || (sq.progress||0)>0 ? "rgba(255,255,255,0.02)" : "rgba(245,158,11,0.06)")+";color:"+(sq.summonedByToken || sqRerollUsed || (sq.progress||0)>0 ? "var(--td)" : "#f59e0b")+";font-family:Orbitron,sans-serif;font-size:10px;cursor:"+(sq.summonedByToken || sqRerollUsed || (sq.progress||0)>0 ? "default" : "pointer")+";letter-spacing:1px;text-transform:uppercase;opacity:"+(sq.summonedByToken || sqRerollUsed || (sq.progress||0)>0 ? ".65" : "1")
+          style:"width:100%;padding:9px;border-radius:8px;border:1px solid "+(sq.summonedByToken ? "rgba(255,255,255,0.08)" : "#f59e0b66")+";background:"+(sq.summonedByToken ? "rgba(255,255,255,0.02)" : "rgba(245,158,11,0.06)")+";color:"+(sq.summonedByToken ? "var(--td)" : "#f59e0b")+";font-family:Orbitron,sans-serif;font-size:10px;cursor:"+(sq.summonedByToken ? "default" : "pointer")+";letter-spacing:1px;text-transform:uppercase;opacity:"+(sq.summonedByToken ? ".65" : "1")
         },
-          sq.summonedByToken ? "Relance indisponible pour une quête invoquée" : (sqRerollUsed ? "Relance utilisée aujourd'hui" : ((sq.progress||0)>0 ? "Relance indisponible après progression" : "↻ Relancer la quête (1/jour)"))
+          sq.summonedByToken ? "Relance indisponible pour une quête invoquée" : "↻ Relancer la quête (1/jour)"
         )
       ),
       showInput&&!done&&(
@@ -2611,8 +2632,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(DebtCard,null),
       activeBreach&&h(BreachCard,{compact:true}),
       activeSq&&h("div",{class:"card",style:"border-color:#ef444444"},
-        h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Quête urgente"+(activeSq.tier?" · "+(SQ_TIER_LABEL[activeSq.tier]||""):"")),
-        h(SqCard,{sq:activeSq,showInput:false})
+        h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Quête urgente"),
+        h(UrgentHomeRow,{sq:activeSq})
       ),
       activeDungeon&&h(DungeonConsultCard,null),
 
