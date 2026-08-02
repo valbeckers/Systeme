@@ -2403,17 +2403,27 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       );
     }
 
-    return h("div",{class:"card",style:"border-color:"+color+"66;background:linear-gradient(135deg,"+color+"12,rgba(255,255,255,.025))"},
-      h("div",{class:"ctitle",style:"color:"+color+";margin-bottom:8px"},"Dette active"),
-      h("div",{style:"display:flex;align-items:center;gap:9px"},
-        QuestIcon(debt.id,debt.icon,16,"min-width:24px"),
-        h("div",{style:"flex:1"},
-          h("div",{style:"font-size:14px;font-weight:800;color:var(--tx)"},debt.name)
-        ),
-        h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:"+color},fmtNum(paid)+"/"+fmtNum(amount)+" "+debt.unit)
+    return h("div",{class:"card",style:"border-color:"+color+"44"},
+      h("div",{class:"shdr"},
+        h("div",null,
+          h("div",{class:"ctitle",style:"margin:0;color:"+color},"Dette active")
+        )
       ),
-      h("div",{class:"qbar",style:"margin-top:9px"},h("div",{class:"qfill"+(pct>=100?" done":pct>0?" partial":""),style:"width:"+pct+"%"})),
-      h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;margin-top:8px"},"⏱ "+fmtCD(debtRemaining)+" restants")
+      h("div",{class:"sqcard"},
+        h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;gap:8px"},
+          h("div",{style:"display:flex;align-items:center;gap:8px;min-width:0"},
+            QuestIcon(debt.id,debt.icon,14,"line-height:1.1;min-width:24px;text-align:center"),
+            h("div",{style:"min-width:0;flex:1"},
+              h("div",{style:"font-size:13px;font-weight:700;color:var(--tx);line-height:1.25"},debt.name)
+            )
+          )
+        ),
+        h("div",{class:"qrow",style:"align-items:center;margin-top:6px"},
+          h("div",{class:"qbar"},h("div",{class:"qfill"+(pct>=100?" done":pct>0?" partial":""),style:"width:"+pct+"%;background:"+color})),
+          h("div",{class:"qxp",style:"color:"+(paid>=amount?"#4ade80":color)+";white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},fmtNum(paid)+"/"+fmtNum(amount)+" "+debt.unit)
+        ),
+        h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;margin-top:4px;text-align:left"},"⏱ "+fmtCD(debtRemaining)+" restants")
+      )
     );
   }
 
