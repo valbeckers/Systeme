@@ -63,7 +63,7 @@ const BREACH_RUPTURE_BOSSES = {
   breach_plank15:{
     id:"breach_boss_bastion",name:"Polyphème",guards:[
       {id:"maitre_articulations",name:"La Gorgone",objective:"Faire 10 minutes de mobilité complète",unit:"min",target:10,step:5},
-      {id:"broyeur",name:"Le Broyeur",objective:"Effectuer 100 crunches",unit:"rep",target:100,step:25},
+      {id:"broyeur",name:"Le Ver Pourpre",objective:"Effectuer 100 crunches",unit:"rep",target:100,step:25},
       {id:"flanc_garde",name:"Le Naga",objective:"Effectuer 50 répétitions de gainage oblique",unit:"rep",target:50,step:10},
     ]
   },
@@ -71,25 +71,25 @@ const BREACH_RUPTURE_BOSSES = {
     id:"breach_boss_archiviste",name:"L’Archiviste Noir",guards:[
       {id:"scribe",name:"Le Scribe Déchu",objective:"Rédiger un résumé de 300 mots de ce que tu viens d’apprendre",unit:"mot",target:300,step:50},
       {id:"mnemarque",name:"Le Détraqueur",objective:"Réaliser 20 minutes de mémorisation",unit:"min",target:20,step:5},
-      {id:"veilleur_muet",name:"L’Homme Pâle",objective:"Garder le téléphone hors de portée et couper les notifications pendant 3 heures",unit:"h",target:3,step:1},
+      {id:"veilleur_muet",name:"Le Palantír",objective:"Garder le téléphone hors de portée et couper les notifications pendant 3 heures",unit:"h",target:3,step:1},
     ]
   },
   breach_reading1h:{
     id:"breach_boss_sage_dechu",name:"Le Sage Déchu",guards:[
       {id:"contemplateur",name:"Māra",objective:"Méditer pendant 10 minutes",unit:"min",target:10,step:5},
       {id:"recitant",name:"Le Détraqueur",objective:"Restituer 10 idées de mémoire sans rouvrir le texte",unit:"idée",target:10,step:1},
-      {id:"gardien_silence",name:"L’Homme Pâle",objective:"Passer 30 minutes sans téléphone, musique, vidéo ni podcast",unit:"min",target:30,step:10},
+      {id:"gardien_silence",name:"Le Palantír",objective:"Passer 30 minutes sans téléphone, musique, vidéo ni podcast",unit:"min",target:30,step:10},
     ]
   },
   breach_run10:{
     id:"breach_boss_arpenteur",name:"La Chimère",guards:[
       {id:"eclaireur",name:"La Gargouille",objective:"Effectuer 5 minutes d’échauffement dynamique",unit:"min",target:5,step:1},
       {id:"cadenceur",name:"Le Satyre",objective:"Effectuer 100 jumping jacks",unit:"rep",target:100,step:25},
-      {id:"recuperateur",name:"Le Fauche-Jambes",objective:"Faire 10 minutes de marche ou de mobilité après la course",unit:"min",target:10,step:5},
+      {id:"recuperateur",name:"Le Draugr",objective:"Faire 10 minutes de marche ou de mobilité après la course",unit:"min",target:10,step:5},
     ]
   },
   breach_sprint10:{
-    id:"breach_boss_predateur",name:"Le Prédateur",guards:[
+    id:"breach_boss_predateur",name:"Le Warg Alpha",guards:[
       {id:"pisteur",name:"L’Engourdisseur",objective:"Effectuer 5 minutes d’échauffement dynamique",unit:"min",target:5,step:1},
       {id:"rabatteur",name:"Le Satyre",objective:"Effectuer 100 jumping jacks",unit:"rep",target:100,step:25},
       {id:"retour_chasse",name:"Le Draugr",objective:"Faire 10 minutes de marche ou de mobilité après la course",unit:"min",target:10,step:5},
