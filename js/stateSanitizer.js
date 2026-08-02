@@ -136,6 +136,20 @@ function cleanCompletedSqLogEntry(q,map){
   };
 }
 
+function cleanSqDrawLogEntry(q,map){
+  if(!q) return null;
+  const id=typeof q==="string"?q:q.id;
+  if(!id || !map[id]) return null;
+  const tpl=map[id];
+  const drawnAt=Number((typeof q==="object"&&(q.drawnAt||q.startedAt||q.completedAt))||0)||Date.now();
+  return {
+    sqid:(typeof q==="object"&&q.sqid)||("draw_"+drawnAt+"_"+id),
+    id:tpl.id,
+    stat:normalizeLegacyStat(tpl.stat),
+    drawnAt
+  };
+}
+
 function cleanDailyExtraXp(extra){
   const allowed=new Set(["eventBonus","sq","breach","dungeon","streak","debt"]);
   const out={};
@@ -228,6 +242,11 @@ export function cleanSystemState(raw){
     .map(q=>cleanCompletedSqLogEntry(q,spMap))
     .filter(Boolean);
 
+  const sqDrawLog=(data.sqDrawLog||[])
+    .map(q=>cleanSqDrawLogEntry(q,spMap))
+    .filter(Boolean)
+    .slice(-120);
+
   const sqStatCycle=(data.sqStatCycle||[])
     .map(normalizeLegacyStat)
     .filter(stat=>STATS.includes(stat));
@@ -302,6 +321,7 @@ export function cleanSystemState(raw){
     dailyCompletionAnimDay:data.dailyCompletionAnimDay||null,
     bonusCompletionAnimDay:data.bonusCompletionAnimDay||null,
     completedSqLog,
+    sqDrawLog,
     sqStatCycle
   };
 }

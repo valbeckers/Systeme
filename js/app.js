@@ -1,6 +1,6 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
 import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js";
-import { pickRandomSq } from "./urgentQuestEngine.js";
+import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js";
 import {
   isDebtEligibleQuest,
   createQuestDebtState,
@@ -227,12 +227,12 @@ function App(){
     const cooldownOk=now>=sqCdUntil;
     const staleCooldownWithoutQuest=!hasActive&&!hasCompletedThisWindow&&sqCdUntil>now;
     if(base.breachTriggeredDay!==eventDayStr(now)&&!hasActive&&!hasCompletedThisWindow&&(cooldownOk||staleCooldownWithoutQuest)){
-      const result=pickRandomSq(sqs.filter(q=>!q.completedAt).map(q=>q.id),base.sqStatCycle,base.completedSqLog,base.urgentCompassStat);
+      const result=pickRandomSq(sqs.filter(q=>!q.completedAt).map(q=>q.id),base.sqStatCycle,base.sqDrawLog,base.urgentCompassStat);
       if(result){
         const {tpl,pickedStat,cycleReset,forced}=result;
         const sq={...tpl,sqid:"sq_"+now,progress:0,startedAt:now,expiresAt:next7AM(now),completedAt:null};
         const newCycle = forced ? [...(base.sqStatCycle||[])] : (cycleReset ? [pickedStat] : [...(base.sqStatCycle||[]),pickedStat]);
-        return {...base,specialQuests:[...sqs.filter(q=>q.completedAt),sq],sqStatCycle:newCycle,sqCooldownUntil:next7AM(now),sqRerollDay:null,urgentCompassStat:forced?null:base.urgentCompassStat};
+        return {...base,specialQuests:[...sqs.filter(q=>q.completedAt),sq],sqStatCycle:newCycle,sqDrawLog:appendUrgentQuestDrawLog(base.sqDrawLog,sq,now),sqCooldownUntil:next7AM(now),sqRerollDay:null,urgentCompassStat:forced?null:base.urgentCompassStat};
       }
     }
     return base;
@@ -676,7 +676,7 @@ function App(){
       const result=pickRandomSq(
         current.filter(q=>!q.completedAt).map(q=>q.id).filter(Boolean),
         s.sqStatCycle,
-        s.completedSqLog,
+        s.sqDrawLog,
         s.urgentCompassStat
       );
       if(!result) return s;
@@ -687,6 +687,7 @@ function App(){
         ...s,
         specialQuests:[...current.filter(q=>q.completedAt),sq],
         sqStatCycle:newCycle,
+        sqDrawLog:appendUrgentQuestDrawLog(s.sqDrawLog,sq,t),
         sqCooldownUntil:next7AM(t),
         sqRerollDay:null,
         urgentCompassStat:forced?null:s.urgentCompassStat,
@@ -1047,13 +1048,13 @@ function App(){
       const hasActive = sqsNow.find(q=>!q.completedAt&&Date.now()<q.expiresAt);
       const cd = s.sqCooldownUntil||0;
       if(hasActive || Date.now()<cd) return s;
-      const result=pickRandomSq(sqsNow.filter(q=>!q.completedAt).map(q=>q.id),s.sqStatCycle,s.completedSqLog,s.urgentCompassStat);
+      const result=pickRandomSq(sqsNow.filter(q=>!q.completedAt).map(q=>q.id),s.sqStatCycle,s.sqDrawLog,s.urgentCompassStat);
       if(!result)return s;
       const {tpl,pickedStat,cycleReset,forced}=result;
       const t = Date.now();
       const sq={...tpl,sqid:"sq_"+t,progress:0,startedAt:t,expiresAt:next7AM(t),completedAt:null};
       const newCycle = forced ? [...(s.sqStatCycle||[])] : (cycleReset ? [pickedStat] : [...(s.sqStatCycle||[]),pickedStat]);
-      return {...s,specialQuests:[...sqsNow.filter(q=>q.completedAt),sq],sqStatCycle:newCycle,sqCooldownUntil:next7AM(t),urgentCompassStat:forced?null:s.urgentCompassStat};
+      return {...s,specialQuests:[...sqsNow.filter(q=>q.completedAt),sq],sqStatCycle:newCycle,sqDrawLog:appendUrgentQuestDrawLog(s.sqDrawLog,sq,t),sqCooldownUntil:next7AM(t),urgentCompassStat:forced?null:s.urgentCompassStat};
     });
   },[sqReady]);
 
@@ -1406,26 +1407,26 @@ function App(){
       const completedToday=list.filter(q=>q.completedAt&&eventDayStr(q.completedAt)===day).sort((a,b)=>(b.completedAt||0)-(a.completedAt||0));
       if(hasActive || !completedToday.length) return s;
       const lastCompleted=completedToday[0];
-      const result=pickRandomSq([lastCompleted.id],s.sqStatCycle,s.completedSqLog,null);
+      const result=pickRandomSq([lastCompleted.id],s.sqStatCycle,s.sqDrawLog,null);
       if(!result) return s;
       const {tpl,pickedStat,cycleReset}=result;
       const sq={...tpl,sqid:"sq_token_"+t,progress:0,startedAt:t,expiresAt:next7AM(t),completedAt:null,summonedByToken:true};
       const newCycle=cycleReset?[pickedStat]:[...(s.sqStatCycle||[]),pickedStat];
       inv.rerollToken=Math.max(0,(Number(inv.rerollToken)||0)-1);
-      return {...s,inventory:inv,specialQuests:[...list.filter(q=>q.completedAt),sq],sqStatCycle:newCycle,sqCooldownUntil:next7AM(t),urgentTokenUseDay:day,lastActiveDay:day};
+      return {...s,inventory:inv,specialQuests:[...list.filter(q=>q.completedAt),sq],sqStatCycle:newCycle,sqDrawLog:appendUrgentQuestDrawLog(s.sqDrawLog,sq,t),sqCooldownUntil:next7AM(t),urgentTokenUseDay:day,lastActiveDay:day};
     });
     setItemUseUp({id:"rerollToken",summoned:true});
   }
 
   function launchNewSq(){
     setState(s=>{
-      const result=pickRandomSq((s.specialQuests||[]).filter(q=>!q.completedAt).map(q=>q.id),s.sqStatCycle,s.completedSqLog,s.urgentCompassStat);
+      const result=pickRandomSq((s.specialQuests||[]).filter(q=>!q.completedAt).map(q=>q.id),s.sqStatCycle,s.sqDrawLog,s.urgentCompassStat);
       if(!result)return s;
       const {tpl,pickedStat,cycleReset,forced}=result;
       const t=Date.now();
       const sq={...tpl,sqid:"sq_"+t,progress:0,startedAt:t,expiresAt:next7AM(t),completedAt:null};
       const newCycle = forced ? [...(s.sqStatCycle||[])] : (cycleReset ? [pickedStat] : [...(s.sqStatCycle||[]),pickedStat]);
-      return {...s,specialQuests:[...s.specialQuests.filter(q=>q.completedAt),sq],sqStatCycle:newCycle,sqCooldownUntil:next7AM(t),urgentCompassStat:forced?null:s.urgentCompassStat};
+      return {...s,specialQuests:[...s.specialQuests.filter(q=>q.completedAt),sq],sqStatCycle:newCycle,sqDrawLog:appendUrgentQuestDrawLog(s.sqDrawLog,sq,t),sqCooldownUntil:next7AM(t),urgentCompassStat:forced?null:s.urgentCompassStat};
     });
   }
 
@@ -1438,13 +1439,13 @@ function App(){
       const active=(s.specialQuests||[]).find(q=>q.sqid===sq.sqid&&!q.completedAt);
       if(!active || (active.progress||0)>0 || s.sqRerollDay===tDay) return s;
 
+      // Une quête passée par Relance compte comme consommée exactement comme une quête accomplie :
+      // sa statistique reste dans le cycle courant et son ID entre dans l'historique de tirage.
       const cycleBase=[...(s.sqStatCycle||[])];
-      if(cycleBase.length && cycleBase[cycleBase.length-1]===active.stat){
-        cycleBase.pop();
-      }
+      const drawLogBeforeReroll=appendUrgentQuestDrawLog(s.sqDrawLog,active,active.startedAt||Date.now());
 
       const usedIds=(s.specialQuests||[]).filter(q=>!q.completedAt).map(q=>q.id).filter(Boolean);
-      const result=pickRandomSq(usedIds,cycleBase,s.completedSqLog);
+      const result=pickRandomSq(usedIds,cycleBase,drawLogBeforeReroll);
       if(!result) return s;
 
       const {tpl,pickedStat,cycleReset}=result;
@@ -1460,6 +1461,7 @@ function App(){
         ...s,
         specialQuests:[...(s.specialQuests||[]).filter(q=>q.completedAt),newSq],
         sqStatCycle:newCycle,
+        sqDrawLog:appendUrgentQuestDrawLog(drawLogBeforeReroll,newSq,t),
         sqCooldownUntil:next7AM(t),
         sqRerollDay:tDay,
         lastActiveDay:tDay

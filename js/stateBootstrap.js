@@ -75,6 +75,7 @@ const IMPORTED = {
   dailyExtraXp:{},
   sqRerollDay:null,
   completedSqLog:[],
+  sqDrawLog:[],
   sqStatCycle:[],
   regressionLog:{},
   enduranceChoiceByDay:{},
@@ -171,6 +172,7 @@ export function buildInitialState(){
     enduranceChoiceByDay:saved.enduranceChoiceByDay||{},
     exerciseRotationByDay:saved.exerciseRotationByDay||{},
     completedSqLog:saved.completedSqLog||[],
+    sqDrawLog:saved.sqDrawLog||[],
     sqStatCycle:saved.sqStatCycle||[],
     stats:saved.stats||IMPORTED.stats,
     statXp:saved.statXp||IMPORTED.statXp,
@@ -208,6 +210,19 @@ export function buildInitialState(){
     const id=typeof entry==="string"?entry:entry&&entry.id;
     return !id || validSpecialQuestIds.has(id);
   });
+  // Migration du nouveau journal de tirages : on reprend l'historique existant et
+  // la quête actuellement visible afin qu'une Relance ne réinitialise pas son cycle.
+  const drawCandidates=[...(out.sqDrawLog||[]),...(out.completedSqLog||[]),...(out.specialQuests||[])];
+  const drawSeen=new Set();
+  out.sqDrawLog=drawCandidates.map(entry=>{
+    if(!entry) return null;
+    const id=typeof entry==="string"?entry:entry.id;
+    if(!id || !validSpecialQuestIds.has(id)) return null;
+    const sqid=typeof entry==="string"?("legacy_"+id):entry.sqid||("legacy_"+id+"_"+(entry.drawnAt||entry.startedAt||entry.completedAt||0));
+    if(drawSeen.has(sqid)) return null;
+    drawSeen.add(sqid);
+    return {sqid,id,stat:entry.stat||null,drawnAt:Number(entry.drawnAt||entry.startedAt||entry.completedAt)||Date.now()};
+  }).filter(Boolean).slice(-120);
   if(hadRemovedActive) {
     out.sqCooldownUntil=null;
     out.sqRerollDay=null;

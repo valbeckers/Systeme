@@ -14,7 +14,22 @@ export const URGENT_QUEST_STATS = Object.freeze([
   "Discipline"
 ]);
 
-export function pickRandomSq(usedIds,statCycle,completedLog,forcedStat=null){
+export function appendUrgentQuestDrawLog(log,quest,drawnAt=Date.now()){
+  if(!quest || !quest.id) return Array.isArray(log)?log:[];
+  const current=Array.isArray(log)?log:[];
+  const sqid=quest.sqid||("draw_"+drawnAt+"_"+quest.id);
+  if(current.some(entry=>entry && entry.sqid===sqid)) return current;
+  const entry={
+    sqid,
+    id:quest.id,
+    stat:quest.stat||null,
+    drawnAt:Number(drawnAt)||Date.now()
+  };
+  // On conserve une marge confortable ; le tirage n'utilise que les 24 derniers.
+  return [...current,entry].slice(-120);
+}
+
+export function pickRandomSq(usedIds,statCycle,selectionLog,forcedStat=null){
   const stats=URGENT_QUEST_STATS;
   const cycle = [...new Set((statCycle||[]).filter(s=>stats.includes(s)))];
   const remaining = stats.filter(s=>!cycle.includes(s));
@@ -23,11 +38,11 @@ export function pickRandomSq(usedIds,statCycle,completedLog,forcedStat=null){
 
   // Anti-répétition : une même quête urgente ne peut pas revenir avant 4 cycles complets.
   const recentWindow = stats.length * 4;
-  const recentIds = (completedLog||[])
+  const recentIds = (selectionLog||[])
     .slice(-recentWindow)
     .map(x=>typeof x==="string" ? x : x.id)
     .filter(Boolean);
-  const lastCompletedId=(completedLog||[]).slice().reverse().map(x=>typeof x==="string"?x:x&&x.id).find(Boolean)||null;
+  const lastDrawnId=(selectionLog||[]).slice().reverse().map(x=>typeof x==="string"?x:x&&x.id).find(Boolean)||null;
 
   const availableForStat = (s, respectCooldown=true) => (SP[s]||[]).filter(t =>
     !(usedIds||[]).includes(t.id) &&
@@ -36,8 +51,8 @@ export function pickRandomSq(usedIds,statCycle,completedLog,forcedStat=null){
 
   // La Boussole force uniquement la statistique. Le cycle de statistiques reste intact.
   if(stats.includes(forcedStat)){
-    let avail=availableForStat(forcedStat,true).filter(t=>t.id!==lastCompletedId);
-    if(!avail.length) avail=availableForStat(forcedStat,false).filter(t=>t.id!==lastCompletedId);
+    let avail=availableForStat(forcedStat,true).filter(t=>t.id!==lastDrawnId);
+    if(!avail.length) avail=availableForStat(forcedStat,false).filter(t=>t.id!==lastDrawnId);
     if(!avail.length) avail=availableForStat(forcedStat,false);
     if(!avail.length) return null;
     const chosen=avail[Math.floor(Math.random()*avail.length)];
