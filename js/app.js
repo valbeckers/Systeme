@@ -2375,6 +2375,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const amount=Math.max(1,Number(debt.amount)||1);
     const pct=Math.min(100,(paid/amount)*100);
     const isDue=debt.dueDay===today;
+    const debtDeadline=(()=>{
+      const d=new Date(debt.dueDay+"T05:00:00");
+      d.setDate(d.getDate()+1);
+      return d.getTime();
+    })();
+    const debtRemaining=Math.max(0,debtDeadline-now);
 
     if(compact){
       const unit=((paid>1||amount>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[debt.unit])||debt.unit;
@@ -2408,7 +2414,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:"+color},fmtNum(paid)+"/"+fmtNum(amount)+" "+debt.unit)
       ),
       h("div",{class:"qbar",style:"margin-top:9px"},h("div",{class:"qfill"+(pct>=100?" done":pct>0?" partial":""),style:"width:"+pct+"%"})),
-      h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;margin-top:8px;letter-spacing:.7px;text-transform:uppercase"},"Échéance : "+debt.dueDay+" · priorité avant la quête du jour")
+      h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;margin-top:8px"},"⏱ "+fmtCD(debtRemaining)+" restants")
     );
   }
 
