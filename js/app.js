@@ -2408,8 +2408,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h("div",{style:"display:flex;align-items:center;gap:9px"},
         QuestIcon(debt.id,debt.icon,16,"min-width:24px"),
         h("div",{style:"flex:1"},
-          h("div",{style:"font-size:14px;font-weight:800;color:var(--tx)"},debt.name),
-          h("div",{style:"font-size:10px;color:var(--td);margin-top:3px"},isDue?"À rembourser aujourd’hui":"Remboursement demain")
+          h("div",{style:"font-size:14px;font-weight:800;color:var(--tx)"},debt.name)
         ),
         h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:"+color},fmtNum(paid)+"/"+fmtNum(amount)+" "+debt.unit)
       ),
