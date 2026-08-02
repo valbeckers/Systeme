@@ -2370,7 +2370,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function DebtCard({compact=false}={}){
     const debt=state.questDebt;
     if(!debt || debt.status!=="active") return null;
-    const color=STAT_COLOR[debt.stat]||"#ef4444";
+    const color="#B46A3C";
+    const colorDark="#7C3F22";
+    const colorLight="#D89A6A";
+    const colorBg="rgba(180,106,60,0.06)";
     const paid=Math.max(0,Number(debt.paid)||0);
     const amount=Math.max(1,Number(debt.amount)||1);
     const pct=Math.min(100,(paid/amount)*100);
@@ -2387,7 +2390,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const progressText=fmtNum(paid)+"/"+fmtNum(amount)+" "+(unit||"");
       const done=paid>=amount;
       const fillStateClass=done ? " done" : (pct>0 ? " partial" : "");
-      return h("div",{class:"card",style:"border-color:"+color+"44"},
+      return h("div",{class:"card",style:"border-color:"+color+"66;background:"+colorBg},
         h("div",{class:"ctitle",style:"color:"+color+";margin-bottom:8px"},"Dette active"),
         h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:0"},
           QuestIcon(debt.id,debt.icon,14),
@@ -2405,13 +2408,13 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       );
     }
 
-    return h("div",{class:"card",style:"border-color:"+color+"44"},
+    return h("div",{class:"card",style:"border-color:"+color+"66;background:"+colorBg},
       h("div",{class:"shdr"},
         h("div",null,
           h("div",{class:"ctitle",style:"margin:0;color:"+color},"Dette active")
         )
       ),
-      h("div",{class:"sqcard"},
+      h("div",{class:"sqcard",style:"border-color:"+color+"55;background:linear-gradient(135deg,"+color+"10,rgba(255,255,255,.018))"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;gap:8px"},
           h("div",{style:"display:flex;align-items:center;gap:8px;min-width:0"},
             QuestIcon(debt.id,debt.icon,14,"line-height:1.1;min-width:24px;text-align:center"),
@@ -2424,7 +2427,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{class:"qbar"},h("div",{class:"qfill"+(pct>=100?" done":pct>0?" partial":""),style:"width:"+pct+"%;background:"+color})),
           h("div",{class:"qxp",style:"color:"+(paid>=amount?"#4ade80":color)+";white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},fmtNum(paid)+"/"+fmtNum(amount)+" "+debt.unit)
         ),
-        h("div",{style:"font-size:10px;color:"+color+";font-family:Orbitron,sans-serif;margin-top:4px;text-align:left"},"⏱ "+fmtCD(debtRemaining)+" restants")
+        h("div",{style:"font-size:10px;color:"+colorLight+";font-family:Orbitron,sans-serif;margin-top:4px;text-align:left"},"⏱ "+fmtCD(debtRemaining)+" restants")
       )
     );
   }
