@@ -6,8 +6,9 @@ import {
   createQuestDebtState,
   planQuestDebtRepayment,
   applyQuestDebtPaymentState,
-  expireQuestDebtState
-} from "./debtEngine.js";
+  expireQuestDebtState,
+  reconcileSameDayQuestDebtState
+} from "./debtEngine.js?v=20260802-debt-sameday-01";
 import {
   REGRESSION_DEFS,
   REGRESSION_DEF,
@@ -890,6 +891,14 @@ function App(){
     if(today<=debt.dueDay) return;
     setState(s=>expireQuestDebtState(s,today));
   },[today,state.questDebt?.status,state.questDebt?.dueDay]);
+
+  // Compatibilité avec les dettes remboursées le jour de leur création avant
+  // le correctif : si la progression déjà saisie a comblé tout le manque,
+  // la dette est clôturée sans attribuer une seconde fois ses XP.
+  useEffect(()=>{
+    if(!state.questDebt || state.questDebt.status!=="active" || state.questDebt.sourceDay!==today) return;
+    setState(s=>reconcileSameDayQuestDebtState(s,today));
+  },[today,state.questDebt?.status,state.questDebt?.sourceDay,state.questDebt?.id,state.dailyLog]);
 
   // Animations de complétion des groupes de quêtes — une seule fois par jour.
   // Clé de donjon : une clé garantie par journée totalement complétée

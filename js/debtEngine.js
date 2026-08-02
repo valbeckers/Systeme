@@ -80,12 +80,14 @@ export function createQuestDebtState(state,obj,{today,target,now=Date.now()}={})
 
 export function planQuestDebtRepayment(debt,obj,value,today){
   const val=Math.max(0,Number(value)||0);
+  const sourceDay=debt&&debt.sourceDay ? debt.sourceDay : null;
   if(
     !debt ||
     debt.status!=="active" ||
     !obj ||
     debt.id!==obj.id ||
-    debt.dueDay!==today
+    (sourceDay && today<sourceDay) ||
+    today>debt.dueDay
   ){
     return {used:0,remaining:val,willComplete:false};
   }
@@ -97,6 +99,30 @@ export function planQuestDebtRepayment(debt,obj,value,today){
     used,
     remaining,
     willComplete:used>0 && (Number(debt.paid)||0)+used>=(Number(debt.amount)||0)
+  };
+}
+
+
+// Répare les dettes créées le jour même avec les anciennes versions du moteur :
+// avant le correctif, une saisie effectuée le jour de création était ajoutée à la
+// quête du jour au lieu de rembourser la dette. Si cette saisie a déjà comblé
+// entièrement le manque initial, on clôt la dette sans redonner d'XP (les XP ont
+// déjà été attribués par la validation normale de la quête).
+export function reconcileSameDayQuestDebtState(state,today,now=Date.now()){
+  const debt=state&&state.questDebt;
+  if(!debt || debt.status!=="active" || debt.sourceDay!==today) return state;
+
+  const logged=Number(state.dailyLog&&state.dailyLog[today]&&state.dailyLog[today][debt.id])||0;
+  const baseline=Number(debt.current)||0;
+  const amount=Number(debt.amount)||0;
+  const postCreationProgress=Math.max(0,logged-baseline);
+  if(amount<=0 || postCreationProgress<amount) return state;
+
+  const resolved={...(state.debtResolvedDays||{}),[debt.sourceDay]:true};
+  return {
+    ...state,
+    questDebt:{...debt,paid:amount,status:"paid",completedAt:now,reconciledFromDailyLog:true},
+    debtResolvedDays:resolved
   };
 }
 
