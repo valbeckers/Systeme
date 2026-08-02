@@ -2385,7 +2385,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     if(compact){
       const unit=((paid>1||amount>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[debt.unit])||debt.unit;
       const progressText=fmtNum(paid)+"/"+fmtNum(amount)+" "+(unit||"");
-      return h("div",{class:"card",style:"border-color:"+color+"66"},
+      const done=paid>=amount;
+      const fillStateClass=done ? " done" : (pct>0 ? " partial" : "");
+      return h("div",{class:"card",style:"border-color:"+color+"44"},
         h("div",{class:"ctitle",style:"color:"+color+";margin-bottom:8px"},"Dette active"),
         h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:0"},
           QuestIcon(debt.id,debt.icon,14),
@@ -2393,11 +2395,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center;gap:8px"},
               h("span",{style:"white-space:normal;line-height:1.25;word-break:normal;min-width:0"},debt.name),
               h("div",{style:"display:flex;align-items:center;gap:6px"},
-                h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+(paid>=amount?"var(--rc)":paid>0?"var(--tx)":"var(--td)")+";white-space:nowrap;flex-shrink:0"},progressText),
+                h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+(done?"var(--rc)":paid>0?"var(--tx)":"var(--td)")+";white-space:nowrap;flex-shrink:0"},progressText),
                 h("span",{style:"width:10px;flex-shrink:0"},"")
               )
             ),
-            h("div",{class:"qbar"},h("div",{class:"qfill"+(pct>=100?" done":pct>0?" partial":""),style:"width:"+pct+"%;background:"+color}))
+            h("div",{class:"qbar"},h("div",{class:"qfill"+fillStateClass,style:"width:"+pct+"%;background:"+color}))
           )
         )
       );
