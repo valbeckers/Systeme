@@ -54,7 +54,7 @@ import {
   calcXp,
   calcQuestTotalXp
 } from "./xp.js";
-import { StatsTab } from "./statsView.js";
+import { StatsTab } from "./statsView.js?v=20260802-kiviat-outerdots-01";
 import { HistoryTab } from "./historyView.js";
 import {
   RANK_BASES,
