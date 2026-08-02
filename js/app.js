@@ -1865,7 +1865,13 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("span",{style:"width:10px;flex-shrink:0"},"")
           )
         ),
-        h("div",{class:"qbar"},h("div",{class:"qfill"+fillStateClass,style:"width:"+pct+"%"}))
+        h("div",{class:"qbar"},h("div",{class:"qfill"+fillStateClass,style:
+          done
+            ? "width:"+pct+"%;background:linear-gradient(90deg,#991b1b,#ef4444)"
+            : (pct>0
+              ? "width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,transparent,transparent 4px,#ef4444 4px,#ef4444 8px);background-size:11.31px 11.31px;opacity:0.8"
+              : "width:"+pct+"%;background:linear-gradient(90deg,#991b1b,#ef4444)")
+        }))
       )
     );
   }
