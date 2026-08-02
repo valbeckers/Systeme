@@ -28,14 +28,14 @@ const BREACH_RUPTURE_BOSSES = {
   breach_cold5:{
     id:"breach_boss_cryomancien",name:"Le Cryomancien",guards:[
       {id:"hydromancien",name:"L’Hydromancien",objective:"Boire 2 litres d’eau pendant la période de Rupture",unit:"L",target:2,step:0.5},
-      {id:"purificateur",name:"Circé",objective:"Prendre 2 repas propres consécutifs",unit:"repas",target:2,step:1},
+      {id:"purificateur",name:"La Sorcière Déguisée",objective:"Prendre 2 repas propres consécutifs",unit:"repas",target:2,step:1},
       {id:"porte_lumiere",name:"L’Ombre Noire",objective:"Passer 30 minutes à la lumière naturelle",unit:"min",target:30,step:10},
     ]
   },
   breach_wallsit15:{
     id:"breach_boss_titan",name:"Le Titan",guards:[
       {id:"delieur_jambes",name:"La Gorgone",objective:"Faire 10 minutes de mobilité du bas du corps",unit:"min",target:10,step:5},
-      {id:"lancier",name:"Le Roc-Jarret",objective:"Effectuer 50 fentes",unit:"rep",target:50,step:10},
+      {id:"lancier",name:"La Strige",objective:"Effectuer 50 fentes",unit:"rep",target:50,step:10},
       {id:"porte_colonne",name:"Le Golem du Soléaire",objective:"Effectuer 100 élévations de mollets",unit:"rep",target:100,step:25},
     ]
   },
@@ -61,7 +61,7 @@ const BREACH_RUPTURE_BOSSES = {
     ]
   },
   breach_plank15:{
-    id:"breach_boss_bastion",name:"Polyphème",guards:[
+    id:"breach_boss_bastion",name:"Le Cyclope",guards:[
       {id:"maitre_articulations",name:"La Gorgone",objective:"Faire 10 minutes de mobilité complète",unit:"min",target:10,step:5},
       {id:"broyeur",name:"Le Ver Pourpre",objective:"Effectuer 100 crunches",unit:"rep",target:100,step:25},
       {id:"flanc_garde",name:"Le Naga",objective:"Effectuer 50 répétitions de gainage oblique",unit:"rep",target:50,step:10},
@@ -90,7 +90,7 @@ const BREACH_RUPTURE_BOSSES = {
   },
   breach_sprint10:{
     id:"breach_boss_predateur",name:"Le Warg Alpha",guards:[
-      {id:"pisteur",name:"L’Engourdisseur",objective:"Effectuer 5 minutes d’échauffement dynamique",unit:"min",target:5,step:1},
+      {id:"pisteur",name:"La Gorgone",objective:"Effectuer 5 minutes d’échauffement dynamique",unit:"min",target:5,step:1},
       {id:"rabatteur",name:"Le Satyre",objective:"Effectuer 100 jumping jacks",unit:"rep",target:100,step:25},
       {id:"retour_chasse",name:"Le Draugr",objective:"Faire 10 minutes de marche ou de mobilité après la course",unit:"min",target:10,step:5},
     ]
@@ -104,15 +104,15 @@ const BREACH_RUPTURE_BOSSES = {
   },
   breach_flex60:{
     id:"breach_boss_acrobate",name:"Le Métamorphe",guards:[
-      {id:"delieur",name:"Le Délieur",objective:"Faire 5 minutes de mobilité corporelle",unit:"min",target:5,step:1},
-      {id:"ombre",name:"Le Grimlock",objective:"Réaliser 10 minutes de déplacement silencieux",unit:"min",target:10,step:5},
+      {id:"delieur",name:"La Gorgone",objective:"Faire 5 minutes de mobilité corporelle",unit:"min",target:5,step:1},
+      {id:"ombre",name:"Le Doyen des Invisibles",objective:"Réaliser 10 minutes de déplacement silencieux",unit:"min",target:10,step:5},
       {id:"funambule",name:"Le Djinn des Vents",objective:"Réaliser 10 minutes d’exercices d’équilibre et de coordination",unit:"min",target:10,step:5},
     ]
   },
   breach_martialflow60:{
     id:"breach_boss_acrobate_martial",name:"Le Shinobi",guards:[
-      {id:"delieur_martial",name:"Le Délieur",objective:"Faire 5 minutes de mobilité corporelle",unit:"min",target:5,step:1},
-      {id:"ombre_martiale",name:"Le Grimlock",objective:"Réaliser 10 minutes de déplacement silencieux",unit:"min",target:10,step:5},
+      {id:"delieur_martial",name:"La Gorgone",objective:"Faire 5 minutes de mobilité corporelle",unit:"min",target:5,step:1},
+      {id:"ombre_martiale",name:"Le Doyen des Invisibles",objective:"Réaliser 10 minutes de déplacement silencieux",unit:"min",target:10,step:5},
       {id:"funambule_martial",name:"Le Djinn des Vents",objective:"Réaliser 10 minutes d’exercices d’équilibre et de coordination",unit:"min",target:10,step:5},
     ]
   },
