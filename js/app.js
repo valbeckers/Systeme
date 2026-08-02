@@ -4245,6 +4245,21 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       );
     }
 
+    function renderBreachCodex(b){
+      const boss=buildBreachRuptureBoss(b.id);
+      const color=STAT_COLOR[b.stat]||"var(--rc)";
+      const rewards=[
+        b.xp&&b.stat?{stat:b.stat,xp:b.xp}:null,
+        b.xp2&&b.stat2?{stat:b.stat2,xp:b.xp2}:null,
+        b.xp3&&b.stat3?{stat:b.stat3,xp:b.xp3}:null
+      ].filter(Boolean);
+      return h("div",{key:b.id,style:"margin-bottom:9px;padding:9px 10px;border-radius:9px;border:1px solid "+color+"33;background:"+color+"08"},
+        h("div",{style:"font-size:11px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;line-height:1.3"},boss?boss.name:b.name),
+        h("div",{style:"font-size:10px;color:var(--td);line-height:1.4;margin-top:4px"},"Objectif : "+b.name),
+        rewards.length>0&&h("div",{style:"margin-top:7px"},rewards.map((r,i)=>h(StatPill,{key:i,stat:r.stat,xp:r.xp})))
+      );
+    }
+
     function renderBreachBossCodex(rb){
       const color=STAT_COLOR[rb.stat]||"var(--rc)";
       return h("div",{key:rb.id,style:"margin-bottom:9px;padding:9px 10px;border-radius:9px;border:1px solid "+color+"33;background:"+color+"08"},
@@ -4376,12 +4391,13 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h(Section,{id:"breach",title:"Brèches",count:breachList.length},
           h(Fragment,null,
             h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Une Brèche a 1 % de chance d’apparaître au reset quotidien. Elle remplace la quête urgente du jour et reste ouverte 72 h."),
-            groupByDominantStat(breachList,renderBreachSpecial)
+            groupByDominantStat(breachList,renderBreachCodex,b=>b.stat)
           )
         ),
         h(Section,{id:"breachRupture",title:"Rupture de Brèche",count:breachBossList.length},
           h(Fragment,null,
-            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Si une Brèche n’est pas refermée après 72 h, elle entre en Rupture pendant 24 h. Son Boss reprend l’objectif initial et invoque une garde rapprochée de 3 sous-quêtes."),
+            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:6px"},"Si une Brèche n’est pas refermée après 72 h, elle entre en Rupture pendant 24 h. Son Boss reprend l’objectif initial et invoque une garde rapprochée de 3 sous-quêtes."),
+            h("div",{style:"font-size:10px;color:#ef4444;font-family:Orbitron,sans-serif;line-height:1.5;font-weight:800;margin-bottom:10px"},"−25 % XP si la Brèche rompue n’est pas fermée dans les 24 h."),
             groupByDominantStat(breachBossList,renderBreachBossCodex,rb=>rb.stat)
           )
         ),
