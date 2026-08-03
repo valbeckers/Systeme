@@ -2930,9 +2930,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       if(state.alchemicalCatalystArmed){disabled=true;reason="Un Catalyseur alchimique est déjà préparé pour la prochaine transmutation.";}
     }else if(id==="masterContract"){
       if(state.masterContractArmed){disabled=true;reason="Un Contrat du Maître est déjà préparé pour le prochain donjon.";}
+      else if(activeDungeon){disabled=true;reason="Le contrat doit être utilisé avant le lancement d’un donjon.";}
     }else if(id==="invisibilityCape"&&activeDungeon&&activeDungeon.contractConstraint==="noEscape"){
       disabled=true;reason="Sans échappatoire est actif : aucun objet permettant d’éviter une salle ne peut être utilisé pendant ce donjon.";
-      else if(activeDungeon){disabled=true;reason="Le contrat doit être utilisé avant le lancement d’un donjon.";}
     }else if(id==="debtAcknowledgement"){
       if(state.questDebt&&state.questDebt.status==="active"){disabled=true;reason="Une dette est déjà active.";}
       else if(state.debtUseDay===today){disabled=true;reason="Une reconnaissance de dette a déjà été utilisée aujourd’hui.";}
