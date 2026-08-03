@@ -2920,7 +2920,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       if(state.urgentCompassStat){disabled=true;reason="La prochaine quête urgente est déjà orientée vers "+(STAT_LBL[state.urgentCompassStat]||state.urgentCompassStat)+".";}
     }else if(id==="mysteryMap"){
       if(state.dungeonMapStat){disabled=true;reason="Le prochain donjon est déjà orienté vers "+(STAT_LBL[state.dungeonMapStat]||state.dungeonMapStat)+".";}
-      else if(activeDungeon){disabled=true;reason="Un donjon est déjà actif. La Carte mystérieuse doit être utilisée avant le prochain lancement.";}
+      else if(activeDungeon){disabled=true;reason="Un donjon est déjà actif. La Carte des profondeurs doit être utilisée avant le prochain lancement.";}
     }else if(id==="etherStopper"){
       if(suspendedElixir){disabled=false;reason="Élixir suspendu · "+fmtCD(suspendedElixir.remainingMs)+" seront restituées à la réactivation.";}
       else if(!activeElixir){disabled=true;reason="Aucun élixir n’est actuellement actif.";}
@@ -2984,7 +2984,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           :id==="teleportCrystal"
             ?"Briser le Cristal de téléportation pour rejoindre un pays voisin et ouvrir une Brèche aléatoire ?"
             :id==="mysteryMap"
-              ?"Déplier la Carte mystérieuse pour choisir la statistique du prochain donjon ?"
+              ?"Déplier la Carte des profondeurs pour choisir la statistique du prochain donjon ?"
               :"Êtes-vous certain de vouloir "+(id==="regressionOrb"?"activer l’":id==="debtAcknowledgement"?"utiliser la ":id==="dungeonKey"?"utiliser une ":id==="transmutationGrimoire"?"utiliser le ":id==="destinyCompass"?"orienter la ":id==="alchemicalCatalyst"?"préparer le ":"consommer un ")+it.name+" ?"),
       h("div",{style:"display:flex;gap:10px;margin-top:22px"},
         h("button",{class:"rudis",style:"min-width:110px;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>setConfirmItemUse(null)},"Non"),
@@ -3589,7 +3589,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const main=isEnter ? null : ((confirmDungeonChoice.icon||"")+" "+(confirmDungeonChoice.title||"Donjon"));
     const desc=isEnter
       ? (state.dungeonMapStat
-          ? "La Carte mystérieuse oriente ce lancement vers "+(STAT_LBL[state.dungeonMapStat]||state.dungeonMapStat)+". Le donjon sera tiré parmi ceux de cette statistique. Êtes-vous certain de vouloir entrer ?"
+          ? "La Carte des profondeurs oriente ce lancement vers "+(STAT_LBL[state.dungeonMapStat]||state.dungeonMapStat)+". Le donjon sera tiré parmi ceux de cette statistique. Êtes-vous certain de vouloir entrer ?"
           : "La statistique sera tirée au sort, puis le donjon sera tiré parmi ceux de cette statistique. Êtes-vous certain de vouloir entrer ?")
       : "Ce choix consommera ton lancement de donjon du jour et comptera dans la limite hebdomadaire.";
     return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+color+"55;background:rgba(0,0,0,0.92)"},
