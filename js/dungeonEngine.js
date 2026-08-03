@@ -64,8 +64,7 @@ export function launchDungeonState(state, options){
     week,
     dungeons,
     nextResetAt,
-    weekKeyForDate,
-    pickContractBoss
+    weekKeyForDate
   }=options||{};
 
   const current=state.activeDungeon;
@@ -77,10 +76,7 @@ export function launchDungeonState(state, options){
   const dungeon=(dungeons||[]).find(d=>d.id===id);
   if(!dungeon) return state;
 
-  const expiresAt=constraint==="12h" ? now+12*3600000 : nextResetAt;
-  const contractBoss=constraint==="rupture" && typeof pickContractBoss==="function"
-    ? pickContractBoss(id)
-    : null;
+  const expiresAt=nextResetAt;
 
   return {
     ...state,
@@ -91,8 +87,7 @@ export function launchDungeonState(state, options){
       expiresAt,
       completedRooms:[],
       completedAt:null,
-      contractConstraint:constraint||null,
-      contractBoss
+      contractConstraint:constraint||null
     },
     masterContractArmed:constraint?false:state.masterContractArmed,
     dungeonRunDay:day,
@@ -116,6 +111,10 @@ export function canValidateDungeonRoom(activeDungeon, dungeon, roomIdx){
   const completed=Array.isArray(activeDungeon.completedRooms)?activeDungeon.completedRooms:[];
   if(completed.includes(roomIdx)) return false;
   const bossIdx=dungeon.rooms.length-1;
+  if(activeDungeon.contractConstraint==="sealedPath"){
+    const nextRequired=Array.from({length:dungeon.rooms.length},(_,i)=>i).find(i=>!completed.includes(i));
+    return roomIdx===nextRequired;
+  }
   if(roomIdx!==bossIdx) return true;
   return Array.from({length:bossIdx},(_,i)=>i).every(i=>completed.includes(i));
 }

@@ -21,7 +21,7 @@ import {
   applyDailyStreakRewardState
 } from "./dailyEngine.js";
 import { BREACH_POOL } from "./breachDefs.js";
-import { DUNGEONS, DUNGEON_RUPTURE_BOSSES } from "./dungeonDefs.js";
+import { DUNGEONS } from "./dungeonDefs.js";
 import {
   dungeonRoomRewardPairs,
   dungeonRewardPairs,
@@ -98,7 +98,6 @@ import {
   buildBreachRuptureBoss,
   normalizeActiveBreach,
   processDailyBreachRoll,
-  pickDungeonRuptureBoss,
   pickBreachRuptureBoss
 } from "./breachEngine.js";
 import {
@@ -1503,8 +1502,7 @@ function App(){
         week:wkStr(new Date(t)),
         dungeons:DUNGEONS,
         nextResetAt:next7AM(t),
-        weekKeyForDate:wkStr,
-        pickContractBoss:pickDungeonRuptureBoss
+        weekKeyForDate:wkStr
       });
       return launched!==s?{...launched,dungeonMapStat:null}:launched;
     });
@@ -2264,22 +2262,22 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{style:"min-width:0"},
             h("div",{class:"ctitle",style:"margin:0;color:"+color},d.icon+" "+d.title),
             h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"Progression "+completedRooms.length+"/"+d.rooms.length+" salles · "+fmtCD(remaining)+" restants"),
-            d.contractConstraint&&h("div",{style:"font-size:9px;color:#f59e0b;font-family:Orbitron,sans-serif;letter-spacing:.8px;margin-top:5px"},"📜 CONTRAT DU MAÎTRE · "+(d.contractConstraint==="12h"?"Délai de 12 h":d.contractConstraint==="x1.5"?"Objectifs ×1,5":"Boss de rupture")+" · récompense finale +20 %")
+            d.contractConstraint&&h("div",{style:"font-size:9px;color:#f59e0b;font-family:Orbitron,sans-serif;letter-spacing:.8px;margin-top:5px"},"📜 CONTRAT DU MAÎTRE · "+(d.contractConstraint==="x1.5"?"Surcharge · objectifs ×1,5":d.contractConstraint==="sealedPath"?"Chemin scellé · salles dans l’ordre":d.contractConstraint==="noEscape"?"Sans échappatoire · objets d’évitement interdits":"Contrainte active")+" · récompense finale +20 %")
           ),
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap"},STAT_LBL[d.stat]||d.stat)
         ),
         h("div",{style:"display:flex;flex-direction:column;gap:6px;margin-top:10px"},d.rooms.map((room,i)=>{
           const done=completedRooms.includes(i);
           const boss=i===d.rooms.length-1;
-          const allPreviousRoomsDone=d.rooms.slice(0,-1).every((_,idx)=>completedRooms.includes(idx));
-          const locked=!done&&boss&&!allPreviousRoomsDone;
+          const canValidate=!done&&canValidateDungeonRoom(d,d,i);
+          const locked=!done&&!canValidate;
           const selected=!done&&!locked&&selectedDungeonRoom===i;
           return h("div",{key:i,onClick:()=>{if(!done&&!locked)setSelectedDungeonRoom(i);},style:"display:flex;gap:8px;align-items:flex-start;padding:8px;border-radius:10px;background:"+(selected?color+"18":"rgba(255,255,255,0.025)")+";border:1px solid "+(selected?color+"88":"rgba(255,255,255,0.05)")+";opacity:"+(done?"0.72":locked?"0.42":"1")+";cursor:"+(!done&&!locked?"pointer":"default")+";box-shadow:"+(selected?"0 0 14px "+color+"22":"none")},
             h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:"+(done?"#4ade80":selected?color:"var(--td)")+";width:18px;text-align:center;flex-shrink:0"},done?"✓":locked?"🔒":(i+1)),
             h("div",{style:"min-width:0;flex:1"},
               h("div",{style:"font-size:12px;color:var(--tx);font-weight:700;line-height:1.25"},(i===d.rooms.length-1?"Boss — ":"")+room.name),
-              h("div",{style:"font-size:10px;color:var(--td);line-height:1.35;margin-top:2px"},d.contractConstraint==="rupture"&&boss?((d.contractBoss&&d.contractBoss.objective)||room.desc):d.contractConstraint==="x1.5"?String(room.desc).replace(/\d+(?:[.,]\d+)?/g,m=>String(Math.round(parseFloat(m.replace(",","."))*1.5*10)/10).replace(".",",")):room.desc),
-              locked&&h("div",{style:"font-size:8.5px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:.7px;text-transform:uppercase;margin-top:4px"},"Termine toutes les salles pour accéder au boss"),
+              h("div",{style:"font-size:10px;color:var(--td);line-height:1.35;margin-top:2px"},d.contractConstraint==="x1.5"?String(room.desc).replace(/\d+(?:[.,]\d+)?/g,m=>String(Math.round(parseFloat(m.replace(",","."))*1.5*10)/10).replace(".",",")):room.desc),
+              locked&&h("div",{style:"font-size:8.5px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:.7px;text-transform:uppercase;margin-top:4px"},d.contractConstraint==="sealedPath"?"Chemin scellé · termine la salle précédente":boss?"Termine toutes les salles pour accéder au boss":"Salle verrouillée"),
               h("div",{style:"font-size:8.5px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:4px"},dungeonRoomRewardPairs(d,i).map(r=>"+"+r.xp+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ")),
               room.help&&h("button",{onClick:()=>setDungeonHelpOpen(o=>({...o,[d.id+"_"+i]:!o[d.id+"_"+i]})),style:"margin-top:6px;padding:5px 7px;border-radius:7px;border:1px solid "+color+"55;background:rgba(255,255,255,0.025);color:"+color+";font-family:Orbitron,sans-serif;font-size:8px;letter-spacing:1px;text-transform:uppercase;cursor:pointer"},dungeonHelpOpen[d.id+"_"+i]?"Masquer l’aide":"Aide"),
               room.help&&dungeonHelpOpen[d.id+"_"+i]&&h("div",{style:"margin-top:6px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.07);font-size:10px;color:var(--td);line-height:1.45"},
@@ -2295,7 +2293,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           style:"width:100%;margin-top:10px;padding:11px;border-radius:9px;border:1px solid "+color+(selectedRoom?"66":"33")+";background:"+color+(selectedRoom?"12":"08")+";color:"+(selectedRoom?color:"var(--td)")+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:"+(selectedRoom?"pointer":"not-allowed")+";opacity:"+(selectedRoom?"1":"0.55")
         },"Valider la salle"),
         h("div",{style:"display:flex;gap:8px;margin-top:8px"},
-          itemQty("invisibilityCape")>0&&h("button",{onClick:()=>setSpecialItemChoice({type:"cape"}),style:"flex:1;padding:9px;border-radius:8px;border:1px solid #94a3b866;background:#94a3b80d;color:#cbd5e1;font-family:Orbitron,sans-serif;font-size:8px;letter-spacing:.8px"},"👣 PASSER UNE SALLE"),
+          itemQty("invisibilityCape")>0&&d.contractConstraint!=="noEscape"&&h("button",{onClick:()=>setSpecialItemChoice({type:"cape"}),style:"flex:1;padding:9px;border-radius:8px;border:1px solid #94a3b866;background:#94a3b80d;color:#cbd5e1;font-family:Orbitron,sans-serif;font-size:8px;letter-spacing:.8px"},"👣 PASSER UNE SALLE"),
           itemQty("teleportCrystal")>0&&h("button",{onClick:()=>setSpecialItemChoice({type:"teleport"}),style:"flex:1;padding:9px;border-radius:8px;border:1px solid #60a5fa66;background:#60a5fa0d;color:#60a5fa;font-family:Orbitron,sans-serif;font-size:8px;letter-spacing:.8px"},"💠 QUITTER LE DONJON")
         )
       );
@@ -2932,6 +2930,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       if(state.alchemicalCatalystArmed){disabled=true;reason="Un Catalyseur alchimique est déjà préparé pour la prochaine transmutation.";}
     }else if(id==="masterContract"){
       if(state.masterContractArmed){disabled=true;reason="Un Contrat du Maître est déjà préparé pour le prochain donjon.";}
+    }else if(id==="invisibilityCape"&&activeDungeon&&activeDungeon.contractConstraint==="noEscape"){
+      disabled=true;reason="Sans échappatoire est actif : aucun objet permettant d’éviter une salle ne peut être utilisé pendant ce donjon.";
       else if(activeDungeon){disabled=true;reason="Le contrat doit être utilisé avant le lancement d’un donjon.";}
     }else if(id==="debtAcknowledgement"){
       if(state.questDebt&&state.questDebt.status==="active"){disabled=true;reason="Une dette est déjà active.";}
@@ -3129,7 +3129,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       setConfirmTargetedItemUse({type:type==="cape"?"invisibilityCape":type,choice:x});
     },style:"padding:11px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:var(--tx);font-family:Orbitron,sans-serif;font-size:9px"},x.label))),!options.length&&h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:10px"},"Aucun choix disponible."),h("button",{onClick:()=>setSpecialItemChoice(null),style:"width:100%;margin-top:12px;padding:10px"},"Annuler")));
   }
-  function ContractChoiceModal(){if(!contractDungeonChoice)return null;const choices=[["12h","Délai réduit à 12 heures"],["x1.5","Tous les objectifs ×1,5"],["rupture","Boss remplacé par un Boss de Rupture"]];return h("div",{class:"modal-ov"},h("div",{class:"modal",style:"max-width:410px;width:calc(100% - 28px)"},h("div",{class:"mtitle"},"CONTRAT DU MAÎTRE"),h("div",{style:"font-size:11px;color:var(--td);line-height:1.5;margin-bottom:12px"},"Choisissez une contrainte. La récompense finale du donjon augmentera de 20 %."),choices.map(([id,label])=>h("button",{key:id,onClick:()=>{const dg=contractDungeonChoice;setContractDungeonChoice(null);setConfirmTargetedItemUse({type:"masterContract",dungeonId:dg,constraint:id,label});},style:"width:100%;margin-top:8px;padding:11px;border-radius:9px;border:1px solid #f59e0b66;background:#f59e0b0d;color:#f59e0b;font-family:Orbitron,sans-serif;font-size:9px"},label)),h("button",{onClick:()=>setContractDungeonChoice(null),style:"width:100%;margin-top:12px;padding:10px"},"Annuler")));}
+  function ContractChoiceModal(){if(!contractDungeonChoice)return null;const choices=[["x1.5","Surcharge · objectifs multipliés par 1,5"],["sealedPath","Chemin scellé · salles obligatoirement dans l’ordre"],["noEscape","Sans échappatoire · aucun objet permettant d’éviter ou de faciliter une salle"]];return h("div",{class:"modal-ov"},h("div",{class:"modal",style:"max-width:410px;width:calc(100% - 28px)"},h("div",{class:"mtitle"},"CONTRAT DU MAÎTRE"),h("div",{style:"font-size:11px;color:var(--td);line-height:1.5;margin-bottom:12px"},"Choisissez une contrainte. La récompense finale du donjon augmentera de 20 %."),choices.map(([id,label])=>h("button",{key:id,onClick:()=>{const dg=contractDungeonChoice;setContractDungeonChoice(null);setConfirmTargetedItemUse({type:"masterContract",dungeonId:dg,constraint:id,label});},style:"width:100%;margin-top:8px;padding:11px;border-radius:9px;border:1px solid #f59e0b66;background:#f59e0b0d;color:#f59e0b;font-family:Orbitron,sans-serif;font-size:9px"},label)),h("button",{onClick:()=>setContractDungeonChoice(null),style:"width:100%;margin-top:12px;padding:10px"},"Annuler")));}
   function ConfirmTargetedItemUseModal(){
     if(!confirmTargetedItemUse)return null;
     const pending=confirmTargetedItemUse;
@@ -4275,14 +4275,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       );
     }
 
-    function renderDungeonAltBossCodex(item){
-      const color=STAT_COLOR[item.stat]||item.color||"var(--rc)";
-      return h("div",{key:item.id,style:"margin-bottom:9px;padding:9px 10px;border-radius:9px;border:1px solid "+color+"33;background:"+color+"08"},
-        h("div",{style:"font-size:11px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;line-height:1.3"},item.name),
-        h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:4px"},item.dungeonTitle),
-        h("div",{style:"font-size:10px;color:#fff;line-height:1.45;margin-top:5px"},item.objective)
-      );
-    }
 
     function renderBreachCodex(b){
       const boss=buildBreachRuptureBoss(b.id);
@@ -4411,13 +4403,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const boss=buildBreachRuptureBoss(b.id);
       return boss?{...boss,stat:b.stat,breachId:b.id}:null;
     }).filter(Boolean);
-    const dungeonAltBossList=DUNGEONS.flatMap(dg=>(DUNGEON_RUPTURE_BOSSES[dg.id]||[]).map(boss=>({
-      ...boss,
-      id:dg.id+"_"+boss.id,
-      stat:dg.stat,
-      color:dg.color,
-      dungeonTitle:dg.title
-    })));
 
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setInventoryItem(null)}},
       h("div",{class:"modal",style:"position:relative;max-width:470px;width:calc(100% - 24px);max-height:88vh;overflow:auto;padding-top:16px"},
@@ -4444,12 +4429,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h(Fragment,null,
             h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Un Donjon inachevé se ferme à l’expiration de son délai. Les salles déjà validées et leurs XP restent acquises."),
             groupByDominantStat(DUNGEONS,renderDungeonCodex,dg=>dg.stat)
-          )
-        ),
-        h(Section,{id:"djAlt",title:"Donjons alternatifs",count:dungeonAltBossList.length},
-          h(Fragment,null,
-            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Boss alternatifs accessibles via le Contrat du Maître. Chaque Boss remplace le Boss classique du donjon concerné par un objectif alternatif."),
-            groupByDominantStat(dungeonAltBossList,renderDungeonAltBossCodex,item=>item.stat)
           )
         ),
         h(Section,{id:"bonus",title:"Quêtes bonus",count:bonus.length+hiddenBonus.length},
