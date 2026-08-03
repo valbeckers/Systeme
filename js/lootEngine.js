@@ -8,7 +8,7 @@ import {
   STANDARD_ITEM_DROPS,
   DUNGEON_GENERIC_DROPS,
   DUNGEON_SPECIFIC_DROPS
-} from "./itemDefs.js";
+} from "./itemDefs.js?v=20260803-mystery-map-01";
 
 function rollIndependentDrops(dropTable,random=Math.random){
   return (dropTable||[]).reduce((won,[id,probability])=>{

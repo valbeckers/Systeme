@@ -16,6 +16,7 @@ const BASE_INVENTORY_ITEMS={
     transmutationGrimoire:{name:"GRIMOIRE DE TRANSMUTATION",short:"GRIMOIRE",emoji:"📔",action:"TRANSMUTER",desc:"Permet de fusionner cinq Élixirs d’expérience mineurs pour créer un Élixir d’expérience magistral.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon de l’Alchimiste (Taux : 10 %)."]},
     destinyCompass:{name:"BOUSSOLE DU DESTIN",short:"BOUSSOLE DU DESTIN",emoji:"🧭",action:"ORIENTER",desc:"Permet de choisir la statistique de la prochaine quête urgente. La quête précise reste tirée aléatoirement dans la catégorie choisie. La Boussole doit être activée avant le reset, ne permet pas de répéter immédiatement la même quête et ne modifie pas le cycle anti-répétition des statistiques.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon du Pèlerin (Taux : 10 %)."]},
     etherStopper:{name:"BOUCHON D’ÉTHER",short:"BOUCHON D’ÉTHER",emoji:"🔮",action:"SUSPENDRE",desc:"Met en pause la durée restante d’un élixir actif. L’élixir peut être réactivé manuellement avec exactement le temps qu’il lui restait. La suspension dure au maximum 24 h, puis l’élixir reprend automatiquement. Aucun autre élixir ne peut être activé pendant la suspension.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon de l’Alchimiste (Taux : 10 %)."]},
+    mysteryMap:{name:"CARTE MYSTÉRIEUSE",short:"CARTE MYSTÉRIEUSE",emoji:"🗺️",action:"DÉPLIER",desc:"Permet de choisir la statistique du prochain donjon. Le donjon précis reste aléatoire lorsqu’une statistique correspond à plusieurs donjons.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon du Pèlerin (Taux : 10 %)."]},
     rerollToken:{name:"JETON DE RELANCE",short:"JETON DE RELANCE",emoji:"🔄",action:"INVOQUER",desc:"Après avoir terminé la quête urgente du jour, invoque immédiatement une seconde quête urgente. Cette quête accorde ses XP et ses objets normaux, ne peut pas être relancée et ne peut être invoquée qu’une fois par jour.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %)."]},
     alchemicalCatalyst:{name:"CATALYSEUR ALCHIMIQUE",short:"CATALYSEUR ALCHIMIQUE",emoji:"⚗️",action:"PRÉPARER",desc:"Lors de la prochaine utilisation du Grimoire de transmutation, réduit le coût de cinq à trois Élixirs d’expérience mineurs. Le Catalyseur et le Grimoire sont tous les deux consommés au moment de la transmutation.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon de l’Alchimiste (Taux : 10 %)."]},
     masterContract:{name:"CONTRAT DU MAÎTRE",short:"CONTRAT DU MAÎTRE",emoji:"📜",action:"UTILISER",desc:"Au lancement du prochain donjon, choisissez une contrainte supplémentaire parmi trois. Si le donjon est terminé, la récompense finale augmente de 20 %. Contraintes : délai réduit à 12 heures, objectifs multipliés par 1,5, ou boss remplacé par un Boss de Rupture.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon du Guerrier (Taux : 10 %)."]},
@@ -50,6 +51,7 @@ export const STANDARD_ITEM_DROPS=[
   ["teleportCrystal",0.01],
   ["invisibilityCape",0.01],
   ["destinyCompass",0.01],
+  ["mysteryMap",0.01],
   ["etherStopper",0.01],
   ["rerollToken",0.01],
   ["alchemicalCatalyst",0.01],
@@ -68,6 +70,7 @@ export const DUNGEON_GENERIC_DROPS=[
   ["teleportCrystal",0.10],
   ["invisibilityCape",0.10],
   ["destinyCompass",0.10],
+  ["mysteryMap",0.10],
   ["etherStopper",0.10],
   ["rerollToken",0.10],
   ["alchemicalCatalyst",0.10],
@@ -77,7 +80,7 @@ export const DUNGEON_GENERIC_DROPS=[
 // Tirages supplémentaires propres au donjon terminé.
 export const DUNGEON_SPECIFIC_DROPS={
   alchemist:[["etherStopper",0.10],["alchemicalCatalyst",0.10],["supremeElixir",0.01],["majorElixir",0.05],["minorElixir",0.10],["transmutationGrimoire",0.10],["invisibilityCape",0.10]],
-  pilgrim:[["destinyCompass",0.10]],
+  pilgrim:[["destinyCompass",0.10],["mysteryMap",0.10]],
   warrior:[["masterContract",0.10],["recordHammer",0.10]],
   hunter:[["teleportCrystal",0.10]],
   monk:[["recoveryOintment",0.10]],

@@ -32,7 +32,7 @@ import {
   expireActiveDungeonState,
   canValidateDungeonRoom
 } from "./dungeonEngine.js";
-import { INVENTORY_ITEMS } from "./itemDefs.js";
+import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260803-mystery-map-01";
 import {
   incrementLootState,
   pickRandomBreachLoot,
@@ -40,7 +40,7 @@ import {
   grantAlliedGiftState,
   rollStandardItemDrops,
   rollDungeonItemDrops
-} from "./lootEngine.js";
+} from "./lootEngine.js?v=20260803-mystery-map-01";
 import {
   eventDayStr,
   next7AM,
@@ -79,8 +79,8 @@ import {
   DEBT_ACKNOWLEDGEMENT_ICON_DATA
 } from "./itemImages.js";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260803-mystery-map-01";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260803-mystery-map-01";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -265,6 +265,7 @@ function App(){
   const [confirmItemUse,setConfirmItemUse] = useState(null);
   const [elixirStatChoice,setElixirStatChoice] = useState(null);
   const [compassStatChoice,setCompassStatChoice] = useState(false);
+  const [dungeonMapStatChoice,setDungeonMapStatChoice] = useState(false);
   const [specialItemChoice,setSpecialItemChoice] = useState(null);
   const [contractDungeonChoice,setContractDungeonChoice] = useState(null);
   const [confirmElixirUse,setConfirmElixirUse] = useState(null);
@@ -1479,7 +1480,13 @@ function App(){
   }
 
   function startRandomDungeon(){
-    const id=drawRandomDungeonId(DUNGEONS);
+    const forcedStat=STATS.includes(state.dungeonMapStat)?state.dungeonMapStat:null;
+    let id=null;
+    if(forcedStat){
+      const candidates=DUNGEONS.filter(d=>d.stat===forcedStat);
+      if(candidates.length)id=candidates[Math.floor(Math.random()*candidates.length)].id;
+    }
+    if(!id)id=drawRandomDungeonId(DUNGEONS);
     if(id)startDungeon(id);
   }
 
@@ -1488,7 +1495,7 @@ function App(){
     setSelectedDungeonRoom(null);
     setState(s=>{
       const t=Date.now();
-      return launchDungeonState(s,{
+      const launched=launchDungeonState(s,{
         id,
         constraint,
         now:t,
@@ -1499,6 +1506,7 @@ function App(){
         weekKeyForDate:wkStr,
         pickContractBoss:pickDungeonRuptureBoss
       });
+      return launched!==s?{...launched,dungeonMapStat:null}:launched;
     });
   }
 
@@ -2818,7 +2826,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   }
   function itemQty(id){ return ["codex","regressionOrb","debtAcknowledgement"].includes(id)?1:id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
   function Inventory(){
-    const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","etherStopper","rerollToken","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape","recoveryOintment"]
+    const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","mysteryMap","etherStopper","rerollToken","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape","recoveryOintment"]
       .sort((a,b)=>{
         if(inventorySort==="name"){
           return INVENTORY_ITEMS[a].name.localeCompare(INVENTORY_ITEMS[b].name,"fr",{sensitivity:"base"});
@@ -2910,6 +2918,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       if(minors<needed){disabled=true;reason=(catalystReady?"Catalyseur préparé · ":"")+needed+" Élixirs d’expérience mineurs sont nécessaires ("+minors+"/"+needed+").";}
     }else if(id==="destinyCompass"){
       if(state.urgentCompassStat){disabled=true;reason="La prochaine quête urgente est déjà orientée vers "+(STAT_LBL[state.urgentCompassStat]||state.urgentCompassStat)+".";}
+    }else if(id==="mysteryMap"){
+      if(state.dungeonMapStat){disabled=true;reason="Le prochain donjon est déjà orienté vers "+(STAT_LBL[state.dungeonMapStat]||state.dungeonMapStat)+".";}
+      else if(activeDungeon){disabled=true;reason="Un donjon est déjà actif. La Carte mystérieuse doit être utilisée avant le prochain lancement.";}
     }else if(id==="etherStopper"){
       if(suspendedElixir){disabled=false;reason="Élixir suspendu · "+fmtCD(suspendedElixir.remainingMs)+" seront restituées à la réactivation.";}
       else if(!activeElixir){disabled=true;reason="Aucun élixir n’est actuellement actif.";}
@@ -2972,7 +2983,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           ?"Réactiver l’élixir suspendu avec exactement "+fmtCD(suspendedElixir.remainingMs)+" restants ?"
           :id==="teleportCrystal"
             ?"Briser le Cristal de téléportation pour rejoindre un pays voisin et ouvrir une Brèche aléatoire ?"
-            :"Êtes-vous certain de vouloir "+(id==="regressionOrb"?"activer l’":id==="debtAcknowledgement"?"utiliser la ":id==="dungeonKey"?"utiliser une ":id==="transmutationGrimoire"?"utiliser le ":id==="destinyCompass"?"orienter la ":id==="alchemicalCatalyst"?"préparer le ":"consommer un ")+it.name+" ?"),
+            :id==="mysteryMap"
+              ?"Déplier la Carte mystérieuse pour choisir la statistique du prochain donjon ?"
+              :"Êtes-vous certain de vouloir "+(id==="regressionOrb"?"activer l’":id==="debtAcknowledgement"?"utiliser la ":id==="dungeonKey"?"utiliser une ":id==="transmutationGrimoire"?"utiliser le ":id==="destinyCompass"?"orienter la ":id==="alchemicalCatalyst"?"préparer le ":"consommer un ")+it.name+" ?"),
       h("div",{style:"display:flex;gap:10px;margin-top:22px"},
         h("button",{class:"rudis",style:"min-width:110px;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>setConfirmItemUse(null)},"Non"),
         h("button",{class:"rudis",style:"min-width:110px;--rc:"+confirmColor+";--rg:"+confirmGlow,onClick:()=>{
@@ -2997,6 +3010,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             setItemUseUp({id,pct:it.pct,global:true});
           }else if(id==="destinyCompass"){
             setCompassStatChoice(true);
+          }else if(id==="mysteryMap"){
+            setDungeonMapStatChoice(true);
           }else if(id==="etherStopper"){
             if(state.suspendedElixir){
               setState(s=>{const cur=s.suspendedElixir;if(!cur||s.activeElixir)return s;const t=Date.now();return {...s,suspendedElixir:null,activeElixir:buildResumedElixir(cur,t)};});
@@ -3048,6 +3063,20 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         setConfirmTargetedItemUse({type:"destinyCompass",stat});
       },style:"padding:11px;border-radius:9px;border:1px solid "+STAT_COLOR[stat]+"88;background:"+STAT_COLOR[stat]+"12;color:"+STAT_COLOR[stat]+";font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},STAT_LBL[stat]||stat))),
       h("button",{onClick:()=>setCompassStatChoice(false),style:"width:100%;margin-top:12px;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--td);font-family:Orbitron,sans-serif;cursor:pointer"},"Annuler")
+    ));
+  }
+
+  function DungeonMapStatModal(){
+    if(!dungeonMapStatChoice)return null;
+    const choices=[...new Set(DUNGEONS.map(d=>d.stat))].filter(stat=>STATS.includes(stat));
+    return h("div",{class:"modal-ov"},h("div",{class:"modal",style:"max-width:410px;width:calc(100% - 28px)"},
+      h("div",{class:"mtitle"},"DÉPLIER LA CARTE"),
+      h("div",{style:"font-size:11px;color:var(--td);line-height:1.55;margin-bottom:12px"},"Choisissez la statistique du prochain donjon. Si plusieurs donjons correspondent à cette statistique, le donjon précis restera tiré au sort."),
+      h("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:8px"},choices.map(stat=>h("button",{key:stat,onClick:()=>{
+        setDungeonMapStatChoice(false);
+        setConfirmTargetedItemUse({type:"mysteryMap",stat});
+      },style:"padding:11px;border-radius:9px;border:1px solid "+STAT_COLOR[stat]+"88;background:"+STAT_COLOR[stat]+"12;color:"+STAT_COLOR[stat]+";font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},STAT_LBL[stat]||stat))),
+      h("button",{onClick:()=>setDungeonMapStatChoice(false),style:"width:100%;margin-top:12px;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--td);font-family:Orbitron,sans-serif;cursor:pointer"},"Annuler")
     ));
   }
 
@@ -3106,7 +3135,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const pending=confirmTargetedItemUse;
     const type=pending.type;
     const choice=pending.choice||null;
-    const color=type==="destinyCompass"?(STAT_COLOR[pending.stat]||rank.color):type==="masterContract"?"#f59e0b":rank.color;
+    const color=(type==="destinyCompass"||type==="mysteryMap")?(STAT_COLOR[pending.stat]||rank.color):type==="masterContract"?"#f59e0b":rank.color;
 
     let text="";
     let confirmLabel="Confirmer";
@@ -3120,6 +3149,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }else if(type==="destinyCompass"){
       text="Orienter la prochaine quête urgente vers la statistique "+(STAT_LBL[pending.stat]||pending.stat)+" ?";
       confirmLabel="Orienter";
+    }else if(type==="mysteryMap"){
+      text="Choisir "+(STAT_LBL[pending.stat]||pending.stat)+" comme statistique du prochain donjon ?";
+      confirmLabel="Choisir";
     }else if(type==="invisibilityCape"){
       text="Utiliser la Potion d’invisibilité éphémère pour traverser la salle « "+choice.label.replace(/^\d+\.\s*/,"")+" » sans gagner son XP ?";
       confirmLabel="Passer la salle";
@@ -3141,6 +3173,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         const stat=pending.stat;
         setState(s=>{const inv={...(s.inventory||{})};if((Number(inv.destinyCompass)||0)<1||s.urgentCompassStat)return s;inv.destinyCompass=Math.max(0,(Number(inv.destinyCompass)||0)-1);return {...s,inventory:inv,urgentCompassStat:stat};});
         setItemUseUp({id:"destinyCompass",statChosen:stat});
+      }else if(type==="mysteryMap"){
+        const stat=pending.stat;
+        setState(s=>{const inv={...(s.inventory||{})};if((Number(inv.mysteryMap)||0)<1||s.dungeonMapStat)return s;inv.mysteryMap=Math.max(0,(Number(inv.mysteryMap)||0)-1);return {...s,inventory:inv,dungeonMapStat:stat};});
+        setItemUseUp({id:"mysteryMap",dungeonStatChosen:stat});
       }else if(type==="invisibilityCape"){
         setState(s=>{const ad=s.activeDungeon;if(!ad||(Number(s.inventory&&s.inventory.invisibilityCape)||0)<1)return s;return {...s,inventory:{...(s.inventory||{}),invisibilityCape:Math.max(0,(Number(s.inventory&&s.inventory.invisibilityCape)||0)-1)},activeDungeon:{...ad,completedRooms:[...(ad.completedRooms||[]),Number(choice.id)].filter((v,i,a)=>a.indexOf(v)===i).sort((a,b)=>a-b)}};});
         setItemUseUp({id:"invisibilityCape"});
@@ -3552,7 +3588,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const title=isEnter ? "ENTRER DANS LE DONJON ?" : "ACTIVER CE DONJON ?";
     const main=isEnter ? null : ((confirmDungeonChoice.icon||"")+" "+(confirmDungeonChoice.title||"Donjon"));
     const desc=isEnter
-      ? "La statistique sera tirée au sort, puis le donjon sera tiré parmi ceux de cette statistique. Êtes-vous certain de vouloir entrer ?"
+      ? (state.dungeonMapStat
+          ? "La Carte mystérieuse oriente ce lancement vers "+(STAT_LBL[state.dungeonMapStat]||state.dungeonMapStat)+". Le donjon sera tiré parmi ceux de cette statistique. Êtes-vous certain de vouloir entrer ?"
+          : "La statistique sera tirée au sort, puis le donjon sera tiré parmi ceux de cette statistique. Êtes-vous certain de vouloir entrer ?")
       : "Ce choix consommera ton lancement de donjon du jour et comptera dans la limite hebdomadaire.";
     return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+color+"55;background:rgba(0,0,0,0.92)"},
       h("div",{class:"rucont",style:"width:min(330px,calc(100vw - 38px));background:rgba(15,15,18,0.96);border:1px solid "+color+"66;border-radius:18px;padding:20px;box-shadow:0 0 30px "+color+"22"},
@@ -3922,6 +3960,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       debtAcknowledgement:{main:"#b91c1c",accent:"#f5d0a9"},
       recoveryOintment:{main:"#22c55e",accent:"#d9f99d"},
       destinyCompass:{main:"#d4a84f",accent:"#60a5fa"},
+      mysteryMap:{main:"#b7791f",accent:"#f5d08a"},
       etherStopper:{main:"#7c3aed",accent:"#60a5fa"},
       rerollToken:{main:"#d4a84f",accent:"#38bdf8"},
       alchemicalCatalyst:{main:"#10b981",accent:"#5eead4"}
@@ -4030,12 +4069,13 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const it=INVENTORY_ITEMS[itemUseUp.id];
     return h("div",{class:"ruov",style:"--rc:"+rank.color+";--rg:"+rank.glow},h("div",{class:"rucont"},
       h(NotificationHeader,null),
-      h("div",{class:"ruevol",style:"color:"+rank.color},itemUseUp.id==="teleportCrystal"&&itemUseUp.alliedTeleport?"ALLIANCE SCELLÉE":itemUseUp.id==="dungeonKey"?"Vous avez utilisé une":itemUseUp.id==="debtAcknowledgement"?"Dette créée avec une":itemUseUp.id==="transmutationGrimoire"?"Transmutation accomplie":itemUseUp.id==="destinyCompass"?"Boussole orientée":itemUseUp.id==="etherStopper"?(itemUseUp.resumed?"Élixir réactivé":"Élixir suspendu"):itemUseUp.id==="rerollToken"?"Quête urgente invoquée":itemUseUp.id==="alchemicalCatalyst"?"Catalyseur préparé":"Vous avez consommé un"),
+      h("div",{class:"ruevol",style:"color:"+rank.color},itemUseUp.id==="teleportCrystal"&&itemUseUp.alliedTeleport?"ALLIANCE SCELLÉE":itemUseUp.id==="dungeonKey"?"Vous avez utilisé une":itemUseUp.id==="debtAcknowledgement"?"Dette créée avec une":itemUseUp.id==="transmutationGrimoire"?"Transmutation accomplie":itemUseUp.id==="destinyCompass"?"Boussole orientée":itemUseUp.id==="mysteryMap"?"Carte déployée":itemUseUp.id==="etherStopper"?(itemUseUp.resumed?"Élixir réactivé":"Élixir suspendu"):itemUseUp.id==="rerollToken"?"Quête urgente invoquée":itemUseUp.id==="alchemicalCatalyst"?"Catalyseur préparé":"Vous avez consommé un"),
       h("div",{class:"rurank",style:responsiveItemAnimationTitleStyle(it.name,56),"data-r":it.name},it.name),
       itemUseUp.stat&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Vous bénéficiez de +"+Math.round(itemUseUp.pct*100)+" % d’XP dans ",h("span",{style:"color:"+(STAT_COLOR[itemUseUp.stat]||rank.color)},STAT_LBL[itemUseUp.stat]||itemUseUp.stat)," pendant 24 h."),
       itemUseUp.global&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:#c084fc"},"Vous bénéficiez de +"+Math.round(itemUseUp.pct*100)+" % d’XP sur toutes les statistiques pendant 24 h."),
       itemUseUp.transmuted&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:#c084fc"},itemUseUp.catalystUsed?"Le Catalyseur et le Grimoire ont fusionné 3 Élixirs d’expérience mineurs en 1 Élixir d’expérience magistral.":"5 Élixirs d’expérience mineurs ont été fusionnés en 1 Élixir d’expérience magistral."),
       itemUseUp.statChosen&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:"+(STAT_COLOR[itemUseUp.statChosen]||rank.color)},"La prochaine quête urgente appartiendra à la statistique "+(STAT_LBL[itemUseUp.statChosen]||itemUseUp.statChosen)+"."),
+      itemUseUp.dungeonStatChosen&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:"+(STAT_COLOR[itemUseUp.dungeonStatChosen]||rank.color)},"Le prochain donjon appartiendra à la statistique "+(STAT_LBL[itemUseUp.dungeonStatChosen]||itemUseUp.dungeonStatChosen)+"."),
       itemUseUp.paused&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Le temps restant de l’élixir est conservé pendant 24 h maximum."),
       itemUseUp.resumed&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"L’élixir reprend avec exactement le temps qui lui restait."),
       itemUseUp.summoned&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Une seconde quête urgente a été invoquée. Elle accorde ses XP et ses objets normaux, mais ne peut pas être relancée."),
@@ -4506,6 +4546,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(InventoryItemModal,null),
       h(ConfirmItemUseModal,null),
       h(CompassStatModal,null),
+      h(DungeonMapStatModal,null),
       h(ElixirStatModal,null),
       h(ConfirmElixirModal,null),
       h(SpecialItemChoiceModal,null),
