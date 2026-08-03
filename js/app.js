@@ -32,7 +32,7 @@ import {
   expireActiveDungeonState,
   canValidateDungeonRoom
 } from "./dungeonEngine.js";
-import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260803-mystery-map-01";
+import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260803-item-descriptions-01";
 import {
   incrementLootState,
   pickRandomBreachLoot,
