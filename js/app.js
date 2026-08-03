@@ -32,15 +32,18 @@ import {
   expireActiveDungeonState,
   canValidateDungeonRoom
 } from "./dungeonEngine.js";
-import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260803-item-descriptions-02";
+import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260803-counterpart-balance-01";
 import {
   incrementLootState,
   pickRandomBreachLoot,
   alliedGiftEligibleIds,
   grantAlliedGiftState,
   rollStandardItemDrops,
-  rollDungeonItemDrops
-} from "./lootEngine.js?v=20260803-mystery-map-01";
+  rollDungeonItemDrops,
+  counterpartBalanceSacrificeEligibleIds,
+  counterpartBalanceRewardEligibleIds,
+  exchangeCounterpartBalanceState
+} from "./lootEngine.js?v=20260803-counterpart-balance-01";
 import {
   eventDayStr,
   next7AM,
@@ -79,8 +82,8 @@ import {
   DEBT_ACKNOWLEDGEMENT_ICON_DATA
 } from "./itemImages.js";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260803-mystery-map-01";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260803-mystery-map-01";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260803-counterpart-balance-01";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260803-counterpart-balance-01";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -269,6 +272,9 @@ function App(){
   const [contractDungeonChoice,setContractDungeonChoice] = useState(null);
   const [confirmElixirUse,setConfirmElixirUse] = useState(null);
   const [confirmTargetedItemUse,setConfirmTargetedItemUse] = useState(null);
+  const [balanceSacrificeChoice,setBalanceSacrificeChoice] = useState(null);
+  const [balanceRewardChoice,setBalanceRewardChoice] = useState(null);
+  const [confirmBalanceExchange,setConfirmBalanceExchange] = useState(null);
   const [dungeonUp,setDungeonUp] = useState(null);
   const [ruptureUp,setRuptureUp] = useState(null);
   const [urgentUp,setUrgentUp] = useState(null);
@@ -2824,7 +2830,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   }
   function itemQty(id){ return ["codex","regressionOrb","debtAcknowledgement"].includes(id)?1:id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
   function Inventory(){
-    const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","mysteryMap","etherStopper","rerollToken","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape","recoveryOintment"]
+    const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","mysteryMap","etherStopper","rerollToken","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape","recoveryOintment","counterpartBalance"]
       .sort((a,b)=>{
         if(inventorySort==="name"){
           return INVENTORY_ITEMS[a].name.localeCompare(INVENTORY_ITEMS[b].name,"fr",{sensitivity:"base"});
@@ -2942,6 +2948,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }else if(id==="recoveryOintment"){
       const regularEligible=objs.some(o=>o.daily&&(Number(tLog[o.id])||0)<getEffectiveTarget(o.id));
       if(!regularEligible){disabled=true;reason="Aucune quête journalière ou bonus active et incomplète ne peut être passée.";}
+    }else if(id==="counterpartBalance"){
+      const eligible=counterpartBalanceSacrificeEligibleIds(state);
+      if(eligible.length<3){disabled=true;reason="Trois objets différents sont nécessaires pour utiliser la Balance ("+eligible.length+"/3 disponibles).";}
     }else if(id==="teleportCrystal"){
       if(activeBreach){disabled=true;reason="Une Brèche est déjà active.";}
       else if(state.alliedGiftPending){disabled=true;reason="Choisissez d’abord l’objet offert par le pays allié.";}
@@ -2985,6 +2994,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             ?"Briser le Cristal de téléportation pour rejoindre un pays voisin et ouvrir une Brèche aléatoire ?"
             :id==="mysteryMap"
               ?"Déplier la Carte des profondeurs pour choisir la statistique du prochain donjon ?"
+              :id==="counterpartBalance"
+                ?"Utiliser la Balance des contreparties pour sacrifier 3 objets différents et choisir 1 nouvel objet ?"
               :"Êtes-vous certain de vouloir "+(id==="regressionOrb"?"activer l’":id==="debtAcknowledgement"?"utiliser la ":id==="dungeonKey"?"utiliser une ":id==="transmutationGrimoire"?"utiliser le ":id==="destinyCompass"?"orienter la ":id==="alchemicalCatalyst"?"préparer le ":"consommer un ")+it.name+" ?"),
       h("div",{style:"display:flex;gap:10px;margin-top:22px"},
         h("button",{class:"rudis",style:"min-width:110px;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>setConfirmItemUse(null)},"Non"),
@@ -3033,6 +3044,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             setSpecialItemChoice({type:"recoveryOintment"});
           }else if(id==="recordHammer"||id==="invisibilityCape"){
             setSpecialItemChoice({type:id});
+          }else if(id==="counterpartBalance"){
+            setBalanceSacrificeChoice([]);
           }else if(id==="teleportCrystal"){
             const t=Date.now();
             const tpl=BREACH_POOL.length?BREACH_POOL[Math.floor(Math.random()*BREACH_POOL.length)]:null;
@@ -3052,6 +3065,92 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       )
     ));
   }
+  function CounterpartBalanceSacrificeModal(){
+    if(!Array.isArray(balanceSacrificeChoice))return null;
+    const eligible=counterpartBalanceSacrificeEligibleIds(state);
+    const selected=balanceSacrificeChoice.filter(id=>eligible.includes(id));
+    const selectedSet=new Set(selected);
+    return h("div",{class:"modal-ov"},
+      h("div",{class:"modal",style:"position:relative;max-width:470px;width:calc(100% - 24px);max-height:88vh;overflow:auto"},
+        h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:12px"},
+          h("div",{class:"mtitle",style:"margin:0;line-height:1.2"},"CHOISIR 3 CONTREPARTIES"),
+          h("button",{onClick:()=>setBalanceSacrificeChoice(null),style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
+        ),
+        h("div",{style:"font-size:11px;color:var(--td);line-height:1.55;margin:12px 0 8px;text-align:center"},"Sélectionnez exactement 3 objets différents. Un exemplaire de chacun sera sacrifié avec la Balance."),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+(selected.length===3?rank.color:"var(--td)")+";text-align:center;margin-bottom:14px"},selected.length+" / 3 sélectionnés"),
+        h("div",{style:"display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px"},eligible.map(id=>{
+          const it=INVENTORY_ITEMS[id];
+          const chosen=selectedSet.has(id);
+          const qty=itemQty(id);
+          const blocked=!chosen&&selected.length>=3;
+          return h("button",{key:id,disabled:blocked,onClick:()=>setBalanceSacrificeChoice(cur=>{
+            const list=Array.isArray(cur)?cur:[];
+            if(list.includes(id))return list.filter(x=>x!==id);
+            if(list.length>=3)return list;
+            return [...list,id];
+          }),style:"position:relative;min-height:116px;padding:10px 8px;border-radius:11px;border:1px solid "+(chosen?rank.color:"rgba(255,255,255,.10)")+";background:"+(chosen?rank.color+"14":"rgba(255,255,255,.025)")+";color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;cursor:"+(blocked?"default":"pointer")+";opacity:"+(blocked?".45":"1")},
+            h("div",{style:"height:52px;display:flex;align-items:center;justify-content:center"},InventoryItemIcon(id,46)),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;line-height:1.3;letter-spacing:.5px;text-transform:uppercase;text-align:center"},it.short),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:var(--td)"},"×"+qty),
+            chosen&&h("div",{style:"position:absolute;right:7px;top:6px;color:"+rank.color+";font-size:16px;font-weight:900"},"✓")
+          );
+        })),
+        h("div",{style:"display:flex;gap:9px;margin-top:14px"},
+          h("button",{onClick:()=>setBalanceSacrificeChoice(null),style:"flex:1;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--td);font-family:Orbitron,sans-serif;cursor:pointer"},"Annuler"),
+          h("button",{disabled:selected.length!==3,onClick:()=>{setBalanceSacrificeChoice(null);setBalanceRewardChoice({sacrifices:[...selected]});},style:"flex:1;padding:10px;border-radius:9px;border:1px solid "+(selected.length===3?rank.color:"rgba(255,255,255,.08)")+";background:"+(selected.length===3?rank.color+"14":"rgba(255,255,255,.03)")+";color:"+(selected.length===3?rank.color:"var(--td)")+";font-family:Orbitron,sans-serif;cursor:"+(selected.length===3?"pointer":"default")},"Continuer")
+        )
+      )
+    );
+  }
+
+  function CounterpartBalanceRewardModal(){
+    if(!balanceRewardChoice)return null;
+    const sacrifices=balanceRewardChoice.sacrifices||[];
+    const ids=counterpartBalanceRewardEligibleIds();
+    return h("div",{class:"modal-ov"},
+      h("div",{class:"modal",style:"position:relative;max-width:470px;width:calc(100% - 24px);max-height:88vh;overflow:auto"},
+        h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:12px"},
+          h("div",{class:"mtitle",style:"margin:0;line-height:1.2"},"CHOISIR LA CONTREPARTIE"),
+          h("button",{onClick:()=>setBalanceRewardChoice(null),style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
+        ),
+        h("div",{style:"font-size:11px;color:var(--td);line-height:1.55;margin:12px 0 14px;text-align:center"},"Choisissez l’objet que la Balance vous accordera en échange des 3 sacrifices."),
+        h("div",{style:"display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px"},ids.map(id=>{
+          const it=INVENTORY_ITEMS[id];
+          return h("button",{key:id,onClick:()=>{setBalanceRewardChoice(null);setConfirmBalanceExchange({sacrifices:[...sacrifices],rewardId:id});},style:"min-height:112px;padding:10px 8px;border-radius:11px;border:1px solid rgba(234,179,8,.28);background:rgba(234,179,8,.045);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer"},
+            h("div",{style:"height:54px;display:flex;align-items:center;justify-content:center"},InventoryItemIcon(id,48)),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;line-height:1.3;letter-spacing:.5px;text-transform:uppercase;text-align:center"},it.short)
+          );
+        })),
+        h("button",{onClick:()=>{setBalanceRewardChoice(null);setBalanceSacrificeChoice([...sacrifices]);},style:"width:100%;margin-top:12px;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--td);font-family:Orbitron,sans-serif;cursor:pointer"},"Retour aux sacrifices")
+      )
+    );
+  }
+
+  function ConfirmCounterpartBalanceExchangeModal(){
+    if(!confirmBalanceExchange)return null;
+    const sacrifices=confirmBalanceExchange.sacrifices||[];
+    const rewardId=confirmBalanceExchange.rewardId;
+    const reward=INVENTORY_ITEMS[rewardId];
+    const color="#eab308";
+    return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+color+"66"},
+      h("div",{class:"rucont",style:"width:min(500px,calc(100vw - 34px));background:rgba(15,15,18,.97);border:1px solid "+color+"88;border-radius:18px;padding:22px;box-shadow:0 0 30px "+color+"22"},
+        h("div",{class:"ruevol",style:"color:"+color},"CONFIRMATION"),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:15px;font-weight:900;color:#fff;text-align:center;line-height:1.5;max-width:370px"},"Sacrifier ces 3 objets et consommer la Balance pour recevoir « "+reward.name+" » ?"),
+        h("div",{style:"width:100%;margin-top:14px;display:flex;flex-direction:column;gap:7px"},sacrifices.map(id=>h("div",{key:id,style:"display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:9px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.025)"},InventoryItemIcon(id,28),h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:var(--tx);text-align:left"},INVENTORY_ITEMS[id].name)))),
+        h("div",{style:"font-size:10px;color:var(--td);margin-top:12px"},"En échange :"),
+        h("div",{style:"margin-top:7px;display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;border:1px solid "+color+"66;background:"+color+"0d"},InventoryItemIcon(rewardId,38),h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";text-align:left"},reward.name)),
+        h("div",{style:"display:flex;gap:10px;margin-top:22px;width:100%"},
+          h("button",{class:"rudis",style:"flex:1;min-width:0;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>{setConfirmBalanceExchange(null);setBalanceRewardChoice({sacrifices:[...sacrifices]});}},"Retour"),
+          h("button",{class:"rudis",style:"flex:1;min-width:0;--rc:"+color+";--rg:"+color+"66",onClick:()=>{
+            setState(s=>exchangeCounterpartBalanceState(s,sacrifices,rewardId));
+            setConfirmBalanceExchange(null);
+            setItemUseUp({id:"counterpartBalance",exchangeRewardId:rewardId});
+          }},"Échanger")
+        )
+      )
+    );
+  }
+
   function CompassStatModal(){
     if(!compassStatChoice)return null;
     const choices=["Sante","Force","Esprit","Endurance","Agilite","Discipline"];
@@ -3963,7 +4062,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       mysteryMap:{main:"#b7791f",accent:"#f5d08a"},
       etherStopper:{main:"#7c3aed",accent:"#60a5fa"},
       rerollToken:{main:"#d4a84f",accent:"#38bdf8"},
-      alchemicalCatalyst:{main:"#10b981",accent:"#5eead4"}
+      alchemicalCatalyst:{main:"#10b981",accent:"#5eead4"},
+      counterpartBalance:{main:"#eab308",accent:"#fef08a"}
     }[itemLootUp.item]||{main:rank.color||"#f59e0b",accent:"#ffffff"};
     const main=rare?"#f59e0b":fx.main;
     const accent=rare?"#fde68a":fx.accent;
@@ -4069,7 +4169,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const it=INVENTORY_ITEMS[itemUseUp.id];
     return h("div",{class:"ruov",style:"--rc:"+rank.color+";--rg:"+rank.glow},h("div",{class:"rucont"},
       h(NotificationHeader,null),
-      h("div",{class:"ruevol",style:"color:"+rank.color},itemUseUp.id==="teleportCrystal"&&itemUseUp.alliedTeleport?"ALLIANCE SCELLÉE":itemUseUp.id==="dungeonKey"?"Vous avez utilisé une":itemUseUp.id==="debtAcknowledgement"?"Dette créée avec une":itemUseUp.id==="transmutationGrimoire"?"Transmutation accomplie":itemUseUp.id==="destinyCompass"?"Boussole orientée":itemUseUp.id==="mysteryMap"?"Carte déployée":itemUseUp.id==="etherStopper"?(itemUseUp.resumed?"Élixir réactivé":"Élixir suspendu"):itemUseUp.id==="rerollToken"?"Quête urgente invoquée":itemUseUp.id==="alchemicalCatalyst"?"Catalyseur préparé":"Vous avez consommé un"),
+      h("div",{class:"ruevol",style:"color:"+rank.color},itemUseUp.id==="teleportCrystal"&&itemUseUp.alliedTeleport?"ALLIANCE SCELLÉE":itemUseUp.id==="dungeonKey"?"Vous avez utilisé une":itemUseUp.id==="debtAcknowledgement"?"Dette créée avec une":itemUseUp.id==="transmutationGrimoire"?"Transmutation accomplie":itemUseUp.id==="destinyCompass"?"Boussole orientée":itemUseUp.id==="mysteryMap"?"Carte déployée":itemUseUp.id==="etherStopper"?(itemUseUp.resumed?"Élixir réactivé":"Élixir suspendu"):itemUseUp.id==="rerollToken"?"Quête urgente invoquée":itemUseUp.id==="alchemicalCatalyst"?"Catalyseur préparé":itemUseUp.id==="counterpartBalance"?"Échange accompli":"Vous avez consommé un"),
       h("div",{class:"rurank",style:responsiveItemAnimationTitleStyle(it.name,56),"data-r":it.name},it.name),
       itemUseUp.stat&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Vous bénéficiez de +"+Math.round(itemUseUp.pct*100)+" % d’XP dans ",h("span",{style:"color:"+(STAT_COLOR[itemUseUp.stat]||rank.color)},STAT_LBL[itemUseUp.stat]||itemUseUp.stat)," pendant 24 h."),
       itemUseUp.global&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:#c084fc"},"Vous bénéficiez de +"+Math.round(itemUseUp.pct*100)+" % d’XP sur toutes les statistiques pendant 24 h."),
@@ -4083,6 +4183,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       itemUseUp.alliedTeleport&&itemUseUp.breachName&&h("div",{class:"rulabel",style:"margin-top:8px;max-width:350px;line-height:1.45;color:#60a5fa"},"Brèche la plus proche : "+itemUseUp.breachName),
       itemUseUp.armed&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:#5eead4"},"La prochaine transmutation ne coûtera que 3 Élixirs d’expérience mineurs."),
       itemUseUp.recordWon&&h("div",{class:"rulabel",style:"margin-top:12px"},"Record officiel battu : +500 XP."),
+      itemUseUp.exchangeRewardId&&INVENTORY_ITEMS[itemUseUp.exchangeRewardId]&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:350px;line-height:1.55;color:#facc15"},"La Balance vous accorde : "+INVENTORY_ITEMS[itemUseUp.exchangeRewardId].name+"."),
       h("button",{class:"rudis",onClick:()=>setItemUseUp(null)},"Continuer")
     ));
   }
@@ -4509,6 +4610,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(ItemUseUp,null),
       h(InventoryItemModal,null),
       h(ConfirmItemUseModal,null),
+      h(CounterpartBalanceSacrificeModal,null),
+      h(CounterpartBalanceRewardModal,null),
+      h(ConfirmCounterpartBalanceExchangeModal,null),
       h(CompassStatModal,null),
       h(DungeonMapStatModal,null),
       h(ElixirStatModal,null),

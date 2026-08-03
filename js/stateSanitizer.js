@@ -295,7 +295,8 @@ export function cleanSystemState(raw){
       etherStopper:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.etherStopper)||0)),
       rerollToken:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.rerollToken)||0)),
       alchemicalCatalyst:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.alchemicalCatalyst)||0)),
-      recoveryOintment:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.recoveryOintment)||0))
+      recoveryOintment:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.recoveryOintment)||0)),
+      counterpartBalance:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.counterpartBalance)||0))
     },
     masterContractArmed:data.masterContractArmed===true,
     recordChallenge:data.recordChallenge||null,

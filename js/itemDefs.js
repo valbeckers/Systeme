@@ -24,6 +24,7 @@ const BASE_INVENTORY_ITEMS={
     teleportCrystal:{name:"CRISTAL DE TÉLÉPORTATION",short:"CRISTAL DE TÉLÉPORTATION",emoji:"💠",action:"BRISER",desc:"Permet au joueur d’aller aider un pays voisin en se téléportant à la Brèche la plus proche. Si elle est refermée, vous obtenez l’XP et le butin habituels de la Brèche, puis choisissez un objet supplémentaire offert par le pays allié.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon du Chasseur (Taux : 10 %)."]},
     invisibilityCape:{name:"POTION D’INVISIBILITÉ ÉPHÉMÈRE",short:"POTION D’INVISIBILITÉ",emoji:"🧪",action:"UTILISER",desc:"Permet au joueur de devenir invisible le temps de traverser une salle de donjon. La salle est considérée comme terminée, sans gain d’XP. Utilisable une seule fois par jour.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon de l’Alchimiste (Taux : 10 %)."]},
     recoveryOintment:{name:"ONGUENT DE RÉCUPÉRATION",short:"ONGUENT DE RÉCUPÉRATION",emoji:"🧴",action:"UTILISER",desc:"Permet au joueur de passer une quête journalière ou bonus en cas de blessure ou de repos forcé. La quête est considérée comme validée, sans gain d’XP. Utilisable une seule fois par jour.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon du Moine (Taux : 10 %)."]},
+    counterpartBalance:{name:"BALANCE DES CONTREPARTIES",short:"BALANCE DES CONTREPARTIES",emoji:"⚖️",action:"UTILISER",desc:"Permet au joueur de sacrifier 3 objets différents pour en choisir 1 nouveau.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon du Moine (Taux : 10 %)."]},
   };
 
 // Toutes les récompenses non permanentes peuvent aussi être tirées après la
@@ -55,7 +56,8 @@ export const STANDARD_ITEM_DROPS=[
   ["etherStopper",0.01],
   ["rerollToken",0.01],
   ["alchemicalCatalyst",0.01],
-  ["recoveryOintment",0.01]
+  ["recoveryOintment",0.01],
+  ["counterpartBalance",0.01]
 ];
 
 // Tirages indépendants effectués après n’importe quel donjon terminé.
@@ -74,7 +76,8 @@ export const DUNGEON_GENERIC_DROPS=[
   ["etherStopper",0.10],
   ["rerollToken",0.10],
   ["alchemicalCatalyst",0.10],
-  ["recoveryOintment",0.10]
+  ["recoveryOintment",0.10],
+  ["counterpartBalance",0.10]
 ];
 
 // Tirages supplémentaires propres au donjon terminé.
@@ -83,6 +86,6 @@ export const DUNGEON_SPECIFIC_DROPS={
   pilgrim:[["destinyCompass",0.10],["mysteryMap",0.10]],
   warrior:[["masterContract",0.10],["recordHammer",0.10]],
   hunter:[["teleportCrystal",0.10]],
-  monk:[["recoveryOintment",0.10]],
+  monk:[["recoveryOintment",0.10],["counterpartBalance",0.10]],
   steward:[]
 };
