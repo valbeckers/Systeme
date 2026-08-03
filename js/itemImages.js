@@ -3,7 +3,7 @@
 // Les anciens noms de constantes sont conservés pour limiter les changements
 // dans la couche d’interface.
 
-const ASSET_VERSION="20260731-step-19";
+const ASSET_VERSION="20260803-mystery-map";
 
 function itemAsset(fileName){
   const url=new URL(`../assets/items/${fileName}`,import.meta.url);
@@ -30,5 +30,6 @@ export const NEW_ITEM_ICON_DATA=Object.freeze({
   teleportCrystal:itemAsset("teleport-crystal.png"),
   invisibilityCape:itemAsset("invisibility-potion.png"),
   recoveryOintment:itemAsset("recovery-ointment.png"),
-  transmutationGrimoire:itemAsset("transmutation-grimoire.png")
+  transmutationGrimoire:itemAsset("transmutation-grimoire.png"),
+  mysteryMap:itemAsset("depth-map.png")
 });
