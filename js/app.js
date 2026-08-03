@@ -2877,7 +2877,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         const it=INVENTORY_ITEMS[id], qty=itemQty(id), grey=!["codex","regressionOrb","debtAcknowledgement"].includes(id)&&!(id==="etherStopper"&&suspendedElixir)&&!(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk)&&(qty<1||(isElixirKind(id)&&(!!activeElixir||!!suspendedElixir)));
         return h("button",{key:id,onClick:()=>setInventoryItem(id),style:"position:relative;aspect-ratio:1/1;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.025);padding:8px;color:var(--tx);cursor:pointer;opacity:"+(grey?".48":"1")+";display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px"},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;line-height:1.25;letter-spacing:.5px;text-transform:uppercase;text-align:center;min-height:20px"},it.short),
-          h("div",{style:"line-height:1"},InventoryItemIcon(id, id==="masterContract" ? 46 : 38)),
+          h("div",{style:"line-height:1"},InventoryItemIcon(id, id==="masterContract" ? 46 : id==="counterpartBalance" ? 46 : 38)),
           h("div",{style:"position:absolute;right:6px;bottom:5px;border-radius:999px;min-width:20px;padding:2px 5px;background:rgba(0,0,0,.55);font-family:Orbitron,sans-serif;font-size:9px;color:#fff"},["codex","regressionOrb","debtAcknowledgement"].includes(id)?"∞":id==="etherStopper"&&suspendedElixir?"PAUSE":"×"+qty)
         );
       }))
@@ -2966,7 +2966,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{class:"mtitle",style:"margin:0;line-height:1.2;min-width:0"},it.name),
           h("button",{onClick:()=>setInventoryItem(null),style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
         ),
-        h("div",{style:"display:flex;justify-content:center;align-items:center;margin:14px 0 8px"},InventoryItemIcon(id,128)),
+        h("div",{style:"display:flex;justify-content:center;align-items:center;margin:14px 0 8px"},InventoryItemIcon(id,id==="counterpartBalance"?154:128)),
         !it.permanent&&h("div",{style:"text-align:center;font-family:Orbitron,sans-serif;font-size:10px;color:var(--td);margin-bottom:16px"},id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"MARQUE EN COURS":id==="etherStopper"&&suspendedElixir?"ÉLIXIR SUSPENDU · "+fmtCD(suspendedElixir.remainingMs):"QUANTITÉ : "+qty),
         h("div",{style:"font-size:12px;line-height:1.6;color:var(--tx);margin-bottom:14px"},it.desc),
         !it.permanent&&h("div",{style:"margin-bottom:16px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);padding:10px 0"},
