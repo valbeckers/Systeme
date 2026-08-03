@@ -4,7 +4,6 @@
 // et dungeonDefs.js.
 
 import { BREACH_POOL, BREACH_RUPTURE_BOSSES } from "./breachDefs.js";
-import { DUNGEON_RUPTURE_BOSSES } from "./dungeonDefs.js";
 import { eventDayStr, next7AM } from "./dayCycle.js";
 
 function breachTemplateById(id){return BREACH_POOL.find(b=>b.id===id)||null;}
@@ -47,10 +46,10 @@ function processDailyBreachRoll(state,now=Date.now()){
   return {...state,activeBreach:{...tpl,breachId:"breach_"+now,progress:0,startedAt:now,expiresAt:now+72*60*60*1000,completedAt:null,ruptureBoss:null,isBreach:true},breachRollDay:day,breachTriggeredDay:day,specialQuests:(state.specialQuests||[]).filter(q=>q.completedAt||now>=(q.expiresAt||0)),sqCooldownUntil:next7AM(now),sqRerollDay:null};
 }
 
-function pickDungeonRuptureBoss(dungeonId){
-  const pool=DUNGEON_RUPTURE_BOSSES[dungeonId]||[];
-  if(!pool.length) return null;
-  return {...pool[Math.floor(Math.random()*pool.length)],ruptureColor:"#ef4444"};
+function pickDungeonRuptureBoss(){
+  // Compatibilité avec les anciennes sauvegardes / imports : les Boss alternatifs
+  // du Contrat du Maître ont été supprimés.
+  return null;
 }
 
 function pickBreachRuptureBoss(breachId){

@@ -21,7 +21,7 @@ import {
   applyDailyStreakRewardState
 } from "./dailyEngine.js";
 import { BREACH_POOL } from "./breachDefs.js";
-import { DUNGEONS } from "./dungeonDefs.js";
+import { DUNGEONS } from "./dungeonDefs.js?v=20260803-contract-fix-01";
 import {
   dungeonRoomRewardPairs,
   dungeonRewardPairs,
@@ -99,7 +99,7 @@ import {
   normalizeActiveBreach,
   processDailyBreachRoll,
   pickBreachRuptureBoss
-} from "./breachEngine.js";
+} from "./breachEngine.js?v=20260803-contract-fix-01";
 import {
   ELIXIR_STATS,
   ELIXIR_DURATION_MS,
