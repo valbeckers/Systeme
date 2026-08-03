@@ -3,7 +3,7 @@
 // Les anciens noms de constantes sont conservés pour limiter les changements
 // dans la couche d’interface.
 
-const ASSET_VERSION="20260803-mystery-map";
+const ASSET_VERSION="20260803-counterpart-balance-art";
 
 function itemAsset(fileName){
   const url=new URL(`../assets/items/${fileName}`,import.meta.url);
@@ -31,5 +31,6 @@ export const NEW_ITEM_ICON_DATA=Object.freeze({
   invisibilityCape:itemAsset("invisibility-potion.png"),
   recoveryOintment:itemAsset("recovery-ointment.png"),
   transmutationGrimoire:itemAsset("transmutation-grimoire.png"),
-  mysteryMap:itemAsset("depth-map.png")
+  mysteryMap:itemAsset("depth-map.png"),
+  counterpartBalance:itemAsset("counterpart-balance.png")
 });
