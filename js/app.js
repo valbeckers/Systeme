@@ -117,7 +117,7 @@ import {
 const { h, render, Fragment } = window.preact;
 const { useState, useEffect, useRef } = window.preactHooks;
 
-const BREACH_FX_VERSION="20260804-v4-raster";
+const BREACH_FX_VERSION="20260804-v4-raster-b";
 function breachFxAsset(fileName){
   const url=new URL(`../assets/fx/${fileName}`,import.meta.url);
   url.searchParams.set("v",BREACH_FX_VERSION);
