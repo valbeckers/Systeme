@@ -2018,7 +2018,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         ? "width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,transparent,transparent 4px,#ef4444 4px,#ef4444 8px);background-size:11.31px 11.31px;opacity:0.8"
         : "width:"+pct+"%;background:linear-gradient(90deg,#991b1b,#ef4444)");
 
-    return h("div",{class:"sqcard"+(urgent?" sq-urgent":"")},
+    return h("div",{class:"sqcard"},
       h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;gap:8px"},
         h("div",{style:"display:flex;align-items:center;gap:8px;min-width:0"},
           QuestIcon(sq.id,sq.icon,14,"line-height:1.1;min-width:24px;text-align:center"),
@@ -2160,10 +2160,21 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       : breachProgressText();
 
     const standardButtonStyle="flex:1;padding:9px;border-radius:8px;border:1px solid rgba(255,255,255,.38);background:rgba(255,255,255,.05);color:#fff;font-family:Orbitron,sans-serif;font-size:9px;cursor:pointer";
+    const breachBolts=[
+      {pos:"top:-9px;left:8px",tone:"yellow",delay:"0s",rot:"0deg"},
+      {pos:"top:-9px;right:8px",tone:"white",delay:".55s",rot:"0deg"},
+      {pos:"bottom:-10px;left:10px",tone:"white",delay:"1.1s",rot:"180deg"},
+      {pos:"bottom:-10px;right:10px",tone:"yellow",delay:"1.65s",rot:"180deg"},
+      {pos:"top:42%;left:-7px",tone:"white",delay:".28s",rot:"-90deg"},
+      {pos:"top:42%;right:-7px",tone:"yellow",delay:".83s",rot:"90deg"},
+      {pos:"top:-8px;left:48%",tone:"yellow",delay:"1.38s",rot:"0deg"},
+      {pos:"bottom:-10px;left:48%",tone:"white",delay:"1.93s",rot:"180deg"}
+    ];
+    const renderBreachBolts=()=>breachBolts.map((bolt,i)=>h("span",{key:i,class:"breach-bolt breach-bolt-"+bolt.tone,style:bolt.pos+";animation-delay:"+bolt.delay+";transform:rotate("+bolt.rot+")"},"⚡"));
 
     if(compact){
-      return h("div",{class:"card sq-urgent",style:"position:relative;overflow:hidden;border-color:#8dbbff;background:linear-gradient(145deg,#07162f,#102e5c);box-shadow:0 0 18px rgba(141,187,255,.32),inset 0 0 24px rgba(255,255,255,.035);padding-top:13px;padding-bottom:13px"},
-        [["top:-10px;left:8px"],["top:-10px;right:8px"],["bottom:-11px;left:10px"],["bottom:-11px;right:10px"]].map((p,i)=>h("span",{key:i,style:"position:absolute;"+p[0]+";color:#fff;font-size:17px;filter:drop-shadow(0 0 7px #fff);pointer-events:none"},"⚡")),
+      return h("div",{class:"card breach-electric",style:"position:relative;overflow:hidden;border-color:#8dbbff;background:linear-gradient(145deg,#07162f,#102e5c);box-shadow:0 0 18px rgba(141,187,255,.32),inset 0 0 24px rgba(255,255,255,.035);padding-top:13px;padding-bottom:13px"},
+        renderBreachBolts(),
         h("div",{style:"position:relative;z-index:2"},
           h("div",{class:"ctitle",style:"margin:0 0 10px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"BRÈCHE ALLIÉE EN RUPTURE":"BRÈCHE ALLIÉE"):(isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE")),
           h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:0"},
@@ -2183,8 +2194,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       );
     }
 
-    return h("div",{class:"card sq-urgent",style:"position:relative;overflow:hidden;border-color:#8dbbff;background:linear-gradient(145deg,#07162f,#102e5c);box-shadow:0 0 18px rgba(141,187,255,.32),inset 0 0 24px rgba(255,255,255,.035)"},
-      [["top:-10px;left:8px"],["top:-10px;right:8px"],["bottom:-11px;left:10px"],["bottom:-11px;right:10px"]].map((p,i)=>h("span",{key:i,style:"position:absolute;"+p[0]+";color:#fff;font-size:17px;filter:drop-shadow(0 0 7px #fff);pointer-events:none"},"⚡")),
+    return h("div",{class:"card breach-electric",style:"position:relative;overflow:hidden;border-color:#8dbbff;background:linear-gradient(145deg,#07162f,#102e5c);box-shadow:0 0 18px rgba(141,187,255,.32),inset 0 0 24px rgba(255,255,255,.035)"},
+      renderBreachBolts(),
       h("div",{style:"position:relative;z-index:2"},
         h("div",{class:"ctitle",style:"margin:0 0 12px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"BRÈCHE ALLIÉE EN RUPTURE":"BRÈCHE ALLIÉE"):(isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE")),
         h("div",{style:"padding:12px;border-radius:12px;border:1px solid rgba(219,234,254,.24);background:rgba(2,10,24,.36);box-shadow:inset 0 0 18px rgba(141,187,255,.05)"},
@@ -2783,7 +2794,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     return h("div",{class:"tab"},
       h(DebtCard,null),
       activeBreach&&h(BreachCard,null),
-      (!completedSq||activeSq)&&h("div",{class:"card",style:"border-color:#ef444444"},
+      (!completedSq||activeSq)&&h("div",{class:"card"+(activeSq&&activeSq.expiresAt-now<86400000&&!activeSq.completedAt?" sq-urgent":""),style:"border-color:#ef444444"},
         h("div",{class:"shdr"},
           h("div",null,
             h("div",{class:"ctitle",style:"margin:0;color:#ef4444"},"Quête urgente"+(activeSq&&activeSq.tier?" · "+(SQ_TIER_LABEL[activeSq.tier]||""):""))
