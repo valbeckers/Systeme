@@ -2200,7 +2200,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         ),
         h("div",{class:"qrow",style:"align-items:center;margin-top:9px"},
           h("div",{class:"qbar"},h("div",{class:"qfill partial",style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,#274f88,#274f88 5px,#7aa7df 5px,#7aa7df 10px);background-size:14px 14px;opacity:.95"})),
-          h("div",{class:"qxp",style:"color:#dbeafe;white-space:nowrap;min-width:118px;text-align:right"},progressText)
+          h("div",{class:"qxp",style:"color:#dbeafe;white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},progressText)
         ),
         h("div",{style:"font-size:10px;color:#8dbbff;font-family:Orbitron,sans-serif;margin-top:4px;text-align:left"},"⏱ "+fmtCD(remaining)+" restants"),
 
