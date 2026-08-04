@@ -117,7 +117,7 @@ import {
 const { h, render, Fragment } = window.preact;
 const { useState, useEffect, useRef } = window.preactHooks;
 
-const BREACH_FX_VERSION="20260804-v9c-jagged-style";
+const BREACH_FX_VERSION="20260804-v9d-fractal-bolt";
 
 const __breachFxRand=(seed,n)=>{
   const x=Math.sin((seed*9283.133)+(n*12.9898))*43758.5453123;
@@ -185,25 +185,27 @@ function __roundedRectPoint(m,d){
 function __drawBreachElectricFrame(ctx, metrics, t, variant){
   const pulse=__breachFxPulse(t);
   const peri=metrics.total;
-  const sampleDist=variant==="home"?5.8:6.2;
-  const samples=Math.max(320,Math.floor(peri/sampleDist));
-  const ampMain=variant==="home"?1.55:1.75;
-  const ampInner=variant==="home"?.9:1.05;
-  const outwardBase=.95;
-  const ctrlMain=variant==="home"?92:104;
-  const ctrlMicro=variant==="home"?188:208;
-  const ctrlTang=variant==="home"?126:144;
-  const glowA=.16*pulse, glowB=.42*pulse, coreA=.98*Math.min(1.12,pulse+.1);
+  const sampleDist=variant==="home"?4.8:5.2;
+  const samples=Math.max(420,Math.floor(peri/sampleDist));
+  const ampMain=variant==="home"?1.18:1.3;
+  const ampInner=variant==="home"?.54:.64;
+  const outwardBase=.82;
+  const ctrlMain=variant==="home"?148:166;
+  const ctrlMicro=variant==="home"?308:336;
+  const ctrlTang=variant==="home"?176:194;
+  const ctrlSpike=variant==="home"?122:136;
+  const glowA=.11*pulse, glowB=.30*pulse, coreA=.98*Math.min(1.08,pulse+.08);
   const makePts=(seed,amp,outBias,phase)=>{
     const pts=[];
     for(let i=0;i<samples;i++){
       const s=(i/samples)*peri;
       const base=__roundedRectPoint(metrics,s);
-      const u=i + phase*14;
+      const u=i + phase*15;
       const jag=__breachFxLoopLinear(seed,(u/samples)*ctrlMain,ctrlMain);
-      const micro=__breachFxLoopNoise(seed+19,(u/samples)*ctrlMicro,ctrlMicro);
-      const tang=__breachFxLoopLinear(seed+71,((i+phase*7)/samples)*ctrlTang,ctrlTang)*.22;
-      const outward=(jag*amp)+(micro*amp*.22)+outBias;
+      const micro=__breachFxLoopLinear(seed+19,(u/samples)*ctrlMicro,ctrlMicro);
+      const tang=__breachFxLoopLinear(seed+71,((i+phase*6)/samples)*ctrlTang,ctrlTang)*.12;
+      const spike=Math.max(0,__breachFxLoopLinear(seed+111,((i+phase*11)/samples)*ctrlSpike,ctrlSpike));
+      const outward=(jag*amp)+(micro*amp*.17)+(spike*amp*.34)+outBias;
       pts.push({
         x:base.x + base.nx*outward + base.tx*tang,
         y:base.y + base.ny*outward + base.ty*tang,
@@ -213,9 +215,9 @@ function __drawBreachElectricFrame(ctx, metrics, t, variant){
     pts.push({...pts[0]});
     return pts;
   };
-  const phase=t*.92;
+  const phase=t*.96;
   const mainPts=makePts(11,ampMain,outwardBase,phase);
-  const innerPts=makePts(27,ampInner,outwardBase-.35,phase*1.18);
+  const innerPts=makePts(27,ampInner,outwardBase-.22,phase*1.14);
 
   const strokePath=(pts,color,width,alpha,blur=0)=>{
     ctx.save();
@@ -233,10 +235,10 @@ function __drawBreachElectricFrame(ctx, metrics, t, variant){
     ctx.restore();
   };
 
-  strokePath(mainPts,'#37cfff',5.8,glowA,11);
-  strokePath(mainPts,'#73ddff',3.1,glowB,4.2);
-  strokePath(innerPts,'#d1f6ff',1.55,.76*pulse,2.4);
-  strokePath(innerPts,'#ffffff',.95,coreA,1.2);
+  strokePath(mainPts,'#29c9ff',4.5,glowA,8);
+  strokePath(mainPts,'#69dcff',2.15,glowB,2.6);
+  strokePath(innerPts,'#dcf9ff',1.02,.72*pulse,1.2);
+  strokePath(innerPts,'#ffffff',.56,coreA,.45);
 
   ctx.save();
   ctx.beginPath();
@@ -248,39 +250,39 @@ function __drawBreachElectricFrame(ctx, metrics, t, variant){
   }
   ctx.closePath();
   ctx.strokeStyle='#baf4ff';
-  ctx.lineWidth=.75;
-  ctx.globalAlpha=.22*pulse;
-  ctx.shadowBlur=3.5;
+  ctx.lineWidth=.48;
+  ctx.globalAlpha=.12*pulse;
+  ctx.shadowBlur=1.8;
   ctx.shadowColor='#59d1ff';
   ctx.stroke();
   ctx.restore();
 
-  const branchEvery=variant==="home"?24:22;
+  const branchEvery=variant==="home"?18:17;
   ctx.save();
   ctx.lineJoin='round';
   ctx.lineCap='round';
   for(let i=0;i<mainPts.length;i+=branchEvery){
-    const roll=__breachFxRand(99,Math.floor(i/branchEvery)+Math.floor(t*2.1));
-    if(roll<.76) continue;
+    const roll=__breachFxRand(99,Math.floor(i/branchEvery)+Math.floor(t*2.3));
+    if(roll<.68) continue;
     const p=mainPts[i];
-    const len=5.5 + __breachFxRand(123,i)*9.5;
+    const len=4 + __breachFxRand(123,i)*7.4;
     const side=(__breachFxRand(91,i)>0.5?1:-1);
-    const splay=1.0+__breachFxRand(15,i)*2.2;
-    const bx1=p.x + p.nx*(len*.42) + p.tx*side*splay;
-    const by1=p.y + p.ny*(len*.42) + p.ty*side*splay;
-    const bx2=bx1 + p.nx*(len*.26) + p.tx*side*(splay*1.25);
-    const by2=by1 + p.ny*(len*.26) + p.ty*side*(splay*1.25);
-    const bx3=bx2 + p.nx*(len*.22) + p.tx*side*(.3+__breachFxRand(17,i)*1.8);
-    const by3=by2 + p.ny*(len*.22) + p.ty*side*(.3+__breachFxRand(17,i)*1.8);
+    const splay=.5+__breachFxRand(15,i)*1.55;
+    const bx1=p.x + p.nx*(len*.36) + p.tx*side*splay;
+    const by1=p.y + p.ny*(len*.36) + p.ty*side*splay;
+    const bx2=bx1 + p.nx*(len*.24) + p.tx*side*(splay*1.15);
+    const by2=by1 + p.ny*(len*.24) + p.ty*side*(splay*1.15);
+    const bx3=bx2 + p.nx*(len*.18) + p.tx*side*(.25+__breachFxRand(17,i)*1.15);
+    const by3=by2 + p.ny*(len*.18) + p.ty*side*(.25+__breachFxRand(17,i)*1.15);
     ctx.beginPath();
     ctx.moveTo(p.x,p.y);
     ctx.lineTo(bx1,by1);
     ctx.lineTo(bx2,by2);
     ctx.lineTo(bx3,by3);
     ctx.strokeStyle='#73dcff';
-    ctx.lineWidth=1.35;
-    ctx.globalAlpha=.18 + (roll-.76)*1.4;
-    ctx.shadowBlur=5;
+    ctx.lineWidth=.92;
+    ctx.globalAlpha=.18 + (roll-.68)*1.05;
+    ctx.shadowBlur=3.4;
     ctx.shadowColor='#59d1ff';
     ctx.stroke();
     ctx.beginPath();
@@ -289,10 +291,36 @@ function __drawBreachElectricFrame(ctx, metrics, t, variant){
     ctx.lineTo(bx2,by2);
     ctx.lineTo(bx3,by3);
     ctx.strokeStyle='#ffffff';
-    ctx.lineWidth=.5;
+    ctx.lineWidth=.34;
     ctx.globalAlpha=.72;
     ctx.shadowBlur=0;
     ctx.stroke();
+
+    if(roll>.86){
+      const sx=bx1 + (bx2-bx1)*(.45+__breachFxRand(44,i)*.2);
+      const sy=by1 + (by2-by1)*(.45+__breachFxRand(45,i)*.2);
+      const tx=p.tx*side*(.55+__breachFxRand(46,i)*1.1);
+      const ty=p.ty*side*(.55+__breachFxRand(47,i)*1.1);
+      const ex=sx + tx + p.nx*(1.1+__breachFxRand(48,i)*1.9);
+      const ey=sy + ty + p.ny*(1.1+__breachFxRand(49,i)*1.9);
+      ctx.beginPath();
+      ctx.moveTo(sx,sy);
+      ctx.lineTo(ex,ey);
+      ctx.strokeStyle='#73dcff';
+      ctx.lineWidth=.74;
+      ctx.globalAlpha=.28;
+      ctx.shadowBlur=2.8;
+      ctx.shadowColor='#59d1ff';
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(sx,sy);
+      ctx.lineTo(ex,ey);
+      ctx.strokeStyle='#ffffff';
+      ctx.lineWidth=.26;
+      ctx.globalAlpha=.64;
+      ctx.shadowBlur=0;
+      ctx.stroke();
+    }
   }
   ctx.restore();
 }
