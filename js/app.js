@@ -2160,21 +2160,14 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       : breachProgressText();
 
     const standardButtonStyle="flex:1;padding:9px;border-radius:8px;border:1px solid rgba(255,255,255,.38);background:rgba(255,255,255,.05);color:#fff;font-family:Orbitron,sans-serif;font-size:9px;cursor:pointer";
-    const breachBolts=[
-      {pos:"top:-9px;left:8px",tone:"yellow",delay:"0s",rot:"0deg"},
-      {pos:"top:-9px;right:8px",tone:"white",delay:".55s",rot:"0deg"},
-      {pos:"bottom:-10px;left:10px",tone:"white",delay:"1.1s",rot:"180deg"},
-      {pos:"bottom:-10px;right:10px",tone:"yellow",delay:"1.65s",rot:"180deg"},
-      {pos:"top:42%;left:-7px",tone:"white",delay:".28s",rot:"-90deg"},
-      {pos:"top:42%;right:-7px",tone:"yellow",delay:".83s",rot:"90deg"},
-      {pos:"top:-8px;left:48%",tone:"yellow",delay:"1.38s",rot:"0deg"},
-      {pos:"bottom:-10px;left:48%",tone:"white",delay:"1.93s",rot:"180deg"}
-    ];
-    const renderBreachBolts=()=>breachBolts.map((bolt,i)=>h("span",{key:i,class:"breach-bolt breach-bolt-"+bolt.tone,style:bolt.pos+";animation-delay:"+bolt.delay+";transform:rotate("+bolt.rot+")"},"⚡"));
+    const renderBreachTrail=()=>h("svg",{class:"breach-trail-svg",viewBox:"0 0 100 100",preserveAspectRatio:"none","aria-hidden":"true"},
+      h("path",{class:"breach-trail-path breach-trail-primary",d:"M 8 2 H 92 Q 98 2 98 8 V 92 Q 98 98 92 98 H 8 Q 2 98 2 92 V 8 Q 2 2 8 2 Z",pathLength:"100"}),
+      h("path",{class:"breach-trail-path breach-trail-secondary",d:"M 8 2 H 92 Q 98 2 98 8 V 92 Q 98 98 92 98 H 8 Q 2 98 2 92 V 8 Q 2 2 8 2 Z",pathLength:"100"})
+    );
 
     if(compact){
       return h("div",{class:"card breach-electric",style:"position:relative;overflow:hidden;border-color:#8dbbff;background:linear-gradient(145deg,#07162f,#102e5c);box-shadow:0 0 18px rgba(141,187,255,.32),inset 0 0 24px rgba(255,255,255,.035);padding-top:13px;padding-bottom:13px"},
-        renderBreachBolts(),
+        renderBreachTrail(),
         h("div",{style:"position:relative;z-index:2"},
           h("div",{class:"ctitle",style:"margin:0 0 10px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"BRÈCHE ALLIÉE EN RUPTURE":"BRÈCHE ALLIÉE"):(isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE")),
           h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:0"},
@@ -2195,7 +2188,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }
 
     return h("div",{class:"card breach-electric",style:"position:relative;overflow:hidden;border-color:#8dbbff;background:linear-gradient(145deg,#07162f,#102e5c);box-shadow:0 0 18px rgba(141,187,255,.32),inset 0 0 24px rgba(255,255,255,.035)"},
-      renderBreachBolts(),
+      renderBreachTrail(),
       h("div",{style:"position:relative;z-index:2"},
         h("div",{class:"ctitle",style:"margin:0 0 12px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"BRÈCHE ALLIÉE EN RUPTURE":"BRÈCHE ALLIÉE"):(isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE")),
         h("div",{style:"padding:12px;border-radius:12px;border:1px solid rgba(219,234,254,.24);background:rgba(2,10,24,.36);box-shadow:inset 0 0 18px rgba(141,187,255,.05)"},
@@ -2731,7 +2724,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
       h(DebtCard,{compact:true}),
       activeBreach&&h(BreachCard,{compact:true}),
-      activeSq&&h("div",{class:"card",style:"border-color:#ef444444"},
+      activeSq&&h("div",{class:"card"+(activeSq&&activeSq.expiresAt-now<86400000&&!activeSq.completedAt?" sq-urgent":""),style:"border-color:#ef444444"},
         h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Quête urgente"),
         h(UrgentHomeRow,{sq:activeSq})
       ),
