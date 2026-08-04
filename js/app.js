@@ -117,7 +117,9 @@ import {
 const { h, render, Fragment } = window.preact;
 const { useState, useEffect, useRef } = window.preactHooks;
 
-const BREACH_FX_VERSION="20260804-v11-canvas-final";
+const BREACH_FX_VERSION="20260804-v12-approved-base-plus-dynamic-flashes";
+const BREACH_FX_ASSET_HOME=`assets/fx/breach-electric-approved-home.png?v=${BREACH_FX_VERSION}`;
+const BREACH_FX_ASSET_QUESTS=`assets/fx/breach-electric-approved-quests.png?v=${BREACH_FX_VERSION}`;
 
 const __breachFxRand=(seed,n)=>{
   const x=Math.sin((seed*9283.133)+(n*12.9898))*43758.5453123;
@@ -350,7 +352,7 @@ function BreachFxOverlay({variant="home"}={}){
       const left=hostRect.left-wrapRect.left;
       const top=hostRect.top-wrapRect.top;
       const radius=__parseRadius(getComputedStyle(host).borderTopLeftRadius);
-      state.metrics=__buildRoundedRectMetrics(left+1.2, top+1.2, Math.max(1,hostRect.width-2.4), Math.max(1,hostRect.height-2.4), radius);
+      state.metrics=__buildRoundedRectMetrics(left+1.15, top+1.15, Math.max(1,hostRect.width-2.3), Math.max(1,hostRect.height-2.3), radius);
     };
     const draw=(ts)=>{
       const {metrics,dpr}=state;
@@ -374,7 +376,9 @@ function BreachFxOverlay({variant="home"}={}){
       state.raf=0;
     };
   },[variant]);
+  const src=variant==="quests" ? BREACH_FX_ASSET_QUESTS : BREACH_FX_ASSET_HOME;
   return h("div",{ref:hostRef,class:"breach-fx-layer breach-fx-layer-"+(variant==="quests"?"quests":"home"),"aria-hidden":"true"},
+    h("img",{class:"breach-fx-base",src,alt:""}),
     h("canvas",{ref:canvasRef,class:"breach-fx-canvas"})
   );
 }
