@@ -117,24 +117,20 @@ import {
 const { h, render, Fragment } = window.preact;
 const { useState, useEffect, useRef } = window.preactHooks;
 
-const BREACH_FX_VERSION="20260804-v4-raster-c";
+const BREACH_FX_VERSION="20260804-v5-frame";
 function breachFxAsset(fileName){
   const url=new URL(`../assets/fx/${fileName}`,import.meta.url);
   url.searchParams.set("v",BREACH_FX_VERSION);
   return url.href;
 }
-const BREACH_FX_ASSETS=Object.freeze([
-  ["top-a",breachFxAsset("breach-lightning-top-a.webp")],
-  ["top-b",breachFxAsset("breach-lightning-top-b.webp")],
-  ["bottom-a",breachFxAsset("breach-lightning-bottom-a.webp")],
-  ["left-a",breachFxAsset("breach-lightning-left-a.webp")],
-  ["right-a",breachFxAsset("breach-lightning-right-a.webp")],
-  ["corner-a",breachFxAsset("breach-lightning-corner-a.webp")],
-  ["corner-b",breachFxAsset("breach-lightning-corner-b.webp")]
-]);
-function BreachFxOverlay(){
-  return h("div",{class:"breach-fx-layer","aria-hidden":"true"},
-    BREACH_FX_ASSETS.map(([name,src])=>h("img",{key:name,src,class:"breach-fx breach-fx-"+name,alt:"",draggable:false}))
+const BREACH_FX_FRAMES=Object.freeze({
+  home:breachFxAsset("breach-lightning-frame-home.webp"),
+  quests:breachFxAsset("breach-lightning-frame-quests.webp")
+});
+function BreachFxOverlay({variant="home"}={}){
+  const kind=variant==="quests"?"quests":"home";
+  return h("div",{class:"breach-fx-layer breach-fx-layer-"+kind,"aria-hidden":"true"},
+    h("img",{src:BREACH_FX_FRAMES[kind],class:"breach-fx-frame breach-fx-frame-"+kind,alt:"",draggable:false})
   );
 }
 
@@ -2181,7 +2177,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       : breachProgressText();
 
     const standardButtonStyle="flex:1;padding:9px;border-radius:8px;border:1px solid rgba(255,255,255,.38);background:rgba(255,255,255,.05);color:#fff;font-family:Orbitron,sans-serif;font-size:9px;cursor:pointer";
-    const renderBreachTrail=()=>h(BreachFxOverlay,null);
+    const renderBreachTrail=()=>h(BreachFxOverlay,{variant:compact?"home":"quests"});
 
     if(compact){
       return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:#8dbbff;background:linear-gradient(145deg,#07162f,#102e5c);box-shadow:0 0 18px rgba(141,187,255,.32),inset 0 0 24px rgba(255,255,255,.035);padding-top:13px;padding-bottom:13px"},
