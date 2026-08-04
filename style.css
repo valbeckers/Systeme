@@ -209,8 +209,11 @@ html,body{height:100dvh;width:100%;overflow:hidden;background:#000000;color:var(
 
 
 
-/* ─── ANIMATIONS CARTES BRÈCHES · V13 VISUEL GÉNÉRÉ ANIMÉ ─────────── */
+/* ─── ANIMATIONS CARTES BRÈCHES · V14 ASSETS ANIMÉS DIRECTS ───────────── */
 .breach-electric{position:relative;isolation:isolate}
 .breach-electric > *:not(.breach-fx-layer){position:relative;z-index:2}
-.breach-fx-layer{position:absolute;z-index:1;pointer-events:none;overflow:visible;border-radius:inherit;inset:-18px}
-.breach-fx-animated{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:fill;pointer-events:none;user-select:none;image-rendering:auto}
+.breach-fx-layer{position:absolute;z-index:1;pointer-events:none;overflow:visible}
+/* L'asset est calibré pour que son canal principal tombe exactement sur le border de la carte. */
+.breach-fx-layer-home{left:-2.915%;right:-2.466%;top:-15.278%;bottom:-12.5%}
+.breach-fx-layer-quests{left:-2.915%;right:-2.466%;top:-7.212%;bottom:-2.404%}
+.breach-fx-animated{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:fill;pointer-events:none;user-select:none;image-rendering:auto;max-width:none;opacity:1}
