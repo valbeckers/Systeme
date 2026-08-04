@@ -117,7 +117,7 @@ import {
 const { h, render, Fragment } = window.preact;
 const { useState, useEffect, useRef } = window.preactHooks;
 
-const BREACH_FX_VERSION="20260804-v7b-electric-arcs";
+const BREACH_FX_VERSION="20260804-v7c-electric-contour";
 function buildElectricRectMetrics(w,h,pad,r){
   const radius=Math.max(6,Math.min(r,(w-pad*2)/2,(h-pad*2)/2));
   const top=Math.max(1,w-2*(pad+radius));
@@ -153,6 +153,16 @@ function electricHash(n,seed){
   const x=Math.sin(n*12.9898+seed*78.233)*43758.5453;
   return (x-Math.floor(x))*2-1;
 }
+function smoothstep01(t){ return t<=0?0:t>=1?1:t*t*(3-2*t); }
+function lerp(a,b,t){ return a+(b-a)*t; }
+function noiseAtKnot(idx, epoch, seed, channel){
+  return electricHash(epoch*911 + idx*(131+channel*17) + channel*53, seed + channel*19.37);
+}
+function interpNoise(idxFloat, epoch, seed, channel){
+  const i0=Math.floor(idxFloat), i1=i0+1, ft=smoothstep01(idxFloat-i0);
+  const n0=noiseAtKnot(i0,epoch,seed,channel), n1=noiseAtKnot(i1,epoch,seed,channel);
+  return lerp(n0,n1,ft);
+}
 function BreachFxOverlay({variant="home"}={}){
   const kind=variant==="quests"?"quests":"home";
   const hostRef=useRef(null);
@@ -163,88 +173,85 @@ function BreachFxOverlay({variant="home"}={}){
     if(!host||!canvas)return;
     const ctx=canvas.getContext("2d");
     if(!ctx)return;
-    const parent=host.parentElement||host;
     const seed=seedRef.current;
-    const overscan=12;
-    let w=200,h=80,dpr=1,metrics=buildElectricRectMetrics(200,80,overscan,14),raf=0;
+    const overscan=20;
+    const pathOffset=2;
+    const knotSpacing=kind==="home"?16:18;
+    const sampleStep=4.7;
+    let w=200,h=80,dpr=1,metrics=buildElectricRectMetrics(200,80,overscan-pathOffset,14),raf=0;
     function resize(){
+      const parent=host.parentElement||host;
       const rect=parent.getBoundingClientRect();
       w=Math.max(40,rect.width+overscan*2);
       h=Math.max(28,rect.height+overscan*2);
       dpr=Math.min(2,window.devicePixelRatio||1);
-      canvas.width=Math.round(w*dpr); canvas.height=Math.round(h*dpr);
-      canvas.style.width=w+"px"; canvas.style.height=h+"px";
+      canvas.width=Math.round(w*dpr);
+      canvas.height=Math.round(h*dpr);
+      canvas.style.width=w+"px";
+      canvas.style.height=h+"px";
       ctx.setTransform(dpr,0,0,dpr,0,0);
       const styles=window.getComputedStyle(parent);
       const radius=parseFloat(styles.borderTopLeftRadius)||14;
-      metrics=buildElectricRectMetrics(w,h,overscan,Math.max(6,radius));
+      metrics=buildElectricRectMetrics(w,h,overscan-pathOffset,Math.max(8,radius+pathOffset));
     }
-    const ro=new ResizeObserver(resize); ro.observe(parent); resize();
-    function makeArc(startFrac,lengthFrac,epoch,arcIndex){
-      const length=metrics.perimeter*lengthFrac;
-      const step=kind==="home"?5.2:5.8;
-      const count=Math.max(5,Math.ceil(length/step));
-      const pts=[];
-      for(let i=0;i<=count;i++){
-        const q=i/count;
-        const s=metrics.perimeter*startFrac + length*q;
-        const p=electricRectPoint(metrics,s);
-        const h1=electricHash(epoch*137+i*17+arcIndex*991,seed);
-        const h2=electricHash(epoch*83+i*29+arcIndex*577,seed+11.7);
-        const outward=Math.max(.55,Math.min(2.8,1.25+h1*.95+(Math.abs(h2)>.78?h2*.8:0)));
-        const tangent=h2*.75;
-        pts.push({x:p.x+p.nx*outward+p.tx*tangent,y:p.y+p.ny*outward+p.ty*tangent,nx:p.nx,ny:p.ny,tx:p.tx,ty:p.ty});
-      }
-      return pts;
-    }
-    function strokeArc(pts,width,color,alpha,blur){
-      if(pts.length<2)return;
+    const ro=new ResizeObserver(resize); ro.observe(host.parentElement||host); resize();
+    function strokePath(points,width,color,alpha,blur){
+      if(points.length<2)return;
       ctx.save(); ctx.beginPath();
-      pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
+      points.forEach((pt,i)=>{ if(i===0)ctx.moveTo(pt.x,pt.y); else ctx.lineTo(pt.x,pt.y); });
+      ctx.closePath();
       ctx.lineCap="round"; ctx.lineJoin="miter"; ctx.miterLimit=2;
-      ctx.lineWidth=width; ctx.strokeStyle=color; ctx.globalAlpha=alpha; ctx.shadowBlur=blur; ctx.shadowColor=color; ctx.stroke(); ctx.restore();
+      ctx.lineWidth=width; ctx.strokeStyle=color; ctx.globalAlpha=alpha; ctx.shadowBlur=blur; ctx.shadowColor=color; ctx.stroke();
+      ctx.restore();
     }
-    function drawBranch(anchor,epoch,index,alpha,pulse){
-      const dir=electricHash(epoch*53+index*111,seed)>0?1:-1;
-      const len=2.4+Math.abs(electricHash(epoch*71+index*37,seed+3))*2.2;
-      const tangent=electricHash(epoch*97+index*43,seed+7)*1.8;
-      const x1=anchor.x+anchor.nx*len+anchor.tx*tangent;
-      const y1=anchor.y+anchor.ny*len+anchor.ty*tangent;
-      const x2=x1+anchor.nx*(1.6+len*.25)-anchor.tx*(2.2*dir);
-      const y2=y1+anchor.ny*(1.6+len*.25)-anchor.ty*(2.2*dir);
+    function drawBranch(anchor,alpha,pulse,noiseSign){
+      const dir=noiseSign>0?1:-1;
+      const len=2.8+Math.abs(noiseSign)*3.3 + pulse*1.2;
+      const x1=anchor.x + anchor.nx*len + anchor.tx*(1.1*dir);
+      const y1=anchor.y + anchor.ny*len + anchor.ty*(1.1*dir);
+      const x2=x1 + anchor.nx*(len*.65) - anchor.tx*(2.5*dir);
+      const y2=y1 + anchor.ny*(len*.65) - anchor.ty*(2.5*dir);
       ctx.save(); ctx.beginPath(); ctx.moveTo(anchor.x,anchor.y); ctx.lineTo(x1,y1); ctx.lineTo(x2,y2);
-      ctx.lineWidth=.8; ctx.lineCap="round"; ctx.lineJoin="round"; ctx.strokeStyle="rgba(235,249,255,1)";
-      ctx.globalAlpha=alpha; ctx.shadowBlur=3+3*pulse; ctx.shadowColor="rgba(118,205,255,1)"; ctx.stroke(); ctx.restore();
+      ctx.lineWidth=.85; ctx.lineCap="round"; ctx.lineJoin="round"; ctx.strokeStyle="rgba(236,248,255,1)";
+      ctx.globalAlpha=alpha; ctx.shadowBlur=3.2+3.2*pulse; ctx.shadowColor="rgba(118,205,255,1)"; ctx.stroke(); ctx.restore();
     }
     function draw(now){
-      const t=now*.001;
       ctx.clearRect(0,0,w,h);
-      const epoch=Math.floor(now/95);
-      const cycle=(t/7.8+seed*.003)%1;
-      const flash1=Math.exp(-.5*Math.pow((cycle-.28)/.018,2));
-      const flash2=Math.exp(-.5*Math.pow((cycle-.315)/.018,2));
-      const pulse=Math.min(1,flash1+flash2);
-      const arcs=kind==="home"?
-        [[.00,.105],[.12,.095],[.235,.11],[.36,.09],[.475,.115],[.61,.09],[.72,.105],[.855,.105]]:
-        [[.00,.09],[.105,.085],[.205,.095],[.315,.08],[.405,.095],[.515,.085],[.615,.095],[.725,.08],[.815,.09],[.91,.075]];
-      arcs.forEach((spec,idx)=>{
-        const drift=electricHash(Math.floor(epoch/4)+idx*23,seed+idx)*.004;
-        const pts=makeArc(spec[0]+drift,spec[1],epoch,idx);
-        const shimmer=.68+.22*Math.sin(t*8.7+idx*1.8+seed);
-        const alpha=(.32+.2*shimmer)+pulse*.28;
-        strokeArc(pts,5.6,"rgba(82,174,255,1)",.10+alpha*.12,8+4*pulse);
-        strokeArc(pts,2.35,"rgba(115,218,255,1)",.24+alpha*.22,4.5+2*pulse);
-        strokeArc(pts,.9,"rgba(255,255,255,1)",.56+alpha*.22,1.8+1.3*pulse);
-        if(pts.length>6){
-          const bi=Math.max(2,Math.min(pts.length-3,Math.floor(pts.length*(.3+.35*((idx%3)/2)))));
-          const branchGate=Math.max(0,electricHash(Math.floor(epoch/3)+idx*91,seed+19));
-          if(branchGate>.28)drawBranch(pts[bi],epoch,idx,(.18+.24*branchGate)+pulse*.18,pulse);
-        }
-      });
+      const t=now*0.001;
+      const shapeTime=now/120;
+      const epoch=Math.floor(shapeTime);
+      const mix=smoothstep01(shapeTime-epoch);
+      const per=metrics.perimeter;
+      const samples=Math.max(160,Math.ceil(per/sampleStep));
+      const pts=[];
+      for(let i=0;i<samples;i++){
+        const s=per*i/samples;
+        const p=electricRectPoint(metrics,s);
+        const idxFloat=s/knotSpacing;
+        const outN=lerp(interpNoise(idxFloat,epoch,seed,0),interpNoise(idxFloat,epoch+1,seed,0),mix);
+        const tanN=lerp(interpNoise(idxFloat,epoch,seed,1),interpNoise(idxFloat,epoch+1,seed,1),mix);
+        const spike=lerp(Math.max(0,interpNoise(idxFloat,epoch,seed,2)),Math.max(0,interpNoise(idxFloat,epoch+1,seed,2)),mix);
+        const outward=1.45 + outN*1.05 + (spike>0.7?(spike-0.7)*2.4:0);
+        const tangent=tanN*0.72;
+        pts.push({x:p.x+p.nx*outward+p.tx*tangent,y:p.y+p.ny*outward+p.ty*tangent,nx:p.nx,ny:p.ny,tx:p.tx,ty:p.ty,idxFloat});
+      }
+      const cycle=(t/8.8 + seed*0.007)%1;
+      const pulse=Math.min(1,Math.exp(-0.5*Math.pow((cycle-0.26)/0.018,2))+Math.exp(-0.5*Math.pow((cycle-0.305)/0.018,2)));
+      const shimmer=0.5 + 0.5*Math.sin(t*9.2 + seed);
+      strokePath(pts,6.1,"rgba(80,170,255,1)",0.09 + shimmer*0.04 + pulse*0.05,8.5 + pulse*4);
+      strokePath(pts,2.5,"rgba(115,218,255,1)",0.28 + shimmer*0.08 + pulse*0.12,4.2 + pulse*2.0);
+      strokePath(pts,0.92,"rgba(255,255,255,1)",0.72 + shimmer*0.08 + pulse*0.14,1.7 + pulse*1.1);
+      const branchEvery=kind==="home"?17:15;
+      for(let i=0;i<pts.length;i+=branchEvery){
+        const anchor=pts[i];
+        const n=lerp(interpNoise(anchor.idxFloat+3.13,epoch,seed,3),interpNoise(anchor.idxFloat+3.13,epoch+1,seed,3),mix);
+        const gate=Math.abs(n);
+        if(gate>.8)drawBranch(anchor,0.14 + (gate-.8)*0.95 + pulse*0.08,pulse,n);
+      }
       raf=requestAnimationFrame(draw);
     }
     raf=requestAnimationFrame(draw);
-    return ()=>{cancelAnimationFrame(raf);ro.disconnect();};
+    return ()=>{ cancelAnimationFrame(raf); ro.disconnect(); };
   },[kind]);
   return h("div",{ref:hostRef,class:"breach-fx-layer breach-fx-layer-"+kind,"aria-hidden":"true"},h("canvas",{ref:canvasRef,class:"breach-fx-canvas"}));
 }
