@@ -209,21 +209,72 @@ html,body{height:100dvh;width:100%;overflow:hidden;background:#000000;color:var(
 
 /* ─── ANIMATIONS CARTES BRÈCHES ─────────────────────────────────────────── */
 .breach-electric{position:relative}
-.breach-trail-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible}
-.breach-trail-path{fill:none;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;opacity:0}
-.breach-trail-primary{stroke:#fef08a;stroke-width:0.9;stroke-dasharray:16 84;stroke-dashoffset:0;filter:drop-shadow(0 0 2px rgba(255,255,255,.95)) drop-shadow(0 0 5px rgba(250,204,21,.7));animation:breachTrailPrimary 8.4s linear infinite}
-.breach-trail-secondary{stroke:#ffffff;stroke-width:0.65;stroke-dasharray:10 90;stroke-dashoffset:-26;filter:drop-shadow(0 0 2px rgba(255,255,255,.95)) drop-shadow(0 0 4px rgba(125,211,252,.55));animation:breachTrailSecondary 10.8s linear infinite}
-@keyframes breachTrailPrimary{
-  0%,68%,100%{opacity:0;stroke-dashoffset:0}
-  72%{opacity:.22}
-  75%{opacity:1}
-  84%{opacity:.88;stroke-dashoffset:-34}
-  90%{opacity:0;stroke-dashoffset:-52}
+.breach-trail-svg{position:absolute;inset:-2px;width:calc(100% + 4px);height:calc(100% + 4px);pointer-events:none;z-index:1;overflow:visible}
+.breach-arc{fill:none;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;opacity:0;filter:drop-shadow(0 0 2px rgba(255,255,255,.95)) drop-shadow(0 0 6px rgba(96,165,250,.7)) drop-shadow(0 0 12px rgba(34,211,238,.35))}
+.breach-arc-a,.breach-arc-d{stroke:#f8fafc;stroke-width:0.55}
+.breach-arc-b,.breach-arc-e{stroke:#7dd3fc;stroke-width:0.65}
+.breach-arc-c,.breach-arc-f{stroke:#ffffff;stroke-width:0.6}
+.breach-arc-g{stroke:#c4b5fd;stroke-width:0.5}
+.breach-arc-a{animation:breachArcA 9.8s linear infinite}
+.breach-arc-b{animation:breachArcB 11.4s linear infinite}
+.breach-arc-c{animation:breachArcC 10.6s linear infinite}
+.breach-arc-d{animation:breachArcD 12.2s linear infinite}
+.breach-arc-e{animation:breachArcE 13.4s linear infinite}
+.breach-arc-f{animation:breachArcF 10.9s linear infinite}
+.breach-arc-g{animation:breachArcG 14.6s linear infinite}
+@keyframes breachArcA{
+  0%,8%,100%{opacity:0}
+  9%{opacity:.18}
+  10.5%{opacity:.95}
+  12%{opacity:.35}
+  13.5%{opacity:.88}
+  16%{opacity:0}
 }
-@keyframes breachTrailSecondary{
-  0%,24%,100%{opacity:0;stroke-dashoffset:-26}
-  28%{opacity:.18}
-  31%{opacity:.9}
-  39%{opacity:.72;stroke-dashoffset:-56}
-  45%{opacity:0;stroke-dashoffset:-72}
+@keyframes breachArcB{
+  0%,61%,100%{opacity:0}
+  62%{opacity:.15}
+  64%{opacity:.92}
+  66%{opacity:.42}
+  68%{opacity:.85}
+  71%{opacity:0}
+}
+@keyframes breachArcC{
+  0%,31%,100%{opacity:0}
+  32%{opacity:.2}
+  34%{opacity:1}
+  35.5%{opacity:.5}
+  37.5%{opacity:.82}
+  40%{opacity:0}
+}
+@keyframes breachArcD{
+  0%,77%,100%{opacity:0}
+  78%{opacity:.16}
+  79.5%{opacity:.86}
+  81%{opacity:.38}
+  83%{opacity:.8}
+  85.5%{opacity:0}
+}
+@keyframes breachArcE{
+  0%,47%,100%{opacity:0}
+  48%{opacity:.14}
+  49.8%{opacity:.95}
+  51.2%{opacity:.48}
+  53.4%{opacity:.82}
+  56%{opacity:0}
+}
+@keyframes breachArcF{
+  0%,19%,100%{opacity:0}
+  20%{opacity:.12}
+  22%{opacity:.8}
+  23.5%{opacity:.32}
+  25%{opacity:.68}
+  27%{opacity:0}
+}
+@keyframes breachArcG{
+  0%,88%,100%{opacity:0}
+  89%{opacity:.12}
+  90.5%{opacity:.72}
+  92%{opacity:.28}
+  94%{opacity:.62}
+  96.5%{opacity:0}
 }
