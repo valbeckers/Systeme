@@ -117,11 +117,24 @@ import {
 const { h, render, Fragment } = window.preact;
 const { useState, useEffect, useRef } = window.preactHooks;
 
-const BREACH_FX_VERSION="20260804-v10-approved-base-dynamic";
+const BREACH_FX_VERSION="20260804-v11-canvas-final";
 
 const __breachFxRand=(seed,n)=>{
   const x=Math.sin((seed*9283.133)+(n*12.9898))*43758.5453123;
   return x-Math.floor(x);
+};
+const __breachFxLoopNoise=(seed,pos,count)=>{
+  const c=Math.max(3,count|0);
+  const x=((pos%c)+c)%c;
+  const i1=Math.floor(x);
+  const f=x-i1;
+  const i0=(i1-1+c)%c, i2=(i1+1)%c, i3=(i1+2)%c;
+  const y0=__breachFxRand(seed,i0)*2-1;
+  const y1=__breachFxRand(seed,i1)*2-1;
+  const y2=__breachFxRand(seed,i2)*2-1;
+  const y3=__breachFxRand(seed,i3)*2-1;
+  const f2=f*f, f3=f2*f;
+  return 0.5*((2*y1)+(-y0+y2)*f+(2*y0-5*y1+4*y2-y3)*f2+(-y0+3*y1-3*y2+y3)*f3);
 };
 const __breachFxLoopLinear=(seed,pos,count)=>{
   const c=Math.max(2,count|0);
@@ -134,15 +147,15 @@ const __breachFxLoopLinear=(seed,pos,count)=>{
   return y0 + (y1-y0)*f;
 };
 const __breachFxPulse=t=>{
-  const cycle=8.4;
+  const cycle=7.8;
   const p=(t%cycle)/cycle;
-  let k=.72 + .05*Math.sin(t*1.12);
+  let k=.78 + .06*Math.sin(t*1.15);
   const flash=(c,w,a)=>{
     const d=Math.abs(p-c);
     return d<w ? (1-d/w)*a : 0;
   };
-  k+=flash(.73,.02,.26);
-  k+=flash(.88,.016,.18);
+  k+=flash(.76,.018,.52);
+  k+=flash(.81,.014,.38);
   return k;
 };
 const __parseRadius=v=>{
@@ -159,7 +172,7 @@ function __buildRoundedRectMetrics(x,y,w,h,r){
 function __roundedRectPoint(m,d){
   let {x,y,w,h,r,top,side,arc,total}=m;
   d=((d%total)+total)%total;
-  const seg0=top, seg1=seg0+arc, seg2=seg1+side, seg3=seg2+arc, seg4=seg3+top, seg5=seg4+arc, seg6=seg5+side;
+  const seg0=top, seg1=seg0+arc, seg2=seg1+side, seg3=seg2+arc, seg4=seg3+top, seg5=seg4+arc, seg6=seg5+side, seg7=seg6+arc;
   if(d<=seg0){ const px=x+r+d, py=y; return {x:px,y:py,nx:0,ny:-1,tx:1,ty:0}; }
   if(d<=seg1){ const a=(d-seg0)/arc*(Math.PI/2)-Math.PI/2; const cx=x+w-r, cy=y+r; return {x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r,nx:Math.cos(a),ny:Math.sin(a),tx:-Math.sin(a),ty:Math.cos(a)}; }
   if(d<=seg2){ const px=x+w, py=y+r+(d-seg1); return {x:px,y:py,nx:1,ny:0,tx:0,ty:1}; }
@@ -169,63 +182,30 @@ function __roundedRectPoint(m,d){
   if(d<=seg6){ const px=x, py=y+h-r-(d-seg5); return {x:px,y:py,nx:-1,ny:0,tx:0,ty:-1}; }
   const a=(d-seg6)/arc*(Math.PI/2)+Math.PI; const cx=x+r, cy=y+r; return {x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r,nx:Math.cos(a),ny:Math.sin(a),tx:-Math.sin(a),ty:Math.cos(a)};
 }
-function __breachStrokePath(ctx, pts, color, width, alpha, blur=0){
-  if(!pts || pts.length<2 || alpha<=0) return;
-  ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(pts[0].x,pts[0].y);
-  for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
-  ctx.strokeStyle=color;
-  ctx.lineWidth=width;
-  ctx.lineJoin='round';
-  ctx.lineCap='round';
-  if(blur>0){ ctx.shadowBlur=blur; ctx.shadowColor=color; }
-  ctx.globalAlpha=alpha;
-  ctx.stroke();
-  ctx.restore();
-}
-function __breachStrokeLoopSegment(ctx, pts, startIndex, span, color, width, alpha, blur=0){
-  const n=(pts && pts.length?pts.length:0)-1;
-  if(n<2 || span<=1 || alpha<=0) return;
-  let start=((Math.floor(startIndex)%n)+n)%n;
-  let count=Math.max(2,Math.min(n,Math.floor(span)));
-  ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(pts[start].x,pts[start].y);
-  for(let step=1;step<=count;step++){
-    const idx=(start+step)%n;
-    ctx.lineTo(pts[idx].x,pts[idx].y);
-  }
-  ctx.strokeStyle=color;
-  ctx.lineWidth=width;
-  ctx.lineJoin='round';
-  ctx.lineCap='round';
-  if(blur>0){ ctx.shadowBlur=blur; ctx.shadowColor=color; }
-  ctx.globalAlpha=alpha;
-  ctx.stroke();
-  ctx.restore();
-}
 function __drawBreachElectricFrame(ctx, metrics, t, variant){
   const pulse=__breachFxPulse(t);
   const peri=metrics.total;
-  const sampleDist=variant==="home"?4.6:4.9;
-  const samples=Math.max(440,Math.floor(peri/sampleDist));
-  const ampMain=variant==="home"?.52:.58;
-  const ampInner=variant==="home"?.24:.28;
-  const outwardBase=.9;
-  const ctrlMain=variant==="home"?124:142;
-  const ctrlMicro=variant==="home"?312:336;
-  const ctrlTang=variant==="home"?182:198;
+  const sampleDist=variant==="home"?4.8:5.2;
+  const samples=Math.max(420,Math.floor(peri/sampleDist));
+  const ampMain=variant==="home"?1.18:1.3;
+  const ampInner=variant==="home"?.54:.64;
+  const outwardBase=.82;
+  const ctrlMain=variant==="home"?148:166;
+  const ctrlMicro=variant==="home"?308:336;
+  const ctrlTang=variant==="home"?176:194;
+  const ctrlSpike=variant==="home"?122:136;
+  const glowA=.11*pulse, glowB=.30*pulse, coreA=.98*Math.min(1.08,pulse+.08);
   const makePts=(seed,amp,outBias,phase)=>{
     const pts=[];
     for(let i=0;i<samples;i++){
       const s=(i/samples)*peri;
       const base=__roundedRectPoint(metrics,s);
-      const u=i + phase*11;
+      const u=i + phase*15;
       const jag=__breachFxLoopLinear(seed,(u/samples)*ctrlMain,ctrlMain);
       const micro=__breachFxLoopLinear(seed+19,(u/samples)*ctrlMicro,ctrlMicro);
-      const tang=__breachFxLoopLinear(seed+71,((i+phase*4)/samples)*ctrlTang,ctrlTang)*.08;
-      const outward=(jag*amp)+(micro*amp*.16)+outBias;
+      const tang=__breachFxLoopLinear(seed+71,((i+phase*6)/samples)*ctrlTang,ctrlTang)*.12;
+      const spike=Math.max(0,__breachFxLoopLinear(seed+111,((i+phase*11)/samples)*ctrlSpike,ctrlSpike));
+      const outward=(jag*amp)+(micro*amp*.17)+(spike*amp*.34)+outBias;
       pts.push({
         x:base.x + base.nx*outward + base.tx*tang,
         y:base.y + base.ny*outward + base.ty*tang,
@@ -235,68 +215,109 @@ function __drawBreachElectricFrame(ctx, metrics, t, variant){
     pts.push({...pts[0]});
     return pts;
   };
-  const phase=t*.85;
+  const phase=t*.96;
   const mainPts=makePts(11,ampMain,outwardBase,phase);
-  const innerPts=makePts(27,ampInner,outwardBase-.16,phase*1.07);
+  const innerPts=makePts(27,ampInner,outwardBase-.22,phase*1.14);
+
+  const strokePath=(pts,color,width,alpha,blur=0)=>{
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x,pts[0].y);
+    for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
+    ctx.closePath();
+    ctx.strokeStyle=color;
+    ctx.lineWidth=width;
+    ctx.lineJoin='round';
+    ctx.lineCap='round';
+    if(blur>0){ ctx.shadowBlur=blur; ctx.shadowColor=color; }
+    ctx.globalAlpha=alpha;
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  strokePath(mainPts,'#29c9ff',4.5,glowA,8);
+  strokePath(mainPts,'#69dcff',2.15,glowB,2.6);
+  strokePath(innerPts,'#dcf9ff',1.02,.72*pulse,1.2);
+  strokePath(innerPts,'#ffffff',.56,coreA,.45);
 
   ctx.save();
-  ctx.globalCompositeOperation='screen';
+  ctx.beginPath();
+  const start=__roundedRectPoint(metrics,0);
+  ctx.moveTo(start.x,start.y);
+  for(let i=1;i<=samples;i++){
+    const p=__roundedRectPoint(metrics,(i/samples)*peri);
+    ctx.lineTo(p.x,p.y);
+  }
+  ctx.closePath();
+  ctx.strokeStyle='#baf4ff';
+  ctx.lineWidth=.48;
+  ctx.globalAlpha=.12*pulse;
+  ctx.shadowBlur=1.8;
+  ctx.shadowColor='#59d1ff';
+  ctx.stroke();
+  ctx.restore();
 
-  // base living shimmer over the approved static frame
-  __breachStrokePath(ctx, mainPts, '#6fdcff', 1.5, .07*pulse, 5.2);
-  __breachStrokePath(ctx, innerPts, '#ffffff', .55, .045*pulse, .9);
+  const branchEvery=variant==="home"?18:17;
+  ctx.save();
+  ctx.lineJoin='round';
+  ctx.lineCap='round';
+  for(let i=0;i<mainPts.length;i+=branchEvery){
+    const roll=__breachFxRand(99,Math.floor(i/branchEvery)+Math.floor(t*2.3));
+    if(roll<.68) continue;
+    const p=mainPts[i];
+    const len=4 + __breachFxRand(123,i)*7.4;
+    const side=(__breachFxRand(91,i)>0.5?1:-1);
+    const splay=.5+__breachFxRand(15,i)*1.55;
+    const bx1=p.x + p.nx*(len*.36) + p.tx*side*splay;
+    const by1=p.y + p.ny*(len*.36) + p.ty*side*splay;
+    const bx2=bx1 + p.nx*(len*.24) + p.tx*side*(splay*1.15);
+    const by2=by1 + p.ny*(len*.24) + p.ty*side*(splay*1.15);
+    const bx3=bx2 + p.nx*(len*.18) + p.tx*side*(.25+__breachFxRand(17,i)*1.15);
+    const by3=by2 + p.ny*(len*.18) + p.ty*side*(.25+__breachFxRand(17,i)*1.15);
+    ctx.beginPath();
+    ctx.moveTo(p.x,p.y);
+    ctx.lineTo(bx1,by1);
+    ctx.lineTo(bx2,by2);
+    ctx.lineTo(bx3,by3);
+    ctx.strokeStyle='#73dcff';
+    ctx.lineWidth=.92;
+    ctx.globalAlpha=.18 + (roll-.68)*1.05;
+    ctx.shadowBlur=3.4;
+    ctx.shadowColor='#59d1ff';
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(p.x,p.y);
+    ctx.lineTo(bx1,by1);
+    ctx.lineTo(bx2,by2);
+    ctx.lineTo(bx3,by3);
+    ctx.strokeStyle='#ffffff';
+    ctx.lineWidth=.34;
+    ctx.globalAlpha=.72;
+    ctx.shadowBlur=0;
+    ctx.stroke();
 
-  // moving energized segments
-  const loops=variant==="home"?4:5;
-  const spanBase=variant==="home"?.13:.115;
-  for(let j=0;j<loops;j++){
-    const speed=.026 + j*.0045;
-    const travel=((t*speed)+(j/loops)+__breachFxRand(41,j)*.14)%1;
-    const center=Math.floor(travel*samples);
-    const span=Math.floor(samples*(spanBase + __breachFxRand(77,j)*.03));
-    const start=center-Math.floor(span/2);
-    const a=.18 + .06*Math.sin(t*1.7 + j) + .11*pulse;
-    __breachStrokeLoopSegment(ctx, mainPts, start, span, '#4fd7ff', 2.6, a*.55, 7.5);
-    __breachStrokeLoopSegment(ctx, mainPts, start, span, '#baf3ff', 1.35, a*.72, 2.4);
-    __breachStrokeLoopSegment(ctx, innerPts, start, span, '#ffffff', .7, a*.86, .8);
-
-    // hotter short core inside each active segment
-    const coreStart=start+Math.floor(span*(.14+__breachFxRand(88,j)*.3));
-    const coreSpan=Math.floor(span*(.22+__breachFxRand(89,j)*.14));
-    __breachStrokeLoopSegment(ctx, innerPts, coreStart, coreSpan, '#ffffff', .95, .45+.12*pulse, 1.1);
-
-    // sparse branch sparks
-    const branchCount=2 + (variant==="home"?1:2);
-    for(let b=0;b<branchCount;b++){
-      const rel=.12 + ((b+__breachFxRand(92,j*9+b)*.8)/branchCount)*.76;
-      const idx=((Math.floor(start + span*rel)%samples)+samples)%samples;
-      const p=mainPts[idx];
-      const flashSeed=j*31+b*7+Math.floor(t*4.2);
-      if(__breachFxRand(103,flashSeed)<.42) continue;
-      const len=4.2 + __breachFxRand(111,flashSeed)*5.4;
-      const side=(__breachFxRand(123,flashSeed)>.5?1:-1);
-      const off=.4+__breachFxRand(145,flashSeed)*1.2;
-      const bx1=p.x + p.nx*(len*.55) + p.tx*side*off;
-      const by1=p.y + p.ny*(len*.55) + p.ty*side*off;
-      const bx2=bx1 + p.nx*(len*.42) + p.tx*side*(off*.7);
-      const by2=by1 + p.ny*(len*.42) + p.ty*side*(off*.7);
+    if(roll>.86){
+      const sx=bx1 + (bx2-bx1)*(.45+__breachFxRand(44,i)*.2);
+      const sy=by1 + (by2-by1)*(.45+__breachFxRand(45,i)*.2);
+      const tx=p.tx*side*(.55+__breachFxRand(46,i)*1.1);
+      const ty=p.ty*side*(.55+__breachFxRand(47,i)*1.1);
+      const ex=sx + tx + p.nx*(1.1+__breachFxRand(48,i)*1.9);
+      const ey=sy + ty + p.ny*(1.1+__breachFxRand(49,i)*1.9);
       ctx.beginPath();
-      ctx.moveTo(p.x,p.y);
-      ctx.lineTo(bx1,by1);
-      ctx.lineTo(bx2,by2);
-      ctx.strokeStyle='#6cdeff';
-      ctx.lineWidth=.9;
-      ctx.globalAlpha=.28 + .16*pulse;
-      ctx.shadowBlur=4.4;
-      ctx.shadowColor='#4fd7ff';
+      ctx.moveTo(sx,sy);
+      ctx.lineTo(ex,ey);
+      ctx.strokeStyle='#73dcff';
+      ctx.lineWidth=.74;
+      ctx.globalAlpha=.28;
+      ctx.shadowBlur=2.8;
+      ctx.shadowColor='#59d1ff';
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(p.x,p.y);
-      ctx.lineTo(bx1,by1);
-      ctx.lineTo(bx2,by2);
+      ctx.moveTo(sx,sy);
+      ctx.lineTo(ex,ey);
       ctx.strokeStyle='#ffffff';
-      ctx.lineWidth=.34;
-      ctx.globalAlpha=.78;
+      ctx.lineWidth=.26;
+      ctx.globalAlpha=.64;
       ctx.shadowBlur=0;
       ctx.stroke();
     }
@@ -353,11 +374,7 @@ function BreachFxOverlay({variant="home"}={}){
       state.raf=0;
     };
   },[variant]);
-  const baseSrc=variant==="quests"
-    ? "assets/fx/breach-electric-approved-quests.png"
-    : "assets/fx/breach-electric-approved-home.png";
   return h("div",{ref:hostRef,class:"breach-fx-layer breach-fx-layer-"+(variant==="quests"?"quests":"home"),"aria-hidden":"true"},
-    h("img",{class:"breach-fx-base",src:baseSrc,alt:"",draggable:"false"}),
     h("canvas",{ref:canvasRef,class:"breach-fx-canvas"})
   );
 }
