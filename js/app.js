@@ -117,9 +117,9 @@ import {
 const { h, render, Fragment } = window.preact;
 const { useState, useEffect, useRef } = window.preactHooks;
 
-const BREACH_FX_VERSION="20260804-v12-approved-base-plus-dynamic-flashes";
-const BREACH_FX_ASSET_HOME=`assets/fx/breach-electric-approved-home.png?v=${BREACH_FX_VERSION}`;
-const BREACH_FX_ASSET_QUESTS=`assets/fx/breach-electric-approved-quests.png?v=${BREACH_FX_VERSION}`;
+const BREACH_FX_VERSION="20260804-v13-animated-generated-frame";
+const BREACH_FX_ASSET_HOME="assets/fx/breach-electric-home-v13.webp?v="+BREACH_FX_VERSION;
+const BREACH_FX_ASSET_QUESTS="assets/fx/breach-electric-quests-v13.webp?v="+BREACH_FX_VERSION;
 
 const __breachFxRand=(seed,n)=>{
   const x=Math.sin((seed*9283.133)+(n*12.9898))*43758.5453123;
@@ -327,59 +327,9 @@ function __drawBreachElectricFrame(ctx, metrics, t, variant){
   ctx.restore();
 }
 function BreachFxOverlay({variant="home"}={}){
-  const hostRef=useRef(null);
-  const canvasRef=useRef(null);
-  const stateRef=useRef({metrics:null,raf:0,ro:null,host:null,wrap:null,dpr:1});
-  useEffect(()=>{
-    const wrap=hostRef.current;
-    const canvas=canvasRef.current;
-    if(!wrap || !canvas) return;
-    const host=wrap.parentElement;
-    if(!host) return;
-    const ctx=canvas.getContext('2d');
-    const state=stateRef.current;
-    state.host=host;
-    state.wrap=wrap;
-    const computeMetrics=()=>{
-      const hostRect=host.getBoundingClientRect();
-      const wrapRect=wrap.getBoundingClientRect();
-      const dpr=Math.min(window.devicePixelRatio||1,2);
-      state.dpr=dpr;
-      canvas.width=Math.max(1,Math.round(wrapRect.width*dpr));
-      canvas.height=Math.max(1,Math.round(wrapRect.height*dpr));
-      canvas.style.width=wrapRect.width+'px';
-      canvas.style.height=wrapRect.height+'px';
-      const left=hostRect.left-wrapRect.left;
-      const top=hostRect.top-wrapRect.top;
-      const radius=__parseRadius(getComputedStyle(host).borderTopLeftRadius);
-      state.metrics=__buildRoundedRectMetrics(left+1.15, top+1.15, Math.max(1,hostRect.width-2.3), Math.max(1,hostRect.height-2.3), radius);
-    };
-    const draw=(ts)=>{
-      const {metrics,dpr}=state;
-      if(metrics){
-        ctx.setTransform(dpr,0,0,dpr,0,0);
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        __drawBreachElectricFrame(ctx,metrics,ts/1000,variant==="quests"?"quests":"home");
-      }
-      state.raf=requestAnimationFrame(draw);
-    };
-    computeMetrics();
-    const ro=new ResizeObserver(computeMetrics);
-    ro.observe(host);
-    ro.observe(wrap);
-    state.ro=ro;
-    state.raf=requestAnimationFrame(draw);
-    return ()=>{
-      if(state.ro) state.ro.disconnect();
-      if(state.raf) cancelAnimationFrame(state.raf);
-      state.ro=null;
-      state.raf=0;
-    };
-  },[variant]);
-  const src=variant==="quests" ? BREACH_FX_ASSET_QUESTS : BREACH_FX_ASSET_HOME;
-  return h("div",{ref:hostRef,class:"breach-fx-layer breach-fx-layer-"+(variant==="quests"?"quests":"home"),"aria-hidden":"true"},
-    h("img",{class:"breach-fx-base",src,alt:""}),
-    h("canvas",{ref:canvasRef,class:"breach-fx-canvas"})
+  const src=variant==="quests"?BREACH_FX_ASSET_QUESTS:BREACH_FX_ASSET_HOME;
+  return h("div",{class:"breach-fx-layer breach-fx-layer-"+(variant==="quests"?"quests":"home"),"aria-hidden":"true"},
+    h("img",{class:"breach-fx-animated",src,alt:"",draggable:false})
   );
 }
 
