@@ -117,7 +117,7 @@ import {
 const { h, render, Fragment } = window.preact;
 const { useState, useEffect, useRef } = window.preactHooks;
 
-const BREACH_FX_VERSION="20260804-v9b-corner-fix";
+const BREACH_FX_VERSION="20260804-v9c-jagged-style";
 
 const __breachFxRand=(seed,n)=>{
   const x=Math.sin((seed*9283.133)+(n*12.9898))*43758.5453123;
@@ -135,6 +135,16 @@ const __breachFxLoopNoise=(seed,pos,count)=>{
   const y3=__breachFxRand(seed,i3)*2-1;
   const f2=f*f, f3=f2*f;
   return 0.5*((2*y1)+(-y0+y2)*f+(2*y0-5*y1+4*y2-y3)*f2+(-y0+3*y1-3*y2+y3)*f3);
+};
+const __breachFxLoopLinear=(seed,pos,count)=>{
+  const c=Math.max(2,count|0);
+  const x=((pos%c)+c)%c;
+  const i0=Math.floor(x);
+  const f=x-i0;
+  const i1=(i0+1)%c;
+  const y0=__breachFxRand(seed,i0)*2-1;
+  const y1=__breachFxRand(seed,i1)*2-1;
+  return y0 + (y1-y0)*f;
 };
 const __breachFxPulse=t=>{
   const cycle=7.8;
@@ -175,25 +185,25 @@ function __roundedRectPoint(m,d){
 function __drawBreachElectricFrame(ctx, metrics, t, variant){
   const pulse=__breachFxPulse(t);
   const peri=metrics.total;
-  const sampleDist=variant==="home"?8.2:8.6;
-  const samples=Math.max(220,Math.floor(peri/sampleDist));
-  const ampMain=variant==="home"?3.3:3.6;
-  const ampInner=variant==="home"?2.2:2.5;
-  const outwardBase=1.8;
-  const ctrlMain=variant==="home"?58:64;
-  const ctrlMicro=variant==="home"?116:128;
-  const ctrlTang=variant==="home"?72:80;
-  const glowA=.26*pulse, glowB=.54*pulse, coreA=.96*Math.min(1.2,pulse+.15);
+  const sampleDist=variant==="home"?5.8:6.2;
+  const samples=Math.max(320,Math.floor(peri/sampleDist));
+  const ampMain=variant==="home"?1.55:1.75;
+  const ampInner=variant==="home"?.9:1.05;
+  const outwardBase=.95;
+  const ctrlMain=variant==="home"?92:104;
+  const ctrlMicro=variant==="home"?188:208;
+  const ctrlTang=variant==="home"?126:144;
+  const glowA=.16*pulse, glowB=.42*pulse, coreA=.98*Math.min(1.12,pulse+.1);
   const makePts=(seed,amp,outBias,phase)=>{
     const pts=[];
     for(let i=0;i<samples;i++){
       const s=(i/samples)*peri;
       const base=__roundedRectPoint(metrics,s);
-      const u=i + phase*12;
-      const jag=__breachFxLoopNoise(seed,(u/samples)*ctrlMain,ctrlMain);
+      const u=i + phase*14;
+      const jag=__breachFxLoopLinear(seed,(u/samples)*ctrlMain,ctrlMain);
       const micro=__breachFxLoopNoise(seed+19,(u/samples)*ctrlMicro,ctrlMicro);
-      const tang=__breachFxLoopNoise(seed+71,((i+phase*9)/samples)*ctrlTang,ctrlTang)*.42;
-      const outward=(jag*amp)+(micro*amp*.38)+outBias;
+      const tang=__breachFxLoopLinear(seed+71,((i+phase*7)/samples)*ctrlTang,ctrlTang)*.22;
+      const outward=(jag*amp)+(micro*amp*.22)+outBias;
       pts.push({
         x:base.x + base.nx*outward + base.tx*tang,
         y:base.y + base.ny*outward + base.ty*tang,
@@ -203,9 +213,9 @@ function __drawBreachElectricFrame(ctx, metrics, t, variant){
     pts.push({...pts[0]});
     return pts;
   };
-  const phase=t*1.08;
+  const phase=t*.92;
   const mainPts=makePts(11,ampMain,outwardBase,phase);
-  const innerPts=makePts(27,ampInner,outwardBase-.8,phase*1.16);
+  const innerPts=makePts(27,ampInner,outwardBase-.35,phase*1.18);
 
   const strokePath=(pts,color,width,alpha,blur=0)=>{
     ctx.save();
@@ -223,13 +233,11 @@ function __drawBreachElectricFrame(ctx, metrics, t, variant){
     ctx.restore();
   };
 
-  // outer glow and body
-  strokePath(mainPts,'#4fd3ff',8.5,glowA,16);
-  strokePath(mainPts,'#77dcff',5.3,glowB,7);
-  strokePath(innerPts,'#8ce6ff',3.5,.55*pulse,4);
-  strokePath(innerPts,'#ffffff',1.55,coreA,2);
+  strokePath(mainPts,'#37cfff',5.8,glowA,11);
+  strokePath(mainPts,'#73ddff',3.1,glowB,4.2);
+  strokePath(innerPts,'#d1f6ff',1.55,.76*pulse,2.4);
+  strokePath(innerPts,'#ffffff',.95,coreA,1.2);
 
-  // subtle underlying card-edge tracer for cohesion
   ctx.save();
   ctx.beginPath();
   const start=__roundedRectPoint(metrics,0);
@@ -239,46 +247,50 @@ function __drawBreachElectricFrame(ctx, metrics, t, variant){
     ctx.lineTo(p.x,p.y);
   }
   ctx.closePath();
-  ctx.strokeStyle='#b8efff';
-  ctx.lineWidth=1.2;
-  ctx.globalAlpha=.42*pulse;
-  ctx.shadowBlur=6;
-  ctx.shadowColor='#69d7ff';
+  ctx.strokeStyle='#baf4ff';
+  ctx.lineWidth=.75;
+  ctx.globalAlpha=.22*pulse;
+  ctx.shadowBlur=3.5;
+  ctx.shadowColor='#59d1ff';
   ctx.stroke();
   ctx.restore();
 
-  // branches
-  const branchEvery=variant==="home"?18:16;
+  const branchEvery=variant==="home"?24:22;
   ctx.save();
   ctx.lineJoin='round';
   ctx.lineCap='round';
   for(let i=0;i<mainPts.length;i+=branchEvery){
-    const roll=__breachFxRand(99,Math.floor(i/branchEvery)+Math.floor(t*2.3));
-    if(roll<.62) continue;
+    const roll=__breachFxRand(99,Math.floor(i/branchEvery)+Math.floor(t*2.1));
+    if(roll<.76) continue;
     const p=mainPts[i];
-    const len=(8 + __breachFxRand(123,i)*16)*(0.92 + (pulse-.78)*0.9);
+    const len=5.5 + __breachFxRand(123,i)*9.5;
     const side=(__breachFxRand(91,i)>0.5?1:-1);
-    const bx1=p.x + (p.nx*len*0.55) + (p.tx*side*2.3);
-    const by1=p.y + (p.ny*len*0.55) + (p.ty*side*2.3);
-    const bx2=bx1 + p.nx*len*0.45 + p.tx*side*(1.2+__breachFxRand(71,i)*2.2);
-    const by2=by1 + p.ny*len*0.45 + p.ty*side*(1.2+__breachFxRand(77,i)*2.2);
+    const splay=1.0+__breachFxRand(15,i)*2.2;
+    const bx1=p.x + p.nx*(len*.42) + p.tx*side*splay;
+    const by1=p.y + p.ny*(len*.42) + p.ty*side*splay;
+    const bx2=bx1 + p.nx*(len*.26) + p.tx*side*(splay*1.25);
+    const by2=by1 + p.ny*(len*.26) + p.ty*side*(splay*1.25);
+    const bx3=bx2 + p.nx*(len*.22) + p.tx*side*(.3+__breachFxRand(17,i)*1.8);
+    const by3=by2 + p.ny*(len*.22) + p.ty*side*(.3+__breachFxRand(17,i)*1.8);
     ctx.beginPath();
     ctx.moveTo(p.x,p.y);
     ctx.lineTo(bx1,by1);
     ctx.lineTo(bx2,by2);
-    ctx.strokeStyle='#7be0ff';
-    ctx.lineWidth=2.4;
-    ctx.globalAlpha=.22 + (roll-.62)*.7;
-    ctx.shadowBlur=8;
-    ctx.shadowColor='#5ad1ff';
+    ctx.lineTo(bx3,by3);
+    ctx.strokeStyle='#73dcff';
+    ctx.lineWidth=1.35;
+    ctx.globalAlpha=.18 + (roll-.76)*1.4;
+    ctx.shadowBlur=5;
+    ctx.shadowColor='#59d1ff';
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(p.x,p.y);
     ctx.lineTo(bx1,by1);
     ctx.lineTo(bx2,by2);
+    ctx.lineTo(bx3,by3);
     ctx.strokeStyle='#ffffff';
-    ctx.lineWidth=.85;
-    ctx.globalAlpha=.65;
+    ctx.lineWidth=.5;
+    ctx.globalAlpha=.72;
     ctx.shadowBlur=0;
     ctx.stroke();
   }
