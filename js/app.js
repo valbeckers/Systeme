@@ -20,7 +20,7 @@ import {
   urgentQuestCompletedOnDay,
   applyDailyStreakRewardState
 } from "./dailyEngine.js";
-import { BREACH_POOL } from "./breachDefs.js";
+import { BREACH_POOL } from "./breachDefs.js?v=20260804-breach-progress-01";
 import { DUNGEONS } from "./dungeonDefs.js?v=20260803-contract-fix-01";
 import {
   dungeonRoomRewardPairs,
@@ -102,7 +102,7 @@ import {
   normalizeActiveBreach,
   processDailyBreachRoll,
   pickBreachRuptureBoss
-} from "./breachEngine.js?v=20260803-contract-fix-01";
+} from "./breachEngine.js?v=20260804-breach-progress-01";
 import {
   ELIXIR_STATS,
   ELIXIR_DURATION_MS,
@@ -2150,14 +2150,33 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       });
     };
 
-    const mainProgressText=b.binary
-      ? (mainDone?"OBJECTIF DU BOSS VALIDÉ":"OBJECTIF DU BOSS À ACCOMPLIR")
-      : fmtNum(mainProgress)+"/"+target+" "+b.unit;
+    const breachProgressText=()=>{
+      const unit=b.unit==="rep"?"reps":b.unit;
+      return fmtNum(mainProgress)+"/"+fmtNum(target)+(unit||"");
+    };
+    const mainProgressText=breachProgressText();
     const progressText=isRupture
       ? "Boss "+(mainDone?"✓":Math.round((mainProgress/target)*100)+" %")+" · Garde "+guardDoneCount+"/"+guards.length
-      : (b.binary?"À accomplir":fmtNum(mainProgress)+"/"+target+" "+b.unit);
+      : breachProgressText();
 
     const standardButtonStyle="flex:1;padding:9px;border-radius:8px;border:1px solid rgba(255,255,255,.38);background:rgba(255,255,255,.05);color:#fff;font-family:Orbitron,sans-serif;font-size:9px;cursor:pointer";
+
+    if(compact){
+      return h("div",{class:"card sq-urgent",style:"position:relative;overflow:hidden;border-color:#8dbbff;background:linear-gradient(145deg,#07162f,#102e5c);box-shadow:0 0 18px rgba(141,187,255,.32),inset 0 0 24px rgba(255,255,255,.035);padding-top:13px;padding-bottom:13px"},
+        [["top:-10px;left:8px"],["top:-10px;right:8px"],["bottom:-11px;left:10px"],["bottom:-11px;right:10px"]].map((p,i)=>h("span",{key:i,style:"position:absolute;"+p[0]+";color:#fff;font-size:17px;filter:drop-shadow(0 0 7px #fff);pointer-events:none"},"⚡")),
+        h("div",{style:"position:relative;z-index:2"},
+          h("div",{class:"ctitle",style:"margin:0 0 10px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"BRÈCHE ALLIÉE EN RUPTURE":"BRÈCHE ALLIÉE"):(isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE")),
+          h("div",{style:"display:flex;align-items:center;justify-content:space-between;gap:10px"},
+            h("div",{style:"display:flex;align-items:center;gap:9px;min-width:0"},
+              QuestIcon(b.id,isRupture?"☠️":b.icon,18,"min-width:26px"),
+              h("div",{style:"font-size:13px;font-weight:800;color:#fff;line-height:1.25;min-width:0"},isRupture?rupture.name:b.name)
+            ),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:#dbeafe;white-space:nowrap;flex-shrink:0"},progressText)
+          ),
+          h("div",{class:"qbar",style:"margin-top:10px"},h("div",{class:"qfill partial",style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,#274f88,#274f88 5px,#7aa7df 5px,#7aa7df 10px);background-size:14px 14px;opacity:.95"}))
+        )
+      );
+    }
 
     return h("div",{class:"card sq-urgent",style:"position:relative;overflow:hidden;border-color:#8dbbff;background:linear-gradient(145deg,#07162f,#102e5c);box-shadow:0 0 18px rgba(141,187,255,.32),inset 0 0 24px rgba(255,255,255,.035)"},
       [["top:-10px;left:8px"],["top:-10px;right:8px"],["bottom:-11px;left:10px"],["bottom:-11px;right:10px"]].map((p,i)=>h("span",{key:i,style:"position:absolute;"+p[0]+";color:#fff;font-size:17px;filter:drop-shadow(0 0 7px #fff);pointer-events:none"},"⚡")),
@@ -2174,20 +2193,16 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               !compact&&h("div",{style:"font-size:10px;color:#cbd5e1;line-height:1.4;margin-top:3px"},isRupture?b.desc:b.desc)
             )
           ),
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#dbeafe;line-height:1.35;text-align:right;white-space:nowrap"},pairs.map((p,i)=>h("div",{key:i},questRewardText(p.xp,p.stat,b.binary,b.target,b.unit))))
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#dbeafe;line-height:1.35;text-align:right;white-space:nowrap"},pairs.map((p,i)=>h("div",{key:i},fmtNum(p.xp||0)+" XP · "+(STAT_LBL[p.stat]||p.stat||""))))
         ),
         h("div",{class:"qrow",style:"align-items:center;margin-top:9px"},
           h("div",{class:"qbar"},h("div",{class:"qfill partial",style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,#274f88,#274f88 5px,#7aa7df 5px,#7aa7df 10px);background-size:14px 14px;opacity:.95"})),
           h("div",{class:"qxp",style:"color:#dbeafe;white-space:nowrap;min-width:118px;text-align:right"},progressText)
         ),
 
-        !compact&&!isRupture&&h("div",{style:"margin-top:9px"},
-          b.binary
-            ? h("button",{onClick:finish,style:"width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.07);color:#fff;font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px"},"REFERMER LA BRÈCHE ✓")
-            : h("div",{style:"display:flex;gap:8px"},
-                h("button",{onClick:()=>addMain(1),style:standardButtonStyle},"+1 "+b.unit),
-                h("button",{onClick:()=>addMain(b.step||10),style:standardButtonStyle},"+"+(b.step||10)+" "+b.unit)
-              )
+        !isRupture&&!mainDone&&h("div",{style:"margin-top:9px;display:flex;gap:8px"},
+          h("button",{onClick:()=>addMain(1),style:standardButtonStyle},"+1 "+b.unit),
+          h("button",{onClick:()=>addMain(b.step||10),style:standardButtonStyle},"+"+(b.step||10)+" "+b.unit)
         ),
 
         !compact&&isRupture&&h("div",{style:"margin-top:10px"},
@@ -2197,12 +2212,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               h("div",{style:"font-family:Orbitron,sans-serif;font-size:8.5px;color:"+(mainDone?"#4ade80":"#dbeafe")},mainProgressText)
             ),
             !mainDone&&h("div",{style:"display:flex;gap:7px;margin-top:8px"},
-              b.binary
-                ? h("button",{onClick:completeMain,style:"width:100%;padding:9px;border-radius:8px;border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.06);color:#fff;font-family:Orbitron,sans-serif;font-size:9px;cursor:pointer"},"VALIDER LE BOSS ✓")
-                : h(Fragment,null,
-                    h("button",{onClick:()=>addMain(1),style:standardButtonStyle},"+1 "+b.unit),
-                    h("button",{onClick:()=>addMain(b.step||10),style:standardButtonStyle},"+"+(b.step||10)+" "+b.unit)
-                  )
+              h("button",{onClick:()=>addMain(1),style:standardButtonStyle},"+1 "+b.unit),
+              h("button",{onClick:()=>addMain(b.step||10),style:standardButtonStyle},"+"+(b.step||10)+" "+b.unit)
             )
           ),
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#fff;letter-spacing:1px;text-transform:uppercase;margin:11px 0 7px"},"GARDE RAPPROCHÉE — "+guardDoneCount+"/"+guards.length),
@@ -2229,7 +2240,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             style:"width:100%;margin-top:10px;padding:11px;border-radius:8px;border:1px solid "+(ruptureComplete?"#4ade8088":"rgba(255,255,255,.12)")+";background:"+(ruptureComplete?"rgba(74,222,128,.12)":"rgba(255,255,255,.025)")+";color:"+(ruptureComplete?"#4ade80":"var(--td)")+";font-family:Orbitron,sans-serif;font-size:10px;cursor:"+(ruptureComplete?"pointer":"default")+";letter-spacing:1px;text-transform:uppercase"
           },ruptureComplete?"MAÎTRISER LA RUPTURE ✓":"4 OBJECTIFS À ACCOMPLIR")
         ),
-        !compact&&h("div",{style:"font-size:9px;color:#bfdbfe;font-family:Orbitron,sans-serif;line-height:1.45;margin-top:9px;text-align:center"},"OBJET ALÉATOIRE GARANTI À LA RÉUSSITE")
+
       )
     );
   }

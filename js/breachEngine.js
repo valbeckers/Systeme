@@ -3,7 +3,7 @@
 // des Boss de Rupture. Les définitions statiques restent dans breachDefs.js
 // et dungeonDefs.js.
 
-import { BREACH_POOL, BREACH_RUPTURE_BOSSES } from "./breachDefs.js";
+import { BREACH_POOL, BREACH_RUPTURE_BOSSES } from "./breachDefs.js?v=20260804-breach-progress-01";
 import { eventDayStr, next7AM } from "./dayCycle.js";
 
 function breachTemplateById(id){return BREACH_POOL.find(b=>b.id===id)||null;}
