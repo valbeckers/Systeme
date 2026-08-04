@@ -2635,7 +2635,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const progressText=fmtNum(paid)+"/"+fmtNum(amount)+" "+(unit||"");
       const done=paid>=amount;
       const fillStateClass=done ? " done" : (pct>0 ? " partial" : "");
-      return h("div",{class:"card",style:"border-color:"+color+"66;background:"+colorBg},
+      return h("div",{class:"card",style:"border-color:"+color+";background:linear-gradient(145deg,#120905,#241209);box-shadow:0 0 14px rgba(180,106,60,.20),inset 0 0 20px rgba(180,106,60,.025)"},
         h("div",{class:"ctitle",style:"color:"+color+";margin-bottom:8px"},"Dette active"),
         h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:0"},
           QuestIcon(debt.id,debt.icon,14),
@@ -2653,13 +2653,13 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       );
     }
 
-    return h("div",{class:"card",style:"border-color:"+color+"66;background:"+colorBg},
+    return h("div",{class:"card",style:"border-color:"+color+";background:linear-gradient(145deg,#120905,#241209);box-shadow:0 0 14px rgba(180,106,60,.20),inset 0 0 20px rgba(180,106,60,.025)"},
       h("div",{class:"shdr"},
         h("div",null,
           h("div",{class:"ctitle",style:"margin:0;color:"+color},"Dette active")
         )
       ),
-      h("div",{class:"sqcard",style:"border-color:"+color+"55;background:linear-gradient(135deg,"+color+"10,rgba(255,255,255,.018))"},
+      h("div",{class:"sqcard",style:"border-color:"+color+"55;background:linear-gradient(135deg,rgba(180,106,60,.055),rgba(255,255,255,.010))"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;gap:8px"},
           h("div",{style:"display:flex;align-items:center;gap:8px;min-width:0"},
             QuestIcon(debt.id,debt.icon,14,"line-height:1.1;min-width:24px;text-align:center"),
@@ -2929,7 +2929,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
       h(DebtCard,{compact:true}),
       activeBreach&&h(BreachCard,{compact:true}),
-      activeSq&&h("div",{class:"card"+(activeSq&&activeSq.expiresAt-now<86400000&&!activeSq.completedAt?" sq-urgent":""),style:"border-color:#ef4444;background:linear-gradient(145deg,#2f0707,#5c1010);box-shadow:0 0 18px rgba(239,68,68,.30),inset 0 0 24px rgba(255,255,255,.03)"},
+      activeSq&&h("div",{class:"card"+(activeSq&&activeSq.expiresAt-now<86400000&&!activeSq.completedAt?" sq-urgent":""),style:"border-color:#ef4444;background:linear-gradient(145deg,#140303,#260606);box-shadow:0 0 14px rgba(239,68,68,.20),inset 0 0 20px rgba(239,68,68,.025)"},
         h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Quête urgente"),
         h(UrgentHomeRow,{sq:activeSq})
       ),
@@ -2992,7 +2992,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     return h("div",{class:"tab"},
       h(DebtCard,null),
       activeBreach&&h(BreachCard,null),
-      (!completedSq||activeSq)&&h("div",{class:"card"+(activeSq&&activeSq.expiresAt-now<86400000&&!activeSq.completedAt?" sq-urgent":""),style:"border-color:#ef4444;background:linear-gradient(145deg,#2f0707,#5c1010);box-shadow:0 0 18px rgba(239,68,68,.30),inset 0 0 24px rgba(255,255,255,.03)"},
+      (!completedSq||activeSq)&&h("div",{class:"card"+(activeSq&&activeSq.expiresAt-now<86400000&&!activeSq.completedAt?" sq-urgent":""),style:"border-color:#ef4444;background:linear-gradient(145deg,#140303,#260606);box-shadow:0 0 14px rgba(239,68,68,.20),inset 0 0 20px rgba(239,68,68,.025)"},
         h("div",{class:"shdr"},
           h("div",null,
             h("div",{class:"ctitle",style:"margin:0;color:#ef4444"},"Quête urgente"+(activeSq&&activeSq.tier?" · "+(SQ_TIER_LABEL[activeSq.tier]||""):""))
