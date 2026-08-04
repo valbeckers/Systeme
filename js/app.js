@@ -2488,7 +2488,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       );
     }
     if(d){
-      return h("div",{class:"card",style:"border-color:#f59e0b;background:linear-gradient(145deg,#2f2107,#5c4510);box-shadow:0 0 18px rgba(245,158,11,.28),inset 0 0 24px rgba(255,255,255,.03)"},
+      return h("div",{class:"card",style:"border-color:#f59e0b;background:linear-gradient(145deg,#140e03,#261b06);box-shadow:0 0 14px rgba(245,158,11,.20),inset 0 0 20px rgba(245,158,11,.025)"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
           h("div",{style:"min-width:0"},
             h("div",{class:"ctitle",style:"margin:0;color:"+color},d.icon+" "+d.title),
@@ -2570,7 +2570,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       );
     }
 
-    return h("div",{class:"card",style:"border-color:#f59e0b;background:linear-gradient(145deg,#2f2107,#5c4510);box-shadow:0 0 18px rgba(245,158,11,.28),inset 0 0 24px rgba(255,255,255,.03)"},
+    return h("div",{class:"card",style:"border-color:#f59e0b;background:linear-gradient(145deg,#140e03,#261b06);box-shadow:0 0 14px rgba(245,158,11,.20),inset 0 0 20px rgba(245,158,11,.025)"},
       h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
         h("div",{style:"min-width:0"},
           h("div",{class:"ctitle",style:"margin:0;color:"+color},d.icon+" "+d.title),
@@ -2593,7 +2593,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const dungeonGold="#f59e0b";
     const subtitle="1 par jour · "+dungeonWeekCount+"/3 cette semaine";
 
-    return h("div",{class:"card",style:"border-color:#f59e0b;background:linear-gradient(145deg,#2f2107,#5c4510);box-shadow:0 0 18px rgba(245,158,11,.28),inset 0 0 24px rgba(255,255,255,.03)"},
+    return h("div",{class:"card",style:"border-color:#f59e0b;background:linear-gradient(145deg,#140e03,#261b06);box-shadow:0 0 14px rgba(245,158,11,.20),inset 0 0 20px rgba(245,158,11,.025)"},
       h("div",{class:"ctitle",style:"margin:0;color:"+dungeonGold},"DONJON"),
       h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},subtitle+" · 🗝️ "+dungeonKeys),
       dungeonAccessOpen&&h("div",{style:"margin-top:8px;color:#4ade80;font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:1px"},"ACCÈS AU DONJON OUVERT"),
