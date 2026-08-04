@@ -117,11 +117,24 @@ import {
 const { h, render, Fragment } = window.preact;
 const { useState, useEffect, useRef } = window.preactHooks;
 
-const BREACH_FX_VERSION="20260804-v9-canvas-contour";
+const BREACH_FX_VERSION="20260804-v9b-corner-fix";
 
 const __breachFxRand=(seed,n)=>{
   const x=Math.sin((seed*9283.133)+(n*12.9898))*43758.5453123;
   return x-Math.floor(x);
+};
+const __breachFxLoopNoise=(seed,pos,count)=>{
+  const c=Math.max(3,count|0);
+  const x=((pos%c)+c)%c;
+  const i1=Math.floor(x);
+  const f=x-i1;
+  const i0=(i1-1+c)%c, i2=(i1+1)%c, i3=(i1+2)%c;
+  const y0=__breachFxRand(seed,i0)*2-1;
+  const y1=__breachFxRand(seed,i1)*2-1;
+  const y2=__breachFxRand(seed,i2)*2-1;
+  const y3=__breachFxRand(seed,i3)*2-1;
+  const f2=f*f, f3=f2*f;
+  return 0.5*((2*y1)+(-y0+y2)*f+(2*y0-5*y1+4*y2-y3)*f2+(-y0+3*y1-3*y2+y3)*f3);
 };
 const __breachFxPulse=t=>{
   const cycle=7.8;
@@ -167,33 +180,30 @@ function __drawBreachElectricFrame(ctx, metrics, t, variant){
   const ampMain=variant==="home"?3.3:3.6;
   const ampInner=variant==="home"?2.2:2.5;
   const outwardBase=1.8;
-  const knot=Math.max(5,Math.round(samples/42));
-  const knotB=Math.max(4,Math.round(samples/56));
+  const ctrlMain=variant==="home"?58:64;
+  const ctrlMicro=variant==="home"?116:128;
+  const ctrlTang=variant==="home"?72:80;
   const glowA=.26*pulse, glowB=.54*pulse, coreA=.96*Math.min(1.2,pulse+.15);
   const makePts=(seed,amp,outBias,phase)=>{
     const pts=[];
-    for(let i=0;i<=samples;i++){
+    for(let i=0;i<samples;i++){
       const s=(i/samples)*peri;
       const base=__roundedRectPoint(metrics,s);
-      const u=i+phase;
-      const k0=Math.floor(u/knot), ft=(u/knot)-k0;
-      const n0=__breachFxRand(seed,k0)*2-1, n1=__breachFxRand(seed,k0+1)*2-1;
-      const jag=((1-ft)*n0+ft*n1);
-      const kb0=Math.floor((u*1.35)/knotB), gt=((u*1.35)/knotB)-kb0;
-      const m0=__breachFxRand(seed+19,kb0)*2-1, m1=__breachFxRand(seed+19,kb0+1)*2-1;
-      const micro=((1-gt)*m0+gt*m1);
-      const tan0=__breachFxRand(seed+71,k0)*2-1, tan1=__breachFxRand(seed+71,k0+1)*2-1;
-      const tang=((1-ft)*tan0+ft*tan1)*.55;
-      const outward=(jag*amp)+(micro*amp*.42)+outBias;
+      const u=i + phase*12;
+      const jag=__breachFxLoopNoise(seed,(u/samples)*ctrlMain,ctrlMain);
+      const micro=__breachFxLoopNoise(seed+19,(u/samples)*ctrlMicro,ctrlMicro);
+      const tang=__breachFxLoopNoise(seed+71,((i+phase*9)/samples)*ctrlTang,ctrlTang)*.42;
+      const outward=(jag*amp)+(micro*amp*.38)+outBias;
       pts.push({
         x:base.x + base.nx*outward + base.tx*tang,
         y:base.y + base.ny*outward + base.ty*tang,
         bx:base.x, by:base.y, nx:base.nx, ny:base.ny, tx:base.tx, ty:base.ty
       });
     }
+    pts.push({...pts[0]});
     return pts;
   };
-  const phase=t*18;
+  const phase=t*1.08;
   const mainPts=makePts(11,ampMain,outwardBase,phase);
   const innerPts=makePts(27,ampInner,outwardBase-.8,phase*1.16);
 
