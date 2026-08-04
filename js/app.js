@@ -117,20 +117,126 @@ import {
 const { h, render, Fragment } = window.preact;
 const { useState, useEffect, useRef } = window.preactHooks;
 
-const BREACH_FX_VERSION="20260804-v5-frame";
-function breachFxAsset(fileName){
-  const url=new URL(`../assets/fx/${fileName}`,import.meta.url);
-  url.searchParams.set("v",BREACH_FX_VERSION);
-  return url.href;
+function buildBreachRoundedRectMetrics(w,h,inset,r){
+  const maxR=Math.max(6,Math.min(r,(w-inset*2)/2,(h-inset*2)/2));
+  const top=Math.max(1,w-2*(inset+maxR));
+  const side=Math.max(1,h-2*(inset+maxR));
+  const arc=Math.PI*maxR/2;
+  const perimeter=2*(top+side)+4*arc;
+  return {w,h,inset,r:maxR,top,side,arc,perimeter};
 }
-const BREACH_FX_FRAMES=Object.freeze({
-  home:breachFxAsset("breach-lightning-frame-home.webp"),
-  quests:breachFxAsset("breach-lightning-frame-quests.webp")
-});
+function breachPointAt(metrics,s){
+  const {w,h,inset,r,top,side,arc,perimeter}=metrics;
+  let d=((s%perimeter)+perimeter)%perimeter;
+  const left=inset, right=w-inset, topY=inset, bottom=h-inset;
+  const x1=left+r, x2=right-r, y1=topY+r, y2=bottom-r;
+  const tr={cx:x2,cy:y1}, br={cx:x2,cy:y2}, bl={cx:x1,cy:y2}, tl={cx:x1,cy:y1};
+  if(d<=top) return {x:x1+d,y:topY,tx:1,ty:0,nx:0,ny:-1}; d-=top;
+  if(d<=arc){ const a=-Math.PI/2 + d/r; return {x:tr.cx+r*Math.cos(a),y:tr.cy+r*Math.sin(a),tx:-Math.sin(a),ty:Math.cos(a),nx:Math.cos(a),ny:Math.sin(a)}; } d-=arc;
+  if(d<=side) return {x:right,y:y1+d,tx:0,ty:1,nx:1,ny:0}; d-=side;
+  if(d<=arc){ const a=0 + d/r; return {x:br.cx+r*Math.cos(a),y:br.cy+r*Math.sin(a),tx:-Math.sin(a),ty:Math.cos(a),nx:Math.cos(a),ny:Math.sin(a)}; } d-=arc;
+  if(d<=top) return {x:x2-d,y:bottom,tx:-1,ty:0,nx:0,ny:1}; d-=top;
+  if(d<=arc){ const a=Math.PI/2 + d/r; return {x:bl.cx+r*Math.cos(a),y:bl.cy+r*Math.sin(a),tx:-Math.sin(a),ty:Math.cos(a),nx:Math.cos(a),ny:Math.sin(a)}; } d-=arc;
+  if(d<=side) return {x:left,y:y2-d,tx:0,ty:-1,nx:-1,ny:0}; d-=side;
+  const a=Math.PI + d/r; return {x:tl.cx+r*Math.cos(a),y:tl.cy+r*Math.sin(a),tx:-Math.sin(a),ty:Math.cos(a),nx:Math.cos(a),ny:Math.sin(a)};
+}
+function gaussianPulse(x,mu,sigma){
+  const z=(x-mu)/sigma;
+  return Math.exp(-0.5*z*z);
+}
 function BreachFxOverlay({variant="home"}={}){
-  const kind=variant==="quests"?"quests":"home";
-  return h("div",{class:"breach-fx-layer breach-fx-layer-"+kind,"aria-hidden":"true"},
-    h("img",{src:BREACH_FX_FRAMES[kind],class:"breach-fx-frame breach-fx-frame-"+kind,alt:"",draggable:false})
+  const hostRef=useRef(null);
+  const canvasRef=useRef(null);
+  const seedRef=useRef(Math.random()*1000);
+  useEffect(()=>{
+    const host=hostRef.current,canvas=canvasRef.current;
+    if(!host||!canvas)return;
+    const ctx=canvas.getContext("2d");
+    if(!ctx)return;
+    let metrics=buildBreachRoundedRectMetrics(100,50,3,14);
+    let w=100,h=50,dpr=1,raf=0;
+    const seed=seedRef.current;
+    const compact=variant==="home";
+    const duration=compact?17000:18500;
+    const segmentRatio=compact?.24:.205;
+    function resize(){
+      const rect=host.getBoundingClientRect();
+      w=Math.max(40,rect.width); h=Math.max(24,rect.height); dpr=Math.min(2,window.devicePixelRatio||1);
+      canvas.width=Math.round(w*dpr); canvas.height=Math.round(h*dpr);
+      canvas.style.width=w+"px"; canvas.style.height=h+"px";
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      const styles=window.getComputedStyle(host.parentElement||host);
+      const br=parseFloat(styles.borderTopLeftRadius)||14;
+      metrics=buildBreachRoundedRectMetrics(w,h,2.5,Math.max(8,br));
+    }
+    const ro=new ResizeObserver(resize); ro.observe(host.parentElement||host); resize();
+    function draw(now){
+      ctx.clearRect(0,0,w,h);
+      const per=metrics.perimeter;
+      const travel=(now/duration*per + seed*37)%per;
+      const segLen=per*segmentRatio;
+      const count=Math.max(26,Math.floor(segLen/6));
+      const pts=[];
+      for(let i=0;i<count;i++){
+        const q=i/(count-1);
+        const s=travel-segLen + segLen*q;
+        const p=breachPointAt(metrics,s);
+        const envelope=Math.sin(Math.PI*q);
+        const n1=Math.sin(s*0.091 + now*0.0062 + seed*1.7);
+        const n2=Math.sin(s*0.183 - now*0.0034 + seed*0.77);
+        const jitter=(n1*0.9+n2*0.45)*(0.9+1.8*envelope);
+        const out=0.8 + envelope*0.65;
+        pts.push({
+          x:p.x + p.nx*(out+jitter),
+          y:p.y + p.ny*(out+jitter),
+          tx:p.tx,ty:p.ty,nx:p.nx,ny:p.ny,q
+        });
+      }
+      const cycle=travel/per;
+      const pulse=Math.min(1,gaussianPulse(cycle,.18,.024)+gaussianPulse(cycle,.58,.024));
+      const flash=0.72 + pulse*0.5;
+      const outerAlpha=.14 + pulse*.1;
+      const midAlpha=.52 + pulse*.16;
+      const coreAlpha=.9 + pulse*.08;
+      function strokePath(points,width,color,alpha,blur){
+        ctx.save();
+        ctx.beginPath();
+        for(let i=0;i<points.length;i++){
+          const pt=points[i];
+          if(i===0)ctx.moveTo(pt.x,pt.y); else ctx.lineTo(pt.x,pt.y);
+        }
+        ctx.lineWidth=width; ctx.lineCap="round"; ctx.lineJoin="round";
+        ctx.strokeStyle=color; ctx.globalAlpha=alpha; ctx.shadowBlur=blur; ctx.shadowColor=color;
+        ctx.stroke();
+        ctx.restore();
+      }
+      strokePath(pts,10,"rgba(94,196,255,1)",outerAlpha*flash,16+12*pulse);
+      strokePath(pts,5,"rgba(122,220,255,1)",midAlpha*flash,8+6*pulse);
+      strokePath(pts,2.1,"rgba(255,255,255,1)",coreAlpha,4+3*pulse);
+      const branchFractions=compact?[.36,.72]:[.28,.62];
+      branchFractions.forEach((fq,idx)=>{
+        const anchor=pts[Math.min(pts.length-4,Math.max(2,Math.floor(fq*(pts.length-1))))];
+        const branchLen=(compact?11:13)*(1+0.15*idx);
+        const side=(idx%2===0?1:-1);
+        const b1x=anchor.x + (anchor.nx*branchLen*side + anchor.tx*2);
+        const b1y=anchor.y + (anchor.ny*branchLen*side + anchor.ty*2);
+        const b2x=b1x + anchor.nx*branchLen*.55*side - anchor.tx*5;
+        const b2y=b1y + anchor.ny*branchLen*.55*side - anchor.ty*5;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(anchor.x,anchor.y); ctx.lineTo(b1x,b1y); ctx.lineTo(b2x,b2y);
+        ctx.lineWidth=1.15; ctx.lineCap="round"; ctx.lineJoin="round";
+        ctx.strokeStyle="rgba(220,245,255,1)"; ctx.globalAlpha=.28 + pulse*.12; ctx.shadowBlur=6+4*pulse; ctx.shadowColor="rgba(120,210,255,1)";
+        ctx.stroke();
+        ctx.restore();
+      });
+      raf=requestAnimationFrame(draw);
+    }
+    raf=requestAnimationFrame(draw);
+    return ()=>{ cancelAnimationFrame(raf); ro.disconnect(); };
+  },[variant]);
+  return h("div",{ref:hostRef,class:"breach-fx-canvas-layer breach-fx-canvas-layer-"+(variant==="quests"?"quests":"home"),"aria-hidden":"true"},
+    h("canvas",{ref:canvasRef,class:"breach-fx-canvas"})
   );
 }
 
