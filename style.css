@@ -209,12 +209,8 @@ html,body{height:100dvh;width:100%;overflow:hidden;background:#000000;color:var(
 
 
 
-/* ─── ANIMATIONS CARTES BRÈCHES · V9 CONTOUR CANVAS DYNAMIQUE ─────────── */
+/* ─── ANIMATIONS CARTES BRÈCHES · V13 VISUEL GÉNÉRÉ ANIMÉ ─────────── */
 .breach-electric{position:relative;isolation:isolate}
 .breach-electric > *:not(.breach-fx-layer){position:relative;z-index:2}
-.breach-fx-layer{position:absolute;z-index:1;pointer-events:none;overflow:visible;border-radius:inherit}
-.breach-fx-layer-home{left:-3.74%;right:-3.66%;top:-2.5%;bottom:-9.66%}
-.breach-fx-layer-quests{left:-3.64%;right:-3.64%;top:-2.82%;bottom:-9.86%}
-.breach-fx-base,.breach-fx-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
-.breach-fx-base{object-fit:fill;image-rendering:auto;filter:saturate(1.04) brightness(1.02)}
-.breach-fx-canvas{mix-blend-mode:screen}
+.breach-fx-layer{position:absolute;z-index:1;pointer-events:none;overflow:visible;border-radius:inherit;inset:-18px}
+.breach-fx-animated{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:fill;pointer-events:none;user-select:none;image-rendering:auto}
