@@ -2166,14 +2166,19 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         [["top:-10px;left:8px"],["top:-10px;right:8px"],["bottom:-11px;left:10px"],["bottom:-11px;right:10px"]].map((p,i)=>h("span",{key:i,style:"position:absolute;"+p[0]+";color:#fff;font-size:17px;filter:drop-shadow(0 0 7px #fff);pointer-events:none"},"⚡")),
         h("div",{style:"position:relative;z-index:2"},
           h("div",{class:"ctitle",style:"margin:0 0 10px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"BRÈCHE ALLIÉE EN RUPTURE":"BRÈCHE ALLIÉE"):(isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE")),
-          h("div",{style:"display:flex;align-items:center;justify-content:space-between;gap:10px"},
-            h("div",{style:"display:flex;align-items:center;gap:9px;min-width:0"},
-              QuestIcon(b.id,isRupture?"☠️":b.icon,18,"min-width:26px"),
-              h("div",{style:"font-size:13px;font-weight:800;color:#fff;line-height:1.25;min-width:0"},isRupture?rupture.name:b.name)
-            ),
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:#dbeafe;white-space:nowrap;flex-shrink:0"},progressText)
-          ),
-          h("div",{class:"qbar",style:"margin-top:10px"},h("div",{class:"qfill partial",style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,#274f88,#274f88 5px,#7aa7df 5px,#7aa7df 10px);background-size:14px 14px;opacity:.95"}))
+          h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:0"},
+            QuestIcon(b.id,isRupture?"☠️":b.icon,14),
+            h("div",{style:"flex:1;min-width:0"},
+              h("div",{style:"font-size:12px;color:#fff;margin-bottom:3px;display:flex;justify-content:space-between;align-items:center;gap:8px"},
+                h("span",{style:"white-space:normal;line-height:1.25;word-break:normal;min-width:0;font-weight:800"},isRupture?rupture.name:b.name),
+                h("div",{style:"display:flex;align-items:center;gap:6px"},
+                  h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:#dbeafe;white-space:nowrap;flex-shrink:0"},progressText),
+                  h("span",{style:"width:10px;flex-shrink:0"},"")
+                )
+              ),
+              h("div",{class:"qbar"},h("div",{class:"qfill partial",style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,#274f88,#274f88 5px,#7aa7df 5px,#7aa7df 10px);background-size:14px 14px;opacity:.95"}))
+            )
+          )
         )
       );
     }
@@ -2182,8 +2187,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       [["top:-10px;left:8px"],["top:-10px;right:8px"],["bottom:-11px;left:10px"],["bottom:-11px;right:10px"]].map((p,i)=>h("span",{key:i,style:"position:absolute;"+p[0]+";color:#fff;font-size:17px;filter:drop-shadow(0 0 7px #fff);pointer-events:none"},"⚡")),
       h("div",{style:"position:relative;z-index:2"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:9px"},
-          h("div",{class:"ctitle",style:"margin:0;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"BRÈCHE ALLIÉE EN RUPTURE":"BRÈCHE ALLIÉE"):(isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE")),
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#fff;border:1px solid rgba(255,255,255,.45);border-radius:999px;padding:4px 7px;white-space:nowrap"},"⏱ "+fmtCD(remaining))
+          h("div",{class:"ctitle",style:"margin:0;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"BRÈCHE ALLIÉE EN RUPTURE":"BRÈCHE ALLIÉE"):(isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE"))
         ),
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px"},
           h("div",{style:"display:flex;align-items:center;gap:9px;min-width:0"},
@@ -2199,6 +2203,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{class:"qbar"},h("div",{class:"qfill partial",style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,#274f88,#274f88 5px,#7aa7df 5px,#7aa7df 10px);background-size:14px 14px;opacity:.95"})),
           h("div",{class:"qxp",style:"color:#dbeafe;white-space:nowrap;min-width:118px;text-align:right"},progressText)
         ),
+        h("div",{style:"font-size:10px;color:#8dbbff;font-family:Orbitron,sans-serif;margin-top:4px;text-align:left"},"⏱ "+fmtCD(remaining)+" restants"),
 
         !isRupture&&!mainDone&&h("div",{style:"margin-top:9px;display:flex;gap:8px"},
           h("button",{onClick:()=>addMain(1),style:standardButtonStyle},"+1 "+b.unit),
