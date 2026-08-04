@@ -208,20 +208,22 @@ html,body{height:100dvh;width:100%;overflow:hidden;background:#000000;color:var(
 }
 
 /* ─── ANIMATIONS CARTES BRÈCHES ─────────────────────────────────────────── */
-.breach-electric{animation:breachElectricGlow 2.2s ease-in-out infinite}
-.breach-bolt{position:absolute;z-index:4;font-size:17px;line-height:1;pointer-events:none;opacity:.16;animation:breachBoltFlash 2.2s steps(1,end) infinite;transform-origin:center}
-.breach-bolt-yellow{color:#facc15;filter:drop-shadow(0 0 3px #fff7a8) drop-shadow(0 0 8px #facc15)}
-.breach-bolt-white{color:#fff;filter:drop-shadow(0 0 4px #fff) drop-shadow(0 0 9px #fde047)}
-@keyframes breachBoltFlash{
-  0%,12%,100%{opacity:.12}
-  14%{opacity:1}
-  17%{opacity:.3}
-  20%{opacity:.95}
-  24%{opacity:.12}
+.breach-electric{position:relative}
+.breach-trail-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible}
+.breach-trail-path{fill:none;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;opacity:0}
+.breach-trail-primary{stroke:#fef08a;stroke-width:0.9;stroke-dasharray:16 84;stroke-dashoffset:0;filter:drop-shadow(0 0 2px rgba(255,255,255,.95)) drop-shadow(0 0 5px rgba(250,204,21,.7));animation:breachTrailPrimary 8.4s linear infinite}
+.breach-trail-secondary{stroke:#ffffff;stroke-width:0.65;stroke-dasharray:10 90;stroke-dashoffset:-26;filter:drop-shadow(0 0 2px rgba(255,255,255,.95)) drop-shadow(0 0 4px rgba(125,211,252,.55));animation:breachTrailSecondary 10.8s linear infinite}
+@keyframes breachTrailPrimary{
+  0%,68%,100%{opacity:0;stroke-dashoffset:0}
+  72%{opacity:.22}
+  75%{opacity:1}
+  84%{opacity:.88;stroke-dashoffset:-34}
+  90%{opacity:0;stroke-dashoffset:-52}
 }
-@keyframes breachElectricGlow{
-  0%,100%{box-shadow:0 0 18px rgba(141,187,255,.30),inset 0 0 24px rgba(255,255,255,.035)}
-  18%{box-shadow:0 0 21px rgba(255,255,255,.34),0 0 30px rgba(250,204,21,.12),inset 0 0 24px rgba(255,255,255,.045)}
-  52%{box-shadow:0 0 18px rgba(141,187,255,.30),inset 0 0 24px rgba(255,255,255,.035)}
-  70%{box-shadow:0 0 22px rgba(250,204,21,.24),0 0 30px rgba(255,255,255,.10),inset 0 0 24px rgba(255,255,255,.045)}
+@keyframes breachTrailSecondary{
+  0%,24%,100%{opacity:0;stroke-dashoffset:-26}
+  28%{opacity:.18}
+  31%{opacity:.9}
+  39%{opacity:.72;stroke-dashoffset:-56}
+  45%{opacity:0;stroke-dashoffset:-72}
 }
