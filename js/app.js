@@ -2161,8 +2161,13 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
     const standardButtonStyle="flex:1;padding:9px;border-radius:8px;border:1px solid rgba(255,255,255,.38);background:rgba(255,255,255,.05);color:#fff;font-family:Orbitron,sans-serif;font-size:9px;cursor:pointer";
     const renderBreachTrail=()=>h("svg",{class:"breach-trail-svg",viewBox:"0 0 100 100",preserveAspectRatio:"none","aria-hidden":"true"},
-      h("path",{class:"breach-trail-path breach-trail-primary",d:"M 8 2 H 92 Q 98 2 98 8 V 92 Q 98 98 92 98 H 8 Q 2 98 2 92 V 8 Q 2 2 8 2 Z",pathLength:"100"}),
-      h("path",{class:"breach-trail-path breach-trail-secondary",d:"M 8 2 H 92 Q 98 2 98 8 V 92 Q 98 98 92 98 H 8 Q 2 98 2 92 V 8 Q 2 2 8 2 Z",pathLength:"100"})
+      h("path",{class:"breach-arc breach-arc-a",d:"M 6 10 L 8 6 L 12 8 L 16 5 L 19 8 L 23 4 L 28 7 L 34 3"}),
+      h("path",{class:"breach-arc breach-arc-b",d:"M 62 4 L 66 7 L 70 3 L 74 6 L 79 2 L 84 5 L 89 3 L 94 6"}),
+      h("path",{class:"breach-arc breach-arc-c",d:"M 96 13 L 93 18 L 96 24 L 91 30 L 95 37 L 90 45 L 94 53"}),
+      h("path",{class:"breach-arc breach-arc-d",d:"M 86 96 L 80 93 L 75 97 L 69 94 L 63 98 L 56 95 L 49 97"}),
+      h("path",{class:"breach-arc breach-arc-e",d:"M 4 58 L 8 53 L 5 47 L 10 40 L 6 34 L 11 27 L 8 21"}),
+      h("path",{class:"breach-arc breach-arc-f",d:"M 32 98 L 28 95 L 24 97 L 19 93 L 14 96 L 10 92 L 6 95"}),
+      h("path",{class:"breach-arc breach-arc-g",d:"M 40 3 L 44 6 L 48 2 L 52 5 L 56 3 L 60 7"})
     );
 
     if(compact){
