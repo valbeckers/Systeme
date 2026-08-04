@@ -117,7 +117,7 @@ import {
 const { h, render, Fragment } = window.preact;
 const { useState, useEffect, useRef } = window.preactHooks;
 
-const BREACH_FX_VERSION="20260804-v11-no-sticks";
+const BREACH_FX_VERSION="20260804-v11-no-sticks-urgent-buttons";
 
 const __breachFxRand=(seed,n)=>{
   const x=Math.sin((seed*9283.133)+(n*12.9898))*43758.5453123;
@@ -2174,6 +2174,15 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const urgent=remaining<86400000&&!sq.completedAt;
     const pct=Math.min(100,(sq.progress/sq.target)*100);
     const done=sq.progress>=sq.target;
+    const numericTarget=Math.max(1,Number(sq.target)||1);
+    const incrementalUrgent = !sq.binary || numericTarget>1;
+    const urgentSteps=[1,5,10].filter(v=>v<=numericTarget);
+    const urgentUnitLabel=(unit,amount)=>{
+      const u=String(unit||"");
+      if(amount===1)return u;
+      const plurals={portion:"portions",objet:"objets",verre:"verres",jour:"jours",rep:"reps"};
+      return plurals[u]||u;
+    };
 
     // Helper : liste les paires (xp, stat) actives sur cette quête (1, 2 ou 3)
     const xpPairs = [
@@ -2251,7 +2260,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         )
       ),
       showInput&&!done&&(
-        sq.binary
+        !incrementalUrgent
           ?h("div",{style:"display:flex;gap:8px;margin-top:8px"},
               h("button",{onClick:e=>completeBinary(1,e),style:"flex:1;padding:10px;border-radius:8px;border:1px solid #4ade8044;background:rgba(255,255,255,0.03);color:#4ade80;font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px"},"Succ\u00e8s \u2713")
             )
@@ -2260,9 +2269,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
                 h("input",{id:"sqi_"+sq.sqid,class:"qin",type:"text",inputMode:"decimal",placeholder:"+ km",style:"border-color:#ef444466"}),
                 h("button",{class:"qbtn",style:"border-color:#ef444466;color:#ef4444",onClick:e=>progressSq(sq,e)},"+XP")
               )
-          :h("div",{style:"display:flex;gap:8px;margin-top:8px"},
-              h("button",{onClick:e=>progressSq(sq,e,1),style:"flex:1;padding:10px;border-radius:8px;border:1px solid #ef444466;background:rgba(255,255,255,0.03);color:#ef4444;font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px"},"+1 "+sq.unit),
-              h("button",{onClick:e=>progressSq(sq,e,sq.step||10),style:"flex:1;padding:10px;border-radius:8px;border:1px solid #ef444466;background:rgba(255,255,255,0.03);color:#ef4444;font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px"},"+"+(sq.step||10)+" "+sq.unit)
+          :h("div",{style:"display:flex;gap:6px;margin-top:8px"},
+              urgentSteps.map(step=>h("button",{
+                key:"sqstep_"+step,
+                onClick:e=>progressSq(sq,e,step),
+                style:"flex:1;min-width:0;padding:10px 4px;border-radius:8px;border:1px solid #ef444466;background:rgba(255,255,255,0.03);color:#ef4444;font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer;letter-spacing:.3px;white-space:nowrap"
+              },"+"+step+" "+urgentUnitLabel(sq.unit,step)))
             )
       ),
       done&&showInput&&h("div",{style:"text-align:center;padding:8px 0;font-size:12px;color:#4ade80;font-family:Orbitron,sans-serif"},"\u2705 Compl\u00e9t\u00e9e !")
