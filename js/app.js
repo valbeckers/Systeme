@@ -117,19 +117,199 @@ import {
 const { h, render, Fragment } = window.preact;
 const { useState, useEffect, useRef } = window.preactHooks;
 
-const BREACH_FX_VERSION="20260804-v14-direct-animated-frame";
-const BREACH_FX_ASSET_HOME="assets/fx/breach-electric-home-v14.webp?v="+BREACH_FX_VERSION;
-const BREACH_FX_ASSET_QUESTS="assets/fx/breach-electric-quests-v14.webp?v="+BREACH_FX_VERSION;
+const BREACH_FX_VERSION="20260804-v11-no-sticks";
 
+const __breachFxRand=(seed,n)=>{
+  const x=Math.sin((seed*9283.133)+(n*12.9898))*43758.5453123;
+  return x-Math.floor(x);
+};
+const __breachFxLoopNoise=(seed,pos,count)=>{
+  const c=Math.max(3,count|0);
+  const x=((pos%c)+c)%c;
+  const i1=Math.floor(x);
+  const f=x-i1;
+  const i0=(i1-1+c)%c, i2=(i1+1)%c, i3=(i1+2)%c;
+  const y0=__breachFxRand(seed,i0)*2-1;
+  const y1=__breachFxRand(seed,i1)*2-1;
+  const y2=__breachFxRand(seed,i2)*2-1;
+  const y3=__breachFxRand(seed,i3)*2-1;
+  const f2=f*f, f3=f2*f;
+  return 0.5*((2*y1)+(-y0+y2)*f+(2*y0-5*y1+4*y2-y3)*f2+(-y0+3*y1-3*y2+y3)*f3);
+};
+const __breachFxLoopLinear=(seed,pos,count)=>{
+  const c=Math.max(2,count|0);
+  const x=((pos%c)+c)%c;
+  const i0=Math.floor(x);
+  const f=x-i0;
+  const i1=(i0+1)%c;
+  const y0=__breachFxRand(seed,i0)*2-1;
+  const y1=__breachFxRand(seed,i1)*2-1;
+  return y0 + (y1-y0)*f;
+};
+const __breachFxPulse=t=>{
+  const cycle=7.8;
+  const p=(t%cycle)/cycle;
+  let k=.78 + .06*Math.sin(t*1.15);
+  const flash=(c,w,a)=>{
+    const d=Math.abs(p-c);
+    return d<w ? (1-d/w)*a : 0;
+  };
+  k+=flash(.76,.018,.52);
+  k+=flash(.81,.014,.38);
+  return k;
+};
+const __parseRadius=v=>{
+  if(!v)return 28;
+  const n=parseFloat(String(v).split(" ")[0]);
+  return Number.isFinite(n)?n:28;
+};
+function __buildRoundedRectMetrics(x,y,w,h,r){
+  const rr=Math.max(0,Math.min(r,Math.min(w,h)/2));
+  const top=Math.max(0,w-2*rr), side=Math.max(0,h-2*rr), arc=Math.PI*rr/2;
+  const total=2*(top+side)+4*arc || 1;
+  return {x,y,w,h,r:rr,top,side,arc,total};
+}
+function __roundedRectPoint(m,d){
+  let {x,y,w,h,r,top,side,arc,total}=m;
+  d=((d%total)+total)%total;
+  const seg0=top, seg1=seg0+arc, seg2=seg1+side, seg3=seg2+arc, seg4=seg3+top, seg5=seg4+arc, seg6=seg5+side, seg7=seg6+arc;
+  if(d<=seg0){ const px=x+r+d, py=y; return {x:px,y:py,nx:0,ny:-1,tx:1,ty:0}; }
+  if(d<=seg1){ const a=(d-seg0)/arc*(Math.PI/2)-Math.PI/2; const cx=x+w-r, cy=y+r; return {x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r,nx:Math.cos(a),ny:Math.sin(a),tx:-Math.sin(a),ty:Math.cos(a)}; }
+  if(d<=seg2){ const px=x+w, py=y+r+(d-seg1); return {x:px,y:py,nx:1,ny:0,tx:0,ty:1}; }
+  if(d<=seg3){ const a=(d-seg2)/arc*(Math.PI/2); const cx=x+w-r, cy=y+h-r; return {x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r,nx:Math.cos(a),ny:Math.sin(a),tx:-Math.sin(a),ty:Math.cos(a)}; }
+  if(d<=seg4){ const px=x+w-r-(d-seg3), py=y+h; return {x:px,y:py,nx:0,ny:1,tx:-1,ty:0}; }
+  if(d<=seg5){ const a=(d-seg4)/arc*(Math.PI/2)+Math.PI/2; const cx=x+r, cy=y+h-r; return {x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r,nx:Math.cos(a),ny:Math.sin(a),tx:-Math.sin(a),ty:Math.cos(a)}; }
+  if(d<=seg6){ const px=x, py=y+h-r-(d-seg5); return {x:px,y:py,nx:-1,ny:0,tx:0,ty:-1}; }
+  const a=(d-seg6)/arc*(Math.PI/2)+Math.PI; const cx=x+r, cy=y+r; return {x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r,nx:Math.cos(a),ny:Math.sin(a),tx:-Math.sin(a),ty:Math.cos(a)};
+}
+function __drawBreachElectricFrame(ctx, metrics, t, variant){
+  const pulse=__breachFxPulse(t);
+  const peri=metrics.total;
+  const sampleDist=variant==="home"?4.8:5.2;
+  const samples=Math.max(420,Math.floor(peri/sampleDist));
+  const ampMain=variant==="home"?1.18:1.3;
+  const ampInner=variant==="home"?.54:.64;
+  const outwardBase=.82;
+  const ctrlMain=variant==="home"?148:166;
+  const ctrlMicro=variant==="home"?308:336;
+  const ctrlTang=variant==="home"?176:194;
+  const ctrlSpike=variant==="home"?122:136;
+  const glowA=.11*pulse, glowB=.30*pulse, coreA=.98*Math.min(1.08,pulse+.08);
+  const makePts=(seed,amp,outBias,phase)=>{
+    const pts=[];
+    for(let i=0;i<samples;i++){
+      const s=(i/samples)*peri;
+      const base=__roundedRectPoint(metrics,s);
+      const u=i + phase*15;
+      const jag=__breachFxLoopLinear(seed,(u/samples)*ctrlMain,ctrlMain);
+      const micro=__breachFxLoopLinear(seed+19,(u/samples)*ctrlMicro,ctrlMicro);
+      const tang=__breachFxLoopLinear(seed+71,((i+phase*6)/samples)*ctrlTang,ctrlTang)*.12;
+      const spike=Math.max(0,__breachFxLoopLinear(seed+111,((i+phase*11)/samples)*ctrlSpike,ctrlSpike));
+      const outward=(jag*amp)+(micro*amp*.17)+(spike*amp*.34)+outBias;
+      pts.push({
+        x:base.x + base.nx*outward + base.tx*tang,
+        y:base.y + base.ny*outward + base.ty*tang,
+        bx:base.x, by:base.y, nx:base.nx, ny:base.ny, tx:base.tx, ty:base.ty
+      });
+    }
+    pts.push({...pts[0]});
+    return pts;
+  };
+  const phase=t*.96;
+  const mainPts=makePts(11,ampMain,outwardBase,phase);
+  const innerPts=makePts(27,ampInner,outwardBase-.22,phase*1.14);
+
+  const strokePath=(pts,color,width,alpha,blur=0)=>{
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x,pts[0].y);
+    for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
+    ctx.closePath();
+    ctx.strokeStyle=color;
+    ctx.lineWidth=width;
+    ctx.lineJoin='round';
+    ctx.lineCap='round';
+    if(blur>0){ ctx.shadowBlur=blur; ctx.shadowColor=color; }
+    ctx.globalAlpha=alpha;
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  strokePath(mainPts,'#29c9ff',4.5,glowA,8);
+  strokePath(mainPts,'#69dcff',2.15,glowB,2.6);
+  strokePath(innerPts,'#dcf9ff',1.02,.72*pulse,1.2);
+  strokePath(innerPts,'#ffffff',.56,coreA,.45);
+
+  ctx.save();
+  ctx.beginPath();
+  const start=__roundedRectPoint(metrics,0);
+  ctx.moveTo(start.x,start.y);
+  for(let i=1;i<=samples;i++){
+    const p=__roundedRectPoint(metrics,(i/samples)*peri);
+    ctx.lineTo(p.x,p.y);
+  }
+  ctx.closePath();
+  ctx.strokeStyle='#baf4ff';
+  ctx.lineWidth=.48;
+  ctx.globalAlpha=.12*pulse;
+  ctx.shadowBlur=1.8;
+  ctx.shadowColor='#59d1ff';
+  ctx.stroke();
+  ctx.restore();
+
+}
 function BreachFxOverlay({variant="home"}={}){
-  const quests=variant==="quests";
-  return h("div",{class:"breach-fx-layer "+(quests?"breach-fx-layer-quests":"breach-fx-layer-home"),"aria-hidden":"true"},
-    h("img",{
-      class:"breach-fx-animated",
-      src:quests?BREACH_FX_ASSET_QUESTS:BREACH_FX_ASSET_HOME,
-      alt:"",
-      draggable:false
-    })
+  const hostRef=useRef(null);
+  const canvasRef=useRef(null);
+  const stateRef=useRef({metrics:null,raf:0,ro:null,host:null,wrap:null,dpr:1});
+  useEffect(()=>{
+    const wrap=hostRef.current;
+    const canvas=canvasRef.current;
+    if(!wrap || !canvas) return;
+    const host=wrap.parentElement;
+    if(!host) return;
+    const ctx=canvas.getContext('2d');
+    const state=stateRef.current;
+    state.host=host;
+    state.wrap=wrap;
+    const computeMetrics=()=>{
+      const hostRect=host.getBoundingClientRect();
+      const wrapRect=wrap.getBoundingClientRect();
+      const dpr=Math.min(window.devicePixelRatio||1,2);
+      state.dpr=dpr;
+      canvas.width=Math.max(1,Math.round(wrapRect.width*dpr));
+      canvas.height=Math.max(1,Math.round(wrapRect.height*dpr));
+      canvas.style.width=wrapRect.width+'px';
+      canvas.style.height=wrapRect.height+'px';
+      const left=hostRect.left-wrapRect.left;
+      const top=hostRect.top-wrapRect.top;
+      const radius=__parseRadius(getComputedStyle(host).borderTopLeftRadius);
+      state.metrics=__buildRoundedRectMetrics(left+1.2, top+1.2, Math.max(1,hostRect.width-2.4), Math.max(1,hostRect.height-2.4), radius);
+    };
+    const draw=(ts)=>{
+      const {metrics,dpr}=state;
+      if(metrics){
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        __drawBreachElectricFrame(ctx,metrics,ts/1000,variant==="quests"?"quests":"home");
+      }
+      state.raf=requestAnimationFrame(draw);
+    };
+    computeMetrics();
+    const ro=new ResizeObserver(computeMetrics);
+    ro.observe(host);
+    ro.observe(wrap);
+    state.ro=ro;
+    state.raf=requestAnimationFrame(draw);
+    return ()=>{
+      if(state.ro) state.ro.disconnect();
+      if(state.raf) cancelAnimationFrame(state.raf);
+      state.ro=null;
+      state.raf=0;
+    };
+  },[variant]);
+  return h("div",{ref:hostRef,class:"breach-fx-layer breach-fx-layer-"+(variant==="quests"?"quests":"home"),"aria-hidden":"true"},
+    h("canvas",{ref:canvasRef,class:"breach-fx-canvas"})
   );
 }
 
