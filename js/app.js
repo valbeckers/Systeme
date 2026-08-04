@@ -117,6 +117,27 @@ import {
 const { h, render, Fragment } = window.preact;
 const { useState, useEffect, useRef } = window.preactHooks;
 
+const BREACH_FX_VERSION="20260804-v4-raster";
+function breachFxAsset(fileName){
+  const url=new URL(`../assets/fx/${fileName}`,import.meta.url);
+  url.searchParams.set("v",BREACH_FX_VERSION);
+  return url.href;
+}
+const BREACH_FX_ASSETS=Object.freeze([
+  ["top-a",breachFxAsset("breach-lightning-top-a.webp")],
+  ["top-b",breachFxAsset("breach-lightning-top-b.webp")],
+  ["bottom-a",breachFxAsset("breach-lightning-bottom-a.webp")],
+  ["left-a",breachFxAsset("breach-lightning-left-a.webp")],
+  ["right-a",breachFxAsset("breach-lightning-right-a.webp")],
+  ["corner-a",breachFxAsset("breach-lightning-corner-a.webp")],
+  ["corner-b",breachFxAsset("breach-lightning-corner-b.webp")]
+]);
+function BreachFxOverlay(){
+  return h("div",{class:"breach-fx-layer","aria-hidden":"true"},
+    BREACH_FX_ASSETS.map(([name,src])=>h("img",{key:name,src,class:"breach-fx breach-fx-"+name,alt:"",draggable:false}))
+  );
+}
+
 // ─── FONCTIONS GLOBALES ─────────────────────────────────────────────────────
 
 function QuestIcon(id, fallback, size=14, extraStyle=""){
@@ -2160,49 +2181,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       : breachProgressText();
 
     const standardButtonStyle="flex:1;padding:9px;border-radius:8px;border:1px solid rgba(255,255,255,.38);background:rgba(255,255,255,.05);color:#fff;font-family:Orbitron,sans-serif;font-size:9px;cursor:pointer";
-    const renderBreachTrail=()=>h("svg",{class:"breach-trail-svg",viewBox:"0 0 100 100",preserveAspectRatio:"none","aria-hidden":"true"},
-      h("g",{class:"breach-bolt-group breach-bolt-group-a"},
-        h("path",{class:"breach-bolt-main",d:"M 4 14 L 6 9 L 9 11 L 13 6 L 17 9 L 21 4 L 26 8 L 31 3 L 36 7"}),
-        h("path",{class:"breach-bolt-branch",d:"M 17 9 L 15 14 L 19 18"}),
-        h("path",{class:"breach-bolt-branch breach-bolt-branch-soft",d:"M 26 8 L 25 13 L 29 16"})
-      ),
-      h("g",{class:"breach-bolt-group breach-bolt-group-b"},
-        h("path",{class:"breach-bolt-main breach-bolt-main-cyan",d:"M 61 3 L 66 7 L 70 2 L 74 6 L 79 1 L 84 5 L 89 2 L 94 6"}),
-        h("path",{class:"breach-bolt-branch",d:"M 74 6 L 73 11 L 77 15"}),
-        h("path",{class:"breach-bolt-branch breach-bolt-branch-soft",d:"M 84 5 L 83 10 L 87 13"})
-      ),
-      h("g",{class:"breach-bolt-group breach-bolt-group-c"},
-        h("path",{class:"breach-bolt-main",d:"M 97 12 L 94 17 L 97 24 L 92 31 L 95 38 L 90 46 L 94 54"}),
-        h("path",{class:"breach-bolt-branch",d:"M 92 31 L 87 29 L 85 34"}),
-        h("path",{class:"breach-bolt-branch breach-bolt-branch-soft",d:"M 90 46 L 85 45 L 82 50"})
-      ),
-      h("g",{class:"breach-bolt-group breach-bolt-group-d"},
-        h("path",{class:"breach-bolt-main breach-bolt-main-cyan",d:"M 96 78 L 92 83 L 94 89 L 89 94 L 83 92 L 79 96 L 73 93 L 67 97"}),
-        h("path",{class:"breach-bolt-branch",d:"M 89 94 L 90 98 L 86 101"}),
-        h("path",{class:"breach-bolt-branch breach-bolt-branch-soft",d:"M 79 96 L 75 100 L 72 98"})
-      ),
-      h("g",{class:"breach-bolt-group breach-bolt-group-e"},
-        h("path",{class:"breach-bolt-main",d:"M 35 97 L 30 94 L 24 97 L 19 93 L 14 96 L 10 92 L 5 95"}),
-        h("path",{class:"breach-bolt-branch",d:"M 24 97 L 23 101 L 18 102"}),
-        h("path",{class:"breach-bolt-branch breach-bolt-branch-soft",d:"M 14 96 L 11 100 L 8 99"})
-      ),
-      h("g",{class:"breach-bolt-group breach-bolt-group-f"},
-        h("path",{class:"breach-bolt-main breach-bolt-main-cyan",d:"M 3 62 L 7 56 L 4 49 L 9 42 L 5 35 L 10 28 L 7 22"}),
-        h("path",{class:"breach-bolt-branch",d:"M 9 42 L 14 40 L 15 34"}),
-        h("path",{class:"breach-bolt-branch breach-bolt-branch-soft",d:"M 7 56 L 12 55 L 13 49"})
-      ),
-      h("g",{class:"breach-bolt-group breach-bolt-group-g"},
-        h("path",{class:"breach-bolt-main",d:"M 43 2 L 47 5 L 50 2 L 54 5 L 58 3 L 62 6"}),
-        h("path",{class:"breach-bolt-branch breach-bolt-branch-soft",d:"M 50 2 L 49 7 L 53 10"})
-      ),
-      h("g",{class:"breach-bolt-group breach-bolt-group-h"},
-        h("path",{class:"breach-bolt-main breach-bolt-main-cyan",d:"M 44 98 L 49 95 L 54 98 L 60 94 L 66 97 L 72 94"}),
-        h("path",{class:"breach-bolt-branch breach-bolt-branch-soft",d:"M 60 94 L 61 90 L 66 88"})
-      )
-    );
+    const renderBreachTrail=()=>h(BreachFxOverlay,null);
 
     if(compact){
-      return h("div",{class:"card breach-electric",style:"position:relative;overflow:hidden;border-color:#8dbbff;background:linear-gradient(145deg,#07162f,#102e5c);box-shadow:0 0 18px rgba(141,187,255,.32),inset 0 0 24px rgba(255,255,255,.035);padding-top:13px;padding-bottom:13px"},
+      return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:#8dbbff;background:linear-gradient(145deg,#07162f,#102e5c);box-shadow:0 0 18px rgba(141,187,255,.32),inset 0 0 24px rgba(255,255,255,.035);padding-top:13px;padding-bottom:13px"},
         renderBreachTrail(),
         h("div",{style:"position:relative;z-index:2"},
           h("div",{class:"ctitle",style:"margin:0 0 10px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"BRÈCHE ALLIÉE EN RUPTURE":"BRÈCHE ALLIÉE"):(isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE")),
@@ -2223,7 +2205,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       );
     }
 
-    return h("div",{class:"card breach-electric",style:"position:relative;overflow:hidden;border-color:#8dbbff;background:linear-gradient(145deg,#07162f,#102e5c);box-shadow:0 0 18px rgba(141,187,255,.32),inset 0 0 24px rgba(255,255,255,.035)"},
+    return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:#8dbbff;background:linear-gradient(145deg,#07162f,#102e5c);box-shadow:0 0 18px rgba(141,187,255,.32),inset 0 0 24px rgba(255,255,255,.035)"},
       renderBreachTrail(),
       h("div",{style:"position:relative;z-index:2"},
         h("div",{class:"ctitle",style:"margin:0 0 12px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"BRÈCHE ALLIÉE EN RUPTURE":"BRÈCHE ALLIÉE"):(isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE")),
