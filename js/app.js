@@ -2491,7 +2491,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       return h("div",{class:"card",style:"border-color:#f59e0b44;background:linear-gradient(145deg,#140e03,#261b06)"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
           h("div",{style:"min-width:0"},
-            h("div",{class:"ctitle",style:"margin:0;color:"+color},"DONJON EN COURS"),
+            h("div",{class:"ctitle",style:"margin:0;color:#f59e0b"},"DONJON EN COURS"),
             h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"Progression "+completedRooms.length+"/"+d.rooms.length+" salles · "+fmtCD(remaining)+" restants"),
             d.contractConstraint&&h("div",{style:"font-size:9px;color:#f59e0b;font-family:Orbitron,sans-serif;letter-spacing:.8px;margin-top:5px"},"📜 CONTRAT DU MAÎTRE · "+(d.contractConstraint==="x1.5"?"Surcharge · objectifs ×1,5":d.contractConstraint==="sealedPath"?"Chemin scellé · salles dans l’ordre":d.contractConstraint==="noEscape"?"Sans échappatoire · objets d’évitement interdits":"Contrainte active")+" · récompense finale +20 %")
           ),
@@ -2506,7 +2506,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           return h("div",{key:i,onClick:()=>{if(!done&&!locked)setSelectedDungeonRoom(i);},style:"display:flex;gap:8px;align-items:flex-start;padding:8px;border-radius:10px;background:"+(selected?color+"18":"rgba(255,255,255,0.025)")+";border:1px solid "+(selected?color+"88":"rgba(255,255,255,0.05)")+";opacity:"+(done?"0.72":locked?"0.42":"1")+";cursor:"+(!done&&!locked?"pointer":"default")+";box-shadow:"+(selected?"0 0 14px "+color+"22":"none")},
             h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:"+(done?"#4ade80":selected?color:"var(--td)")+";width:18px;text-align:center;flex-shrink:0"},done?"✓":locked?"🔒":(i+1)),
             h("div",{style:"min-width:0;flex:1"},
-              h("div",{style:"font-size:12px;color:var(--tx);font-weight:700;line-height:1.25"},(i===d.rooms.length-1?"Boss — ":"")+room.name),
+              h("div",{style:"font-size:12px;color:var(--tx);font-weight:"+(boss?"700":"400")+";line-height:1.25"},(boss?"Boss — ":"")+room.name),
               h("div",{style:"font-size:10px;color:var(--td);line-height:1.35;margin-top:2px"},d.contractConstraint==="x1.5"?String(room.desc).replace(/\d+(?:[.,]\d+)?/g,m=>String(Math.round(parseFloat(m.replace(",","."))*1.5*10)/10).replace(".",",")):room.desc),
               locked&&h("div",{style:"font-size:8.5px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:.7px;text-transform:uppercase;margin-top:4px"},d.contractConstraint==="sealedPath"?"Chemin scellé · termine la salle précédente":boss?"Termine toutes les salles pour accéder au boss":"Salle verrouillée"),
               h("div",{style:"font-size:8.5px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:4px"},dungeonRoomRewardPairs(d,i).map(r=>"+"+r.xp+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ")),
@@ -2524,7 +2524,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           style:"width:100%;margin-top:10px;padding:11px;border-radius:9px;border:1px solid "+color+(selectedRoom?"66":"33")+";background:"+color+(selectedRoom?"12":"08")+";color:"+(selectedRoom?color:"var(--td)")+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:"+(selectedRoom?"pointer":"not-allowed")+";opacity:"+(selectedRoom?"1":"0.55")
         },"Valider la salle"),
         h("div",{style:"display:flex;gap:8px;margin-top:8px"},
-          itemQty("invisibilityCape")>0&&d.contractConstraint!=="noEscape"&&h("button",{onClick:()=>setSpecialItemChoice({type:"cape"}),style:"flex:1;padding:9px;border-radius:8px;border:1px solid #94a3b866;background:#94a3b80d;color:#cbd5e1;font-family:Orbitron,sans-serif;font-size:8px;letter-spacing:.8px"},"👣 PASSER UNE SALLE"),
+          
           itemQty("teleportCrystal")>0&&h("button",{onClick:()=>setSpecialItemChoice({type:"teleport"}),style:"flex:1;padding:9px;border-radius:8px;border:1px solid #60a5fa66;background:#60a5fa0d;color:#60a5fa;font-family:Orbitron,sans-serif;font-size:8px;letter-spacing:.8px"},"💠 QUITTER LE DONJON")
         )
       );
@@ -2573,7 +2573,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     return h("div",{class:"card",style:"border-color:#f59e0b44;background:linear-gradient(145deg,#140e03,#261b06)"},
       h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
         h("div",{style:"min-width:0"},
-          h("div",{class:"ctitle",style:"margin:0;color:"+color},"DONJON EN COURS"),
+          h("div",{class:"ctitle",style:"margin:0;color:#f59e0b"},"DONJON EN COURS"),
           h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"Progression "+completedRooms.length+"/"+d.rooms.length+" salles · "+fmtCD(remaining)+" restants")
         ),
         h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap"},STAT_LBL[d.stat]||d.stat)
@@ -2582,7 +2582,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         const done=completedRooms.includes(i);
         return h("div",{key:i,style:"display:flex;gap:8px;align-items:center;padding:7px 8px;border-radius:9px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.045);opacity:"+(done?"0.7":"1")},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:"+(done?"#4ade80":"var(--td)")+";width:18px;text-align:center;flex-shrink:0"},done?"✓":(i+1)),
-          h("div",{style:"font-size:12px;color:var(--tx);font-weight:700;line-height:1.25;min-width:0"},(i===d.rooms.length-1?"Boss — ":"")+room.name)
+          h("div",{style:"font-size:12px;color:var(--tx);font-weight:"+(i===d.rooms.length-1?"700":"400")+";line-height:1.25;min-width:0"},(i===d.rooms.length-1?"Boss — ":"")+room.name)
         );
       }))
     );
