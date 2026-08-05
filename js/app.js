@@ -21,7 +21,7 @@ import {
   applyDailyStreakRewardState
 } from "./dailyEngine.js";
 import { BREACH_POOL } from "./breachDefs.js?v=20260804-breach-progress-01";
-import { DUNGEONS } from "./dungeonDefs.js?v=20260803-contract-fix-01";
+import { DUNGEONS } from "./dungeonDefs.js?v=20260805-master-contract-random-01";
 import {
   dungeonRoomRewardPairs,
   dungeonRewardPairs,
@@ -31,8 +31,8 @@ import {
   launchDungeonState,
   expireActiveDungeonState,
   canValidateDungeonRoom
-} from "./dungeonEngine.js";
-import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260803-counterpart-balance-01";
+} from "./dungeonEngine.js?v=20260805-master-contract-random-01";
+import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260805-master-contract-random-01";
 import {
   incrementLootState,
   pickRandomBreachLoot,
@@ -118,6 +118,43 @@ const { h, render, Fragment } = window.preact;
 const { useState, useEffect, useRef } = window.preactHooks;
 
 const BREACH_FX_VERSION="20260804-v11-no-sticks-urgent-buttons-card-bg";
+
+const MASTER_CONTRACT_CLAUSES=["overload","hiddenTrial","chain","pressure","doubleDungeon"];
+const MASTER_CONTRACT_LABELS={
+  overload:"Surcharge",
+  hiddenTrial:"Épreuve cachée",
+  chain:"Enchaînement",
+  pressure:"Sous pression",
+  doubleDungeon:"Double donjon"
+};
+function scaleDungeonDesc(desc,multiplier){
+  return String(desc||"").replace(/\d+(?:[.,]\d+)?/g,m=>{
+    const n=parseFloat(m.replace(",","."));
+    const scaled=Math.round(n*multiplier*10)/10;
+    return String(scaled).replace(".",",");
+  });
+}
+function buildMasterContractMeta(dungeon,random=Math.random){
+  const clause=MASTER_CONTRACT_CLAUSES[Math.floor(random()*MASTER_CONTRACT_CLAUSES.length)]||"overload";
+  const normalRooms=(dungeon?.rooms||[]).slice(0,-1);
+  const base={contractConstraint:clause,contractRevealed:false,contractStartedAt:Date.now()};
+  if(clause==="hiddenTrial"){
+    const eligible=normalRooms.map((room,idx)=>room?.masterClause?idx:null).filter(Number.isInteger);
+    const masterRoomIdx=eligible.length?eligible[Math.floor(random()*eligible.length)]:0;
+    return {...base,masterRoomIdx};
+  }
+  if(clause==="chain"){
+    const indices=normalRooms.map((_,idx)=>idx);
+    const firstPos=Math.floor(random()*indices.length);
+    const first=indices.splice(firstPos,1)[0]??0;
+    const second=indices[Math.floor(random()*indices.length)]??Math.min(1,normalRooms.length-1);
+    return {...base,chainRooms:[first,second],chainTargetRoom:null,chainDeadline:null,contractOriginalExpiresAt:null};
+  }
+  if(clause==="pressure"){
+    return {...base,pressureHours:1+Math.floor(random()*6),pressureDeadline:null};
+  }
+  return base;
+}
 
 const __breachFxRand=(seed,n)=>{
   const x=Math.sin((seed*9283.133)+(n*12.9898))*43758.5453123;
@@ -468,13 +505,13 @@ function App(){
   const [compassStatChoice,setCompassStatChoice] = useState(false);
   const [dungeonMapStatChoice,setDungeonMapStatChoice] = useState(false);
   const [specialItemChoice,setSpecialItemChoice] = useState(null);
-  const [contractDungeonChoice,setContractDungeonChoice] = useState(null);
   const [confirmElixirUse,setConfirmElixirUse] = useState(null);
   const [confirmTargetedItemUse,setConfirmTargetedItemUse] = useState(null);
   const [balanceSacrificeChoice,setBalanceSacrificeChoice] = useState(null);
   const [balanceRewardChoice,setBalanceRewardChoice] = useState(null);
   const [confirmBalanceExchange,setConfirmBalanceExchange] = useState(null);
   const [dungeonUp,setDungeonUp] = useState(null);
+  const [contractUp,setContractUp] = useState(null);
   const [ruptureUp,setRuptureUp] = useState(null);
   const [urgentUp,setUrgentUp] = useState(null);
   const [confirmRerollSq,setConfirmRerollSq] = useState(null);
@@ -1129,11 +1166,11 @@ function App(){
     if(allDailyDone && state.dailyCompletionAnimDay!==today) return;
     if(dungeonLootConditionsMet && state.allQuestsCompletionAnimDay!==today) return;
     if(completionQueue.length) return;
-    if(rankUp || levelUp || statDecadeUp || completionUp || streakUp || recordUp || dungeonUp || ruptureUp || urgentUp || debtUp || prestigeUp || alliedGiftUp || alliedGiftChoiceOpen || confirmAlliedGift) return;
+    if(rankUp || levelUp || statDecadeUp || completionUp || streakUp || recordUp || contractUp || dungeonUp || ruptureUp || urgentUp || debtUp || prestigeUp || alliedGiftUp || alliedGiftChoiceOpen || confirmAlliedGift) return;
     const [next,...rest]=keyLootQueue;
     setKeyLootQueue(rest);
     setKeyLootUp(next);
-  },[keyLootQueue,keyLootUp,rankUp,levelUp,statDecadeUp,completionUp,completionQueue.length,streakUp,recordUp,dungeonUp,ruptureUp,urgentUp,debtUp,prestigeUp,alliedGiftUp,alliedGiftChoiceOpen,confirmAlliedGift,allDailyDone,dungeonLootConditionsMet,state.dailyCompletionAnimDay,state.allQuestsCompletionAnimDay,today]);
+  },[keyLootQueue,keyLootUp,rankUp,levelUp,statDecadeUp,completionUp,completionQueue.length,streakUp,recordUp,contractUp,dungeonUp,ruptureUp,urgentUp,debtUp,prestigeUp,alliedGiftUp,alliedGiftChoiceOpen,confirmAlliedGift,allDailyDone,dungeonLootConditionsMet,state.dailyCompletionAnimDay,state.allQuestsCompletionAnimDay,today]);
 
   useEffect(()=>{
     if(itemLootUp || !itemLootQueue.length) return;
@@ -1141,16 +1178,16 @@ function App(){
     if(allDailyDone && state.dailyCompletionAnimDay!==today) return;
     if(dungeonLootConditionsMet && state.allQuestsCompletionAnimDay!==today) return;
     if(completionQueue.length) return;
-    if(rankUp || levelUp || statDecadeUp || completionUp || streakUp || recordUp || keyLootUp || dungeonUp || ruptureUp || urgentUp || debtUp || prestigeUp || itemUseUp || alliedGiftUp || alliedGiftChoiceOpen || confirmAlliedGift) return;
+    if(rankUp || levelUp || statDecadeUp || completionUp || streakUp || recordUp || keyLootUp || contractUp || dungeonUp || ruptureUp || urgentUp || debtUp || prestigeUp || itemUseUp || alliedGiftUp || alliedGiftChoiceOpen || confirmAlliedGift) return;
     const [next,...rest]=itemLootQueue;
     setItemLootQueue(rest);
     setItemLootUp(next);
-  },[itemLootQueue,itemLootUp,rankUp,levelUp,statDecadeUp,completionUp,completionQueue.length,streakUp,recordUp,keyLootUp,dungeonUp,ruptureUp,urgentUp,debtUp,prestigeUp,itemUseUp,alliedGiftUp,alliedGiftChoiceOpen,confirmAlliedGift,allDailyDone,dungeonLootConditionsMet,state.dailyCompletionAnimDay,state.allQuestsCompletionAnimDay,today]);
+  },[itemLootQueue,itemLootUp,rankUp,levelUp,statDecadeUp,completionUp,completionQueue.length,streakUp,recordUp,keyLootUp,contractUp,dungeonUp,ruptureUp,urgentUp,debtUp,prestigeUp,itemUseUp,alliedGiftUp,alliedGiftChoiceOpen,confirmAlliedGift,allDailyDone,dungeonLootConditionsMet,state.dailyCompletionAnimDay,state.allQuestsCompletionAnimDay,today]);
 
   useEffect(()=>{
     const pending=state.alliedGiftPending;
     if(!pending||alliedGiftUp||alliedGiftChoiceOpen||confirmAlliedGift)return;
-    if(rankUp||levelUp||statDecadeUp||completionUp||streakUp||recordUp||keyLootUp||itemLootUp||dungeonUp||ruptureUp||urgentUp||debtUp||prestigeUp||itemUseUp)return;
+    if(rankUp||levelUp||statDecadeUp||completionUp||streakUp||recordUp||keyLootUp||itemLootUp||contractUp||dungeonUp||ruptureUp||urgentUp||debtUp||prestigeUp||itemUseUp)return;
     if(keyLootQueue.length||itemLootQueue.length)return;
     setAlliedGiftUp(pending);
   },[
@@ -1166,6 +1203,7 @@ function App(){
     recordUp,
     keyLootUp,
     itemLootUp,
+    contractUp,
     dungeonUp,
     ruptureUp,
     urgentUp,
@@ -1694,11 +1732,13 @@ function App(){
     if(id)startDungeon(id);
   }
 
-  function startDungeon(id,constraint=null){
-    if(state.masterContractArmed && !constraint){setContractDungeonChoice(id);return;}
+  function startDungeon(id){
     setSelectedDungeonRoom(null);
     setState(s=>{
       const t=Date.now();
+      const dungeon=DUNGEONS.find(d=>d.id===id);
+      const contractMeta=s.masterContractArmed&&dungeon ? buildMasterContractMeta(dungeon) : null;
+      const constraint=contractMeta?.contractConstraint||null;
       const launched=launchDungeonState(s,{
         id,
         constraint,
@@ -1709,12 +1749,34 @@ function App(){
         nextResetAt:next7AM(t),
         weekKeyForDate:wkStr
       });
-      return launched!==s?{...launched,dungeonMapStat:null}:launched;
+      if(launched===s)return s;
+      return {
+        ...launched,
+        dungeonMapStat:null,
+        activeDungeon:contractMeta?{...launched.activeDungeon,...contractMeta}:launched.activeDungeon
+      };
     });
   }
 
   function skipDungeonToday(){
     setState(s=>({...s,dungeonSkipDay:todayStr()}));
+  }
+
+  function openDungeonRoom(roomIdx){
+    const ad=state.activeDungeon;
+    const dungeon=ad?DUNGEONS.find(d=>d.id===ad.id):null;
+    if(!ad||!dungeon||!Number.isInteger(roomIdx))return;
+    const room=dungeon.rooms[roomIdx];
+    if(!room)return;
+
+    if(ad.contractConstraint==="overload"&&!ad.contractRevealed){
+      setState(s=>s.activeDungeon&&s.activeDungeon.runId===ad.runId?{...s,activeDungeon:{...s.activeDungeon,contractRevealed:true,contractRevealedAt:Date.now()}}:s);
+      setContractUp({kind:"clause",title:"SURCHARGE",detail:"Tous les objectifs du donjon sont multipliés par 1,5."});
+    }else if(ad.contractConstraint==="hiddenTrial"&&!ad.contractRevealed&&roomIdx===ad.masterRoomIdx){
+      setState(s=>s.activeDungeon&&s.activeDungeon.runId===ad.runId?{...s,activeDungeon:{...s.activeDungeon,contractRevealed:true,contractRevealedAt:Date.now()}}:s);
+      setContractUp({kind:"clause",title:"ÉPREUVE CACHÉE",subtitle:"SALLE DU MAÎTRE — "+room.name,detail:room.masterClause||"Une contrainte spéciale s’applique à cette salle."});
+    }
+    setSelectedDungeonRoom(roomIdx);
   }
 
   function validateDungeonRoom(roomIdxOverride=null){
@@ -1799,24 +1861,156 @@ function App(){
       if(awardedXp>0) daily[day]=dayLog;
 
       const nextCompleted=[...completed,nextIdx].sort((a,b)=>a-b);
+      const bossIdx=dungeon.rooms.length-1;
       const isComplete=nextCompleted.length>=dungeon.rooms.length;
+      let nextAd={...ad,completedRooms:nextCompleted};
       setSelectedDungeonRoom(null);
       triggerProgressOverlay(beforeXp,beforeStats,totalXp,stats,300);
 
+      // CONTRAT DU MAÎTRE — ENCHAÎNEMENT
+      // La clause se révèle dès que la première des deux salles liées est terminée.
+      if(ad.contractConstraint==="chain"){
+        const linked=Array.isArray(ad.chainRooms)?ad.chainRooms:[];
+        if(!ad.contractRevealed&&linked.includes(nextIdx)&&nextIdx<bossIdx){
+          const target=linked.find(idx=>idx!==nextIdx);
+          if(Number.isInteger(target)&&!nextCompleted.includes(target)){
+            const deadline=Math.min(ad.expiresAt,t+30*60*1000);
+            nextAd={
+              ...nextAd,
+              contractRevealed:true,
+              contractRevealedAt:t,
+              chainTriggerRoom:nextIdx,
+              chainTargetRoom:target,
+              chainDeadline:deadline,
+              contractOriginalExpiresAt:ad.expiresAt,
+              expiresAt:deadline
+            };
+            const targetName=dungeon.rooms[target]?.name||"la salle liée";
+            setTimeout(()=>setContractUp({kind:"clause",title:"ENCHAÎNEMENT",subtitle:"SALLE LIÉE — "+targetName,detail:"Vous avez 30 minutes pour terminer cette salle. Aucune autre salle ne peut être accomplie avant elle."}),0);
+          }
+        }else if(ad.contractRevealed&&Number.isInteger(ad.chainTargetRoom)&&nextIdx===ad.chainTargetRoom){
+          nextAd={
+            ...nextAd,
+            chainTargetRoom:null,
+            chainDeadline:null,
+            chainCompletedAt:t,
+            expiresAt:ad.contractOriginalExpiresAt||ad.expiresAt
+          };
+        }
+      }
+
+      // CONTRAT DU MAÎTRE — SOUS PRESSION
+      // La clause n'existe visiblement qu'une fois les quatre salles normales terminées.
+      const allNormalDone=Array.from({length:bossIdx},(_,i)=>i).every(i=>nextCompleted.includes(i));
+      if(ad.contractConstraint==="pressure"&&!ad.contractRevealed&&allNormalDone&&!nextCompleted.includes(bossIdx)){
+        const hours=Math.max(1,Math.min(6,Number(ad.pressureHours)||1));
+        const deadline=Math.min(ad.expiresAt,t+hours*60*60*1000);
+        nextAd={
+          ...nextAd,
+          contractRevealed:true,
+          contractRevealedAt:t,
+          pressureDeadline:deadline,
+          expiresAt:deadline
+        };
+        setTimeout(()=>setContractUp({kind:"clause",title:"SOUS PRESSION",subtitle:"LE BOSS VOUS ATTEND",detail:"Vous avez "+hours+" h pour vaincre le Boss."}),0);
+      }
+
       if(!isComplete){
-        return {...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:{...ad,completedRooms:nextCompleted},lastActiveDay:todayStr()};
+        return {...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:nextAd,lastActiveDay:todayStr()};
+      }
+
+      // CONTRAT DU MAÎTRE — DOUBLE DONJON
+      // Le Boss classique verse bien ses XP, mais la victoire, le loot et le bonus +20 %
+      // restent verrouillés jusqu'à la victoire sur le second Boss.
+      if(ad.contractConstraint==="doubleDungeon"&&!ad.doubleBoss){
+        const doubleIdx=Math.floor(Math.random()*Math.max(1,bossIdx));
+        const baseRoom=dungeon.rooms[doubleIdx]||dungeon.rooms[0];
+        const doubleBoss={
+          roomIdx:doubleIdx,
+          name:baseRoom.name,
+          objective:scaleDungeonDesc(baseRoom.desc,3),
+          startedAt:t
+        };
+        nextAd={
+          ...nextAd,
+          contractRevealed:true,
+          contractRevealedAt:t,
+          normalBossCompletedAt:t,
+          doubleBoss
+        };
+        setTimeout(()=>setContractUp({kind:"double",stage:1,bossName:baseRoom.name,bossObjective:doubleBoss.objective}),120);
+        return {...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:nextAd,lastActiveDay:todayStr()};
       }
 
       const completedAt=t;
       const rewards=dungeonRewardPairs(dungeon);
-      const contractBonusPairs=ad.contractConstraint?rewards.map(r=>({stat:r.stat,xp:Math.round(r.xp*.20)})):[];
-      contractBonusPairs.forEach(r=>{totalXp+=r.xp;statXp[r.stat]=(statXp[r.stat]||0)+r.xp;stats[r.stat]=getLvl(statXp[r.stat]);});
-      const rewardText=rewards.map(r=>"+"+r.xp+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ")+(ad.contractConstraint?" · CONTRAT +20 %":"");
+      const contractBonusPairs=nextAd.contractConstraint?rewards.map(r=>({stat:r.stat,xp:Math.round(r.xp*.20)})):[];
+      contractBonusPairs.forEach(r=>{
+        totalXp+=r.xp;
+        statXp[r.stat]=(statXp[r.stat]||0)+r.xp;
+        stats[r.stat]=getLvl(statXp[r.stat]);
+      });
+      const contractBonusXp=contractBonusPairs.reduce((a,r)=>a+(r.xp||0),0);
+      if(contractBonusXp>0){
+        dayLog.dungeon=(dayLog.dungeon||0)+contractBonusXp;
+        daily[day]=dayLog;
+      }
+      const rewardText=rewards.map(r=>"+"+r.xp+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ")+(nextAd.contractConstraint?" · CONTRAT +20 %":"");
       setTimeout(()=>{
         setDungeonUp({title:dungeon.title,short:dungeon.short,icon:dungeon.icon,color:dungeon.color,reward:rewardText});
         tryDungeonItemDrops(dungeon.id);
       },200);
-      return {...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:null,dungeonLog:[...(s.dungeonLog||[]),{id:dungeon.id,title:dungeon.title,stat:dungeon.stat,xp:rewards.reduce((a,r)=>a+(r.xp||0),0)+contractBonusPairs.reduce((a,r)=>a+(r.xp||0),0),completedAt,expiresAt:ad.expiresAt||completedAt+86400000}],lastActiveDay:todayStr()};
+      return {...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:null,dungeonLog:[...(s.dungeonLog||[]),{id:dungeon.id,runId:ad.runId,startedAt:ad.startedAt,title:dungeon.title,stat:dungeon.stat,xp:rewards.reduce((a,r)=>a+(r.xp||0),0)+contractBonusXp,completedAt,expiresAt:ad.expiresAt||completedAt+86400000,contractConstraint:nextAd.contractConstraint||null}],lastActiveDay:todayStr()};
+    });
+  }
+
+  function validateDoubleDungeonBoss(){
+    setState(s=>{
+      const ad=s.activeDungeon;
+      if(!ad||!ad.doubleBoss||ad.contractConstraint!=="doubleDungeon")return s;
+      const dungeon=DUNGEONS.find(d=>d.id===ad.id);
+      if(!dungeon)return {...s,activeDungeon:null};
+      const t=Date.now();
+      if(t>=ad.expiresAt)return s;
+
+      const beforeXp=s.totalXp;
+      const beforeStats=s.stats;
+      let totalXp=s.totalXp;
+      const statXp={...s.statXp};
+      const stats={...s.stats};
+      const rewards=dungeonRewardPairs(dungeon);
+      const contractBonusPairs=rewards.map(r=>({stat:r.stat,xp:Math.round(r.xp*.20)}));
+      contractBonusPairs.forEach(r=>{
+        totalXp+=r.xp;
+        statXp[r.stat]=(statXp[r.stat]||0)+r.xp;
+        stats[r.stat]=getLvl(statXp[r.stat]);
+      });
+      const contractBonusXp=contractBonusPairs.reduce((sum,r)=>sum+(r.xp||0),0);
+      const day=todayStr();
+      const daily={...(s.dailyExtraXp||{})};
+      const dayLog={...(daily[day]||{})};
+      if(contractBonusXp>0){
+        dayLog.dungeon=(dayLog.dungeon||0)+contractBonusXp;
+        daily[day]=dayLog;
+      }
+      triggerProgressOverlay(beforeXp,beforeStats,totalXp,stats,250);
+
+      const completedAt=t;
+      const rewardText=rewards.map(r=>"+"+r.xp+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ")+" · CONTRAT +20 %";
+      setTimeout(()=>{
+        setDungeonUp({title:dungeon.title,short:dungeon.short,icon:dungeon.icon,color:dungeon.color,reward:rewardText,subtitle:"DOUBLE DONJON VAINCU"});
+        tryDungeonItemDrops(dungeon.id);
+      },200);
+      return {
+        ...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:null,
+        dungeonLog:[...(s.dungeonLog||[]),{
+          id:dungeon.id,runId:ad.runId,startedAt:ad.startedAt,title:dungeon.title,stat:dungeon.stat,
+          xp:rewards.reduce((a,r)=>a+(r.xp||0),0)+contractBonusXp,
+          completedAt,expiresAt:ad.expiresAt||completedAt+86400000,
+          contractConstraint:"doubleDungeon",doubleBoss:{...ad.doubleBoss,completedAt}
+        }],
+        lastActiveDay:day
+      };
     });
   }
 
@@ -2462,6 +2656,34 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
+  function MasterContractStatus({d,compact=false}){
+    if(!d||!d.contractConstraint)return null;
+    let revealedText="";
+    if(d.contractRevealed){
+      if(d.contractConstraint==="overload")revealedText="Surcharge · objectifs ×1,5";
+      else if(d.contractConstraint==="hiddenTrial"){
+        const room=d.rooms?.[d.masterRoomIdx];
+        revealedText="Épreuve cachée · "+(room?room.name+" — "+(room.masterClause||"Salle du Maître"):"Salle du Maître");
+      }else if(d.contractConstraint==="chain"){
+        const room=Number.isInteger(d.chainTargetRoom)?d.rooms?.[d.chainTargetRoom]:null;
+        revealedText=room&&d.chainDeadline
+          ?"Enchaînement · "+room.name+" · "+fmtCD(Math.max(0,d.chainDeadline-now))+" restants"
+          :"Enchaînement · clause accomplie";
+      }else if(d.contractConstraint==="pressure"){
+        revealedText=d.pressureDeadline
+          ?"Sous pression · Boss · "+fmtCD(Math.max(0,d.pressureDeadline-now))+" restants"
+          :"Sous pression";
+      }else if(d.contractConstraint==="doubleDungeon"){
+        revealedText=d.doubleBoss?"Double donjon · nouveau Boss : "+d.doubleBoss.name+" ×3":"Double donjon";
+      }else revealedText=MASTER_CONTRACT_LABELS[d.contractConstraint]||"Clause révélée";
+    }
+    return h("div",{style:"margin-top:"+(compact?5:6)+"px;display:flex;flex-direction:column;gap:2px"},
+      h("div",{style:"font-size:"+(compact?8.5:9)+"px;color:#f59e0b;font-family:Orbitron,sans-serif;letter-spacing:.8px"},"📜 CONTRAT DU MAÎTRE ACTIF"),
+      h("div",{style:"font-size:"+(compact?8:8.5)+"px;color:#fbbf24;font-family:Orbitron,sans-serif;letter-spacing:.65px"},"Récompenses : +20 % XP"),
+      revealedText&&h("div",{style:"font-size:"+(compact?8:8.5)+"px;color:var(--tx);font-family:Orbitron,sans-serif;letter-spacing:.55px;line-height:1.35;margin-top:2px"},"CLAUSE RÉVÉLÉE · "+revealedText)
+    );
+  }
+
   function DungeonCard({compact=false}={}){
     const d=activeDungeon;
     const remaining=d ? d.expiresAt-now : 0;
@@ -2490,6 +2712,27 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("button",{onClick:validateDungeonRoom,style:"width:100%;margin-top:10px;padding:11px;border-radius:9px;border:1px solid "+ruptureColor+"77;background:"+ruptureColor+"18;color:"+ruptureColor+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"},"Vaincre le Boss de Rupture")
       );
     }
+    if(d&&d.doubleBoss){
+      const db=d.doubleBoss;
+      return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:#f59e0b66;background:linear-gradient(145deg,#170b05,#2a1308)"},
+        h(BreachFxOverlay,{variant:"quests",theme:"dungeon"}),
+        h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
+          h("div",{style:"min-width:0"},
+            h("div",{class:"ctitle",style:"margin:0;color:#f59e0b"},"DOUBLE DONJON"),
+            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"Boss initial vaincu · "+fmtCD(remaining)+" restants"),
+            h(MasterContractStatus,{d})
+          ),
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap"},STAT_LBL[d.stat]||d.stat)
+        ),
+        h("div",{style:"margin-top:10px;padding:12px;border-radius:11px;border:1px solid #ef444455;background:linear-gradient(135deg,rgba(239,68,68,.08),rgba(245,158,11,.04))"},
+          h("div",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:5px"},"⚠️ NOUVEAU BOSS"),
+          h("div",{style:"font-size:15px;color:var(--tx);font-weight:900;line-height:1.25"},db.name),
+          h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin-top:6px"},"Objectif ×3 · "+db.objective),
+          h("div",{style:"font-size:9px;color:#f59e0b;font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:9px"},"Venez à bout du nouveau Boss pour sortir du donjon")
+        ),
+        h("button",{onClick:validateDoubleDungeonBoss,style:"width:100%;margin-top:10px;padding:11px;border-radius:9px;border:1px solid #ef444477;background:rgba(239,68,68,.10);color:#ef4444;font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"},"Vaincre le nouveau Boss")
+      );
+    }
     if(d){
       return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:#f59e0b44;background:linear-gradient(145deg,#140e03,#261b06)"},
         h(BreachFxOverlay,{variant:"quests",theme:"dungeon"}),
@@ -2497,7 +2740,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{style:"min-width:0"},
             h("div",{class:"ctitle",style:"margin:0;color:#f59e0b"},"DONJON EN COURS"),
             h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"Progression "+completedRooms.length+"/"+d.rooms.length+" salles · "+fmtCD(remaining)+" restants"),
-            d.contractConstraint&&h("div",{style:"font-size:9px;color:#f59e0b;font-family:Orbitron,sans-serif;letter-spacing:.8px;margin-top:5px"},"📜 CONTRAT DU MAÎTRE · "+(d.contractConstraint==="x1.5"?"Surcharge · objectifs ×1,5":d.contractConstraint==="sealedPath"?"Chemin scellé · salles dans l’ordre":d.contractConstraint==="noEscape"?"Sans échappatoire · objets d’évitement interdits":"Contrainte active")+" · récompense finale +20 %")
+            h(MasterContractStatus,{d})
           ),
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap"},STAT_LBL[d.stat]||d.stat)
         ),
@@ -2507,12 +2750,13 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           const canValidate=!done&&canValidateDungeonRoom(d,d,i);
           const locked=!done&&!canValidate;
           const selected=!done&&!locked&&selectedDungeonRoom===i;
-          return h("div",{key:i,onClick:()=>{if(!done&&!locked)setSelectedDungeonRoom(i);},style:"display:flex;gap:8px;align-items:flex-start;padding:8px;border-radius:10px;background:"+(selected?color+"18":"rgba(255,255,255,0.025)")+";border:1px solid "+(selected?color+"88":"rgba(255,255,255,0.05)")+";opacity:"+(done?"0.72":locked?"0.42":"1")+";cursor:"+(!done&&!locked?"pointer":"default")+";box-shadow:"+(selected?"0 0 14px "+color+"22":"none")},
+          return h("div",{key:i,onClick:()=>{if(!done&&!locked)openDungeonRoom(i);},style:"display:flex;gap:8px;align-items:flex-start;padding:8px;border-radius:10px;background:"+(selected?color+"18":"rgba(255,255,255,0.025)")+";border:1px solid "+(selected?color+"88":"rgba(255,255,255,0.05)")+";opacity:"+(done?"0.72":locked?"0.42":"1")+";cursor:"+(!done&&!locked?"pointer":"default")+";box-shadow:"+(selected?"0 0 14px "+color+"22":"none")},
             h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:"+(done?"#4ade80":selected?color:"var(--td)")+";width:18px;text-align:center;flex-shrink:0"},done?"✓":locked?"🔒":(i+1)),
             h("div",{style:"min-width:0;flex:1"},
               h("div",{style:"font-size:12px;color:var(--tx);font-weight:"+(boss?"700":"400")+";line-height:1.25"},(boss?"Boss — ":"")+room.name),
-              h("div",{style:"font-size:10px;color:var(--td);line-height:1.35;margin-top:2px"},d.contractConstraint==="x1.5"?String(room.desc).replace(/\d+(?:[.,]\d+)?/g,m=>String(Math.round(parseFloat(m.replace(",","."))*1.5*10)/10).replace(".",",")):room.desc),
-              locked&&h("div",{style:"font-size:8.5px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:.7px;text-transform:uppercase;margin-top:4px"},d.contractConstraint==="sealedPath"?"Chemin scellé · termine la salle précédente":boss?"Termine toutes les salles pour accéder au boss":"Salle verrouillée"),
+              h("div",{style:"font-size:10px;color:var(--td);line-height:1.35;margin-top:2px"},d.contractConstraint==="overload"&&d.contractRevealed?scaleDungeonDesc(room.desc,1.5):room.desc),
+              d.contractConstraint==="hiddenTrial"&&d.contractRevealed&&i===d.masterRoomIdx&&h("div",{style:"font-size:9px;color:#f59e0b;font-family:Orbitron,sans-serif;letter-spacing:.65px;line-height:1.4;margin-top:5px"},"SALLE DU MAÎTRE · "+(room.masterClause||"Contrainte spéciale")),
+              locked&&h("div",{style:"font-size:8.5px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:.7px;text-transform:uppercase;margin-top:4px"},d.contractConstraint==="chain"&&d.contractRevealed&&Number.isInteger(d.chainTargetRoom)?"Enchaînement · termine d’abord "+(d.rooms[d.chainTargetRoom]?.name||"la salle liée"):boss?"Termine toutes les salles pour accéder au boss":"Salle verrouillée"),
               h("div",{style:"font-size:8.5px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:4px"},dungeonRoomRewardPairs(d,i).map(r=>"+"+r.xp+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ")),
               room.help&&h("button",{onClick:()=>setDungeonHelpOpen(o=>({...o,[d.id+"_"+i]:!o[d.id+"_"+i]})),style:"margin-top:6px;padding:5px 7px;border-radius:7px;border:1px solid "+color+"55;background:rgba(255,255,255,0.025);color:"+color+";font-family:Orbitron,sans-serif;font-size:8px;letter-spacing:1px;text-transform:uppercase;cursor:pointer"},dungeonHelpOpen[d.id+"_"+i]?"Masquer l’aide":"Aide"),
               room.help&&dungeonHelpOpen[d.id+"_"+i]&&h("div",{style:"margin-top:6px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.07);font-size:10px;color:var(--td);line-height:1.45"},
@@ -2574,12 +2818,33 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       );
     }
 
+    if(d.doubleBoss){
+      const db=d.doubleBoss;
+      return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:#f59e0b66;background:linear-gradient(145deg,#170b05,#2a1308)"},
+        h(BreachFxOverlay,{variant:"home",theme:"dungeon"}),
+        h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
+          h("div",{style:"min-width:0"},
+            h("div",{class:"ctitle",style:"margin:0;color:#f59e0b"},"DOUBLE DONJON"),
+            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"Boss initial vaincu · "+fmtCD(remaining)+" restants"),
+            h(MasterContractStatus,{d,compact:true})
+          ),
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap"},STAT_LBL[d.stat]||d.stat)
+        ),
+        h("div",{style:"padding:9px 10px;border-radius:9px;border:1px solid #ef444444;background:rgba(239,68,68,.055)"},
+          h("div",{style:"font-size:8.5px;color:#ef4444;font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase"},"⚠️ NOUVEAU BOSS"),
+          h("div",{style:"font-size:12px;color:var(--tx);font-weight:800;margin-top:4px"},db.name),
+          h("div",{style:"font-size:10px;color:var(--td);margin-top:3px"},"Objectif ×3 · "+db.objective)
+        )
+      );
+    }
+
     return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:#f59e0b44;background:linear-gradient(145deg,#140e03,#261b06)"},
       h(BreachFxOverlay,{variant:"home",theme:"dungeon"}),
       h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
         h("div",{style:"min-width:0"},
           h("div",{class:"ctitle",style:"margin:0;color:#f59e0b"},"DONJON EN COURS"),
-          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"Progression "+completedRooms.length+"/"+d.rooms.length+" salles · "+fmtCD(remaining)+" restants")
+          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"Progression "+completedRooms.length+"/"+d.rooms.length+" salles · "+fmtCD(remaining)+" restants"),
+          h(MasterContractStatus,{d,compact:true})
         ),
         h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap"},STAT_LBL[d.stat]||d.stat)
       ),
@@ -3180,8 +3445,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }else if(id==="masterContract"){
       if(state.masterContractArmed){disabled=true;reason="Un Contrat du Maître est déjà préparé pour le prochain donjon.";}
       else if(activeDungeon){disabled=true;reason="Le contrat doit être utilisé avant le lancement d’un donjon.";}
-    }else if(id==="invisibilityCape"&&activeDungeon&&activeDungeon.contractConstraint==="noEscape"){
-      disabled=true;reason="Sans échappatoire est actif : aucun objet permettant d’éviter une salle ne peut être utilisé pendant ce donjon.";
     }else if(id==="debtAcknowledgement"){
       if(state.questDebt&&state.questDebt.status==="active"){disabled=true;reason="Une dette est déjà active.";}
       else if(state.debtUseDay===today){disabled=true;reason="Une reconnaissance de dette a déjà été utilisée aujourd’hui.";}
@@ -3239,6 +3502,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               ?"Déplier la Carte des profondeurs pour choisir la statistique du prochain donjon ?"
               :id==="counterpartBalance"
                 ?"Utiliser la Balance des contreparties pour sacrifier 3 objets différents et choisir 1 nouvel objet ?"
+              :id==="masterContract"
+                ?"Signer le Contrat du Maître pour le prochain donjon ? La contrainte sera tirée au sort et restera cachée jusqu’au moment où elle s’activera."
               :"Êtes-vous certain de vouloir "+(id==="regressionOrb"?"activer l’":id==="debtAcknowledgement"?"utiliser la ":id==="dungeonKey"?"utiliser une ":id==="transmutationGrimoire"?"utiliser le ":id==="destinyCompass"?"orienter la ":id==="alchemicalCatalyst"?"préparer le ":"consommer un ")+it.name+" ?"),
       h("div",{style:"display:flex;gap:10px;margin-top:22px"},
         h("button",{class:"rudis",style:"min-width:110px;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>setConfirmItemUse(null)},"Non"),
@@ -3304,7 +3569,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               setItemUseUp({id:"teleportCrystal",alliedTeleport:true,breachName:tpl.name});
             }
           }else setElixirStatChoice({id});
-        }},eraseRecord?"Effacer":id==="teleportCrystal"?"Briser":id==="dungeonKey"||id==="transmutationGrimoire"||id==="supremeElixir"?"Oui":"Continuer")
+        }},eraseRecord?"Effacer":id==="teleportCrystal"?"Briser":id==="masterContract"?"Signer":id==="dungeonKey"||id==="transmutationGrimoire"||id==="supremeElixir"?"Oui":"Continuer")
       )
     ));
   }
@@ -3465,13 +3730,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     if(type==="recoveryOintment"){
       options=objs.filter(o=>o.daily&&(Number(tLog[o.id])||0)<getEffectiveTarget(o.id)).map(o=>({id:"regular:"+o.id,label:o.icon+" "+o.name,obj:o,questKind:"regular"}));
     }
-    if(type==="invisibilityCape"||type==="cape"){const d=activeDungeon;options=d?d.rooms.slice(0,-1).map((r,i)=>!(d.completedRooms||[]).includes(i)?{id:i,label:(i+1)+". "+r.name}:null).filter(Boolean):[];}
+    if(type==="invisibilityCape"||type==="cape"){const d=activeDungeon;options=d?d.rooms.slice(0,-1).map((r,i)=>!(d.completedRooms||[]).includes(i)&&canValidateDungeonRoom(d,d,i)?{id:i,label:(i+1)+". "+r.name}:null).filter(Boolean):[];}
     return h("div",{class:"modal-ov"},h("div",{class:"modal",style:"max-width:410px;width:calc(100% - 28px)"},h("div",{class:"mtitle"},type==="recordHammer"?"CHOISIR UN RECORD":type==="debtAcknowledgement"?"CRÉER UNE DETTE":type==="recoveryOintment"?"CHOISIR UNE QUÊTE":"PASSER UNE SALLE"),h("div",{style:"display:flex;flex-direction:column;gap:8px;margin-top:12px"},options.map(x=>h("button",{key:x.id,onClick:()=>{
       setSpecialItemChoice(null);
       setConfirmTargetedItemUse({type:type==="cape"?"invisibilityCape":type,choice:x});
     },style:"padding:11px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:var(--tx);font-family:Orbitron,sans-serif;font-size:9px"},x.label))),!options.length&&h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:10px"},"Aucun choix disponible."),h("button",{onClick:()=>setSpecialItemChoice(null),style:"width:100%;margin-top:12px;padding:10px"},"Annuler")));
   }
-  function ContractChoiceModal(){if(!contractDungeonChoice)return null;const choices=[["x1.5","Surcharge · objectifs multipliés par 1,5"],["sealedPath","Chemin scellé · salles obligatoirement dans l’ordre"],["noEscape","Sans échappatoire · aucun objet permettant d’éviter ou de faciliter une salle"]];return h("div",{class:"modal-ov"},h("div",{class:"modal",style:"max-width:410px;width:calc(100% - 28px)"},h("div",{class:"mtitle"},"CONTRAT DU MAÎTRE"),h("div",{style:"font-size:11px;color:var(--td);line-height:1.5;margin-bottom:12px"},"Choisissez une contrainte. La récompense finale du donjon augmentera de 20 %."),choices.map(([id,label])=>h("button",{key:id,onClick:()=>{const dg=contractDungeonChoice;setContractDungeonChoice(null);setConfirmTargetedItemUse({type:"masterContract",dungeonId:dg,constraint:id,label});},style:"width:100%;margin-top:8px;padding:11px;border-radius:9px;border:1px solid #f59e0b66;background:#f59e0b0d;color:#f59e0b;font-family:Orbitron,sans-serif;font-size:9px"},label)),h("button",{onClick:()=>setContractDungeonChoice(null),style:"width:100%;margin-top:12px;padding:10px"},"Annuler")));}
   function ConfirmTargetedItemUseModal(){
     if(!confirmTargetedItemUse)return null;
     const pending=confirmTargetedItemUse;
@@ -3520,7 +3784,42 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         setState(s=>{const inv={...(s.inventory||{})};if((Number(inv.mysteryMap)||0)<1||s.dungeonMapStat)return s;inv.mysteryMap=Math.max(0,(Number(inv.mysteryMap)||0)-1);return {...s,inventory:inv,dungeonMapStat:stat};});
         setItemUseUp({id:"mysteryMap",dungeonStatChosen:stat});
       }else if(type==="invisibilityCape"){
-        setState(s=>{const ad=s.activeDungeon;if(!ad||(Number(s.inventory&&s.inventory.invisibilityCape)||0)<1)return s;return {...s,inventory:{...(s.inventory||{}),invisibilityCape:Math.max(0,(Number(s.inventory&&s.inventory.invisibilityCape)||0)-1)},activeDungeon:{...ad,completedRooms:[...(ad.completedRooms||[]),Number(choice.id)].filter((v,i,a)=>a.indexOf(v)===i).sort((a,b)=>a-b)}};});
+        setState(s=>{
+          const ad=s.activeDungeon;
+          if(!ad||(Number(s.inventory&&s.inventory.invisibilityCape)||0)<1)return s;
+          const dungeon=DUNGEONS.find(d=>d.id===ad.id);
+          if(!dungeon)return s;
+          const idx=Number(choice.id);
+          const t=Date.now();
+          const nextCompleted=[...(ad.completedRooms||[]),idx].filter((v,i,a)=>a.indexOf(v)===i).sort((a,b)=>a-b);
+          let nextAd={...ad,completedRooms:nextCompleted};
+          const bossIdx=dungeon.rooms.length-1;
+
+          if(ad.contractConstraint==="chain"){
+            const linked=Array.isArray(ad.chainRooms)?ad.chainRooms:[];
+            if(!ad.contractRevealed&&linked.includes(idx)){
+              const target=linked.find(x=>x!==idx);
+              if(Number.isInteger(target)&&!nextCompleted.includes(target)){
+                const deadline=Math.min(ad.expiresAt,t+30*60*1000);
+                nextAd={...nextAd,contractRevealed:true,contractRevealedAt:t,chainTriggerRoom:idx,chainTargetRoom:target,chainDeadline:deadline,contractOriginalExpiresAt:ad.expiresAt,expiresAt:deadline};
+                const targetName=dungeon.rooms[target]?.name||"la salle liée";
+                setTimeout(()=>setContractUp({kind:"clause",title:"ENCHAÎNEMENT",subtitle:"SALLE LIÉE — "+targetName,detail:"Vous avez 30 minutes pour terminer cette salle. Aucune autre salle ne peut être accomplie avant elle."}),0);
+              }
+            }else if(ad.contractRevealed&&Number.isInteger(ad.chainTargetRoom)&&idx===ad.chainTargetRoom){
+              nextAd={...nextAd,chainTargetRoom:null,chainDeadline:null,chainCompletedAt:t,expiresAt:ad.contractOriginalExpiresAt||ad.expiresAt};
+            }
+          }
+
+          const allNormalDone=Array.from({length:bossIdx},(_,i)=>i).every(i=>nextCompleted.includes(i));
+          if(ad.contractConstraint==="pressure"&&!ad.contractRevealed&&allNormalDone){
+            const hours=Math.max(1,Math.min(6,Number(ad.pressureHours)||1));
+            const deadline=Math.min(ad.expiresAt,t+hours*60*60*1000);
+            nextAd={...nextAd,contractRevealed:true,contractRevealedAt:t,pressureDeadline:deadline,expiresAt:deadline};
+            setTimeout(()=>setContractUp({kind:"clause",title:"SOUS PRESSION",subtitle:"LE BOSS VOUS ATTEND",detail:"Vous avez "+hours+" h pour vaincre le Boss."}),0);
+          }
+
+          return {...s,inventory:{...(s.inventory||{}),invisibilityCape:Math.max(0,(Number(s.inventory&&s.inventory.invisibilityCape)||0)-1)},activeDungeon:nextAd};
+        });
         setItemUseUp({id:"invisibilityCape"});
       }else if(type==="recoveryOintment"){
         setState(s=>{
@@ -3786,6 +4085,48 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   }
 
   // ─── ANIMATION LEVEL UP ───────────────────────────────────────────────
+
+  function ContractUp(){
+    if(!contractUp)return null;
+    const isDouble=contractUp.kind==="double";
+    const stage=Number(contractUp.stage)||1;
+    const anomaly=isDouble&&stage===1;
+    const color=anomaly?"#ef4444":"#f59e0b";
+    const glow=color+"77";
+    const particles=Array.from({length:44},(_,i)=>({id:i,left:Math.random()*100,delay:Math.random()*2.4,dur:1.1+Math.random()*1.8,size:2+Math.random()*4,accent:Math.random()>0.48}));
+
+    if(isDouble){
+      return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+glow+";background:rgba(0,0,0,.95)"},
+        h("div",{class:"ruparts"},particles.map(p=>h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?"#ffffff":color)+";box-shadow:0 0 10px "+glow+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"}))),
+        h("div",{class:"rucont"},
+          anomaly
+            ? h(Fragment,null,
+                h("div",{class:"ruevol",style:"color:#ef4444;text-shadow:0 0 18px rgba(239,68,68,.75)"},"ANOMALIE DÉTECTÉE"),
+                h("div",{class:"rulabel",style:"margin-top:14px;max-width:330px;line-height:1.55;color:var(--td)"},"La victoire n’a pas été enregistrée."),
+                h("button",{class:"rudis",style:"--rc:#ef4444;--rg:rgba(239,68,68,.7)",onClick:()=>setContractUp({...contractUp,stage:2})},"Continuer")
+              )
+            : h(Fragment,null,
+                h("div",{class:"ruevol",style:"color:#f59e0b;text-shadow:0 0 18px rgba(245,158,11,.7)"},"UN DOUBLE DONJON EST APPARU"),
+                h("div",{class:"rulabel",style:"margin-top:14px;max-width:350px;line-height:1.55;color:#fff;font-size:clamp(15px,4vw,22px)"},"VENEZ À BOUT DU NOUVEAU BOSS POUR EN SORTIR"),
+                contractUp.bossName&&h("div",{class:"rulabel",style:"margin-top:12px;color:#ef4444;max-width:330px;line-height:1.45"},"Nouveau Boss : "+contractUp.bossName+" · objectif ×3"),
+                h("button",{class:"rudis",style:"--rc:#f59e0b;--rg:rgba(245,158,11,.65)",onClick:()=>setContractUp(null)},"Continuer")
+              )
+        )
+      );
+    }
+
+    return h("div",{class:"ruov",style:"--rc:#f59e0b;--rg:rgba(245,158,11,.65);background:rgba(0,0,0,.94)"},
+      h("div",{class:"ruparts"},particles.map(p=>h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?"#ffffff":"#f59e0b")+";box-shadow:0 0 9px rgba(245,158,11,.65);animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"}))),
+      h("div",{class:"rucont"},
+        h(NotificationHeader,null),
+        h("div",{class:"ruevol",style:"color:#f59e0b;text-shadow:0 0 16px rgba(245,158,11,.65)"},"CLAUSE DU MAÎTRE RÉVÉLÉE"),
+        h("div",{class:"rurank",style:"--rc:#f59e0b;--rg:rgba(245,158,11,.65);color:#f59e0b;text-shadow:0 0 18px rgba(245,158,11,.55);font-size:clamp(30px,9vw,52px);letter-spacing:-1px;white-space:normal;max-width:350px;line-height:1.05","data-r":contractUp.title||"CLAUSE"},contractUp.title||"CLAUSE"),
+        contractUp.subtitle&&h("div",{class:"rulabel",style:"margin-top:10px;letter-spacing:2px;color:#fbbf24;max-width:340px;line-height:1.4"},contractUp.subtitle),
+        contractUp.detail&&h("div",{class:"rulabel",style:"margin-top:10px;max-width:350px;line-height:1.55;color:var(--tx);letter-spacing:1px"},contractUp.detail),
+        h("button",{class:"rudis",style:"--rc:#f59e0b;--rg:rgba(245,158,11,.65)",onClick:()=>setContractUp(null)},"Continuer")
+      )
+    );
+  }
 
   function DungeonUp(){
     if(!dungeonUp)return null;
@@ -4412,13 +4753,14 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const it=INVENTORY_ITEMS[itemUseUp.id];
     return h("div",{class:"ruov",style:"--rc:"+rank.color+";--rg:"+rank.glow},h("div",{class:"rucont"},
       h(NotificationHeader,null),
-      h("div",{class:"ruevol",style:"color:"+rank.color},itemUseUp.id==="teleportCrystal"&&itemUseUp.alliedTeleport?"ALLIANCE SCELLÉE":itemUseUp.id==="dungeonKey"?"Vous avez utilisé une":itemUseUp.id==="debtAcknowledgement"?"Dette créée avec une":itemUseUp.id==="transmutationGrimoire"?"Transmutation accomplie":itemUseUp.id==="destinyCompass"?"Boussole orientée":itemUseUp.id==="mysteryMap"?"Carte déployée":itemUseUp.id==="etherStopper"?(itemUseUp.resumed?"Élixir réactivé":"Élixir suspendu"):itemUseUp.id==="rerollToken"?"Quête urgente invoquée":itemUseUp.id==="alchemicalCatalyst"?"Catalyseur préparé":itemUseUp.id==="counterpartBalance"?"Échange accompli":"Vous avez consommé un"),
+      h("div",{class:"ruevol",style:"color:"+rank.color},itemUseUp.id==="teleportCrystal"&&itemUseUp.alliedTeleport?"ALLIANCE SCELLÉE":itemUseUp.id==="dungeonKey"?"Vous avez utilisé une":itemUseUp.id==="debtAcknowledgement"?"Dette créée avec une":itemUseUp.id==="transmutationGrimoire"?"Transmutation accomplie":itemUseUp.id==="destinyCompass"?"Boussole orientée":itemUseUp.id==="mysteryMap"?"Carte déployée":itemUseUp.id==="etherStopper"?(itemUseUp.resumed?"Élixir réactivé":"Élixir suspendu"):itemUseUp.id==="rerollToken"?"Quête urgente invoquée":itemUseUp.id==="alchemicalCatalyst"?"Catalyseur préparé":itemUseUp.id==="counterpartBalance"?"Échange accompli":itemUseUp.id==="masterContract"?"Vous avez signé un":"Vous avez consommé un"),
       h("div",{class:"rurank",style:responsiveItemAnimationTitleStyle(it.name,56),"data-r":it.name},it.name),
       itemUseUp.stat&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Vous bénéficiez de +"+Math.round(itemUseUp.pct*100)+" % d’XP dans ",h("span",{style:"color:"+(STAT_COLOR[itemUseUp.stat]||rank.color)},STAT_LBL[itemUseUp.stat]||itemUseUp.stat)," pendant 24 h."),
       itemUseUp.global&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:#c084fc"},"Vous bénéficiez de +"+Math.round(itemUseUp.pct*100)+" % d’XP sur toutes les statistiques pendant 24 h."),
       itemUseUp.transmuted&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:#c084fc"},itemUseUp.catalystUsed?"Le Catalyseur et le Grimoire ont fusionné 3 Élixirs d’expérience mineurs en 1 Élixir d’expérience magistral.":"5 Élixirs d’expérience mineurs ont été fusionnés en 1 Élixir d’expérience magistral."),
       itemUseUp.statChosen&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:"+(STAT_COLOR[itemUseUp.statChosen]||rank.color)},"La prochaine quête urgente appartiendra à la statistique "+(STAT_LBL[itemUseUp.statChosen]||itemUseUp.statChosen)+"."),
       itemUseUp.dungeonStatChosen&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:"+(STAT_COLOR[itemUseUp.dungeonStatChosen]||rank.color)},"Le prochain donjon appartiendra à la statistique "+(STAT_LBL[itemUseUp.dungeonStatChosen]||itemUseUp.dungeonStatChosen)+"."),
+      itemUseUp.id==="masterContract"&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:350px;line-height:1.5;color:#fbbf24"},"Le prochain donjon sera soumis à une contrainte aléatoire, cachée jusqu’au moment où elle s’activera. Récompenses : +20 % XP si le donjon est terminé."),
       itemUseUp.paused&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Le temps restant de l’élixir est conservé pendant 24 h maximum."),
       itemUseUp.resumed&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"L’élixir reprend avec exactement le temps qui lui restait."),
       itemUseUp.summoned&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Une seconde quête urgente a été invoquée. Elle accorde ses XP et ses objets normaux, mais ne peut pas être relancée."),
@@ -4861,8 +5203,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(ElixirStatModal,null),
       h(ConfirmElixirModal,null),
       h(SpecialItemChoiceModal,null),
-      h(ContractChoiceModal,null),
       h(ConfirmTargetedItemUseModal,null),
+      h(ContractUp,null),
       h(DungeonUp,null),
       h(DungeonRuptureUp,null),
       h(UrgentUp,null),

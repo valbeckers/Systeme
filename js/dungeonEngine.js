@@ -111,6 +111,12 @@ export function canValidateDungeonRoom(activeDungeon, dungeon, roomIdx){
   const completed=Array.isArray(activeDungeon.completedRooms)?activeDungeon.completedRooms:[];
   if(completed.includes(roomIdx)) return false;
   const bossIdx=dungeon.rooms.length-1;
+  // Contrat du Maître — Enchaînement : une fois la clause révélée,
+  // seule la seconde salle liée peut être accomplie jusqu'à sa validation.
+  if(activeDungeon.contractConstraint==="chain" && activeDungeon.contractRevealed && Number.isInteger(activeDungeon.chainTargetRoom)){
+    return roomIdx===activeDungeon.chainTargetRoom;
+  }
+  // Compatibilité avec les anciens contrats déjà sauvegardés.
   if(activeDungeon.contractConstraint==="sealedPath"){
     const nextRequired=Array.from({length:dungeon.rooms.length},(_,i)=>i).find(i=>!completed.includes(i));
     return roomIdx===nextRequired;
