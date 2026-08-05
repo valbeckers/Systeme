@@ -2491,7 +2491,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       return h("div",{class:"card",style:"border-color:#f59e0b44;background:linear-gradient(145deg,#140e03,#261b06)"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
           h("div",{style:"min-width:0"},
-            h("div",{class:"ctitle",style:"margin:0;color:"+color},d.icon+" "+d.title),
+            h("div",{class:"ctitle",style:"margin:0;color:"+color},"DONJON OUVERT"),
             h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"Progression "+completedRooms.length+"/"+d.rooms.length+" salles · "+fmtCD(remaining)+" restants"),
             d.contractConstraint&&h("div",{style:"font-size:9px;color:#f59e0b;font-family:Orbitron,sans-serif;letter-spacing:.8px;margin-top:5px"},"📜 CONTRAT DU MAÎTRE · "+(d.contractConstraint==="x1.5"?"Surcharge · objectifs ×1,5":d.contractConstraint==="sealedPath"?"Chemin scellé · salles dans l’ordre":d.contractConstraint==="noEscape"?"Sans échappatoire · objets d’évitement interdits":"Contrainte active")+" · récompense finale +20 %")
           ),
@@ -2573,7 +2573,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     return h("div",{class:"card",style:"border-color:#f59e0b44;background:linear-gradient(145deg,#140e03,#261b06)"},
       h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
         h("div",{style:"min-width:0"},
-          h("div",{class:"ctitle",style:"margin:0;color:"+color},d.icon+" "+d.title),
+          h("div",{class:"ctitle",style:"margin:0;color:"+color},"DONJON OUVERT"),
           h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"Progression "+completedRooms.length+"/"+d.rooms.length+" salles · "+fmtCD(remaining)+" restants")
         ),
         h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap"},STAT_LBL[d.stat]||d.stat)
@@ -2594,7 +2594,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const subtitle="1 par jour · "+dungeonWeekCount+"/3 cette semaine";
 
     return h("div",{class:"card",style:"border-color:#f59e0b44;background:linear-gradient(145deg,#140e03,#261b06)"},
-      h("div",{class:"ctitle",style:"margin:0;color:"+dungeonGold},"DONJON"),
+      h("div",{class:"ctitle",style:"margin:0;color:"+dungeonGold},"DONJON FERMÉ"),
       h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},subtitle+" · 🗝️ "+dungeonKeys),
       dungeonAccessOpen&&h("div",{style:"margin-top:8px;color:#4ade80;font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:1px"},"ACCÈS AU DONJON OUVERT"),
       dungeonCanStart
