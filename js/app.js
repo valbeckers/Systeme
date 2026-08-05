@@ -182,7 +182,10 @@ function __roundedRectPoint(m,d){
   if(d<=seg6){ const px=x, py=y+h-r-(d-seg5); return {x:px,y:py,nx:-1,ny:0,tx:0,ty:-1}; }
   const a=(d-seg6)/arc*(Math.PI/2)+Math.PI; const cx=x+r, cy=y+r; return {x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r,nx:Math.cos(a),ny:Math.sin(a),tx:-Math.sin(a),ty:Math.cos(a)};
 }
-function __drawBreachElectricFrame(ctx, metrics, t, variant){
+function __drawBreachElectricFrame(ctx, metrics, t, variant, theme="breach"){
+  const palette=theme==="dungeon"
+    ? {main:"#f59e0b",mid:"#fbbf24",inner:"#fde68a",core:"#fff7d6",trace:"#fcd34d",shadow:"#f59e0b"}
+    : {main:"#29c9ff",mid:"#69dcff",inner:"#dcf9ff",core:"#ffffff",trace:"#baf4ff",shadow:"#59d1ff"};
   const pulse=__breachFxPulse(t);
   const peri=metrics.total;
   const sampleDist=variant==="home"?4.8:5.2;
@@ -235,10 +238,10 @@ function __drawBreachElectricFrame(ctx, metrics, t, variant){
     ctx.restore();
   };
 
-  strokePath(mainPts,'#29c9ff',4.5,glowA,8);
-  strokePath(mainPts,'#69dcff',2.15,glowB,2.6);
-  strokePath(innerPts,'#dcf9ff',1.02,.72*pulse,1.2);
-  strokePath(innerPts,'#ffffff',.56,coreA,.45);
+  strokePath(mainPts,palette.main,4.5,glowA,8);
+  strokePath(mainPts,palette.mid,2.15,glowB,2.6);
+  strokePath(innerPts,palette.inner,1.02,.72*pulse,1.2);
+  strokePath(innerPts,palette.core,.56,coreA,.45);
 
   ctx.save();
   ctx.beginPath();
@@ -249,16 +252,16 @@ function __drawBreachElectricFrame(ctx, metrics, t, variant){
     ctx.lineTo(p.x,p.y);
   }
   ctx.closePath();
-  ctx.strokeStyle='#baf4ff';
+  ctx.strokeStyle=palette.trace;
   ctx.lineWidth=.48;
   ctx.globalAlpha=.12*pulse;
   ctx.shadowBlur=1.8;
-  ctx.shadowColor='#59d1ff';
+  ctx.shadowColor=palette.shadow;
   ctx.stroke();
   ctx.restore();
 
 }
-function BreachFxOverlay({variant="home"}={}){
+function BreachFxOverlay({variant="home",theme="breach"}={}){
   const hostRef=useRef(null);
   const canvasRef=useRef(null);
   const stateRef=useRef({metrics:null,raf:0,ro:null,host:null,wrap:null,dpr:1});
@@ -291,7 +294,7 @@ function BreachFxOverlay({variant="home"}={}){
       if(metrics){
         ctx.setTransform(dpr,0,0,dpr,0,0);
         ctx.clearRect(0,0,canvas.width,canvas.height);
-        __drawBreachElectricFrame(ctx,metrics,ts/1000,variant==="quests"?"quests":"home");
+        __drawBreachElectricFrame(ctx,metrics,ts/1000,variant==="quests"?"quests":"home",theme);
       }
       state.raf=requestAnimationFrame(draw);
     };
@@ -307,7 +310,7 @@ function BreachFxOverlay({variant="home"}={}){
       state.ro=null;
       state.raf=0;
     };
-  },[variant]);
+  },[variant,theme]);
   return h("div",{ref:hostRef,class:"breach-fx-layer breach-fx-layer-"+(variant==="quests"?"quests":"home"),"aria-hidden":"true"},
     h("canvas",{ref:canvasRef,class:"breach-fx-canvas"})
   );
@@ -2488,7 +2491,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       );
     }
     if(d){
-      return h("div",{class:"card",style:"border-color:#f59e0b44;background:linear-gradient(145deg,#140e03,#261b06)"},
+      return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:#f59e0b44;background:linear-gradient(145deg,#140e03,#261b06)"},
+        h(BreachFxOverlay,{variant:"quests",theme:"dungeon"}),
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
           h("div",{style:"min-width:0"},
             h("div",{class:"ctitle",style:"margin:0;color:#f59e0b"},"DONJON EN COURS"),
@@ -2570,7 +2574,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       );
     }
 
-    return h("div",{class:"card",style:"border-color:#f59e0b44;background:linear-gradient(145deg,#140e03,#261b06)"},
+    return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:#f59e0b44;background:linear-gradient(145deg,#140e03,#261b06)"},
+      h(BreachFxOverlay,{variant:"home",theme:"dungeon"}),
       h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
         h("div",{style:"min-width:0"},
           h("div",{class:"ctitle",style:"margin:0;color:#f59e0b"},"DONJON EN COURS"),
@@ -2593,7 +2598,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const dungeonGold="#f59e0b";
     const subtitle="1 par jour · "+dungeonWeekCount+"/3 cette semaine";
 
-    return h("div",{class:"card",style:"border-color:#f59e0b44;background:linear-gradient(145deg,#140e03,#261b06)"},
+    return h("div",{class:"card"+(dungeonAccessOpen?" breach-electric":""),style:"position:relative;overflow:"+(dungeonAccessOpen?"visible":"hidden")+";border-color:#f59e0b44;background:linear-gradient(145deg,#140e03,#261b06)"},
+      dungeonAccessOpen&&h(BreachFxOverlay,{variant:"quests",theme:"dungeon"}),
       h("div",{class:"ctitle",style:"margin:0;color:"+dungeonGold},dungeonAccessOpen?"DONJON OUVERT":"DONJON FERMÉ"),
       h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},subtitle+" · 🗝️ "+dungeonKeys),
       dungeonAccessOpen&&h("div",{style:"margin-top:8px;color:#4ade80;font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:1px"},"ACCÈS AU DONJON OUVERT"),
