@@ -2377,7 +2377,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:#8dbbff44;background:linear-gradient(145deg,#07162f,#102e5c);padding-top:13px;padding-bottom:13px"},
         renderBreachTrail(),
         h("div",{style:"position:relative;z-index:2"},
-          h("div",{class:"ctitle",style:"margin:0 0 10px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"BRÈCHE ALLIÉE EN RUPTURE":"BRÈCHE ALLIÉE"):(isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE")),
+          h("div",{class:"ctitle",style:"margin:0 0 10px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"BRÈCHE ALLIÉE EN RUPTURE":"BRÈCHE ALLIÉE ACTIVE"):(isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE ACTIVE")),
           h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:0"},
             QuestIcon(b.id,isRupture?"☠️":b.icon,14),
             h("div",{style:"flex:1;min-width:0"},
@@ -2398,7 +2398,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:#8dbbff44;background:linear-gradient(145deg,#07162f,#102e5c)"},
       renderBreachTrail(),
       h("div",{style:"position:relative;z-index:2"},
-        h("div",{class:"ctitle",style:"margin:0 0 12px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"BRÈCHE ALLIÉE EN RUPTURE":"BRÈCHE ALLIÉE"):(isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE")),
+        h("div",{class:"ctitle",style:"margin:0 0 12px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"BRÈCHE ALLIÉE EN RUPTURE":"BRÈCHE ALLIÉE ACTIVE"):(isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE ACTIVE")),
         h("div",{style:"padding:12px;border-radius:12px;border:1px solid rgba(219,234,254,.24);background:rgba(2,10,24,.36);box-shadow:inset 0 0 18px rgba(141,187,255,.05)"},
           h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px"},
           h("div",{style:"display:flex;align-items:center;gap:9px;min-width:0"},
@@ -2614,6 +2614,17 @@ const BONUS_BADGE_COLOR = "#fbbf24";
                   ? "Utilise une Clé de Donjon depuis ton inventaire pour ouvrir l’accès."
                   : "L’accès est ouvert, mais le donjon ne peut pas être lancé actuellement."
           )
+    );
+  }
+
+
+  function BreachInactiveCard(){
+    if(activeBreach) return null;
+    return h("div",{class:"card",style:"border-color:#8dbbff44;background:linear-gradient(145deg,#07162f,#102e5c)"},
+      h("div",{class:"ctitle",style:"margin:0;color:#dbeafe"},"BRÈCHE INACTIVE"),
+      h("div",{style:"text-align:center;padding:10px 0 2px;color:var(--td);font-size:11px;line-height:1.45"},
+        "Aucune brèche active n'a été détectée à proximité."
+      )
     );
   }
 
@@ -3025,6 +3036,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         bon.map(o=>o.isEnduranceChoice?h(EnduranceChoiceItem,{key:o.id,mode:"quest"}):h(QI,{key:o.id,obj:o}))
       ),
       !activeDungeon&&h(DungeonChoiceCard,null),
+      !activeBreach&&h(BreachInactiveCard,null),
     );
   }
 
