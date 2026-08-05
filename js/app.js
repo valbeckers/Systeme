@@ -501,6 +501,7 @@ function App(){
   const [inventorySort,setInventorySort] = useState("quantity");
   const [inventorySortOpen,setInventorySortOpen] = useState(false);
   const [confirmItemUse,setConfirmItemUse] = useState(null);
+  const [itemComboPrompt,setItemComboPrompt] = useState(null);
   const [elixirStatChoice,setElixirStatChoice] = useState(null);
   const [compassStatChoice,setCompassStatChoice] = useState(false);
   const [dungeonMapStatChoice,setDungeonMapStatChoice] = useState(false);
@@ -3408,6 +3409,85 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     return it.action;
   }
 
+
+  function compatibleItemQueue(primaryId){
+    if(primaryId==="transmutationGrimoire"){
+      return itemQty("alchemicalCatalyst")>0&&!state.alchemicalCatalystArmed?["alchemicalCatalyst"]:[];
+    }
+    if(primaryId==="dungeonKey"){
+      const queue=[];
+      if(itemQty("masterContract")>0&&!state.masterContractArmed)queue.push("masterContract");
+      if(itemQty("mysteryMap")>0&&!state.dungeonMapStat)queue.push("mysteryMap");
+      return queue;
+    }
+    return [];
+  }
+  function advanceItemCombo(prompt){
+    if(!prompt)return;
+    const nextIndex=(Number(prompt.index)||0)+1;
+    if(nextIndex<(prompt.queue||[]).length){
+      setItemComboPrompt({...prompt,index:nextIndex,selectingMap:false});
+    }else{
+      setItemComboPrompt(null);
+      setConfirmItemUse({id:prompt.primaryId,eraseRecord:!!prompt.eraseRecord});
+    }
+  }
+  function ItemComboPromptModal(){
+    const prompt=itemComboPrompt;
+    if(!prompt||prompt.selectingMap)return null;
+    const complementId=(prompt.queue||[])[Number(prompt.index)||0];
+    if(!complementId)return null;
+    const primaryId=prompt.primaryId;
+    const primary=INVENTORY_ITEMS[primaryId];
+    const complement=INVENTORY_ITEMS[complementId];
+    const minors=Math.max(0,Math.floor(Number(state.inventory&&state.inventory.minorElixir)||0));
+    const catalystRequired=primaryId==="transmutationGrimoire"&&complementId==="alchemicalCatalyst"&&minors<5;
+    const color=complementId==="alchemicalCatalyst"?"#10b981":complementId==="masterContract"?"#d4a84f":"#b7791f";
+    const glow=color+"88";
+    const title=complementId==="alchemicalCatalyst"?"CATALYSEUR ALCHIMIQUE DISPONIBLE":complementId==="masterContract"?"CONTRAT DU MAÎTRE DISPONIBLE":"CARTE DES PROFONDEURS DISPONIBLE";
+    const detail=complementId==="alchemicalCatalyst"
+      ?"Le Catalyseur peut compléter cette transmutation : 3 Élixirs d’expérience mineurs seront nécessaires au lieu de 5."
+      :complementId==="masterContract"
+        ?"Vous pouvez signer le Contrat avant d’ouvrir le Donjon. Une contrainte aléatoire restera cachée jusqu’à son activation et accordera +20 % XP si le Donjon est terminé."
+        :"Vous pouvez déplier la Carte avant d’ouvrir le Donjon afin de choisir la statistique du prochain Donjon.";
+    const useLabel=complementId==="alchemicalCatalyst"?"UTILISER LE CATALYSEUR":complementId==="masterContract"?"SIGNER LE CONTRAT":"DÉPLIER LA CARTE";
+    function useComplement(){
+      if(complementId==="alchemicalCatalyst"){
+        setState(s=>({...s,alchemicalCatalystArmed:true}));
+        advanceItemCombo(prompt);
+      }else if(complementId==="masterContract"){
+        setState(s=>{
+          const inv={...(s.inventory||{})};
+          if((Number(inv.masterContract)||0)<1||s.masterContractArmed)return s;
+          inv.masterContract=Math.max(0,(Number(inv.masterContract)||0)-1);
+          return {...s,inventory:inv,masterContractArmed:true};
+        });
+        advanceItemCombo(prompt);
+      }else if(complementId==="mysteryMap"){
+        setItemComboPrompt({...prompt,selectingMap:true});
+        setDungeonMapStatChoice(true);
+      }
+    }
+    return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+glow},
+      h("div",{class:"rucont",style:"width:min(500px,calc(100vw - 34px));background:rgba(15,15,18,.97);border:1px solid "+color+"88;border-radius:18px;padding:22px;box-shadow:0 0 30px "+color+"22"},
+        h(NotificationHeader,null),
+        h("div",{class:"ruevol",style:"color:"+color},"OBJET COMPLÉMENTAIRE DÉTECTÉ"),
+        h("div",{style:"display:flex;align-items:center;justify-content:center;gap:15px;margin:14px 0 12px"},
+          h("div",{style:"filter:drop-shadow(0 0 10px rgba(255,255,255,.12))"},InventoryItemIcon(primaryId,70)),
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:24px;color:var(--td)"},"+"),
+          h("div",{style:"filter:drop-shadow(0 0 14px "+glow+");animation:ruPulse 1.6s ease-in-out infinite"},InventoryItemIcon(complementId,70))
+        ),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:15px;font-weight:900;color:"+color+";text-align:center;line-height:1.4;max-width:380px"},title),
+        h("div",{class:"rulabel",style:"margin-top:11px;max-width:380px;line-height:1.55;color:var(--tx)"},detail),
+        catalystRequired&&h("div",{class:"rulabel",style:"margin-top:9px;max-width:360px;line-height:1.45;color:#fbbf24"},"Catalyseur requis : vous ne possédez que "+minors+" Élixirs mineurs."),
+        h("div",{style:"display:flex;flex-direction:column;gap:9px;margin-top:20px;width:min(360px,100%)"},
+          h("button",{class:"rudis",style:"width:100%;--rc:"+color+";--rg:"+glow,onClick:useComplement},useLabel),
+          h("button",{class:"rudis",disabled:catalystRequired,style:"width:100%;--rc:#64748b;--rg:rgba(100,116,139,.5);opacity:"+(catalystRequired?".35":"1")+";cursor:"+(catalystRequired?"default":"pointer"),onClick:()=>!catalystRequired&&advanceItemCombo(prompt)},catalystRequired?"CATALYSEUR REQUIS":"CONTINUER SANS CET OBJET")
+        )
+      )
+    );
+  }
+
   function InventoryItemModal(){
     if(!inventoryItem)return null;
     if(inventoryItem==="codex")return h(Codex,null);
@@ -3425,8 +3505,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }else if(id==="transmutationGrimoire"){
       const minors=Math.max(0,Math.floor(Number(state.inventory&&state.inventory.minorElixir)||0));
       const catalystReady=state.alchemicalCatalystArmed&&itemQty("alchemicalCatalyst")>0;
-      const needed=catalystReady?3:5;
-      if(minors<needed){disabled=true;reason=(catalystReady?"Catalyseur préparé · ":"")+needed+" Élixirs d’expérience mineurs sont nécessaires ("+minors+"/"+needed+").";}
+      const catalystAvailable=!state.alchemicalCatalystArmed&&itemQty("alchemicalCatalyst")>0;
+      const needed=(catalystReady||catalystAvailable)?3:5;
+      if(minors<needed){disabled=true;reason=(catalystReady?"Catalyseur préparé · ":catalystAvailable?"Catalyseur disponible · ":"")+needed+" Élixirs d’expérience mineurs sont nécessaires ("+minors+"/"+needed+").";}
+      else if(catalystAvailable&&minors<5){reason="Catalyseur alchimique disponible · utilisez-le pour réaliser la transmutation avec 3 Élixirs mineurs.";}
     }else if(id==="destinyCompass"){
       if(state.urgentCompassStat){disabled=true;reason="La prochaine quête urgente est déjà orientée vers "+(STAT_LBL[state.urgentCompassStat]||state.urgentCompassStat)+".";}
     }else if(id==="mysteryMap"){
@@ -3479,7 +3561,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{style:"margin-top:9px;display:flex;flex-direction:column;gap:7px"},it.obtain.map((x,i)=>h("div",{key:i,style:"font-size:10px;color:var(--td);line-height:1.5"},ObtainLine(x))))
         ),
         reason&&h("div",{style:"font-size:10px;color:var(--td);text-align:center;margin-bottom:8px"},reason),
-        h("button",{disabled,onClick:()=>{const eraseRecord=id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk;setInventoryItem(null);setConfirmItemUse({id,eraseRecord})},style:"width:100%;padding:12px;border-radius:9px;border:1px solid "+(disabled?"rgba(255,255,255,.08)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"#ef4444":rank.color))+";background:"+(disabled?"rgba(255,255,255,.03)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"rgba(239,68,68,.10)":rank.color+"18"))+";color:"+(disabled?"var(--td)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"#ef4444":rank.color))+";font-family:Orbitron,sans-serif;letter-spacing:1.3px;cursor:"+(disabled?"default":"pointer")},id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"EFFACER":inventoryActionLabel(id,it))
+        h("button",{disabled,onClick:()=>{const eraseRecord=id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk;const comboQueue=eraseRecord?[]:compatibleItemQueue(id);setInventoryItem(null);if(comboQueue.length)setItemComboPrompt({primaryId:id,eraseRecord,queue:comboQueue,index:0,selectingMap:false});else setConfirmItemUse({id,eraseRecord})},style:"width:100%;padding:12px;border-radius:9px;border:1px solid "+(disabled?"rgba(255,255,255,.08)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"#ef4444":rank.color))+";background:"+(disabled?"rgba(255,255,255,.03)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"rgba(239,68,68,.10)":rank.color+"18"))+";color:"+(disabled?"var(--td)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"#ef4444":rank.color))+";font-family:Orbitron,sans-serif;letter-spacing:1.3px;cursor:"+(disabled?"default":"pointer")},id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"EFFACER":inventoryActionLabel(id,it))
       )
     );
   }
@@ -3675,14 +3757,20 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function DungeonMapStatModal(){
     if(!dungeonMapStatChoice)return null;
     const choices=[...new Set(DUNGEONS.map(d=>d.stat))].filter(stat=>STATS.includes(stat));
+    const comboPrompt=itemComboPrompt&&itemComboPrompt.selectingMap?itemComboPrompt:null;
     return h("div",{class:"modal-ov"},h("div",{class:"modal",style:"max-width:410px;width:calc(100% - 28px)"},
       h("div",{class:"mtitle"},"DÉPLIER LA CARTE"),
       h("div",{style:"font-size:11px;color:var(--td);line-height:1.55;margin-bottom:12px"},"Choisissez la statistique du prochain donjon. Si plusieurs donjons correspondent à cette statistique, le donjon précis restera tiré au sort."),
       h("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:8px"},choices.map(stat=>h("button",{key:stat,onClick:()=>{
         setDungeonMapStatChoice(false);
-        setConfirmTargetedItemUse({type:"mysteryMap",stat});
+        if(comboPrompt){
+          setState(s=>{const inv={...(s.inventory||{})};if((Number(inv.mysteryMap)||0)<1||s.dungeonMapStat)return s;inv.mysteryMap=Math.max(0,(Number(inv.mysteryMap)||0)-1);return {...s,inventory:inv,dungeonMapStat:stat};});
+          advanceItemCombo(comboPrompt);
+        }else{
+          setConfirmTargetedItemUse({type:"mysteryMap",stat});
+        }
       },style:"padding:11px;border-radius:9px;border:1px solid "+STAT_COLOR[stat]+"88;background:"+STAT_COLOR[stat]+"12;color:"+STAT_COLOR[stat]+";font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},STAT_LBL[stat]||stat))),
-      h("button",{onClick:()=>setDungeonMapStatChoice(false),style:"width:100%;margin-top:12px;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--td);font-family:Orbitron,sans-serif;cursor:pointer"},"Annuler")
+      h("button",{onClick:()=>{setDungeonMapStatChoice(false);if(comboPrompt)advanceItemCombo(comboPrompt);},style:"width:100%;margin-top:12px;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--td);font-family:Orbitron,sans-serif;cursor:pointer"},comboPrompt?"Continuer sans la Carte":"Annuler")
     ));
   }
 
@@ -5193,6 +5281,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(ConfirmAlliedGiftModal,null),
       h(ItemUseUp,null),
       h(InventoryItemModal,null),
+      h(ItemComboPromptModal,null),
       h(ConfirmItemUseModal,null),
       h(CounterpartBalanceSacrificeModal,null),
       h(CounterpartBalanceRewardModal,null),
