@@ -2840,12 +2840,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
     return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:#f59e0b44;background:linear-gradient(145deg,#140e03,#261b06)"},
       h(BreachFxOverlay,{variant:"home",theme:"dungeon"}),
-      h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
-        h("div",{style:"min-width:0"},
-          h("div",{class:"ctitle",style:"margin:0;color:#f59e0b"},"DONJON EN COURS"),
-          h(MasterContractStatus,{d,compact:true})
+      h("div",{style:"margin-bottom:8px"},
+        h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:10px"},
+          h("div",{class:"ctitle",style:"margin:0;color:#f59e0b;min-width:0"},"DONJON EN COURS"),
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap;flex-shrink:0"},STAT_LBL[d.stat]||d.stat)
         ),
-        h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap"},STAT_LBL[d.stat]||d.stat)
+        h(MasterContractStatus,{d,compact:true})
       ),
       h("div",{style:"display:flex;flex-direction:column;gap:5px;margin-top:10px"},d.rooms.map((room,i)=>{
         const done=completedRooms.includes(i);
