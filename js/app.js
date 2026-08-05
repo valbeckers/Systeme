@@ -2739,7 +2739,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
           h("div",{style:"min-width:0"},
             h("div",{class:"ctitle",style:"margin:0;color:#f59e0b"},"DONJON EN COURS"),
-            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"Progression "+completedRooms.length+"/"+d.rooms.length+" salles · "+fmtCD(remaining)+" restants"),
+            h("div",{style:"font-size:10px;color:#f59e0b;font-family:Orbitron,sans-serif;margin-top:4px;text-align:left"},"⏱ "+fmtCD(remaining)+" restantes"),
             h(MasterContractStatus,{d})
           ),
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap"},STAT_LBL[d.stat]||d.stat)
@@ -2843,7 +2843,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
         h("div",{style:"min-width:0"},
           h("div",{class:"ctitle",style:"margin:0;color:#f59e0b"},"DONJON EN COURS"),
-          h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"Progression "+completedRooms.length+"/"+d.rooms.length+" salles · "+fmtCD(remaining)+" restants"),
           h(MasterContractStatus,{d,compact:true})
         ),
         h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap"},STAT_LBL[d.stat]||d.stat)
