@@ -1954,7 +1954,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("div",{class:"qxp",style:"white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},fmtNum(d)+"/"+fmtNum(displayTarget)+" "+((d>1||displayTarget>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[obj.unit]||obj.unit))
           )
       ),
-      (!obj.optional&&!obj.weekly&&isDebtEligibleQuest(obj)&&d<effectiveT&&state.questDebt&&state.questDebt.status==="active"&&state.questDebt.id===obj.id)&&h("div",{style:"margin-top:8px;font-family:Orbitron,sans-serif;font-size:9px;color:#f59e0b;letter-spacing:.8px;text-transform:uppercase"},"Dette active : "+fmtNum(state.questDebt.paid||0)+"/"+fmtNum(state.questDebt.amount)+" "+state.questDebt.unit),
+      (!obj.optional&&!obj.weekly&&isDebtEligibleQuest(obj)&&d<effectiveT&&state.questDebt&&state.questDebt.status==="active"&&state.questDebt.id===obj.id)&&h("div",{style:"margin-top:8px;font-family:Orbitron,sans-serif;font-size:9px;color:#6E9A8E;letter-spacing:.8px;text-transform:uppercase"},"Dette active : "+fmtNum(state.questDebt.paid||0)+"/"+fmtNum(state.questDebt.amount)+" "+state.questDebt.unit),
       (()=>{
         // Repas sans stimulation : un seul bouton +1 repas
         if(obj.id==="sp_mealnostim"){
@@ -2632,10 +2632,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function DebtCard({compact=false}={}){
     const debt=state.questDebt;
     if(!debt || debt.status!=="active") return null;
-    const color="#facc15";
-    const colorDark="#a16207";
-    const colorLight="#fde047";
-    const colorBg="rgba(250,204,21,0.045)";
+    const color="#6E9A8E";
+    const colorDark="#35574F";
+    const colorLight="#A5C4BA";
+    const colorBg="rgba(110,154,142,0.055)";
     const paid=Math.max(0,Number(debt.paid)||0);
     const amount=Math.max(1,Number(debt.amount)||1);
     const pct=Math.min(100,(paid/amount)*100);
@@ -2652,7 +2652,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const progressText=fmtNum(paid)+"/"+fmtNum(amount)+" "+(unit||"");
       const done=paid>=amount;
       const fillStateClass=done ? " done" : (pct>0 ? " partial" : "");
-      return h("div",{class:"card",style:"border-color:"+color+"44;background:linear-gradient(145deg,#121003,#241f05)"},
+      return h("div",{class:"card",style:"border-color:"+color+"55;background:linear-gradient(145deg,#07110f,#10211d)"},
         h("div",{class:"ctitle",style:"color:"+color+";margin-bottom:8px"},"Dette active"),
         h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:0"},
           QuestIcon(debt.id,debt.icon,14),
@@ -2670,13 +2670,13 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       );
     }
 
-    return h("div",{class:"card",style:"border-color:"+color+"44;background:linear-gradient(145deg,#121003,#241f05)"},
+    return h("div",{class:"card",style:"border-color:"+color+"55;background:linear-gradient(145deg,#07110f,#10211d)"},
       h("div",{class:"shdr"},
         h("div",null,
           h("div",{class:"ctitle",style:"margin:0;color:"+color},"Dette active")
         )
       ),
-      h("div",{class:"sqcard",style:"border-color:"+color+"44;background:linear-gradient(135deg,rgba(250,204,21,.045),rgba(255,255,255,.010))"},
+      h("div",{class:"sqcard",style:"border-color:"+color+"44;background:linear-gradient(135deg,rgba(110,154,142,.055),rgba(255,255,255,.010))"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;gap:8px"},
           h("div",{style:"display:flex;align-items:center;gap:8px;min-width:0"},
             QuestIcon(debt.id,debt.icon,14,"line-height:1.1;min-width:24px;text-align:center"),
