@@ -1,17 +1,5 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
-import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js";
-
-// Ajustement XP quêtes — 2026-08-05
-{
-  const meditationDef=DEFS.find(q=>q.id==="meditation"||q.title==="Méditation");
-  if(meditationDef) meditationDef.xpRules=[{stat:"🧠 Esprit",xpPerUnit:15}];
-
-  const balanceDef=DEFS.find(q=>q.id==="balance_one_foot"||q.id==="balance"||q.title==="Équilibre"||q.title==="Équilibre sur un pied");
-  if(balanceDef) balanceDef.xpRules=[
-    {stat:"🐈 Agilité",xpPerUnit:10},
-    {stat:"🧠 Esprit",xpPerUnit:5}
-  ];
-}
+import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260805-xp-med-balance-02";
 import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js";
 import {
   isDebtEligibleQuest,
