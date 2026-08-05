@@ -1,5 +1,5 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
-import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js";
+import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260805-xp-med-balance-02";
 import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js";
 import {
   isDebtEligibleQuest,
@@ -20,7 +20,7 @@ import {
   urgentQuestCompletedOnDay,
   applyDailyStreakRewardState
 } from "./dailyEngine.js";
-import { BREACH_POOL } from "./breachDefs.js";
+import { BREACH_POOL } from "./breachDefs.js?v=20260804-breach-progress-01";
 import { DUNGEONS } from "./dungeonDefs.js?v=20260803-contract-fix-01";
 import {
   dungeonRoomRewardPairs,
@@ -32,15 +32,18 @@ import {
   expireActiveDungeonState,
   canValidateDungeonRoom
 } from "./dungeonEngine.js";
-import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260803-item-descriptions-02";
+import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260803-counterpart-balance-01";
 import {
   incrementLootState,
   pickRandomBreachLoot,
   alliedGiftEligibleIds,
   grantAlliedGiftState,
   rollStandardItemDrops,
-  rollDungeonItemDrops
-} from "./lootEngine.js?v=20260803-mystery-map-01";
+  rollDungeonItemDrops,
+  counterpartBalanceSacrificeEligibleIds,
+  counterpartBalanceRewardEligibleIds,
+  exchangeCounterpartBalanceState
+} from "./lootEngine.js?v=20260803-counterpart-balance-01";
 import {
   eventDayStr,
   next7AM,
@@ -79,8 +82,8 @@ import {
   DEBT_ACKNOWLEDGEMENT_ICON_DATA
 } from "./itemImages.js";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260803-mystery-map-01";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260803-mystery-map-01";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260803-counterpart-balance-01";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260803-counterpart-balance-01";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -99,7 +102,7 @@ import {
   normalizeActiveBreach,
   processDailyBreachRoll,
   pickBreachRuptureBoss
-} from "./breachEngine.js?v=20260803-contract-fix-01";
+} from "./breachEngine.js?v=20260804-breach-progress-01";
 import {
   ELIXIR_STATS,
   ELIXIR_DURATION_MS,
@@ -113,6 +116,205 @@ import {
 
 const { h, render, Fragment } = window.preact;
 const { useState, useEffect, useRef } = window.preactHooks;
+
+const BREACH_FX_VERSION="20260804-v11-no-sticks-urgent-buttons-card-bg";
+
+const __breachFxRand=(seed,n)=>{
+  const x=Math.sin((seed*9283.133)+(n*12.9898))*43758.5453123;
+  return x-Math.floor(x);
+};
+const __breachFxLoopNoise=(seed,pos,count)=>{
+  const c=Math.max(3,count|0);
+  const x=((pos%c)+c)%c;
+  const i1=Math.floor(x);
+  const f=x-i1;
+  const i0=(i1-1+c)%c, i2=(i1+1)%c, i3=(i1+2)%c;
+  const y0=__breachFxRand(seed,i0)*2-1;
+  const y1=__breachFxRand(seed,i1)*2-1;
+  const y2=__breachFxRand(seed,i2)*2-1;
+  const y3=__breachFxRand(seed,i3)*2-1;
+  const f2=f*f, f3=f2*f;
+  return 0.5*((2*y1)+(-y0+y2)*f+(2*y0-5*y1+4*y2-y3)*f2+(-y0+3*y1-3*y2+y3)*f3);
+};
+const __breachFxLoopLinear=(seed,pos,count)=>{
+  const c=Math.max(2,count|0);
+  const x=((pos%c)+c)%c;
+  const i0=Math.floor(x);
+  const f=x-i0;
+  const i1=(i0+1)%c;
+  const y0=__breachFxRand(seed,i0)*2-1;
+  const y1=__breachFxRand(seed,i1)*2-1;
+  return y0 + (y1-y0)*f;
+};
+const __breachFxPulse=t=>{
+  const cycle=7.8;
+  const p=(t%cycle)/cycle;
+  let k=.78 + .06*Math.sin(t*1.15);
+  const flash=(c,w,a)=>{
+    const d=Math.abs(p-c);
+    return d<w ? (1-d/w)*a : 0;
+  };
+  k+=flash(.76,.018,.52);
+  k+=flash(.81,.014,.38);
+  return k;
+};
+const __parseRadius=v=>{
+  if(!v)return 28;
+  const n=parseFloat(String(v).split(" ")[0]);
+  return Number.isFinite(n)?n:28;
+};
+function __buildRoundedRectMetrics(x,y,w,h,r){
+  const rr=Math.max(0,Math.min(r,Math.min(w,h)/2));
+  const top=Math.max(0,w-2*rr), side=Math.max(0,h-2*rr), arc=Math.PI*rr/2;
+  const total=2*(top+side)+4*arc || 1;
+  return {x,y,w,h,r:rr,top,side,arc,total};
+}
+function __roundedRectPoint(m,d){
+  let {x,y,w,h,r,top,side,arc,total}=m;
+  d=((d%total)+total)%total;
+  const seg0=top, seg1=seg0+arc, seg2=seg1+side, seg3=seg2+arc, seg4=seg3+top, seg5=seg4+arc, seg6=seg5+side, seg7=seg6+arc;
+  if(d<=seg0){ const px=x+r+d, py=y; return {x:px,y:py,nx:0,ny:-1,tx:1,ty:0}; }
+  if(d<=seg1){ const a=(d-seg0)/arc*(Math.PI/2)-Math.PI/2; const cx=x+w-r, cy=y+r; return {x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r,nx:Math.cos(a),ny:Math.sin(a),tx:-Math.sin(a),ty:Math.cos(a)}; }
+  if(d<=seg2){ const px=x+w, py=y+r+(d-seg1); return {x:px,y:py,nx:1,ny:0,tx:0,ty:1}; }
+  if(d<=seg3){ const a=(d-seg2)/arc*(Math.PI/2); const cx=x+w-r, cy=y+h-r; return {x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r,nx:Math.cos(a),ny:Math.sin(a),tx:-Math.sin(a),ty:Math.cos(a)}; }
+  if(d<=seg4){ const px=x+w-r-(d-seg3), py=y+h; return {x:px,y:py,nx:0,ny:1,tx:-1,ty:0}; }
+  if(d<=seg5){ const a=(d-seg4)/arc*(Math.PI/2)+Math.PI/2; const cx=x+r, cy=y+h-r; return {x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r,nx:Math.cos(a),ny:Math.sin(a),tx:-Math.sin(a),ty:Math.cos(a)}; }
+  if(d<=seg6){ const px=x, py=y+h-r-(d-seg5); return {x:px,y:py,nx:-1,ny:0,tx:0,ty:-1}; }
+  const a=(d-seg6)/arc*(Math.PI/2)+Math.PI; const cx=x+r, cy=y+r; return {x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r,nx:Math.cos(a),ny:Math.sin(a),tx:-Math.sin(a),ty:Math.cos(a)};
+}
+function __drawBreachElectricFrame(ctx, metrics, t, variant, theme="breach"){
+  const palette=theme==="dungeon"
+    ? {main:"#f59e0b",mid:"#fbbf24",inner:"#fde68a",core:"#fff7d6",trace:"#fcd34d",shadow:"#f59e0b"}
+    : {main:"#29c9ff",mid:"#69dcff",inner:"#dcf9ff",core:"#ffffff",trace:"#baf4ff",shadow:"#59d1ff"};
+  const pulse=__breachFxPulse(t);
+  const peri=metrics.total;
+  const sampleDist=variant==="home"?4.8:5.2;
+  const samples=Math.max(420,Math.floor(peri/sampleDist));
+  const ampMain=variant==="home"?1.18:1.3;
+  const ampInner=variant==="home"?.54:.64;
+  const outwardBase=.82;
+  const ctrlMain=variant==="home"?148:166;
+  const ctrlMicro=variant==="home"?308:336;
+  const ctrlTang=variant==="home"?176:194;
+  const ctrlSpike=variant==="home"?122:136;
+  const glowA=.11*pulse, glowB=.30*pulse, coreA=.98*Math.min(1.08,pulse+.08);
+  const makePts=(seed,amp,outBias,phase)=>{
+    const pts=[];
+    for(let i=0;i<samples;i++){
+      const s=(i/samples)*peri;
+      const base=__roundedRectPoint(metrics,s);
+      const u=i + phase*15;
+      const jag=__breachFxLoopLinear(seed,(u/samples)*ctrlMain,ctrlMain);
+      const micro=__breachFxLoopLinear(seed+19,(u/samples)*ctrlMicro,ctrlMicro);
+      const tang=__breachFxLoopLinear(seed+71,((i+phase*6)/samples)*ctrlTang,ctrlTang)*.12;
+      const spike=Math.max(0,__breachFxLoopLinear(seed+111,((i+phase*11)/samples)*ctrlSpike,ctrlSpike));
+      const outward=(jag*amp)+(micro*amp*.17)+(spike*amp*.34)+outBias;
+      pts.push({
+        x:base.x + base.nx*outward + base.tx*tang,
+        y:base.y + base.ny*outward + base.ty*tang,
+        bx:base.x, by:base.y, nx:base.nx, ny:base.ny, tx:base.tx, ty:base.ty
+      });
+    }
+    pts.push({...pts[0]});
+    return pts;
+  };
+  const phase=t*.96;
+  const mainPts=makePts(11,ampMain,outwardBase,phase);
+  const innerPts=makePts(27,ampInner,outwardBase-.22,phase*1.14);
+
+  const strokePath=(pts,color,width,alpha,blur=0)=>{
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x,pts[0].y);
+    for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
+    ctx.closePath();
+    ctx.strokeStyle=color;
+    ctx.lineWidth=width;
+    ctx.lineJoin='round';
+    ctx.lineCap='round';
+    if(blur>0){ ctx.shadowBlur=blur; ctx.shadowColor=color; }
+    ctx.globalAlpha=alpha;
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  strokePath(mainPts,palette.main,4.5,glowA,8);
+  strokePath(mainPts,palette.mid,2.15,glowB,2.6);
+  strokePath(innerPts,palette.inner,1.02,.72*pulse,1.2);
+  strokePath(innerPts,palette.core,.56,coreA,.45);
+
+  ctx.save();
+  ctx.beginPath();
+  const start=__roundedRectPoint(metrics,0);
+  ctx.moveTo(start.x,start.y);
+  for(let i=1;i<=samples;i++){
+    const p=__roundedRectPoint(metrics,(i/samples)*peri);
+    ctx.lineTo(p.x,p.y);
+  }
+  ctx.closePath();
+  ctx.strokeStyle=palette.trace;
+  ctx.lineWidth=.48;
+  ctx.globalAlpha=.12*pulse;
+  ctx.shadowBlur=1.8;
+  ctx.shadowColor=palette.shadow;
+  ctx.stroke();
+  ctx.restore();
+
+}
+function BreachFxOverlay({variant="home",theme="breach"}={}){
+  const hostRef=useRef(null);
+  const canvasRef=useRef(null);
+  const stateRef=useRef({metrics:null,raf:0,ro:null,host:null,wrap:null,dpr:1});
+  useEffect(()=>{
+    const wrap=hostRef.current;
+    const canvas=canvasRef.current;
+    if(!wrap || !canvas) return;
+    const host=wrap.parentElement;
+    if(!host) return;
+    const ctx=canvas.getContext('2d');
+    const state=stateRef.current;
+    state.host=host;
+    state.wrap=wrap;
+    const computeMetrics=()=>{
+      const hostRect=host.getBoundingClientRect();
+      const wrapRect=wrap.getBoundingClientRect();
+      const dpr=Math.min(window.devicePixelRatio||1,2);
+      state.dpr=dpr;
+      canvas.width=Math.max(1,Math.round(wrapRect.width*dpr));
+      canvas.height=Math.max(1,Math.round(wrapRect.height*dpr));
+      canvas.style.width=wrapRect.width+'px';
+      canvas.style.height=wrapRect.height+'px';
+      const left=hostRect.left-wrapRect.left;
+      const top=hostRect.top-wrapRect.top;
+      const radius=__parseRadius(getComputedStyle(host).borderTopLeftRadius);
+      state.metrics=__buildRoundedRectMetrics(left+1.2, top+1.2, Math.max(1,hostRect.width-2.4), Math.max(1,hostRect.height-2.4), radius);
+    };
+    const draw=(ts)=>{
+      const {metrics,dpr}=state;
+      if(metrics){
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        __drawBreachElectricFrame(ctx,metrics,ts/1000,variant==="quests"?"quests":"home",theme);
+      }
+      state.raf=requestAnimationFrame(draw);
+    };
+    computeMetrics();
+    const ro=new ResizeObserver(computeMetrics);
+    ro.observe(host);
+    ro.observe(wrap);
+    state.ro=ro;
+    state.raf=requestAnimationFrame(draw);
+    return ()=>{
+      if(state.ro) state.ro.disconnect();
+      if(state.raf) cancelAnimationFrame(state.raf);
+      state.ro=null;
+      state.raf=0;
+    };
+  },[variant,theme]);
+  return h("div",{ref:hostRef,class:"breach-fx-layer breach-fx-layer-"+(variant==="quests"?"quests":"home"),"aria-hidden":"true"},
+    h("canvas",{ref:canvasRef,class:"breach-fx-canvas"})
+  );
+}
 
 // ─── FONCTIONS GLOBALES ─────────────────────────────────────────────────────
 
@@ -269,6 +471,9 @@ function App(){
   const [contractDungeonChoice,setContractDungeonChoice] = useState(null);
   const [confirmElixirUse,setConfirmElixirUse] = useState(null);
   const [confirmTargetedItemUse,setConfirmTargetedItemUse] = useState(null);
+  const [balanceSacrificeChoice,setBalanceSacrificeChoice] = useState(null);
+  const [balanceRewardChoice,setBalanceRewardChoice] = useState(null);
+  const [confirmBalanceExchange,setConfirmBalanceExchange] = useState(null);
   const [dungeonUp,setDungeonUp] = useState(null);
   const [ruptureUp,setRuptureUp] = useState(null);
   const [urgentUp,setUrgentUp] = useState(null);
@@ -286,7 +491,7 @@ function App(){
   const [dungeonHelpOpen,setDungeonHelpOpen] = useState({});
   const [selectedDungeonRoom,setSelectedDungeonRoom] = useState(null);
   const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
-  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,reg:false,sq:false,breach:false,breachRupture:false,debt:false,dj:false,djAlt:false,cs:false});
+  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,reg:false,sq:false,breach:false,debt:false,dj:false,djAlt:false,cs:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
   const [showStatReqDetail,setShowStatReqDetail] = useState(false);
   const [showRankReqStats,setShowRankReqStats] = useState(false);
@@ -1749,7 +1954,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("div",{class:"qxp",style:"white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},fmtNum(d)+"/"+fmtNum(displayTarget)+" "+((d>1||displayTarget>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[obj.unit]||obj.unit))
           )
       ),
-      (!obj.optional&&!obj.weekly&&isDebtEligibleQuest(obj)&&d<effectiveT&&state.questDebt&&state.questDebt.status==="active"&&state.questDebt.id===obj.id)&&h("div",{style:"margin-top:8px;font-family:Orbitron,sans-serif;font-size:9px;color:#6E9A8E;letter-spacing:.8px;text-transform:uppercase"},"Dette active : "+fmtNum(state.questDebt.paid||0)+"/"+fmtNum(state.questDebt.amount)+" "+state.questDebt.unit),
+      (!obj.optional&&!obj.weekly&&isDebtEligibleQuest(obj)&&d<effectiveT&&state.questDebt&&state.questDebt.status==="active"&&state.questDebt.id===obj.id)&&h("div",{style:"margin-top:8px;font-family:Orbitron,sans-serif;font-size:9px;color:#f59e0b;letter-spacing:.8px;text-transform:uppercase"},"Dette active : "+fmtNum(state.questDebt.paid||0)+"/"+fmtNum(state.questDebt.amount)+" "+state.questDebt.unit),
       (()=>{
         // Repas sans stimulation : un seul bouton +1 repas
         if(obj.id==="sp_mealnostim"){
@@ -1972,6 +2177,15 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const urgent=remaining<86400000&&!sq.completedAt;
     const pct=Math.min(100,(sq.progress/sq.target)*100);
     const done=sq.progress>=sq.target;
+    const numericTarget=Math.max(1,Number(sq.target)||1);
+    const incrementalUrgent = !sq.binary || numericTarget>1;
+    const urgentSteps=[1,5,10].filter(v=>v<=numericTarget);
+    const urgentUnitLabel=(unit,amount)=>{
+      const u=String(unit||"");
+      if(amount===1)return u;
+      const plurals={portion:"portions",objet:"objets",verre:"verres",jour:"jours",rep:"reps"};
+      return plurals[u]||u;
+    };
 
     // Helper : liste les paires (xp, stat) actives sur cette quête (1, 2 ou 3)
     const xpPairs = [
@@ -2012,7 +2226,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         ? "width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,transparent,transparent 4px,#ef4444 4px,#ef4444 8px);background-size:11.31px 11.31px;opacity:0.8"
         : "width:"+pct+"%;background:linear-gradient(90deg,#991b1b,#ef4444)");
 
-    return h("div",{class:"sqcard"+(urgent?" sq-urgent":"")},
+    return h("div",{class:"sqcard"},
       h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;gap:8px"},
         h("div",{style:"display:flex;align-items:center;gap:8px;min-width:0"},
           QuestIcon(sq.id,sq.icon,14,"line-height:1.1;min-width:24px;text-align:center"),
@@ -2049,7 +2263,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         )
       ),
       showInput&&!done&&(
-        sq.binary
+        !incrementalUrgent
           ?h("div",{style:"display:flex;gap:8px;margin-top:8px"},
               h("button",{onClick:e=>completeBinary(1,e),style:"flex:1;padding:10px;border-radius:8px;border:1px solid #4ade8044;background:rgba(255,255,255,0.03);color:#4ade80;font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px"},"Succ\u00e8s \u2713")
             )
@@ -2058,9 +2272,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
                 h("input",{id:"sqi_"+sq.sqid,class:"qin",type:"text",inputMode:"decimal",placeholder:"+ km",style:"border-color:#ef444466"}),
                 h("button",{class:"qbtn",style:"border-color:#ef444466;color:#ef4444",onClick:e=>progressSq(sq,e)},"+XP")
               )
-          :h("div",{style:"display:flex;gap:8px;margin-top:8px"},
-              h("button",{onClick:e=>progressSq(sq,e,1),style:"flex:1;padding:10px;border-radius:8px;border:1px solid #ef444466;background:rgba(255,255,255,0.03);color:#ef4444;font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px"},"+1 "+sq.unit),
-              h("button",{onClick:e=>progressSq(sq,e,sq.step||10),style:"flex:1;padding:10px;border-radius:8px;border:1px solid #ef444466;background:rgba(255,255,255,0.03);color:#ef4444;font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px"},"+"+(sq.step||10)+" "+sq.unit)
+          :h("div",{style:"display:flex;gap:6px;margin-top:8px"},
+              urgentSteps.map(step=>h("button",{
+                key:"sqstep_"+step,
+                onClick:e=>progressSq(sq,e,step),
+                style:"flex:1;min-width:0;padding:10px 4px;border-radius:8px;border:1px solid #ef444466;background:rgba(255,255,255,0.03);color:#ef4444;font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer;letter-spacing:.3px;white-space:nowrap"
+              },"+"+step+" "+urgentUnitLabel(sq.unit,step)))
             )
       ),
       done&&showInput&&h("div",{style:"text-align:center;padding:8px 0;font-size:12px;color:#4ade80;font-family:Orbitron,sans-serif"},"\u2705 Compl\u00e9t\u00e9e !")
@@ -2144,23 +2361,46 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       });
     };
 
-    const mainProgressText=b.binary
-      ? (mainDone?"OBJECTIF DU BOSS VALIDÉ":"OBJECTIF DU BOSS À ACCOMPLIR")
-      : fmtNum(mainProgress)+"/"+target+" "+b.unit;
+    const breachProgressText=()=>{
+      const unit=b.unit==="rep"?"reps":b.unit;
+      return fmtNum(mainProgress)+"/"+fmtNum(target)+(unit||"");
+    };
+    const mainProgressText=breachProgressText();
     const progressText=isRupture
       ? "Boss "+(mainDone?"✓":Math.round((mainProgress/target)*100)+" %")+" · Garde "+guardDoneCount+"/"+guards.length
-      : (b.binary?"À accomplir":fmtNum(mainProgress)+"/"+target+" "+b.unit);
+      : breachProgressText();
 
     const standardButtonStyle="flex:1;padding:9px;border-radius:8px;border:1px solid rgba(255,255,255,.38);background:rgba(255,255,255,.05);color:#fff;font-family:Orbitron,sans-serif;font-size:9px;cursor:pointer";
+    const renderBreachTrail=()=>h(BreachFxOverlay,{variant:compact?"home":"quests"});
 
-    return h("div",{class:"card sq-urgent",style:"position:relative;overflow:hidden;border-color:#8dbbff;background:linear-gradient(145deg,#07162f,#102e5c);box-shadow:0 0 18px rgba(141,187,255,.32),inset 0 0 24px rgba(255,255,255,.035)"},
-      [["top:-10px;left:8px"],["top:-10px;right:8px"],["bottom:-11px;left:10px"],["bottom:-11px;right:10px"]].map((p,i)=>h("span",{key:i,style:"position:absolute;"+p[0]+";color:#fff;font-size:17px;filter:drop-shadow(0 0 7px #fff);pointer-events:none"},"⚡")),
+    if(compact){
+      return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:#8dbbff44;background:linear-gradient(145deg,#07162f,#102e5c);padding-top:13px;padding-bottom:13px"},
+        renderBreachTrail(),
+        h("div",{style:"position:relative;z-index:2"},
+          h("div",{class:"ctitle",style:"margin:0 0 10px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"BRÈCHE ALLIÉE EN RUPTURE":"BRÈCHE ALLIÉE ACTIVE"):(isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE ACTIVE")),
+          h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:0"},
+            QuestIcon(b.id,isRupture?"☠️":b.icon,14),
+            h("div",{style:"flex:1;min-width:0"},
+              h("div",{style:"font-size:12px;color:#fff;margin-bottom:3px;display:flex;justify-content:space-between;align-items:center;gap:8px"},
+                h("span",{style:"white-space:normal;line-height:1.25;word-break:normal;min-width:0;font-weight:800"},isRupture?rupture.name:b.name),
+                h("div",{style:"display:flex;align-items:center;gap:6px"},
+                  h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:#dbeafe;white-space:nowrap;flex-shrink:0"},progressText),
+                  h("span",{style:"width:10px;flex-shrink:0"},"")
+                )
+              ),
+              h("div",{class:"qbar"},h("div",{class:"qfill partial",style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,#274f88,#274f88 5px,#7aa7df 5px,#7aa7df 10px);background-size:14px 14px;opacity:.95"}))
+            )
+          )
+        )
+      );
+    }
+
+    return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:#8dbbff44;background:linear-gradient(145deg,#07162f,#102e5c)"},
+      renderBreachTrail(),
       h("div",{style:"position:relative;z-index:2"},
-        h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:9px"},
-          h("div",{class:"ctitle",style:"margin:0;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"BRÈCHE ALLIÉE EN RUPTURE":"BRÈCHE ALLIÉE"):(isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE")),
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#fff;border:1px solid rgba(255,255,255,.45);border-radius:999px;padding:4px 7px;white-space:nowrap"},"⏱ "+fmtCD(remaining))
-        ),
-        h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px"},
+        h("div",{class:"ctitle",style:"margin:0 0 12px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"BRÈCHE ALLIÉE EN RUPTURE":"BRÈCHE ALLIÉE ACTIVE"):(isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE ACTIVE")),
+        h("div",{style:"padding:12px;border-radius:12px;border:1px solid rgba(219,234,254,.24);background:rgba(2,10,24,.36);box-shadow:inset 0 0 18px rgba(141,187,255,.05)"},
+          h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px"},
           h("div",{style:"display:flex;align-items:center;gap:9px;min-width:0"},
             QuestIcon(b.id,isRupture?"☠️":b.icon,18,"min-width:26px"),
             h("div",{style:"min-width:0"},
@@ -2168,20 +2408,17 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               !compact&&h("div",{style:"font-size:10px;color:#cbd5e1;line-height:1.4;margin-top:3px"},isRupture?b.desc:b.desc)
             )
           ),
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#dbeafe;line-height:1.35;text-align:right;white-space:nowrap"},pairs.map((p,i)=>h("div",{key:i},questRewardText(p.xp,p.stat,b.binary,b.target,b.unit))))
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#dbeafe;line-height:1.35;text-align:right;white-space:nowrap"},pairs.map((p,i)=>h("div",{key:i},fmtNum(p.xp||0)+" XP · "+(STAT_LBL[p.stat]||p.stat||""))))
         ),
         h("div",{class:"qrow",style:"align-items:center;margin-top:9px"},
           h("div",{class:"qbar"},h("div",{class:"qfill partial",style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,#274f88,#274f88 5px,#7aa7df 5px,#7aa7df 10px);background-size:14px 14px;opacity:.95"})),
-          h("div",{class:"qxp",style:"color:#dbeafe;white-space:nowrap;min-width:118px;text-align:right"},progressText)
+          h("div",{class:"qxp",style:"color:#dbeafe;white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},progressText)
         ),
+        h("div",{style:"font-size:10px;color:#8dbbff;font-family:Orbitron,sans-serif;margin-top:4px;text-align:left"},"⏱ "+fmtCD(remaining)+" restants"),
 
-        !compact&&!isRupture&&h("div",{style:"margin-top:9px"},
-          b.binary
-            ? h("button",{onClick:finish,style:"width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.07);color:#fff;font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px"},"REFERMER LA BRÈCHE ✓")
-            : h("div",{style:"display:flex;gap:8px"},
-                h("button",{onClick:()=>addMain(1),style:standardButtonStyle},"+1 "+b.unit),
-                h("button",{onClick:()=>addMain(b.step||10),style:standardButtonStyle},"+"+(b.step||10)+" "+b.unit)
-              )
+        !isRupture&&!mainDone&&h("div",{style:"margin-top:9px;display:flex;gap:8px"},
+          h("button",{onClick:()=>addMain(1),style:standardButtonStyle},"+1 "+b.unit),
+          h("button",{onClick:()=>addMain(b.step||10),style:standardButtonStyle},"+"+(b.step||10)+" "+b.unit)
         ),
 
         !compact&&isRupture&&h("div",{style:"margin-top:10px"},
@@ -2191,12 +2428,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               h("div",{style:"font-family:Orbitron,sans-serif;font-size:8.5px;color:"+(mainDone?"#4ade80":"#dbeafe")},mainProgressText)
             ),
             !mainDone&&h("div",{style:"display:flex;gap:7px;margin-top:8px"},
-              b.binary
-                ? h("button",{onClick:completeMain,style:"width:100%;padding:9px;border-radius:8px;border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.06);color:#fff;font-family:Orbitron,sans-serif;font-size:9px;cursor:pointer"},"VALIDER LE BOSS ✓")
-                : h(Fragment,null,
-                    h("button",{onClick:()=>addMain(1),style:standardButtonStyle},"+1 "+b.unit),
-                    h("button",{onClick:()=>addMain(b.step||10),style:standardButtonStyle},"+"+(b.step||10)+" "+b.unit)
-                  )
+              h("button",{onClick:()=>addMain(1),style:standardButtonStyle},"+1 "+b.unit),
+              h("button",{onClick:()=>addMain(b.step||10),style:standardButtonStyle},"+"+(b.step||10)+" "+b.unit)
             )
           ),
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#fff;letter-spacing:1px;text-transform:uppercase;margin:11px 0 7px"},"GARDE RAPPROCHÉE — "+guardDoneCount+"/"+guards.length),
@@ -2223,7 +2456,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             style:"width:100%;margin-top:10px;padding:11px;border-radius:8px;border:1px solid "+(ruptureComplete?"#4ade8088":"rgba(255,255,255,.12)")+";background:"+(ruptureComplete?"rgba(74,222,128,.12)":"rgba(255,255,255,.025)")+";color:"+(ruptureComplete?"#4ade80":"var(--td)")+";font-family:Orbitron,sans-serif;font-size:10px;cursor:"+(ruptureComplete?"pointer":"default")+";letter-spacing:1px;text-transform:uppercase"
           },ruptureComplete?"MAÎTRISER LA RUPTURE ✓":"4 OBJECTIFS À ACCOMPLIR")
         ),
-        !compact&&h("div",{style:"font-size:9px;color:#bfdbfe;font-family:Orbitron,sans-serif;line-height:1.45;margin-top:9px;text-align:center"},"OBJET ALÉATOIRE GARANTI À LA RÉUSSITE")
+
+        )
       )
     );
   }
@@ -2257,10 +2491,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       );
     }
     if(d){
-      return h("div",{class:"card",style:"border-color:"+color+"66"},
+      return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:#f59e0b44;background:linear-gradient(145deg,#140e03,#261b06)"},
+        h(BreachFxOverlay,{variant:"quests",theme:"dungeon"}),
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
           h("div",{style:"min-width:0"},
-            h("div",{class:"ctitle",style:"margin:0;color:"+color},d.icon+" "+d.title),
+            h("div",{class:"ctitle",style:"margin:0;color:#f59e0b"},"DONJON EN COURS"),
             h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"Progression "+completedRooms.length+"/"+d.rooms.length+" salles · "+fmtCD(remaining)+" restants"),
             d.contractConstraint&&h("div",{style:"font-size:9px;color:#f59e0b;font-family:Orbitron,sans-serif;letter-spacing:.8px;margin-top:5px"},"📜 CONTRAT DU MAÎTRE · "+(d.contractConstraint==="x1.5"?"Surcharge · objectifs ×1,5":d.contractConstraint==="sealedPath"?"Chemin scellé · salles dans l’ordre":d.contractConstraint==="noEscape"?"Sans échappatoire · objets d’évitement interdits":"Contrainte active")+" · récompense finale +20 %")
           ),
@@ -2275,7 +2510,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           return h("div",{key:i,onClick:()=>{if(!done&&!locked)setSelectedDungeonRoom(i);},style:"display:flex;gap:8px;align-items:flex-start;padding:8px;border-radius:10px;background:"+(selected?color+"18":"rgba(255,255,255,0.025)")+";border:1px solid "+(selected?color+"88":"rgba(255,255,255,0.05)")+";opacity:"+(done?"0.72":locked?"0.42":"1")+";cursor:"+(!done&&!locked?"pointer":"default")+";box-shadow:"+(selected?"0 0 14px "+color+"22":"none")},
             h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:"+(done?"#4ade80":selected?color:"var(--td)")+";width:18px;text-align:center;flex-shrink:0"},done?"✓":locked?"🔒":(i+1)),
             h("div",{style:"min-width:0;flex:1"},
-              h("div",{style:"font-size:12px;color:var(--tx);font-weight:700;line-height:1.25"},(i===d.rooms.length-1?"Boss — ":"")+room.name),
+              h("div",{style:"font-size:12px;color:var(--tx);font-weight:"+(boss?"700":"400")+";line-height:1.25"},(boss?"Boss — ":"")+room.name),
               h("div",{style:"font-size:10px;color:var(--td);line-height:1.35;margin-top:2px"},d.contractConstraint==="x1.5"?String(room.desc).replace(/\d+(?:[.,]\d+)?/g,m=>String(Math.round(parseFloat(m.replace(",","."))*1.5*10)/10).replace(".",",")):room.desc),
               locked&&h("div",{style:"font-size:8.5px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:.7px;text-transform:uppercase;margin-top:4px"},d.contractConstraint==="sealedPath"?"Chemin scellé · termine la salle précédente":boss?"Termine toutes les salles pour accéder au boss":"Salle verrouillée"),
               h("div",{style:"font-size:8.5px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:4px"},dungeonRoomRewardPairs(d,i).map(r=>"+"+r.xp+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ")),
@@ -2293,7 +2528,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           style:"width:100%;margin-top:10px;padding:11px;border-radius:9px;border:1px solid "+color+(selectedRoom?"66":"33")+";background:"+color+(selectedRoom?"12":"08")+";color:"+(selectedRoom?color:"var(--td)")+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:"+(selectedRoom?"pointer":"not-allowed")+";opacity:"+(selectedRoom?"1":"0.55")
         },"Valider la salle"),
         h("div",{style:"display:flex;gap:8px;margin-top:8px"},
-          itemQty("invisibilityCape")>0&&d.contractConstraint!=="noEscape"&&h("button",{onClick:()=>setSpecialItemChoice({type:"cape"}),style:"flex:1;padding:9px;border-radius:8px;border:1px solid #94a3b866;background:#94a3b80d;color:#cbd5e1;font-family:Orbitron,sans-serif;font-size:8px;letter-spacing:.8px"},"👣 PASSER UNE SALLE"),
+          
           itemQty("teleportCrystal")>0&&h("button",{onClick:()=>setSpecialItemChoice({type:"teleport"}),style:"flex:1;padding:9px;border-radius:8px;border:1px solid #60a5fa66;background:#60a5fa0d;color:#60a5fa;font-family:Orbitron,sans-serif;font-size:8px;letter-spacing:.8px"},"💠 QUITTER LE DONJON")
         )
       );
@@ -2339,10 +2574,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       );
     }
 
-    return h("div",{class:"card",style:"border-color:"+color+"66"},
+    return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:#f59e0b44;background:linear-gradient(145deg,#140e03,#261b06)"},
+      h(BreachFxOverlay,{variant:"home",theme:"dungeon"}),
       h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
         h("div",{style:"min-width:0"},
-          h("div",{class:"ctitle",style:"margin:0;color:"+color},d.icon+" "+d.title),
+          h("div",{class:"ctitle",style:"margin:0;color:#f59e0b"},"DONJON EN COURS"),
           h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},"Progression "+completedRooms.length+"/"+d.rooms.length+" salles · "+fmtCD(remaining)+" restants")
         ),
         h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap"},STAT_LBL[d.stat]||d.stat)
@@ -2351,7 +2587,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         const done=completedRooms.includes(i);
         return h("div",{key:i,style:"display:flex;gap:8px;align-items:center;padding:7px 8px;border-radius:9px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.045);opacity:"+(done?"0.7":"1")},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:"+(done?"#4ade80":"var(--td)")+";width:18px;text-align:center;flex-shrink:0"},done?"✓":(i+1)),
-          h("div",{style:"font-size:12px;color:var(--tx);font-weight:700;line-height:1.25;min-width:0"},(i===d.rooms.length-1?"Boss — ":"")+room.name)
+          h("div",{style:"font-size:12px;color:var(--tx);font-weight:"+(i===d.rooms.length-1?"700":"400")+";line-height:1.25;min-width:0"},(i===d.rooms.length-1?"Boss — ":"")+room.name)
         );
       }))
     );
@@ -2362,10 +2598,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const dungeonGold="#f59e0b";
     const subtitle="1 par jour · "+dungeonWeekCount+"/3 cette semaine";
 
-    return h("div",{class:"card",style:"border:1px solid rgba(245,158,11,0.55);background:rgba(245,158,11,0.025)"},
-      h("div",{class:"ctitle",style:"margin:0;color:"+dungeonGold},"DONJON"),
+    return h("div",{class:"card"+(dungeonAccessOpen?" breach-electric":""),style:"position:relative;overflow:"+(dungeonAccessOpen?"visible":"hidden")+";border-color:#f59e0b44;background:linear-gradient(145deg,#140e03,#261b06)"},
+      dungeonAccessOpen&&h(BreachFxOverlay,{variant:"quests",theme:"dungeon"}),
+      h("div",{class:"ctitle",style:"margin:0;color:"+dungeonGold},dungeonAccessOpen?"DONJON OUVERT":"DONJON FERMÉ"),
       h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},subtitle+" · 🗝️ "+dungeonKeys),
-      dungeonAccessOpen&&h("div",{style:"margin-top:8px;color:#4ade80;font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:1px"},"ACCÈS AU DONJON OUVERT"),
+      
       dungeonCanStart
         ? h("button",{onClick:()=>setConfirmDungeonChoice({type:"enter",color:dungeonGold}),style:"width:100%;margin-top:12px;padding:11px;border-radius:9px;border:1px solid "+dungeonGold+"88;background:"+dungeonGold+"12;color:"+dungeonGold+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.35px;text-transform:uppercase;cursor:pointer"},"ENTRER DANS LE DONJON")
         : h("div",{style:"text-align:center;padding:10px 0 2px;color:var(--td);font-size:11px;line-height:1.45"},
@@ -2381,13 +2618,24 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   }
 
 
+  function BreachInactiveCard(){
+    if(activeBreach) return null;
+    return h("div",{class:"card",style:"border-color:#8dbbff44;background:linear-gradient(145deg,#07162f,#102e5c)"},
+      h("div",{class:"ctitle",style:"margin:0;color:#dbeafe"},"BRÈCHE INACTIVE"),
+      h("div",{style:"text-align:center;padding:10px 0 2px;color:var(--td);font-size:11px;line-height:1.45"},
+        "Aucune brèche active n'a été détectée à proximité."
+      )
+    );
+  }
+
+
   function DebtCard({compact=false}={}){
     const debt=state.questDebt;
     if(!debt || debt.status!=="active") return null;
-    const color="#6E9A8E";
-    const colorDark="#35574F";
-    const colorLight="#A5C4BA";
-    const colorBg="rgba(110,154,142,0.09)";
+    const color="#facc15";
+    const colorDark="#a16207";
+    const colorLight="#fde047";
+    const colorBg="rgba(250,204,21,0.045)";
     const paid=Math.max(0,Number(debt.paid)||0);
     const amount=Math.max(1,Number(debt.amount)||1);
     const pct=Math.min(100,(paid/amount)*100);
@@ -2404,7 +2652,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const progressText=fmtNum(paid)+"/"+fmtNum(amount)+" "+(unit||"");
       const done=paid>=amount;
       const fillStateClass=done ? " done" : (pct>0 ? " partial" : "");
-      return h("div",{class:"card",style:"border-color:"+color+"66;background:"+colorBg},
+      return h("div",{class:"card",style:"border-color:"+color+"44;background:linear-gradient(145deg,#121003,#241f05)"},
         h("div",{class:"ctitle",style:"color:"+color+";margin-bottom:8px"},"Dette active"),
         h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:0"},
           QuestIcon(debt.id,debt.icon,14),
@@ -2422,13 +2670,13 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       );
     }
 
-    return h("div",{class:"card",style:"border-color:"+color+"66;background:"+colorBg},
+    return h("div",{class:"card",style:"border-color:"+color+"44;background:linear-gradient(145deg,#121003,#241f05)"},
       h("div",{class:"shdr"},
         h("div",null,
           h("div",{class:"ctitle",style:"margin:0;color:"+color},"Dette active")
         )
       ),
-      h("div",{class:"sqcard",style:"border-color:"+color+"55;background:linear-gradient(135deg,"+color+"10,rgba(255,255,255,.018))"},
+      h("div",{class:"sqcard",style:"border-color:"+color+"44;background:linear-gradient(135deg,rgba(250,204,21,.045),rgba(255,255,255,.010))"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;gap:8px"},
           h("div",{style:"display:flex;align-items:center;gap:8px;min-width:0"},
             QuestIcon(debt.id,debt.icon,14,"line-height:1.1;min-width:24px;text-align:center"),
@@ -2698,7 +2946,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
       h(DebtCard,{compact:true}),
       activeBreach&&h(BreachCard,{compact:true}),
-      activeSq&&h("div",{class:"card",style:"border-color:#ef444444"},
+      activeSq&&h("div",{class:"card"+(activeSq&&activeSq.expiresAt-now<86400000&&!activeSq.completedAt?" sq-urgent":""),style:"border-color:#ef444444;background:linear-gradient(145deg,#140303,#260606)"},
         h("div",{class:"ctitle",style:"color:#ef4444;margin-bottom:8px"},"Quête urgente"),
         h(UrgentHomeRow,{sq:activeSq})
       ),
@@ -2761,7 +3009,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     return h("div",{class:"tab"},
       h(DebtCard,null),
       activeBreach&&h(BreachCard,null),
-      (!completedSq||activeSq)&&h("div",{class:"card",style:"border-color:#ef444444"},
+      (!completedSq||activeSq)&&h("div",{class:"card"+(activeSq&&activeSq.expiresAt-now<86400000&&!activeSq.completedAt?" sq-urgent":""),style:"border-color:#ef444444;background:linear-gradient(145deg,#140303,#260606)"},
         h("div",{class:"shdr"},
           h("div",null,
             h("div",{class:"ctitle",style:"margin:0;color:#ef4444"},"Quête urgente"+(activeSq&&activeSq.tier?" · "+(SQ_TIER_LABEL[activeSq.tier]||""):""))
@@ -2788,6 +3036,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         bon.map(o=>o.isEnduranceChoice?h(EnduranceChoiceItem,{key:o.id,mode:"quest"}):h(QI,{key:o.id,obj:o}))
       ),
       !activeDungeon&&h(DungeonChoiceCard,null),
+      !activeBreach&&h(BreachInactiveCard,null),
     );
   }
 
@@ -2824,7 +3073,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   }
   function itemQty(id){ return ["codex","regressionOrb","debtAcknowledgement"].includes(id)?1:id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
   function Inventory(){
-    const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","mysteryMap","etherStopper","rerollToken","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape","recoveryOintment"]
+    const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","mysteryMap","etherStopper","rerollToken","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape","recoveryOintment","counterpartBalance"]
       .sort((a,b)=>{
         if(inventorySort==="name"){
           return INVENTORY_ITEMS[a].name.localeCompare(INVENTORY_ITEMS[b].name,"fr",{sensitivity:"base"});
@@ -2871,7 +3120,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         const it=INVENTORY_ITEMS[id], qty=itemQty(id), grey=!["codex","regressionOrb","debtAcknowledgement"].includes(id)&&!(id==="etherStopper"&&suspendedElixir)&&!(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk)&&(qty<1||(isElixirKind(id)&&(!!activeElixir||!!suspendedElixir)));
         return h("button",{key:id,onClick:()=>setInventoryItem(id),style:"position:relative;aspect-ratio:1/1;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.025);padding:8px;color:var(--tx);cursor:pointer;opacity:"+(grey?".48":"1")+";display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px"},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;line-height:1.25;letter-spacing:.5px;text-transform:uppercase;text-align:center;min-height:20px"},it.short),
-          h("div",{style:"line-height:1"},InventoryItemIcon(id, id==="masterContract" ? 46 : 38)),
+          h("div",{style:"line-height:1"},InventoryItemIcon(id, id==="masterContract" ? 46 : id==="counterpartBalance" ? 46 : 38)),
           h("div",{style:"position:absolute;right:6px;bottom:5px;border-radius:999px;min-width:20px;padding:2px 5px;background:rgba(0,0,0,.55);font-family:Orbitron,sans-serif;font-size:9px;color:#fff"},["codex","regressionOrb","debtAcknowledgement"].includes(id)?"∞":id==="etherStopper"&&suspendedElixir?"PAUSE":"×"+qty)
         );
       }))
@@ -2942,6 +3191,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }else if(id==="recoveryOintment"){
       const regularEligible=objs.some(o=>o.daily&&(Number(tLog[o.id])||0)<getEffectiveTarget(o.id));
       if(!regularEligible){disabled=true;reason="Aucune quête journalière ou bonus active et incomplète ne peut être passée.";}
+    }else if(id==="counterpartBalance"){
+      const eligible=counterpartBalanceSacrificeEligibleIds(state);
+      if(eligible.length<3){disabled=true;reason="Trois objets différents sont nécessaires pour utiliser la Balance ("+eligible.length+"/3 disponibles).";}
     }else if(id==="teleportCrystal"){
       if(activeBreach){disabled=true;reason="Une Brèche est déjà active.";}
       else if(state.alliedGiftPending){disabled=true;reason="Choisissez d’abord l’objet offert par le pays allié.";}
@@ -2957,7 +3209,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{class:"mtitle",style:"margin:0;line-height:1.2;min-width:0"},it.name),
           h("button",{onClick:()=>setInventoryItem(null),style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
         ),
-        h("div",{style:"display:flex;justify-content:center;align-items:center;margin:14px 0 8px"},InventoryItemIcon(id,128)),
+        h("div",{style:"display:flex;justify-content:center;align-items:center;margin:14px 0 8px"},InventoryItemIcon(id,id==="counterpartBalance"?154:128)),
         !it.permanent&&h("div",{style:"text-align:center;font-family:Orbitron,sans-serif;font-size:10px;color:var(--td);margin-bottom:16px"},id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"MARQUE EN COURS":id==="etherStopper"&&suspendedElixir?"ÉLIXIR SUSPENDU · "+fmtCD(suspendedElixir.remainingMs):"QUANTITÉ : "+qty),
         h("div",{style:"font-size:12px;line-height:1.6;color:var(--tx);margin-bottom:14px"},it.desc),
         !it.permanent&&h("div",{style:"margin-bottom:16px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);padding:10px 0"},
@@ -2985,6 +3237,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             ?"Briser le Cristal de téléportation pour rejoindre un pays voisin et ouvrir une Brèche aléatoire ?"
             :id==="mysteryMap"
               ?"Déplier la Carte des profondeurs pour choisir la statistique du prochain donjon ?"
+              :id==="counterpartBalance"
+                ?"Utiliser la Balance des contreparties pour sacrifier 3 objets différents et choisir 1 nouvel objet ?"
               :"Êtes-vous certain de vouloir "+(id==="regressionOrb"?"activer l’":id==="debtAcknowledgement"?"utiliser la ":id==="dungeonKey"?"utiliser une ":id==="transmutationGrimoire"?"utiliser le ":id==="destinyCompass"?"orienter la ":id==="alchemicalCatalyst"?"préparer le ":"consommer un ")+it.name+" ?"),
       h("div",{style:"display:flex;gap:10px;margin-top:22px"},
         h("button",{class:"rudis",style:"min-width:110px;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>setConfirmItemUse(null)},"Non"),
@@ -3033,6 +3287,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             setSpecialItemChoice({type:"recoveryOintment"});
           }else if(id==="recordHammer"||id==="invisibilityCape"){
             setSpecialItemChoice({type:id});
+          }else if(id==="counterpartBalance"){
+            setBalanceSacrificeChoice([]);
           }else if(id==="teleportCrystal"){
             const t=Date.now();
             const tpl=BREACH_POOL.length?BREACH_POOL[Math.floor(Math.random()*BREACH_POOL.length)]:null;
@@ -3052,6 +3308,92 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       )
     ));
   }
+  function CounterpartBalanceSacrificeModal(){
+    if(!Array.isArray(balanceSacrificeChoice))return null;
+    const eligible=counterpartBalanceSacrificeEligibleIds(state);
+    const selected=balanceSacrificeChoice.filter(id=>eligible.includes(id));
+    const selectedSet=new Set(selected);
+    return h("div",{class:"modal-ov"},
+      h("div",{class:"modal",style:"position:relative;max-width:470px;width:calc(100% - 24px);max-height:88vh;overflow:auto"},
+        h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:12px"},
+          h("div",{class:"mtitle",style:"margin:0;line-height:1.2"},"CHOISIR 3 CONTREPARTIES"),
+          h("button",{onClick:()=>setBalanceSacrificeChoice(null),style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
+        ),
+        h("div",{style:"font-size:11px;color:var(--td);line-height:1.55;margin:12px 0 8px;text-align:center"},"Sélectionnez exactement 3 objets différents. Un exemplaire de chacun sera sacrifié avec la Balance."),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+(selected.length===3?rank.color:"var(--td)")+";text-align:center;margin-bottom:14px"},selected.length+" / 3 sélectionnés"),
+        h("div",{style:"display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px"},eligible.map(id=>{
+          const it=INVENTORY_ITEMS[id];
+          const chosen=selectedSet.has(id);
+          const qty=itemQty(id);
+          const blocked=!chosen&&selected.length>=3;
+          return h("button",{key:id,disabled:blocked,onClick:()=>setBalanceSacrificeChoice(cur=>{
+            const list=Array.isArray(cur)?cur:[];
+            if(list.includes(id))return list.filter(x=>x!==id);
+            if(list.length>=3)return list;
+            return [...list,id];
+          }),style:"position:relative;min-height:116px;padding:10px 8px;border-radius:11px;border:1px solid "+(chosen?rank.color:"rgba(255,255,255,.10)")+";background:"+(chosen?rank.color+"14":"rgba(255,255,255,.025)")+";color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;cursor:"+(blocked?"default":"pointer")+";opacity:"+(blocked?".45":"1")},
+            h("div",{style:"height:52px;display:flex;align-items:center;justify-content:center"},InventoryItemIcon(id,46)),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;line-height:1.3;letter-spacing:.5px;text-transform:uppercase;text-align:center"},it.short),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:var(--td)"},"×"+qty),
+            chosen&&h("div",{style:"position:absolute;right:7px;top:6px;color:"+rank.color+";font-size:16px;font-weight:900"},"✓")
+          );
+        })),
+        h("div",{style:"display:flex;gap:9px;margin-top:14px"},
+          h("button",{onClick:()=>setBalanceSacrificeChoice(null),style:"flex:1;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--td);font-family:Orbitron,sans-serif;cursor:pointer"},"Annuler"),
+          h("button",{disabled:selected.length!==3,onClick:()=>{setBalanceSacrificeChoice(null);setBalanceRewardChoice({sacrifices:[...selected]});},style:"flex:1;padding:10px;border-radius:9px;border:1px solid "+(selected.length===3?rank.color:"rgba(255,255,255,.08)")+";background:"+(selected.length===3?rank.color+"14":"rgba(255,255,255,.03)")+";color:"+(selected.length===3?rank.color:"var(--td)")+";font-family:Orbitron,sans-serif;cursor:"+(selected.length===3?"pointer":"default")},"Continuer")
+        )
+      )
+    );
+  }
+
+  function CounterpartBalanceRewardModal(){
+    if(!balanceRewardChoice)return null;
+    const sacrifices=balanceRewardChoice.sacrifices||[];
+    const ids=counterpartBalanceRewardEligibleIds();
+    return h("div",{class:"modal-ov"},
+      h("div",{class:"modal",style:"position:relative;max-width:470px;width:calc(100% - 24px);max-height:88vh;overflow:auto"},
+        h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:12px"},
+          h("div",{class:"mtitle",style:"margin:0;line-height:1.2"},"CHOISIR LA CONTREPARTIE"),
+          h("button",{onClick:()=>setBalanceRewardChoice(null),style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
+        ),
+        h("div",{style:"font-size:11px;color:var(--td);line-height:1.55;margin:12px 0 14px;text-align:center"},"Choisissez l’objet que la Balance vous accordera en échange des 3 sacrifices."),
+        h("div",{style:"display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px"},ids.map(id=>{
+          const it=INVENTORY_ITEMS[id];
+          return h("button",{key:id,onClick:()=>{setBalanceRewardChoice(null);setConfirmBalanceExchange({sacrifices:[...sacrifices],rewardId:id});},style:"min-height:112px;padding:10px 8px;border-radius:11px;border:1px solid rgba(234,179,8,.28);background:rgba(234,179,8,.045);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer"},
+            h("div",{style:"height:54px;display:flex;align-items:center;justify-content:center"},InventoryItemIcon(id,48)),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;line-height:1.3;letter-spacing:.5px;text-transform:uppercase;text-align:center"},it.short)
+          );
+        })),
+        h("button",{onClick:()=>{setBalanceRewardChoice(null);setBalanceSacrificeChoice([...sacrifices]);},style:"width:100%;margin-top:12px;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--td);font-family:Orbitron,sans-serif;cursor:pointer"},"Retour aux sacrifices")
+      )
+    );
+  }
+
+  function ConfirmCounterpartBalanceExchangeModal(){
+    if(!confirmBalanceExchange)return null;
+    const sacrifices=confirmBalanceExchange.sacrifices||[];
+    const rewardId=confirmBalanceExchange.rewardId;
+    const reward=INVENTORY_ITEMS[rewardId];
+    const color="#eab308";
+    return h("div",{class:"ruov",style:"--rc:"+color+";--rg:"+color+"66"},
+      h("div",{class:"rucont",style:"width:min(500px,calc(100vw - 34px));background:rgba(15,15,18,.97);border:1px solid "+color+"88;border-radius:18px;padding:22px;box-shadow:0 0 30px "+color+"22"},
+        h("div",{class:"ruevol",style:"color:"+color},"CONFIRMATION"),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:15px;font-weight:900;color:#fff;text-align:center;line-height:1.5;max-width:370px"},"Sacrifier ces 3 objets et consommer la Balance pour recevoir « "+reward.name+" » ?"),
+        h("div",{style:"width:100%;margin-top:14px;display:flex;flex-direction:column;gap:7px"},sacrifices.map(id=>h("div",{key:id,style:"display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:9px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.025)"},InventoryItemIcon(id,28),h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:var(--tx);text-align:left"},INVENTORY_ITEMS[id].name)))),
+        h("div",{style:"font-size:10px;color:var(--td);margin-top:12px"},"En échange :"),
+        h("div",{style:"margin-top:7px;display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;border:1px solid "+color+"66;background:"+color+"0d"},InventoryItemIcon(rewardId,38),h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";text-align:left"},reward.name)),
+        h("div",{style:"display:flex;gap:10px;margin-top:22px;width:100%"},
+          h("button",{class:"rudis",style:"flex:1;min-width:0;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>{setConfirmBalanceExchange(null);setBalanceRewardChoice({sacrifices:[...sacrifices]});}},"Retour"),
+          h("button",{class:"rudis",style:"flex:1;min-width:0;--rc:"+color+";--rg:"+color+"66",onClick:()=>{
+            setState(s=>exchangeCounterpartBalanceState(s,sacrifices,rewardId));
+            setConfirmBalanceExchange(null);
+            setItemUseUp({id:"counterpartBalance",exchangeRewardId:rewardId});
+          }},"Échanger")
+        )
+      )
+    );
+  }
+
   function CompassStatModal(){
     if(!compassStatChoice)return null;
     const choices=["Sante","Force","Esprit","Endurance","Agilite","Discipline"];
@@ -3963,7 +4305,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       mysteryMap:{main:"#b7791f",accent:"#f5d08a"},
       etherStopper:{main:"#7c3aed",accent:"#60a5fa"},
       rerollToken:{main:"#d4a84f",accent:"#38bdf8"},
-      alchemicalCatalyst:{main:"#10b981",accent:"#5eead4"}
+      alchemicalCatalyst:{main:"#10b981",accent:"#5eead4"},
+      counterpartBalance:{main:"#eab308",accent:"#fef08a"}
     }[itemLootUp.item]||{main:rank.color||"#f59e0b",accent:"#ffffff"};
     const main=rare?"#f59e0b":fx.main;
     const accent=rare?"#fde68a":fx.accent;
@@ -4069,7 +4412,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const it=INVENTORY_ITEMS[itemUseUp.id];
     return h("div",{class:"ruov",style:"--rc:"+rank.color+";--rg:"+rank.glow},h("div",{class:"rucont"},
       h(NotificationHeader,null),
-      h("div",{class:"ruevol",style:"color:"+rank.color},itemUseUp.id==="teleportCrystal"&&itemUseUp.alliedTeleport?"ALLIANCE SCELLÉE":itemUseUp.id==="dungeonKey"?"Vous avez utilisé une":itemUseUp.id==="debtAcknowledgement"?"Dette créée avec une":itemUseUp.id==="transmutationGrimoire"?"Transmutation accomplie":itemUseUp.id==="destinyCompass"?"Boussole orientée":itemUseUp.id==="mysteryMap"?"Carte déployée":itemUseUp.id==="etherStopper"?(itemUseUp.resumed?"Élixir réactivé":"Élixir suspendu"):itemUseUp.id==="rerollToken"?"Quête urgente invoquée":itemUseUp.id==="alchemicalCatalyst"?"Catalyseur préparé":"Vous avez consommé un"),
+      h("div",{class:"ruevol",style:"color:"+rank.color},itemUseUp.id==="teleportCrystal"&&itemUseUp.alliedTeleport?"ALLIANCE SCELLÉE":itemUseUp.id==="dungeonKey"?"Vous avez utilisé une":itemUseUp.id==="debtAcknowledgement"?"Dette créée avec une":itemUseUp.id==="transmutationGrimoire"?"Transmutation accomplie":itemUseUp.id==="destinyCompass"?"Boussole orientée":itemUseUp.id==="mysteryMap"?"Carte déployée":itemUseUp.id==="etherStopper"?(itemUseUp.resumed?"Élixir réactivé":"Élixir suspendu"):itemUseUp.id==="rerollToken"?"Quête urgente invoquée":itemUseUp.id==="alchemicalCatalyst"?"Catalyseur préparé":itemUseUp.id==="counterpartBalance"?"Échange accompli":"Vous avez consommé un"),
       h("div",{class:"rurank",style:responsiveItemAnimationTitleStyle(it.name,56),"data-r":it.name},it.name),
       itemUseUp.stat&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Vous bénéficiez de +"+Math.round(itemUseUp.pct*100)+" % d’XP dans ",h("span",{style:"color:"+(STAT_COLOR[itemUseUp.stat]||rank.color)},STAT_LBL[itemUseUp.stat]||itemUseUp.stat)," pendant 24 h."),
       itemUseUp.global&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:#c084fc"},"Vous bénéficiez de +"+Math.round(itemUseUp.pct*100)+" % d’XP sur toutes les statistiques pendant 24 h."),
@@ -4083,12 +4426,13 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       itemUseUp.alliedTeleport&&itemUseUp.breachName&&h("div",{class:"rulabel",style:"margin-top:8px;max-width:350px;line-height:1.45;color:#60a5fa"},"Brèche la plus proche : "+itemUseUp.breachName),
       itemUseUp.armed&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:#5eead4"},"La prochaine transmutation ne coûtera que 3 Élixirs d’expérience mineurs."),
       itemUseUp.recordWon&&h("div",{class:"rulabel",style:"margin-top:12px"},"Record officiel battu : +500 XP."),
+      itemUseUp.exchangeRewardId&&INVENTORY_ITEMS[itemUseUp.exchangeRewardId]&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:350px;line-height:1.55;color:#facc15"},"La Balance vous accorde : "+INVENTORY_ITEMS[itemUseUp.exchangeRewardId].name+"."),
       h("button",{class:"rudis",onClick:()=>setItemUseUp(null)},"Continuer")
     ));
   }
 
   function Codex(){
-    const toggleC = k => setCodexOpen(o=>({obl:false,bonus:false,reg:false,sq:false,ev:false,mm:false,debt:false,ep:false,breach:false,breachRupture:false,dj:false,djAlt:false,cs:false,[k]:!o[k]}));
+    const toggleC = k => setCodexOpen(o=>({obl:false,bonus:false,reg:false,sq:false,ev:false,mm:false,debt:false,ep:false,breach:false,dj:false,djAlt:false,cs:false,[k]:!o[k]}));
     const statLabel = stat => STAT_LBL2[stat] || STAT_LBL[stat] || stat || "";
     const unitPlural = (unit, value) => {
       if(!unit) return "";
@@ -4286,23 +4630,18 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       ].filter(Boolean);
       return h("div",{key:b.id,style:"margin-bottom:9px;padding:9px 10px;border-radius:9px;border:1px solid "+color+"33;background:"+color+"08"},
         h("div",{style:"font-size:11px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;line-height:1.3"},boss?boss.name:b.name),
-        h("div",{style:"font-size:10px;color:var(--td);line-height:1.4;margin-top:4px"},"Objectif : "+b.name),
-        rewards.length>0&&h("div",{style:"margin-top:7px"},rewards.map((r,i)=>h(StatPill,{key:i,stat:r.stat,xp:r.xp})))
+        h("div",{style:"font-size:10px;color:var(--td);line-height:1.4;margin-top:4px"},"Objectif du Boss : "+b.name),
+        rewards.length>0&&h("div",{style:"margin-top:7px"},rewards.map((r,i)=>h(StatPill,{key:i,stat:r.stat,xp:r.xp}))),
+        boss&&h(Fragment,null,
+          h("div",{style:"font-size:8.5px;color:#fff;font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin-top:9px;margin-bottom:5px"},"Garde rapprochée"),
+          h("div",{style:"display:flex;flex-direction:column;gap:5px"},(boss.guards||[]).map(g=>h("div",{key:g.id,style:"padding:6px 7px;border-radius:7px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02)"},
+            h("div",{style:"font-size:9.5px;color:#fff;font-weight:700;line-height:1.3"},g.name),
+            h("div",{style:"font-size:9.5px;color:var(--td);line-height:1.4;margin-top:2px"},g.objective)
+          )))
+        )
       );
     }
 
-    function renderBreachBossCodex(rb){
-      const color=STAT_COLOR[rb.stat]||"var(--rc)";
-      return h("div",{key:rb.id,style:"margin-bottom:9px;padding:9px 10px;border-radius:9px;border:1px solid "+color+"33;background:"+color+"08"},
-        h("div",{style:"font-size:11px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;line-height:1.3"},rb.name),
-        h("div",{style:"font-size:10px;color:var(--td);line-height:1.4;margin-top:4px"},"Objectif du Boss : "+(rb.objective||((BREACH_POOL.find(b=>b.id===rb.breachId)||{}).name)||"—")),
-        h("div",{style:"font-size:8.5px;color:#fff;font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin-top:9px;margin-bottom:5px"},"Garde rapprochée"),
-        h("div",{style:"display:flex;flex-direction:column;gap:5px"},(rb.guards||[]).map(g=>h("div",{key:g.id,style:"padding:6px 7px;border-radius:7px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02)"},
-          h("div",{style:"font-size:9.5px;color:#fff;font-weight:700;line-height:1.3"},g.name),
-          h("div",{style:"font-size:9.5px;color:var(--td);line-height:1.4;margin-top:2px"},g.objective)
-        )))
-      );
-    }
     function Section({id,title,count,children}){
       const open=!!codexOpen[id];
       return h("div",{class:"card"},
@@ -4399,10 +4738,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const hiddenBonus = objs.filter(o=>o.optional&&!o.weekly&&o.bonusHidden);
     const specialList = STATS.flatMap(stat=>(SP[stat]||[]).map(q=>({...q,stat:q.stat||stat})));
     const breachList=BREACH_POOL.map(q=>({...q,isBreach:true}));
-    const breachBossList=BREACH_POOL.map(b=>{
-      const boss=buildBreachRuptureBoss(b.id);
-      return boss?{...boss,stat:b.stat,breachId:b.id}:null;
-    }).filter(Boolean);
 
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setInventoryItem(null)}},
       h("div",{class:"modal",style:"position:relative;max-width:470px;width:calc(100% - 24px);max-height:88vh;overflow:auto;padding-top:16px"},
@@ -4414,15 +4749,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{style:"font-size:12px;line-height:1.6;color:var(--tx);text-align:center;margin-bottom:15px"},"Permet au joueur de consulter les quêtes et systèmes de l’application."),
         h(Section,{id:"breach",title:"Brèches",count:breachList.length},
           h(Fragment,null,
-            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Une Brèche a 1 % de chance d’apparaître au reset quotidien. Elle remplace la quête urgente du jour et reste ouverte 72 h."),
-            groupByDominantStat(breachList,renderBreachCodex,b=>b.stat)
-          )
-        ),
-        h(Section,{id:"breachRupture",title:"Rupture de Brèche",count:breachBossList.length},
-          h(Fragment,null,
-            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:6px"},"Si une Brèche n’est pas refermée après 72 h, elle entre en Rupture pendant 24 h. Son Boss reprend l’objectif initial et invoque une garde rapprochée de 3 sous-quêtes."),
+            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:6px"},"Une Brèche a 1 % de chance d’apparaître au reset quotidien. Elle remplace la quête urgente du jour et reste ouverte 72 h. Si elle n’est pas refermée après 72 h, elle entre en Rupture pendant 24 h : son Boss reprend l’objectif initial et invoque une garde rapprochée de 3 sous-quêtes."),
             h("div",{style:"font-size:10px;color:#ef4444;font-family:Orbitron,sans-serif;line-height:1.5;font-weight:800;margin-bottom:10px"},"−25 % XP si la Brèche rompue n’est pas fermée dans les 24 h."),
-            groupByDominantStat(breachBossList,renderBreachBossCodex,rb=>rb.stat)
+            groupByDominantStat(breachList,renderBreachCodex,b=>b.stat)
           )
         ),
         h(Section,{id:"dj",title:"Donjons",count:DUNGEONS.length},
@@ -4524,6 +4853,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(ItemUseUp,null),
       h(InventoryItemModal,null),
       h(ConfirmItemUseModal,null),
+      h(CounterpartBalanceSacrificeModal,null),
+      h(CounterpartBalanceRewardModal,null),
+      h(ConfirmCounterpartBalanceExchangeModal,null),
       h(CompassStatModal,null),
       h(DungeonMapStatModal,null),
       h(ElixirStatModal,null),
