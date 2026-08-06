@@ -52,8 +52,8 @@ const SP = {
   Agilite:[
     {id:"sp_flow20",  name:"Animal flow · 30min", icon:"\uD83D\uDC0A",                                         unit:"min",  target:30, xp:1250, days:1, tiers:[{at:15,xp:500,stat:"Agilite"},{at:30,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"}]},
     {id:"sp_fluide",  name:"Flow martial · 30min", icon:"\uD83C\uDF0A",                              unit:"min",  target:30, xp:1250, days:1, tiers:[{at:15,xp:500,stat:"Agilite"},{at:30,xp:500,stat:"Agilite",xp2:250,stat2:"Endurance"}]},
-    {id:"sp_silent",  name:"Déplacements silencieux · 30min", icon:"\uD83D\uDC08",                          unit:"min",  target:10, xp:500, days:1},
-        {id:"sp_footwork", name:"Footwork · 30min", icon:"\u26A1",                                            unit:"min",  target:10, xp:500, xp2:250, stat2:"Endurance", step:5, days:1},
+    {id:"sp_silent",  name:"Déplacements silencieux · 15min", icon:"\uD83D\uDC08",                          unit:"min",  target:15, xp:500, days:1},
+        {id:"sp_footwork", name:"Footwork · 15min", icon:"\u26A1",                                            unit:"min",  target:15, xp:500, xp2:250, stat2:"Endurance", step:5, days:1},
   ],
   Discipline:[
     {id:"sp_no_passive", name:"Aucun contenu passif", icon:"\uD83D\uDEAB", unit:"jour", target:1, xp:500, days:1, binary:true},

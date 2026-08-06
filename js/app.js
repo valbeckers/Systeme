@@ -1,5 +1,5 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
-import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260805-xp-med-balance-02";
+import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260806-urgent-silent-footwork-15";
 import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js";
 import {
   isDebtEligibleQuest,
