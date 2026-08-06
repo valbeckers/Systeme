@@ -32,7 +32,7 @@ import {
   expireActiveDungeonState,
   canValidateDungeonRoom
 } from "./dungeonEngine.js?v=20260805-master-contract-random-01";
-import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260805-master-contract-random-01";
+import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260806-level-rank-loot-01";
 import {
   incrementLootState,
   pickRandomBreachLoot,
@@ -481,6 +481,7 @@ function App(){
   function switchTab(id){ setTab(id); if(scrollRef.current) scrollRef.current.scrollTop=0; }
   const [rankUp,setRankUp] = useState(null);
   const [levelUp,setLevelUp] = useState(null);
+  const [rankLootChoice,setRankLootChoice] = useState(null);
   const [statDecadeUp,setStatDecadeUp] = useState(null);
   const [statLevelQueue,setStatLevelQueue] = useState([]);
   const [debtUp,setDebtUp] = useState(null);
@@ -566,6 +567,25 @@ function App(){
     return won;
   }
 
+  function grantProgressionLootItems(ids){
+    const rewards=(ids||[]).filter(id=>INVENTORY_ITEMS[id]&&!INVENTORY_ITEMS[id].permanent);
+    if(!rewards.length)return;
+    setState(s=>rewards.reduce((next,id)=>incrementLootState(next,id),s));
+    rewards.forEach(id=>{
+      if(id==="dungeonKey")enqueueDungeonKeyLoot("guaranteed");
+      else enqueueItemLoot(id,"guaranteed");
+    });
+  }
+
+  function drawRandomProgressionLoot(count=1){
+    const eligible=counterpartBalanceRewardEligibleIds();
+    if(!eligible.length)return [];
+    return Array.from({length:Math.max(0,Math.floor(Number(count)||0))},()=>{
+      const index=Math.min(eligible.length-1,Math.floor(Math.random()*eligible.length));
+      return eligible[Math.max(0,index)];
+    }).filter(Boolean);
+  }
+
   function grantAlliedGift(id){
     setState(s=>grantAlliedGiftState(s,id));
   }
@@ -607,18 +627,18 @@ function App(){
 
   // File d’attente des animations de montée de niveau de stat
   useEffect(()=>{
-    if(statDecadeUp || !statLevelQueue.length) return;
+    if(rankLootChoice || statDecadeUp || !statLevelQueue.length) return;
     const [next,...rest]=statLevelQueue;
     setStatLevelQueue(rest);
     setStatDecadeUp(next);
-  },[statDecadeUp,statLevelQueue]);
+  },[rankLootChoice,statDecadeUp,statLevelQueue]);
 
   useEffect(()=>{
-    if(completionUp || !completionQueue.length) return;
+    if(rankLootChoice || completionUp || !completionQueue.length) return;
     const [next,...rest]=completionQueue;
     setCompletionQueue(rest);
     setCompletionUp(next);
-  },[completionUp,completionQueue]);
+  },[rankLootChoice,completionUp,completionQueue]);
 
 
   // Penalite jours manques (une seule fois au montage)
@@ -1015,6 +1035,15 @@ function App(){
     const afterLevel = getGlobalLevelInfo(afterXp).level;
     const rankChanged = afterRank.id !== beforeRank.id;
     const levelChanged = afterLevel !== beforeLevel;
+    const levelsGained=Math.max(0,afterLevel-beforeLevel);
+
+    // Chaque niveau global franchi garantit un objet aléatoire non permanent.
+    // Le tirage est effectué maintenant, puis le butin est versé juste après
+    // la mise à jour d'XP ; ses animations attendent la fin du Level/Rank Up.
+    if(levelsGained>0){
+      const levelRewards=drawRandomProgressionLoot(levelsGained);
+      setTimeout(()=>grantProgressionLootItems(levelRewards),Math.max(0,delay)+40);
+    }
 
     triggerStatDecadeOverlay(beforeStats,afterStats,rankChanged||levelChanged ? delay+1200 : delay);
 
@@ -1167,11 +1196,11 @@ function App(){
     if(allDailyDone && state.dailyCompletionAnimDay!==today) return;
     if(dungeonLootConditionsMet && state.allQuestsCompletionAnimDay!==today) return;
     if(completionQueue.length) return;
-    if(rankUp || levelUp || statDecadeUp || completionUp || streakUp || recordUp || contractUp || dungeonUp || ruptureUp || urgentUp || debtUp || prestigeUp || alliedGiftUp || alliedGiftChoiceOpen || confirmAlliedGift) return;
+    if(rankUp || levelUp || rankLootChoice || statDecadeUp || completionUp || streakUp || recordUp || contractUp || dungeonUp || ruptureUp || urgentUp || debtUp || prestigeUp || alliedGiftUp || alliedGiftChoiceOpen || confirmAlliedGift) return;
     const [next,...rest]=keyLootQueue;
     setKeyLootQueue(rest);
     setKeyLootUp(next);
-  },[keyLootQueue,keyLootUp,rankUp,levelUp,statDecadeUp,completionUp,completionQueue.length,streakUp,recordUp,contractUp,dungeonUp,ruptureUp,urgentUp,debtUp,prestigeUp,alliedGiftUp,alliedGiftChoiceOpen,confirmAlliedGift,allDailyDone,dungeonLootConditionsMet,state.dailyCompletionAnimDay,state.allQuestsCompletionAnimDay,today]);
+  },[keyLootQueue,keyLootUp,rankUp,levelUp,rankLootChoice,statDecadeUp,completionUp,completionQueue.length,streakUp,recordUp,contractUp,dungeonUp,ruptureUp,urgentUp,debtUp,prestigeUp,alliedGiftUp,alliedGiftChoiceOpen,confirmAlliedGift,allDailyDone,dungeonLootConditionsMet,state.dailyCompletionAnimDay,state.allQuestsCompletionAnimDay,today]);
 
   useEffect(()=>{
     if(itemLootUp || !itemLootQueue.length) return;
@@ -1179,16 +1208,16 @@ function App(){
     if(allDailyDone && state.dailyCompletionAnimDay!==today) return;
     if(dungeonLootConditionsMet && state.allQuestsCompletionAnimDay!==today) return;
     if(completionQueue.length) return;
-    if(rankUp || levelUp || statDecadeUp || completionUp || streakUp || recordUp || keyLootUp || contractUp || dungeonUp || ruptureUp || urgentUp || debtUp || prestigeUp || itemUseUp || alliedGiftUp || alliedGiftChoiceOpen || confirmAlliedGift) return;
+    if(rankUp || levelUp || rankLootChoice || statDecadeUp || completionUp || streakUp || recordUp || keyLootUp || contractUp || dungeonUp || ruptureUp || urgentUp || debtUp || prestigeUp || itemUseUp || alliedGiftUp || alliedGiftChoiceOpen || confirmAlliedGift) return;
     const [next,...rest]=itemLootQueue;
     setItemLootQueue(rest);
     setItemLootUp(next);
-  },[itemLootQueue,itemLootUp,rankUp,levelUp,statDecadeUp,completionUp,completionQueue.length,streakUp,recordUp,keyLootUp,contractUp,dungeonUp,ruptureUp,urgentUp,debtUp,prestigeUp,itemUseUp,alliedGiftUp,alliedGiftChoiceOpen,confirmAlliedGift,allDailyDone,dungeonLootConditionsMet,state.dailyCompletionAnimDay,state.allQuestsCompletionAnimDay,today]);
+  },[itemLootQueue,itemLootUp,rankUp,levelUp,rankLootChoice,statDecadeUp,completionUp,completionQueue.length,streakUp,recordUp,keyLootUp,contractUp,dungeonUp,ruptureUp,urgentUp,debtUp,prestigeUp,itemUseUp,alliedGiftUp,alliedGiftChoiceOpen,confirmAlliedGift,allDailyDone,dungeonLootConditionsMet,state.dailyCompletionAnimDay,state.allQuestsCompletionAnimDay,today]);
 
   useEffect(()=>{
     const pending=state.alliedGiftPending;
     if(!pending||alliedGiftUp||alliedGiftChoiceOpen||confirmAlliedGift)return;
-    if(rankUp||levelUp||statDecadeUp||completionUp||streakUp||recordUp||keyLootUp||itemLootUp||contractUp||dungeonUp||ruptureUp||urgentUp||debtUp||prestigeUp||itemUseUp)return;
+    if(rankUp||levelUp||rankLootChoice||statDecadeUp||completionUp||streakUp||recordUp||keyLootUp||itemLootUp||contractUp||dungeonUp||ruptureUp||urgentUp||debtUp||prestigeUp||itemUseUp)return;
     if(keyLootQueue.length||itemLootQueue.length)return;
     setAlliedGiftUp(pending);
   },[
@@ -1198,6 +1227,7 @@ function App(){
     confirmAlliedGift,
     rankUp,
     levelUp,
+    rankLootChoice,
     statDecadeUp,
     completionUp,
     streakUp,
@@ -4112,7 +4142,54 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h(NotificationHeader,null),
         h("div",{class:"ruevol",style:"color:"+rankUp.color+";text-shadow:0 0 14px "+rankUp.glow},"ÉVOLUTION DE RANG"),
         h("div",{class:"rurank",style:"color:"+rankUp.color+";text-shadow:0 0 18px "+rankUp.glow,"data-r":"RANG "+rankUp.id},"RANG "+rankUp.id),
-        h("button",{class:"rudis",onClick:()=>setRankUp(null)},"Continuer")
+        h("button",{class:"rudis",onClick:()=>{setRankUp(null);setRankLootChoice([]);}},"Continuer")
+      )
+    );
+  }
+
+  function RankLootChoiceModal(){
+    if(!Array.isArray(rankLootChoice))return null;
+    const ids=counterpartBalanceRewardEligibleIds();
+    const selected=rankLootChoice.slice(0,2);
+    const counts=selected.reduce((acc,id)=>{acc[id]=(acc[id]||0)+1;return acc;},{});
+    const color=rank.color||"#8b82c4";
+    const removeOne=id=>setRankLootChoice(cur=>{
+      const list=Array.isArray(cur)?[...cur]:[];
+      const index=list.lastIndexOf(id);
+      if(index>=0)list.splice(index,1);
+      return list;
+    });
+    return h("div",{class:"modal-ov"},
+      h("div",{class:"modal",style:"position:relative;max-width:470px;width:calc(100% - 24px);max-height:88vh;overflow:auto"},
+        h("div",{class:"mtitle",style:"margin:0;line-height:1.2;text-align:center"},"RÉCOMPENSE DE RANG"),
+        h("div",{style:"font-size:11px;color:var(--td);line-height:1.55;margin:12px 0 7px;text-align:center"},"Choisissez 2 objets. Vous pouvez choisir deux fois le même objet."),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+(selected.length===2?color:"var(--td)")+";text-align:center;margin-bottom:12px"},selected.length+" / 2 sélectionnés"),
+        selected.length>0&&h("div",{style:"display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin-bottom:13px"},Object.entries(counts).map(([id,count])=>
+          h("button",{key:id,onClick:()=>removeOne(id),style:"display:flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;border:1px solid "+color+"55;background:"+color+"0d;color:#fff;cursor:pointer"},
+            InventoryItemIcon(id,24),
+            h("span",{style:"font-family:Orbitron,sans-serif;font-size:8px"},(INVENTORY_ITEMS[id].short||INVENTORY_ITEMS[id].name)+(count>1?" ×"+count:"")),
+            h("span",{style:"color:var(--td);font-size:11px"},"×")
+          )
+        )),
+        h("div",{style:"display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px"},ids.map(id=>{
+          const it=INVENTORY_ITEMS[id];
+          const count=counts[id]||0;
+          const blocked=selected.length>=2;
+          return h("button",{key:id,disabled:blocked,onClick:()=>setRankLootChoice(cur=>{
+            const list=Array.isArray(cur)?cur:[];
+            if(list.length>=2)return list;
+            return [...list,id];
+          }),style:"position:relative;min-height:112px;padding:10px 8px;border-radius:11px;border:1px solid "+(count?color+"88":"rgba(255,255,255,.10)")+";background:"+(count?color+"12":"rgba(255,255,255,.025)")+";color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:"+(blocked?"default":"pointer")+";opacity:"+(blocked&&!count?".42":"1")},
+            h("div",{style:"height:54px;display:flex;align-items:center;justify-content:center"},InventoryItemIcon(id,48)),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;line-height:1.3;letter-spacing:.5px;text-transform:uppercase;text-align:center"},it.short),
+            count>0&&h("div",{style:"position:absolute;right:7px;top:6px;color:"+color+";font-family:Orbitron,sans-serif;font-size:10px;font-weight:900"},"×"+count)
+          );
+        })),
+        h("button",{disabled:selected.length!==2,onClick:()=>{
+          if(selected.length!==2)return;
+          grantProgressionLootItems(selected);
+          setRankLootChoice(null);
+        },style:"width:100%;margin-top:14px;padding:11px;border-radius:9px;border:1px solid "+(selected.length===2?color:"rgba(255,255,255,.08)")+";background:"+(selected.length===2?color+"16":"rgba(255,255,255,.03)")+";color:"+(selected.length===2?color:"var(--td)")+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1px;cursor:"+(selected.length===2?"pointer":"default")},"VALIDER LES 2 OBJETS")
       )
     );
   }
@@ -5269,6 +5346,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       ),
       h(Settings,null),
       h(RankUp,null),
+      h(RankLootChoiceModal,null),
       h(LevelUp,null),
       h(StatDecadeUp,null),
       h(CompletionUp,null),

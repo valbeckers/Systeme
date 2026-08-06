@@ -5,6 +5,9 @@
 
 import { BREACH_LOOT_TEXT } from "./breachDefs.js";
 
+const LEVEL_UP_LOOT_TEXT="Après chaque montée de niveau : 1 objet aléatoire garanti.";
+const RANK_UP_LOOT_TEXT="Après chaque montée de rang : 2 objets au choix garantis.";
+
 const BASE_INVENTORY_ITEMS={
     codex:{name:"CODEX",short:"CODEX",emoji:"📖",action:"",desc:"Permet au joueur de consulter les quêtes et systèmes de l’application.",obtain:[],permanent:true},
     regressionOrb:{name:"ORBE DE RÉGRESSION",short:"ORBE DE RÉGRESSION",emoji:"🔴",action:"ACTIVER",desc:"Permet au joueur de lancer une régression. Si plusieurs régressions existent, vous pourrez choisir laquelle activer.",obtain:[],permanent:true},
@@ -35,7 +38,7 @@ export const INVENTORY_ITEMS=Object.fromEntries(
     id,
     item.permanent
       ? item
-      : {...item,obtain:[...(item.obtain||[]),BREACH_LOOT_TEXT]}
+      : {...item,obtain:[...(item.obtain||[]),BREACH_LOOT_TEXT,LEVEL_UP_LOOT_TEXT,RANK_UP_LOOT_TEXT]}
   ])
 );
 
