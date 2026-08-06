@@ -57,7 +57,7 @@ import {
   calcXp,
   calcQuestTotalXp
 } from "./xp.js";
-import { StatsTab } from "./statsView.js?v=20260802-kiviat-innerdots-restore-01";
+import { StatsTab } from "./statsView.js?v=20260806-remove-radar";
 import { HistoryTab } from "./historyView.js";
 import {
   RANK_BASES,
@@ -5333,11 +5333,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("button",{class:"nbtn "+(tab==="quests"?"on":""),onClick:()=>switchTab("quests")},
           h("span",null,"Quêtes")
         ),
-        h("button",{class:"nbtn "+(tab==="inventory"?"on":""),onClick:()=>switchTab("inventory")},
-          h("span",null,"Inventaire")
-        ),
         h("button",{class:"nbtn "+(tab==="stats"?"on":""),onClick:()=>switchTab("stats")},
           h("span",null,"Stats")
+        ),
+        h("button",{class:"nbtn "+(tab==="inventory"?"on":""),onClick:()=>switchTab("inventory")},
+          h("span",null,"Inventaire")
         ),
         h("button",{class:"nbtn "+(tab==="history"?"on":""),onClick:()=>switchTab("history")},
           h("span",null,"Historique")

@@ -217,7 +217,6 @@ export function StatsTab({
       ),
       h("div",{class:"xpbar",style:"height:7px"},h("div",{class:"xpfill",style:"width:"+globalLevel.pct+"%"}))
     ),
-    h(StatsRadarCard,{state}),
     h("div",{class:"card"},
       h("div",{class:"ctitle"},"Caractéristiques"),
       STATS.map(s=>{
