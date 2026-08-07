@@ -2239,7 +2239,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               onClick:e=>{inputs.current[obj.id]="1";validate(obj,e);},
               style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px;transition:all .2s"
             },"+1 "+lbl+(isWater?" \uD83D\uDCA7":"")),
-            !isWater&&h("button",{
+            !isWater&&obj.name!=="Gainage"&&h("button",{
               onClick:e=>{inputs.current[obj.id]=String(quickAmount);validate(obj,e);},
               style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px;transition:all .2s"
             },"+"+quickAmount+" "+lblPl)
