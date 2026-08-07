@@ -3072,26 +3072,28 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const remaining=Math.max(0,weekEnd.getTime()-now);
 
     const pluralUnit=questRecordUnit(unit,goal);
+    const progressText=fmtNum(bestThisWeek)+"/"+fmtNum(goal)+" "+pluralUnit;
+
     return h("div",{class:"card",style:"border-color:"+color+"88;background:linear-gradient(135deg,"+color+"16,rgba(255,255,255,.022));box-shadow:0 0 20px "+color+"18"},
-      h("div",{style:"display:flex;align-items:center;gap:9px;margin-bottom:7px;min-width:0"},
-        QuestIcon(challenge.questId,icon,18,"width:24px;height:24px"),
-        h("div",{style:"min-width:0;flex:1"},
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;font-weight:900;letter-spacing:1px;color:"+color+";text-transform:uppercase"},"Marque du dépassement active"),
-          h("div",{style:"font-size:12px;color:var(--tx);font-weight:800;line-height:1.2;margin-top:2px"},name)
+      h("div",{class:"ctitle",style:"color:"+color+";margin-bottom:8px"},"Marque du dépassement active"),
+      h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:0"},
+        QuestIcon(challenge.questId,icon,14),
+        h("div",{style:"flex:1;min-width:0"},
+          h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center;gap:8px"},
+            h("span",{style:"white-space:normal;line-height:1.25;word-break:normal;min-width:0"},name),
+            h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+(bestThisWeek>target?"#4ade80":bestThisWeek>0?"var(--tx)":"var(--td)")+";white-space:nowrap;flex-shrink:0"},progressText)
+          ),
+          h("div",{class:"qbar"},
+            h("div",{
+              class:"qfill"+(pct>0?" partial":""),
+              style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,transparent,transparent 4px,"+color+" 4px,"+color+" 8px);background-size:11.31px 11.31px;opacity:.8;box-shadow:0 0 10px "+color+"33"
+            })
+          )
         )
       ),
-      h("div",{class:"qrow",style:"align-items:center;margin-top:4px"},
-        h("div",{class:"qbar",style:"height:7px"},
-          h("div",{
-            class:"qfill"+(pct>0?" partial":""),
-            style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,transparent,transparent 4px,"+color+" 4px,"+color+" 8px);background-size:11.31px 11.31px;opacity:.8;box-shadow:0 0 10px "+color+"33"
-          })
-        ),
-        h("div",{class:"qxp",style:"color:"+(bestThisWeek>target?"#4ade80":color)+";white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},fmtNum(bestThisWeek)+"/"+fmtNum(goal)+" "+pluralUnit)
-      ),
-      h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:5px;font-family:Orbitron,sans-serif;font-size:9px"},
-        h("span",{style:"color:var(--td)"},"Récompense : +500 XP "+(STAT_LBL[stat]||stat||"")),
-        h("span",{style:"color:"+color+";white-space:nowrap"},"⏱ "+fmtCD(remaining)+" restants")
+      h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:7px;font-family:Orbitron,sans-serif;font-size:9px"},
+        h("span",{style:"color:"+color+";white-space:nowrap"},"⏱ "+fmtCD(remaining)+" restants"),
+        h("span",{style:"color:var(--td);text-align:right"},"Récompense : +500 XP "+(STAT_LBL[stat]||stat||""))
       )
     );
   }
