@@ -3079,15 +3079,18 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:0"},
         QuestIcon(challenge.questId,icon,14),
         h("div",{style:"flex:1;min-width:0"},
-          h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;white-space:normal;line-height:1.25;word-break:normal;min-width:0"},name),
-          h("div",{class:"qrow",style:"align-items:center;margin-top:6px"},
-            h("div",{class:"qbar"},
-              h("div",{
-                class:"qfill"+(pct>0?" partial":""),
-                style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,transparent,transparent 4px,"+color+" 4px,"+color+" 8px);background-size:11.31px 11.31px;opacity:.8;box-shadow:0 0 10px "+color+"33"
-              })
-            ),
-            h("div",{class:"qxp",style:"color:"+(bestThisWeek>target?"#4ade80":bestThisWeek>0?"var(--tx)":"var(--td)")+";white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},progressText)
+          h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center;gap:8px"},
+            h("span",{style:"white-space:normal;line-height:1.25;word-break:normal;min-width:0"},name),
+            h("div",{style:"display:flex;align-items:center;gap:6px"},
+              h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+(bestThisWeek>target?"#4ade80":bestThisWeek>0?"var(--tx)":"var(--td)")+";white-space:nowrap;flex-shrink:0"},progressText),
+              h("span",{style:"width:10px;flex-shrink:0"},"")
+            )
+          ),
+          h("div",{class:"qbar"},
+            h("div",{
+              class:"qfill"+(pct>0?" partial":""),
+              style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,transparent,transparent 4px,"+color+" 4px,"+color+" 8px);background-size:11.31px 11.31px;opacity:.8;box-shadow:0 0 10px "+color+"33"
+            })
           )
         )
       ),
