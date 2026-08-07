@@ -1082,6 +1082,19 @@ function App(){
     const nextNumber=Number(nextVal)||0;
     if(nextNumber<=0) return;
 
+    // La réussite d'une Marque du dépassement est indépendante du système
+    // d'animation "NOUVEAU RECORD". Dès que l'objectif officiel est dépassé,
+    // la Marque est validée.
+    const challenge=state.recordChallenge;
+    const challengeRotationOk=!challenge||!challenge.rotationId||recordRotationIdForDay(state.exerciseRotationByDay,today,challenge.family)===challenge.rotationId;
+    const challengeWon=!!(
+      challenge
+      && challenge.week===wkStr()
+      && challenge.questId===obj.id
+      && challengeRotationOk
+      && nextNumber>Number(challenge.target||0)
+    );
+
     let best=0;
     Object.entries(state.dailyLog||{}).forEach(([day,log])=>{
       if(obj.id==="run" && day<RUN_RECORD_RESET_DAY) return;
@@ -1089,28 +1102,35 @@ function App(){
       if(Number.isFinite(v) && v>best) best=v;
     });
 
-    // Pas d'animation sur la toute première valeur enregistrée : on célèbre seulement un vrai record battu.
-    if(best<=0 || nextNumber<=best) return;
+    const isNewRecord=best>0 && nextNumber>best;
+    if(!isNewRecord && !challengeWon) return;
 
     const color=STAT_COLOR[obj.stat] || rank.color || "#fbbf24";
     const label=fmtNum(nextNumber)+" "+questRecordUnit(obj.unit,nextNumber);
+
     setTimeout(()=>{
-      setRecordUp({
-        title:"NOUVEAU RECORD",
-        name:obj.name,
-        icon:obj.icon,
-        value:label,
-        color,
-        glow:color+"55",
-        rankColor:rank.color,
-        rankGlow:rank.glow
-      });
-      tryRareDungeonKeyDrop("record");
-      const challenge=state.recordChallenge;
-      const challengeRotationOk=!challenge||!challenge.rotationId||recordRotationIdForDay(state.exerciseRotationByDay,today,challenge.family)===challenge.rotationId;
-      if(challenge&&challenge.week===wkStr()&&challenge.questId===obj.id&&challengeRotationOk&&nextNumber>Number(challenge.target||0)){
-        addXp(500,obj.stat,null,true);
-        setState(s=>({...s,recordChallenge:null}));
+      if(isNewRecord){
+        setRecordUp({
+          title:"NOUVEAU RECORD",
+          name:obj.name,
+          icon:obj.icon,
+          value:label,
+          color,
+          glow:color+"55",
+          rankColor:rank.color,
+          rankGlow:rank.glow
+        });
+        tryRareDungeonKeyDrop("record");
+      }
+
+      if(challengeWon){
+        addXp(500,challenge.stat||obj.stat,null,true);
+        setState(s=>{
+          const active=s.recordChallenge;
+          if(!active) return s;
+          if(active.week!==challenge.week || active.questId!==challenge.questId || Number(active.target||0)!==Number(challenge.target||0)) return s;
+          return {...s,recordChallenge:null};
+        });
         setTimeout(()=>setItemUseUp({id:"recordHammer",recordWon:true}),250);
       }
     },delay);
