@@ -96,7 +96,7 @@ import {
   questRecordUnit,
   recordRotationIdForDay,
   buildRecordOptions
-} from "./records.js";
+} from "./records.js?v=20260807-marche-record-hammer";
 import {
   buildBreachRuptureBoss,
   normalizeActiveBreach,

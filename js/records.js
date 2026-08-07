@@ -65,6 +65,13 @@ export function buildRecordOptions({questDefs,dailyLog,exerciseRotationByDay}){
         const value=Number(log&&log[quest.id])||0;
         if(value>best)best=value;
       });
+      // Marche est une nouvelle quête : tant qu'aucun record réel n'existe,
+      // sa valeur de référence est son objectif de base afin qu'elle soit
+      // immédiatement disponible dans la Marque du dépassement.
+      if(quest.id==="march" && best<=0){
+        const baseline=Math.max(0,Number(quest.base)||0);
+        return baseline>0?{obj:quest,best:baseline}:null;
+      }
       return best>0?{obj:quest,best}:null;
     })
     .filter(Boolean);
