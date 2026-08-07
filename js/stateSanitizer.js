@@ -196,7 +196,7 @@ function cleanDungeonRunWeeks(obj){
 function cleanEnduranceChoiceByDay(obj){
   const out={};
   Object.entries(obj||{}).forEach(([day,id])=>{
-    if((id==="run"||id==="walk") && /^\d{4}-\d{2}-\d{2}$/.test(day)) out[day]=id;
+    if((id==="run"||id==="walk"||id==="march") && /^\d{4}-\d{2}-\d{2}$/.test(day)) out[day]=id;
   });
   return out;
 }

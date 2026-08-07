@@ -100,7 +100,7 @@ export function getRankBase(objId, rankIdx, prestige, stats){
   const base = RANK_BASES[objId]?.[rankIdx] ?? (def?.base ?? 0);
   if(!prestige||prestige===0)return base;
   const sBase = RANK_BASES[objId]?.[5] ?? base;
-  if(objId==="reading" || objId==="run" || objId==="walk") return sBase;
+  if(objId==="reading" || objId==="run" || objId==="walk" || objId==="march") return sBase;
   return Math.round(sBase * Math.pow(1.2, prestige));
 }
 

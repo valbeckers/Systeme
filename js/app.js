@@ -1,5 +1,5 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
-import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260806-urgent-silent-footwork-15";
+import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260807-endurance-walk-choice";
 import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js";
 import {
   isDebtEligibleQuest,
@@ -70,7 +70,7 @@ import {
   getAscensionXpRequired,
   getRankBase,
   sortStat
-} from "./progression.js";
+} from "./progression.js?v=20260807-endurance-walk-choice";
 import {
   REGRESSION_ORB_ICON_DATA,
   DUNGEON_KEY_ICON_DATA,
@@ -82,7 +82,7 @@ import {
   DEBT_ACKNOWLEDGEMENT_ICON_DATA
 } from "./itemImages.js";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260803-counterpart-balance-01";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260807-endurance-walk-choice";
 import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260803-counterpart-balance-01";
 import {
   EXERCISE_ROTATIONS,
@@ -681,36 +681,51 @@ function App(){
     );
   },[wk,state.recordChallenge?.week]);
 
-  // Une seule sortie bonus par jour : Running ou Rando.
+  // Une seule sortie bonus par jour : Running, Rando ou Marche.
   const runQuestObj = objs.find(o=>o.id==="run") || DEFS.find(o=>o.id==="run");
   const hikeQuestObj = objs.find(o=>o.id==="walk") || DEFS.find(o=>o.id==="walk");
+  const marchQuestObj = objs.find(o=>o.id==="march") || DEFS.find(o=>o.id==="march");
   const savedEnduranceChoice = (state.enduranceChoiceByDay||{})[today];
-  const inferredEnduranceChoice = (Number(tLog.run)||0)>0 && (Number(tLog.walk)||0)>0
-    ? ((Number(tLog.run)||0)>=(Number(tLog.walk)||0) ? "run" : "walk")
-    : ((Number(tLog.run)||0)>0 ? "run" : ((Number(tLog.walk)||0)>0 ? "walk" : null));
-  const enduranceChoiceId = savedEnduranceChoice==="run"||savedEnduranceChoice==="walk"
+  const enduranceProgress = [
+    ["run",Number(tLog.run)||0],
+    ["walk",Number(tLog.walk)||0],
+    ["march",Number(tLog.march)||0]
+  ];
+  const progressedEndurance = enduranceProgress.filter(([,value])=>value>0).sort((a,b)=>b[1]-a[1]);
+  const inferredEnduranceChoice = progressedEndurance.length ? progressedEndurance[0][0] : null;
+  const enduranceChoiceId = ["run","walk","march"].includes(savedEnduranceChoice)
     ? savedEnduranceChoice
     : inferredEnduranceChoice;
-  const selectedEnduranceQuest = enduranceChoiceId==="run" ? runQuestObj : enduranceChoiceId==="walk" ? hikeQuestObj : null;
+  const selectedEnduranceQuest = enduranceChoiceId==="run"
+    ? runQuestObj
+    : enduranceChoiceId==="walk"
+      ? hikeQuestObj
+      : enduranceChoiceId==="march"
+        ? marchQuestObj
+        : null;
   const enduranceChoicePlaceholder = {
-    id:"endurance_choice",name:"Running ou Rando",icon:"🏃🏻 / 🥾",unit:"choix",
+    id:"endurance_choice",name:"Running/Rando/Marche",icon:"🏃🏻 / 🥾 / 🚶🏻",unit:"choix",
     daily:true,weekly:false,optional:true,stat:"Endurance",base:1,isEnduranceChoice:true
   };
 
   function chooseEnduranceQuest(id){
-    if(id!=="run"&&id!=="walk") return;
+    if(!["run","walk","march"].includes(id)) return;
     setState(s=>{
       const choices={...(s.enduranceChoiceByDay||{})};
-      if(choices[today]==="run"||choices[today]==="walk") return s;
+      if(["run","walk","march"].includes(choices[today])) return s;
       const row=((s.dailyLog||{})[today])||{};
-      const inferred=(Number(row.run)||0)>0 ? "run" : ((Number(row.walk)||0)>0 ? "walk" : null);
-      choices[today]=inferred||id;
+      const progressed=[
+        ["run",Number(row.run)||0],
+        ["walk",Number(row.walk)||0],
+        ["march",Number(row.march)||0]
+      ].filter(([,value])=>value>0).sort((a,b)=>b[1]-a[1]);
+      choices[today]=(progressed[0]&&progressed[0][0])||id;
       return {...s,enduranceChoiceByDay:choices,lastActiveDay:todayStr()};
     });
   }
 
   function dailyBonusQuestObjects(){
-    const others=objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden&&o.id!=="run"&&o.id!=="walk");
+    const others=objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden&&!["run","walk","march"].includes(o.id));
     return sortStat([...others,selectedEnduranceQuest||enduranceChoicePlaceholder]);
   }
 
@@ -2333,18 +2348,22 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
         h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:center;gap:8px;line-height:1.25"},
           QuestIcon("endurance_choice","🏃🏻",14,"width:18px;height:18px"),
-          h("span",null,"Running ou Rando")
+          h("span",null,"Running/Rando/Marche")
         ),
         h(QuestBadge,{label:"CHOIX",color})
       ),
-      h("div",{style:"display:flex;gap:8px;margin-top:10px"},
+      h("div",{style:"display:flex;gap:6px;margin-top:10px"},
         h("button",{onClick:()=>chooseEnduranceQuest("run"),style:buttonStyle},
           h("span",{style:"font-size:15px"},"🏃🏻"),
-          h("span",{style:"font-size:10px;font-weight:800;letter-spacing:.7px"},"Running")
+          h("span",{style:"font-size:10px;font-weight:800;letter-spacing:.5px"},"Running")
         ),
         h("button",{onClick:()=>chooseEnduranceQuest("walk"),style:buttonStyle},
           h("span",{style:"font-size:15px"},"🥾"),
-          h("span",{style:"font-size:10px;font-weight:800;letter-spacing:.7px"},"Rando")
+          h("span",{style:"font-size:10px;font-weight:800;letter-spacing:.5px"},"Rando")
+        ),
+        h("button",{onClick:()=>chooseEnduranceQuest("march"),style:buttonStyle},
+          h("span",{style:"font-size:15px"},"🚶🏻"),
+          h("span",{style:"font-size:10px;font-weight:800;letter-spacing:.5px"},"Marche")
         )
       )
     );
