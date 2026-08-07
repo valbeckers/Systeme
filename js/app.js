@@ -56,7 +56,7 @@ import {
   getGlobalLevelInfo,
   calcXp,
   calcQuestTotalXp
-} from "./xp.js";
+} from "./xp.js?v=20260807-marche-complete";
 import { StatsTab } from "./statsView.js?v=20260806-remove-radar";
 import { HistoryTab } from "./historyView.js";
 import {
@@ -70,7 +70,7 @@ import {
   getAscensionXpRequired,
   getRankBase,
   sortStat
-} from "./progression.js?v=20260807-endurance-walk-choice";
+} from "./progression.js?v=20260807-marche-complete";
 import {
   REGRESSION_ORB_ICON_DATA,
   DUNGEON_KEY_ICON_DATA,
@@ -1461,7 +1461,7 @@ function App(){
     const effectiveNext = next;
     const effectiveVal = val;
     // Tout objectif avec un base, non-binary, hors cas spéciaux (water/run) entre dans le système palier
-    const isPalier = obj.base && !obj.binary && obj.id!=="water" && obj.id!=="run";
+    const isPalier = obj.base && !obj.binary && obj.id!=="water" && obj.id!=="run" && obj.id!=="march";
 
     // Cas spécial : quête avec tiers (repas équilibré x/2, etc.)
     if(obj.tiers && obj.tiers.length>0){
@@ -1555,11 +1555,14 @@ function App(){
       }
     }
     else if(obj.id==="run"){
-      // Course : linéaire 100xp/km + 50% bonus si total >= 2x objectif
-      
+      // Course : linéaire + bonus spécifique Running si total >= 2x objectif
       xp=effectiveVal*obj.xpPer;
       const totalAfter=effectiveNext;
       if(totalAfter>=b*2) xp+=Math.round(effectiveVal*obj.xpPer*0.5);
+    }
+    else if(obj.id==="march"){
+      // Marche : strictement linéaire à 50 XP Endurance / km.
+      xp=effectiveVal*obj.xpPer;
     }
     else{const nt=cur+val; if(cur>=b)xp=val*obj.xpPer; else if(nt<=b)xp=val*obj.xpPer; else xp=val*obj.xpPer;}
     setState(s=>{

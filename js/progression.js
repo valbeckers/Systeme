@@ -26,6 +26,7 @@ export const RANK_BASES = {
   med:     [15, 18, 21,  24,  27,  30],
   flex:    [15, 18, 21,  24,  27,  30],
   walk:    [4,  5,  6,   7,   8,   10],
+  march:   [4,  5,  6,   7,   8,   10],
   balance: [5,  10, 15,  20,  25,  30],
   grips:   [10, 12, 14,  16,  18,  20],
 };
@@ -43,6 +44,7 @@ export const STAT_LEVEL_BASES = {
 export const STAT_LEVEL_TABLES = {
   run:  {stat:"Endurance", values:[3,4,5,6,6,7,7,8,9,10], cap:10},
   walk: {stat:"Endurance", values:[3,4,5,6,6,7,7,8,9,10], cap:10},
+  march:{stat:"Endurance", values:[3,4,5,6,6,7,7,8,9,10], cap:10},
 };
 export function statLevelTier(level){
   const lvl=Number(level)||1;
