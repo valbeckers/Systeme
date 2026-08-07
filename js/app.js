@@ -2199,6 +2199,37 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       ),
       (!obj.optional&&!obj.weekly&&isDebtEligibleQuest(obj)&&d<effectiveT&&state.questDebt&&state.questDebt.status==="active"&&state.questDebt.id===obj.id)&&h("div",{style:"margin-top:8px;font-family:Orbitron,sans-serif;font-size:9px;color:#6E9A8E;letter-spacing:.8px;text-transform:uppercase"},"Dette active : "+fmtNum(state.questDebt.paid||0)+"/"+fmtNum(state.questDebt.amount)+" "+state.questDebt.unit),
       (()=>{
+        const challenge=state.recordChallenge;
+        if(!challenge || challenge.week!==wk || challenge.questId!==obj.id) return null;
+
+        // Pour les quêtes à rotation, la ligne n'apparaît que lorsque la variante
+        // actuellement affichée est bien celle visée par la Marque.
+        if(challenge.rotationId && recordRotationIdForDay(state.exerciseRotationByDay,today,challenge.family)!==challenge.rotationId) return null;
+
+        const unit=challenge.rotationId?(challenge.unit||obj.unit||""):(obj.unit||challenge.unit||"");
+        const stat=challenge.rotationId?(challenge.stat||obj.stat):(obj.stat||challenge.stat);
+        const markColor=STAT_COLOR[stat]||"#22d3ee";
+
+        let bestThisWeek=0;
+        Object.entries(state.dailyLog||{}).forEach(([day,log])=>{
+          const date=new Date(day+"T12:00:00");
+          if(Number.isNaN(date.getTime()) || wkStr(date)!==challenge.week) return;
+          const value=challenge.rotationId
+            ? (recordRotationIdForDay(state.exerciseRotationByDay,day,challenge.family)===challenge.rotationId ? Number(log&&log[challenge.questId]) : 0)
+            : Number(log&&log[challenge.questId]);
+          if(Number.isFinite(value)&&value>bestThisWeek) bestThisWeek=value;
+        });
+
+        const stepByUnit={rep:1,verre:1,page:1,objet:1,contact:1,action:1,repas:1,"sér.":1,km:.01,min:.1,h:.1};
+        const step=stepByUnit[unit]||1;
+        const goal=Math.max(0,Number(challenge.target)||0)+step;
+        const shownUnit=questRecordUnit(unit,goal);
+
+        return h("div",{
+          style:"margin-top:8px;font-family:Orbitron,sans-serif;font-size:9px;color:"+markColor+";letter-spacing:.8px;text-transform:uppercase"
+        },"Marque du dépassement active : "+fmtNum(bestThisWeek)+"/"+fmtNum(goal)+" "+shownUnit);
+      })(),
+      (()=>{
         // Repas sans stimulation : un seul bouton +1 repas
         if(obj.id==="sp_mealnostim"){
           const isMax = d >= (obj.target||2);
