@@ -3073,32 +3073,25 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
     const pluralUnit=questRecordUnit(unit,goal);
     return h("div",{class:"card",style:"border-color:"+color+"88;background:linear-gradient(135deg,"+color+"16,rgba(255,255,255,.022));box-shadow:0 0 20px "+color+"18"},
-      h("div",{style:"display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px"},
-        h("div",{style:"display:flex;align-items:center;gap:9px;min-width:0"},
-          QuestIcon(challenge.questId,icon,20,"width:28px;height:28px"),
-          h("div",{style:"min-width:0"},
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;font-weight:900;letter-spacing:1px;color:"+color+";text-transform:uppercase"},"Marque du dépassement active"),
-            h("div",{style:"font-size:13px;color:var(--tx);font-weight:800;line-height:1.25;margin-top:3px"},name)
-          )
+      h("div",{style:"display:flex;align-items:center;gap:9px;margin-bottom:7px;min-width:0"},
+        QuestIcon(challenge.questId,icon,18,"width:24px;height:24px"),
+        h("div",{style:"min-width:0;flex:1"},
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;font-weight:900;letter-spacing:1px;color:"+color+";text-transform:uppercase"},"Marque du dépassement active"),
+          h("div",{style:"font-size:12px;color:var(--tx);font-weight:800;line-height:1.2;margin-top:2px"},name)
         )
       ),
-      h("div",{style:"width:100%;padding:10px;border-radius:8px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.055);margin-bottom:10px"},
-        h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;color:var(--td);letter-spacing:.8px;text-transform:uppercase"},"Record à battre"),
-        h("div",{style:"font-family:Orbitron,sans-serif;font-size:15px;font-weight:900;color:var(--tx);margin-top:4px"},fmtNum(target)+" "+questRecordUnit(unit,target))
+      h("div",{class:"qrow",style:"align-items:center;margin-top:4px"},
+        h("div",{class:"qbar",style:"height:7px"},
+          h("div",{
+            class:"qfill"+(pct>0?" partial":""),
+            style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,transparent,transparent 4px,"+color+" 4px,"+color+" 8px);background-size:11.31px 11.31px;opacity:.8;box-shadow:0 0 10px "+color+"33"
+          })
+        ),
+        h("div",{class:"qxp",style:"color:"+(bestThisWeek>target?"#4ade80":color)+";white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},fmtNum(bestThisWeek)+"/"+fmtNum(goal)+" "+pluralUnit)
       ),
-      h("div",{style:"display:flex;justify-content:space-between;align-items:center;font-family:Orbitron,sans-serif;font-size:9px;margin-bottom:5px"},
-        h("span",{style:"color:var(--td)"},"MEILLEURE PERFORMANCE CETTE SEMAINE"),
-        h("span",{style:"color:"+(bestThisWeek>target?"#4ade80":color)},fmtNum(bestThisWeek)+" / "+fmtNum(goal)+" "+pluralUnit)
-      ),
-      h("div",{class:"qbar",style:"height:7px"},
-        h("div",{
-          class:"qfill"+(pct>0?" partial":""),
-          style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,transparent,transparent 4px,"+color+" 4px,"+color+" 8px);background-size:11.31px 11.31px;opacity:.8;box-shadow:0 0 10px "+color+"33"
-        })
-      ),
-      h("div",{style:"display:flex;justify-content:space-between;gap:10px;margin-top:8px;font-family:Orbitron,sans-serif;font-size:8.5px;letter-spacing:.55px;text-transform:uppercase"},
+      h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:5px;font-family:Orbitron,sans-serif;font-size:9px"},
         h("span",{style:"color:var(--td)"},"Récompense : +500 XP "+(STAT_LBL[stat]||stat||"")),
-        h("span",{style:"color:"+color+";white-space:nowrap"},"Temps restant : "+fmtCD(remaining))
+        h("span",{style:"color:"+color+";white-space:nowrap"},"⏱ "+fmtCD(remaining)+" restants")
       )
     );
   }
