@@ -5174,7 +5174,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const squatTarget=getStatLevelTarget("squats",state.stats);
       const calvesTarget=getStatLevelTarget("calves",state.stats);
       function FamilyTitle({label}){
-        return h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px"},label);
+        return h("div",{style:"font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px"},label);
       }
       return h(Fragment,null,
         h("div",{style:familyStyle},
