@@ -3,7 +3,7 @@
 // Les anciens noms de constantes sont conservés pour limiter les changements
 // dans la couche d’interface.
 
-const ASSET_VERSION="20260803-counterpart-balance-art";
+const ASSET_VERSION="20260808-rewrite-rune-art";
 
 function itemAsset(fileName){
   const url=new URL(`../assets/items/${fileName}`,import.meta.url);
@@ -24,6 +24,7 @@ export const NEW_ITEM_ICON_DATA=Object.freeze({
   destinyCompass:itemAsset("destiny-compass.png"),
   etherStopper:itemAsset("ether-stopper.png"),
   rerollToken:itemAsset("reroll-token.png"),
+  rewriteRune:itemAsset("rewrite-rune.png"),
   alchemicalCatalyst:itemAsset("alchemical-catalyst.png"),
   masterContract:itemAsset("master-contract.png"),
   recordHammer:itemAsset("record-mark.png"),
