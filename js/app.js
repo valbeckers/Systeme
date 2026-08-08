@@ -58,7 +58,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260807-marche-complete";
 import { StatsTab } from "./statsView.js?v=20260806-remove-radar";
-import { HistoryTab } from "./historyView.js";
+import { HistoryTab } from "./historyView.js?v=20260808-icon-slots-v1";
 import {
   RANK_BASES,
   ROMAN,
@@ -81,6 +81,7 @@ import {
   GRIMOIRE_ICON_DATA,
   DEBT_ACKNOWLEDGEMENT_ICON_DATA
 } from "./itemImages.js?v=20260808-items-normalized-v1";
+import { UiIcon } from "./uiIcons.js?v=20260808-icon-slots-v1";
 import { saveStoredState } from "./storage.js";
 import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260808-rewrite-rune-distinct";
 import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260808-rewrite-rune-distinct";
@@ -356,9 +357,14 @@ function BreachFxOverlay({variant="home",theme="breach"}={}){
 // ─── FONCTIONS GLOBALES ─────────────────────────────────────────────────────
 
 function QuestIcon(id, fallback, size=14, extraStyle=""){
-  return h("span",{
-    style:"font-size:"+size+"px;line-height:1;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;flex-shrink:0;"+extraStyle
-  },fallback);
+  const slotSize=size>=18?26:18;
+  return h(UiIcon,{
+    iconKey:"quest."+id,
+    fallback,
+    slotSize,
+    glyphSize:size,
+    extraStyle
+  });
 }
 
 const getRank    = xp => { for(let i=RANKS.length-1;i>=0;i--)if(xp>=RANKS[i].xpRequired)return RANKS[i]; return RANKS[0]; };
@@ -2430,15 +2436,15 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       ),
       h("div",{style:"display:flex;gap:6px;margin-top:10px"},
         h("button",{onClick:()=>chooseEnduranceQuest("run"),style:buttonStyle},
-          h("span",{style:"font-size:15px"},"🏃🏻"),
+          h(UiIcon,{iconKey:"quest.run",fallback:"🏃🏻",slotSize:18,glyphSize:15}),
           h("span",{style:"font-size:10px;font-weight:800;letter-spacing:.5px"},"Running")
         ),
         h("button",{onClick:()=>chooseEnduranceQuest("walk"),style:buttonStyle},
-          h("span",{style:"font-size:15px"},"🥾"),
+          h(UiIcon,{iconKey:"quest.walk",fallback:"🥾",slotSize:18,glyphSize:15}),
           h("span",{style:"font-size:10px;font-weight:800;letter-spacing:.5px"},"Rando")
         ),
         h("button",{onClick:()=>chooseEnduranceQuest("march"),style:buttonStyle},
-          h("span",{style:"font-size:15px"},"🚶🏻"),
+          h(UiIcon,{iconKey:"quest.march",fallback:"🚶🏻",slotSize:18,glyphSize:15}),
           h("span",{style:"font-size:10px;font-weight:800;letter-spacing:.5px"},"Marche")
         )
       )
@@ -2795,7 +2801,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       }else revealedText=MASTER_CONTRACT_LABELS[d.contractConstraint]||"Clause révélée";
     }
     return h("div",{style:"margin-top:"+(compact?5:6)+"px;display:flex;flex-direction:column;gap:2px"},
-      h("div",{style:"font-size:"+(compact?8.5:9)+"px;color:#f59e0b;font-family:Orbitron,sans-serif;letter-spacing:.8px"},"📜 CONTRAT DU MAÎTRE ACTIF"),
+      h("div",{style:"font-size:"+(compact?8.5:9)+"px;color:#f59e0b;font-family:Orbitron,sans-serif;letter-spacing:.8px;display:flex;align-items:center;gap:5px"},
+        h(UiIcon,{iconKey:"item.masterContract",fallback:"📜",slotSize:16,glyphSize:12}),
+        h("span",null,"CONTRAT DU MAÎTRE ACTIF")
+      ),
       h("div",{style:"font-size:"+(compact?8:8.5)+"px;color:#fbbf24;font-family:Orbitron,sans-serif;letter-spacing:.65px"},"Récompenses : +20 % XP"),
       revealedText&&h("div",{style:"font-size:"+(compact?8:8.5)+"px;color:var(--tx);font-family:Orbitron,sans-serif;letter-spacing:.55px;line-height:1.35;margin-top:2px"},"CLAUSE RÉVÉLÉE · "+revealedText)
     );
@@ -2815,11 +2824,17 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       return h("div",{class:"card",style:"border-color:"+ruptureColor+"88;background:linear-gradient(135deg,"+ruptureColor+"12,rgba(255,255,255,0.025))"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px"},
           h("div",{style:"min-width:0"},
-            h("div",{class:"ctitle",style:"margin:0;color:"+ruptureColor},"⚠️ RUPTURE — "+d.title)
+            h("div",{class:"ctitle",style:"margin:0;color:"+ruptureColor+";display:flex;align-items:center;gap:5px"},
+              h(UiIcon,{iconKey:"interface.warning",fallback:"⚠️",slotSize:16,glyphSize:12}),
+              h("span",null,"RUPTURE — "+d.title)
+            )
           ),
         ),
         h("div",{style:"padding:12px;border-radius:11px;border:1px solid "+ruptureColor+"55;background:"+ruptureColor+"10"},
-          h("div",{style:"font-size:9px;color:"+ruptureColor+";font-family:Orbitron,sans-serif;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:5px"},"☠️ Boss de Rupture · "+fmtCD(remaining)+" restants"),
+          h("div",{style:"font-size:9px;color:"+ruptureColor+";font-family:Orbitron,sans-serif;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:5px;display:flex;align-items:center;gap:5px"},
+            h(UiIcon,{iconKey:"interface.rupture",fallback:"☠️",slotSize:16,glyphSize:12}),
+            h("span",null,"Boss de Rupture · "+fmtCD(remaining)+" restants")
+          ),
           h("div",{style:"font-size:15px;color:var(--tx);font-weight:900;line-height:1.2"},rb.name),
           h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin-top:6px"},rb.objective),
           h("div",{style:"font-size:9px;color:"+ruptureColor+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:9px"},
@@ -2842,7 +2857,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap"},STAT_LBL[d.stat]||d.stat)
         ),
         h("div",{style:"margin-top:10px;padding:12px;border-radius:11px;border:1px solid #ef444455;background:linear-gradient(135deg,rgba(239,68,68,.08),rgba(245,158,11,.04))"},
-          h("div",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:5px"},"⚠️ NOUVEAU BOSS"),
+          h("div",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:5px;display:flex;align-items:center;gap:5px"},
+            h(UiIcon,{iconKey:"interface.warning",fallback:"⚠️",slotSize:16,glyphSize:12}),
+            h("span",null,"NOUVEAU BOSS")
+          ),
           h("div",{style:"font-size:15px;color:var(--tx);font-weight:900;line-height:1.25"},db.name),
           h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin-top:6px"},"Objectif ×3 · "+db.objective),
           h("div",{style:"font-size:9px;color:#f59e0b;font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:9px"},"Venez à bout du nouveau Boss pour sortir du donjon")
@@ -2868,7 +2886,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           const locked=!done&&!canValidate;
           const selected=!done&&!locked&&selectedDungeonRoom===i;
           return h("div",{key:i,onClick:()=>{if(!done&&!locked)openDungeonRoom(i);},style:"display:flex;gap:8px;align-items:flex-start;padding:8px;border-radius:10px;background:"+(selected?color+"18":"rgba(255,255,255,0.025)")+";border:1px solid "+(selected?color+"88":"rgba(255,255,255,0.05)")+";opacity:"+(done?"0.72":locked?"0.42":"1")+";cursor:"+(!done&&!locked?"pointer":"default")+";box-shadow:"+(selected?"0 0 14px "+color+"22":"none")},
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:"+(done?"#4ade80":selected?color:"var(--td)")+";width:18px;text-align:center;flex-shrink:0"},done?"✓":locked?"🔒":(i+1)),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:"+(done?"#4ade80":selected?color:"var(--td)")+";width:18px;height:18px;text-align:center;flex-shrink:0;display:flex;align-items:center;justify-content:center"},done?"✓":locked?h(UiIcon,{iconKey:"interface.lock",fallback:"🔒",slotSize:18,glyphSize:12}):(i+1)),
             h("div",{style:"min-width:0;flex:1"},
               h("div",{style:"font-size:12px;color:var(--tx);font-weight:"+(boss?"700":"400")+";line-height:1.25"},(boss?"Boss — ":"")+room.name),
               h("div",{style:"font-size:10px;color:var(--td);line-height:1.35;margin-top:2px"},d.contractConstraint==="overload"&&d.contractRevealed?scaleDungeonDesc(room.desc,1.5):room.desc),
@@ -2890,7 +2908,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         },"Valider la salle"),
         h("div",{style:"display:flex;gap:8px;margin-top:8px"},
           
-          itemQty("teleportCrystal")>0&&h("button",{onClick:()=>setSpecialItemChoice({type:"teleport"}),style:"flex:1;padding:9px;border-radius:8px;border:1px solid #60a5fa66;background:#60a5fa0d;color:#60a5fa;font-family:Orbitron,sans-serif;font-size:8px;letter-spacing:.8px"},"💠 QUITTER LE DONJON")
+          itemQty("teleportCrystal")>0&&h("button",{onClick:()=>setSpecialItemChoice({type:"teleport"}),style:"flex:1;padding:9px;border-radius:8px;border:1px solid #60a5fa66;background:#60a5fa0d;color:#60a5fa;font-family:Orbitron,sans-serif;font-size:8px;letter-spacing:.8px;display:flex;align-items:center;justify-content:center;gap:6px"},
+            h(UiIcon,{iconKey:"item.teleportCrystal",fallback:"💠",slotSize:18,glyphSize:13}),
+            h("span",null,"QUITTER LE DONJON")
+          )
         )
       );
     }
@@ -2900,7 +2921,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{style:"font-size:10px;color:"+(dungeonCanStart?"#4ade80":"var(--td)")+";font-family:Orbitron,sans-serif;text-transform:uppercase;white-space:nowrap"},dungeonCanStart?"Disponible":(dungeonDailyUsed?"Déjà lancé":dungeonWeekCount>=3?"Limite hebdo":"Verrouillé"))
       ),
       dungeonCanStart
-        ? h("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:8px"},DUNGEONS.map(dg=>h("button",{key:dg.id,onClick:()=>startDungeon(dg.id),style:"padding:10px 8px;border-radius:10px;border:1px solid "+dg.color+"55;background:"+dg.color+"0f;color:"+dg.color+";font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:.7px;text-transform:uppercase;cursor:pointer;text-align:center;line-height:1.25"},h("div",{style:"font-size:16px;margin-bottom:4px"},dg.icon),h("div",null,dg.short),h("div",{style:"font-size:8px;color:var(--td);margin-top:3px"},STAT_LBL[dg.stat]||dg.stat))))
+        ? h("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:8px"},DUNGEONS.map(dg=>h("button",{key:dg.id,onClick:()=>startDungeon(dg.id),style:"padding:10px 8px;border-radius:10px;border:1px solid "+dg.color+"55;background:"+dg.color+"0f;color:"+dg.color+";font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:.7px;text-transform:uppercase;cursor:pointer;text-align:center;line-height:1.25;display:flex;flex-direction:column;align-items:center"},h(UiIcon,{iconKey:"dungeon."+dg.id,fallback:dg.icon,slotSize:24,glyphSize:16,extraStyle:"margin-bottom:4px"}),h("div",null,dg.short),h("div",{style:"font-size:8px;color:var(--td);margin-top:3px"},STAT_LBL[dg.stat]||dg.stat))))
         : h("div",{style:"text-align:center;padding:10px 0;color:var(--td);font-size:11px;line-height:1.45"},dungeonDailyUsed?"Tu as déjà lancé un donjon aujourd'hui. Prochain lancement disponible demain.":dungeonWeekCount>=3?"Limite hebdomadaire atteinte.":"Aucune clé disponible.")
     );
   }
@@ -2921,11 +2942,17 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       return h("div",{class:"card",style:"border-color:"+ruptureColor+"88;background:linear-gradient(135deg,"+ruptureColor+"12,rgba(255,255,255,0.025))"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
           h("div",{style:"min-width:0"},
-            h("div",{class:"ctitle",style:"margin:0;color:"+ruptureColor},"⚠️ RUPTURE — "+d.title)
+            h("div",{class:"ctitle",style:"margin:0;color:"+ruptureColor+";display:flex;align-items:center;gap:5px"},
+              h(UiIcon,{iconKey:"interface.warning",fallback:"⚠️",slotSize:16,glyphSize:12}),
+              h("span",null,"RUPTURE — "+d.title)
+            )
           ),
         ),
         h("div",{style:"padding:10px;border-radius:10px;border:1px solid "+ruptureColor+"55;background:"+ruptureColor+"10"},
-          h("div",{style:"font-size:8.5px;color:"+ruptureColor+";font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px"},"☠️ Boss de Rupture · "+fmtCD(remaining)+" restants"),
+          h("div",{style:"font-size:8.5px;color:"+ruptureColor+";font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:5px"},
+            h(UiIcon,{iconKey:"interface.rupture",fallback:"☠️",slotSize:16,glyphSize:12}),
+            h("span",null,"Boss de Rupture · "+fmtCD(remaining)+" restants")
+          ),
           h("div",{style:"font-size:14px;color:var(--tx);font-weight:900;line-height:1.2"},rb.name),
           h("div",{style:"font-size:10px;color:var(--td);line-height:1.4;margin-top:5px"},rb.objective),
           h("div",{style:"font-size:8.5px;color:"+ruptureColor+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:8px"},
@@ -2948,7 +2975,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap"},STAT_LBL[d.stat]||d.stat)
         ),
         h("div",{style:"padding:9px 10px;border-radius:9px;border:1px solid #ef444444;background:rgba(239,68,68,.055)"},
-          h("div",{style:"font-size:8.5px;color:#ef4444;font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase"},"⚠️ NOUVEAU BOSS"),
+          h("div",{style:"font-size:8.5px;color:#ef4444;font-family:Orbitron,sans-serif;letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;gap:5px"},
+            h(UiIcon,{iconKey:"interface.warning",fallback:"⚠️",slotSize:16,glyphSize:12}),
+            h("span",null,"NOUVEAU BOSS")
+          ),
           h("div",{style:"font-size:12px;color:var(--tx);font-weight:800;margin-top:4px"},db.name),
           h("div",{style:"font-size:10px;color:var(--td);margin-top:3px"},"Objectif ×3 · "+db.objective)
         )
@@ -2982,7 +3012,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     return h("div",{class:"card"+(dungeonAccessOpen?" breach-electric":""),style:"position:relative;overflow:"+(dungeonAccessOpen?"visible":"hidden")+";border-color:#f59e0b44;background:linear-gradient(145deg,#140e03,#261b06)"},
       dungeonAccessOpen&&h(BreachFxOverlay,{variant:"quests",theme:"dungeon"}),
       h("div",{class:"ctitle",style:"margin:0;color:"+dungeonGold},dungeonAccessOpen?"DONJON OUVERT":"DONJON FERMÉ"),
-      h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px"},subtitle+" · 🗝️ "+dungeonKeys),
+      h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:1px;margin-top:4px;display:flex;align-items:center;gap:4px"},
+        h("span",null,subtitle+" ·"),
+        h(UiIcon,{iconKey:"item.dungeonKey",fallback:"🗝️",slotSize:16,glyphSize:11}),
+        h("span",null,dungeonKeys)
+      ),
       
       dungeonCanStart
         ? h("button",{onClick:()=>setConfirmDungeonChoice({type:"enter",color:dungeonGold}),style:"width:100%;margin-top:12px;padding:11px;border-radius:9px;border:1px solid "+dungeonGold+"88;background:"+dungeonGold+"12;color:"+dungeonGold+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.35px;text-transform:uppercase;cursor:pointer"},"ENTRER DANS LE DONJON")
@@ -3232,7 +3266,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     ];
 
     return h("div",{class:"tab"},
-      missedDays>=2&&h("div",{class:"warn"},"⚠️ Pénalité : -"+(missedDays*10)+" XP ("+missedDays+" jours manqués)"),
+      missedDays>=2&&h("div",{class:"warn",style:"display:flex;align-items:center;gap:7px"},
+        h(UiIcon,{iconKey:"interface.warning",fallback:"⚠️",slotSize:18,glyphSize:14}),
+        h("span",null,"Pénalité : -"+(missedDays*10)+" XP ("+missedDays+" jours manqués)")
+      ),
 
       h("div",{class:"card"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"},
@@ -3286,8 +3323,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             setState(s=>({...s,streak:0,streakBonusDay:null,weeklyBonusWk:null,streakMilestones:[],dailyLog:{},weeklyLog:{},regressionLog:{},specialQuests:[],sqStatCycle:[],sqCooldownUntil:null,sqRerollDay:null,activeDungeon:null,dungeonRunDay:null,dungeonRunsByWeek:{},dungeonKeyRollDay:null,dungeonKeys:0,dungeonKeyDay:null,dungeonKeyRollWon:false,dungeonLog:[],enduranceChoiceByDay:{},prestige:newPrestige}));
             setPrestigeUp(newPrestige);
           },
-          style:"width:100%;margin-top:12px;padding:12px;background:rgba(168,85,247,0.1);border:1px solid #a855f7;border-radius:10px;color:#a855f7;font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:3px;cursor:pointer;text-transform:uppercase;text-shadow:0 0 12px #a855f7"
-        },"⚛️ Montée en Ascension"),
+          style:"width:100%;margin-top:12px;padding:12px;background:rgba(168,85,247,0.1);border:1px solid #a855f7;border-radius:10px;color:#a855f7;font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:3px;cursor:pointer;text-transform:uppercase;text-shadow:0 0 12px #a855f7;display:flex;align-items:center;justify-content:center;gap:8px"
+        },
+          h(UiIcon,{iconKey:"interface.ascension",fallback:"⚛️",slotSize:20,glyphSize:15}),
+          h("span",null,"Montée en Ascension")
+        ),
         h("div",{style:"display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr) 1px minmax(0,1fr);align-items:center;justify-items:stretch;margin-top:12px;padding-top:16px;padding-bottom:0px;border-top:1px solid rgba(255,255,255,0.06)"},
           h("div",{style:"width:100%;display:flex;align-items:center;justify-content:center;gap:5px;padding:0"},
             h("div",{style:"display:flex;flex-direction:column;align-items:center;justify-content:center"},
@@ -3449,7 +3489,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     if(id==="invisibilityCape"&&NEW_ITEM_ICON_DATA[id])return EmojiStyleItemImage(NEW_ITEM_ICON_DATA[id],size);
     if(id==="teleportCrystal"&&NEW_ITEM_ICON_DATA[id])return EmojiStyleItemImage(NEW_ITEM_ICON_DATA[id],size);
     if(NEW_ITEM_ICON_DATA[id])return EmojiStyleItemImage(NEW_ITEM_ICON_DATA[id],size);
-    return h("span",{style:"font-size:"+size+"px;line-height:1"},INVENTORY_ITEMS[id].emoji);
+    return h(UiIcon,{iconKey:"item."+id,fallback:INVENTORY_ITEMS[id].emoji,slotSize:size,glyphSize:size});
   }
   function itemQty(id){ return ["codex","regressionOrb","debtAcknowledgement"].includes(id)?1:id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
   function Inventory(){
@@ -4219,7 +4259,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   const congratsStyle = "font-family:Orbitron,sans-serif;font-size:clamp(20px,5.4vw,27px);font-weight:900;letter-spacing:3px;text-transform:uppercase;color:#ffffff;text-shadow:none";
   function NotificationHeader(){
     return h("div",{style:"display:grid;grid-template-columns:34px auto 34px;align-items:center;justify-content:center;margin-bottom:14px;width:100%"},
-      h("span",{style:"font-family:Orbitron,sans-serif;font-size:clamp(21px,5.6vw,28px);font-weight:900;color:#ffffff;text-align:center;line-height:1"},"❕"),
+      h(UiIcon,{iconKey:"interface.notification",fallback:"❕",slotSize:34,glyphSize:26}),
       h("span",{style:congratsStyle},"NOTIFICATION"),
       h("span",{style:"width:34px"})
     );
@@ -4421,8 +4461,14 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     return h("div",{class:"ruov",style:"--rc:"+rankColor+";--rg:"+rankGlow},
       h("div",{class:"ruparts"},particles.map(p=>h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?"#ffffff":rarityColor)+";box-shadow:0 0 10px "+rarityColor+"88;animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"}))),
       h("div",{class:"rucont"},
-        h("div",{class:"ruevol",style:"color:"+red+";text-shadow:0 0 18px rgba(239,68,68,.65)"},"⚠️ RUPTURE DE DONJON"),
-        h("div",{class:"rurank",style:"--rc:"+red+";--rg:rgba(239,68,68,.75);color:"+red+";text-shadow:0 0 20px rgba(239,68,68,.75);font-size:clamp(34px,10vw,60px);letter-spacing:-1px;white-space:normal;max-width:350px;line-height:1.05;margin-top:10px","data-r":"☠️ "+ruptureUp.name},"☠️ "+ruptureUp.name),
+        h("div",{class:"ruevol",style:"color:"+red+";text-shadow:0 0 18px rgba(239,68,68,.65);display:flex;align-items:center;justify-content:center;gap:8px"},
+          h(UiIcon,{iconKey:"interface.warning",fallback:"⚠️",slotSize:24,glyphSize:18}),
+          h("span",null,"RUPTURE DE DONJON")
+        ),
+        h("div",{style:"display:flex;align-items:center;justify-content:center;gap:10px;max-width:350px;margin-top:10px"},
+          h(UiIcon,{iconKey:"interface.rupture",fallback:"☠️",slotSize:48,glyphSize:36}),
+          h("div",{class:"rurank",style:"--rc:"+red+";--rg:rgba(239,68,68,.75);color:"+red+";text-shadow:0 0 20px rgba(239,68,68,.75);font-size:clamp(34px,10vw,60px);letter-spacing:-1px;white-space:normal;max-width:292px;line-height:1.05","data-r":ruptureUp.name},ruptureUp.name)
+        ),
         h("div",{class:"rulabel",style:"margin-top:12px;letter-spacing:3px;color:"+rarityColor},"BOSS DE RUPTURE"),
         h("button",{class:"rudis",style:"--rc:#ef4444;--rg:rgba(239,68,68,.65)",onClick:()=>setRuptureUp(null)},"Continuer")
       )
@@ -4575,7 +4621,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{style:"display:flex;flex-direction:column;gap:8px;margin-top:12px"},REGRESSION_DEFS.map(reg=>
           h("button",{key:reg.id,onClick:()=>{setRegressionChoiceOpen(false);setConfirmRegression(reg)},style:"padding:12px;border-radius:9px;border:1px solid #ef444466;background:rgba(239,68,68,.05);color:var(--tx);text-align:left;cursor:pointer"},
             h("div",{style:"display:flex;align-items:center;gap:9px"},
-              h("span",{style:"font-size:18px"},reg.icon),
+              h(UiIcon,{iconKey:"item.regressionOrb",fallback:reg.icon,slotSize:24,glyphSize:18}),
               h("div",null,
                 h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:#ef4444;text-transform:uppercase"},reg.name),
                 h("div",{style:"font-size:10px;color:var(--td);margin-top:4px"},"−"+reg.statPenalty.toLocaleString("fr-FR")+" XP par statistique · −"+reg.globalPenalty.toLocaleString("fr-FR")+" XP global")
@@ -4621,7 +4667,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{key:p.id,class:"rupart",style:"left:"+p.left+"%;bottom:0;width:"+p.size+"px;height:"+p.size+"px;background:"+(p.accent?"#7f1d1d":color)+";box-shadow:0 0 10px "+glow+";animation-delay:"+p.delay+"s;animation-duration:"+p.dur+"s"})
       )),
       h("div",{class:"rucont",style:"color:"+color},
-        h("div",{class:"ruevol",style:"color:"+color+";text-shadow:0 0 18px "+glow+";font-size:clamp(21px,6vw,31px);letter-spacing:2px"},"☠️ REGRESSION"),
+        h("div",{class:"ruevol",style:"color:"+color+";text-shadow:0 0 18px "+glow+";font-size:clamp(21px,6vw,31px);letter-spacing:2px;display:flex;align-items:center;justify-content:center;gap:9px"},
+          h(UiIcon,{iconKey:"interface.regression",fallback:"☠️",slotSize:32,glyphSize:24}),
+          h("span",null,"REGRESSION")
+        ),
         h("div",{style:"max-width:340px;margin-top:16px;font-size:13px;line-height:1.55;text-align:center;color:"+color+";font-family:Orbitron,sans-serif"},
           "Vous avez succombé à la tentation, une pénalité vous est imposée :"
         ),
@@ -4909,7 +4958,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h("div",{class:"rucont"},
         h(NotificationHeader,null),
         h("div",{class:"ruevol",style:"color:"+main+";text-shadow:0 0 16px "+glow},itemLootUp.item==="debtAcknowledgement"?"PACTE SCELLÉ !":(rare?"DROP RARE OBTENU !":"OBJET OBTENU !")),
-        itemLootUp.item==="debtAcknowledgement"&&h("div",{style:"font-size:28px;letter-spacing:10px;color:#9ca3af;opacity:.8;animation:ruPulse 1.4s ease-in-out infinite"},"⛓ ⛓"),
+        itemLootUp.item==="debtAcknowledgement"&&h("div",{style:"color:#9ca3af;opacity:.8;animation:ruPulse 1.4s ease-in-out infinite;display:flex;align-items:center;justify-content:center;gap:18px"},
+          h(UiIcon,{iconKey:"interface.chain",fallback:"⛓",slotSize:34,glyphSize:28}),
+          h(UiIcon,{iconKey:"interface.chain",fallback:"⛓",slotSize:34,glyphSize:28})
+        ),
         h("div",{style:"position:relative;display:flex;align-items:center;justify-content:center;width:150px;height:150px;margin:8px 0 14px"},
           h("div",{style:"position:absolute;inset:18px;border-radius:50%;background:radial-gradient(circle,"+main+"55 0%,"+main+"20 42%,transparent 72%);filter:blur(5px);box-shadow:0 0 34px "+glow}),
           h("div",{style:"position:relative;z-index:1;filter:drop-shadow(0 0 14px "+glow+");animation:ruPulse 1.8s ease-in-out infinite"},InventoryItemIcon(itemLootUp.item,112))
@@ -5087,14 +5139,14 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       function Reward({stat,xp}){
         return h(StatPill,{stat,xp,showPlus:false});
       }
-      function Exercise({icon,name,target,unit,rewards}){
+      function Exercise({iconKey,icon,name,target,unit,rewards}){
         const rewardNodes=[];
         (rewards||[]).forEach((r,i)=>{
           rewardNodes.push(h(Reward,{key:"reward"+i,stat:r.stat,xp:r.xp}));
         });
         return h("div",{style:subStyle},
           h("div",{style:"display:flex;align-items:center;gap:8px"},
-            h("span",{style:"font-size:15px;line-height:1;min-width:24px;text-align:center;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0"},icon),
+            h(UiIcon,{iconKey:"exercise."+iconKey,fallback:icon,slotSize:24,glyphSize:15}),
             h("div",{style:"flex:1;min-width:0"},
               h("div",{style:"font-size:12px;color:var(--tx);font-weight:800"},name),
               h("div",{style:"margin-top:5px"},rewardNodes),
@@ -5112,29 +5164,35 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const sideTarget=pushTarget;
       const squatTarget=getStatLevelTarget("squats",state.stats);
       const calvesTarget=getStatLevelTarget("calves",state.stats);
+      function FamilyTitle({iconKey,icon,label}){
+        return h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px;display:flex;align-items:center;gap:7px"},
+          h(UiIcon,{iconKey:"exercise-family."+iconKey,fallback:icon,slotSize:22,glyphSize:15}),
+          h("span",null,label)
+        );
+      }
       return h(Fragment,null,
         h("div",{style:familyStyle},
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px"},"🦾 PECS & TRICEPS"),
-          h(Exercise,{icon:"💪🏼",name:"Pompes",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
-          h(Exercise,{icon:"💪🏼",name:"Dips",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]})
+          h(FamilyTitle,{iconKey:"push",icon:"🦾",label:"PECS & TRICEPS"}),
+          h(Exercise,{iconKey:"pushups",icon:"💪🏼",name:"Pompes",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
+          h(Exercise,{iconKey:"dips",icon:"💪🏼",name:"Dips",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]})
         ),
         h("div",{style:familyStyle},
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px"},"🦾 DOS & BICEPS"),
-          h(Exercise,{icon:"💪🏼",name:"Tractions négatives",target:backTarget,unit:"reps",rewards:[{stat:"Force",xp:"12/rep"}]}),
-          h(Exercise,{icon:"💪🏼",name:"Tractions australiennes",target:australianTarget,unit:"reps",rewards:[{stat:"Force",xp:"6/rep"}]})
+          h(FamilyTitle,{iconKey:"back",icon:"🦾",label:"DOS & BICEPS"}),
+          h(Exercise,{iconKey:"negative_pullups",icon:"💪🏼",name:"Tractions négatives",target:backTarget,unit:"reps",rewards:[{stat:"Force",xp:"12/rep"}]}),
+          h(Exercise,{iconKey:"australian_pullups",icon:"💪🏼",name:"Tractions australiennes",target:australianTarget,unit:"reps",rewards:[{stat:"Force",xp:"6/rep"}]})
         ),
         h("div",{style:familyStyle},
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px"},"🧱 ABDOS"),
-          h(Exercise,{icon:"🧎🏻",name:"Crunches",target:absTarget,unit:"reps",rewards:[{stat:"Force",xp:"1,5/rep"}]}),
-          h(Exercise,{icon:"🦵🏻",name:"Levées de jambes",target:legRaiseTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
-          h(Exercise,{icon:"🫳🏼",name:"Gainage",target:plankTarget,unit:"min",rewards:[{stat:"Force",xp:"50/min"}]}),
-          h(Exercise,{icon:"🧎🏻‍♂️‍➡️",name:"Gainage obliques",target:sideTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
+          h(FamilyTitle,{iconKey:"abs",icon:"🧱",label:"ABDOS"}),
+          h(Exercise,{iconKey:"crunches",icon:"🧎🏻",name:"Crunches",target:absTarget,unit:"reps",rewards:[{stat:"Force",xp:"1,5/rep"}]}),
+          h(Exercise,{iconKey:"leg_raises",icon:"🦵🏻",name:"Levées de jambes",target:legRaiseTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
+          h(Exercise,{iconKey:"plank",icon:"🫳🏼",name:"Gainage",target:plankTarget,unit:"min",rewards:[{stat:"Force",xp:"50/min"}]}),
+          h(Exercise,{iconKey:"side_plank",icon:"🧎🏻‍♂️‍➡️",name:"Gainage obliques",target:sideTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
         ),
         h("div",{style:familyStyle},
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px"},"🦿 JAMBES"),
-          h(Exercise,{icon:"🦵🏻",name:"Squats",target:squatTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"},{stat:"Agilite",xp:"3/rep"}]}),
-          h(Exercise,{icon:"🦵🏻",name:"Mollets",target:calvesTarget,unit:"reps",rewards:[{stat:"Force",xp:"2/rep"},{stat:"Agilite",xp:"1/rep"}]}),
-          h(Exercise,{icon:"🦵🏻",name:"Fentes",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]})
+          h(FamilyTitle,{iconKey:"legs",icon:"🦿",label:"JAMBES"}),
+          h(Exercise,{iconKey:"squats",icon:"🦵🏻",name:"Squats",target:squatTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"},{stat:"Agilite",xp:"3/rep"}]}),
+          h(Exercise,{iconKey:"calves",icon:"🦵🏻",name:"Mollets",target:calvesTarget,unit:"reps",rewards:[{stat:"Force",xp:"2/rep"},{stat:"Agilite",xp:"1/rep"}]}),
+          h(Exercise,{iconKey:"lunges",icon:"🦵🏻",name:"Fentes",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]})
         )
       );
     }
@@ -5186,7 +5244,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const rewards=dungeonRewardPairs(dg);
       return h("div",{key:dg.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:center;gap:8px"},
-          h("div",{style:"font-size:18px;line-height:1;min-width:24px;text-align:center;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0"},dg.icon),
+          h(UiIcon,{iconKey:"dungeon."+dg.id,fallback:dg.icon,slotSize:24,glyphSize:18}),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},dg.title),
             h("div",{style:"margin-top:7px"},rewards.map((r,i)=>h(StatPill,{key:i,stat:r.stat,xp:r.xp}))),
@@ -5389,9 +5447,14 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               h("div",{class:"pname"},"VAL,"),
               h("div",{style:"margin-top:6px;width:100%;min-height:26px;font-size:9.5px;line-height:1.3;color:"+mantraColor+";font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-transform:uppercase;display:block;opacity:.96;white-space:normal;overflow:hidden"},dailyMantra)
             ),
-            prestige>0&&h("div",{class:"prestige-badge"},"\u269B\uFE0F Ascension "+ROMAN[prestige-1]),
+            prestige>0&&h("div",{class:"prestige-badge"},
+              h(UiIcon,{iconKey:"interface.ascension",fallback:"⚛️",slotSize:18,glyphSize:13}),
+              h("span",null,"Ascension "+ROMAN[prestige-1])
+            ),
             h("div",{style:"display:flex;align-items:center;gap:2px;flex:0 0 auto;transform:translateY(-2px)"},
-              h("button",{class:"gbtn",title:"Réglages","aria-label":"Ouvrir les réglages",style:"display:flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;font-size:24px;line-height:1",onClick:()=>setShowSet(true)},"⚙️")
+              h("button",{class:"gbtn",title:"Réglages","aria-label":"Ouvrir les réglages",style:"display:flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;font-size:24px;line-height:1",onClick:()=>setShowSet(true)},
+                h(UiIcon,{iconKey:"interface.settings",fallback:"⚙️",slotSize:26,glyphSize:22})
+              )
             )
           )
         )

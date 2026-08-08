@@ -9,6 +9,7 @@ import {
   rotatedQuestObjects
 } from "./exerciseRotation.js";
 import { RECORD_EXERCISE_DEFS, recordExerciseValueForDay } from "./records.js";
+import { UiIcon } from "./uiIcons.js?v=20260808-icon-slots-v1";
 
 const { h, Fragment } = window.preact;
 
@@ -16,9 +17,14 @@ const WEEKLY_BADGE_COLOR = "#818cf8";
 const BONUS_BADGE_COLOR = "#fbbf24";
 
 function QuestIcon(id, fallback, size=14, extraStyle=""){
-  return h("span",{
-    style:"font-size:"+size+"px;line-height:1;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;flex-shrink:0;"+extraStyle
-  },fallback);
+  const slotSize=size>=18?26:18;
+  return h(UiIcon,{
+    iconKey:"quest."+id,
+    fallback,
+    slotSize,
+    glyphSize:size,
+    extraStyle
+  });
 }
 
 function questBadgeStyle(color, filled=false, extra=""){
