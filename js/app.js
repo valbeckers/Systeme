@@ -32,7 +32,7 @@ import {
   expireActiveDungeonState,
   canValidateDungeonRoom
 } from "./dungeonEngine.js?v=20260805-master-contract-random-01";
-import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260806-level-rank-loot-01";
+import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260808-rewrite-rune-distinct";
 import {
   incrementLootState,
   pickRandomBreachLoot,
@@ -43,7 +43,7 @@ import {
   counterpartBalanceSacrificeEligibleIds,
   counterpartBalanceRewardEligibleIds,
   exchangeCounterpartBalanceState
-} from "./lootEngine.js?v=20260803-counterpart-balance-01";
+} from "./lootEngine.js?v=20260808-rewrite-rune-distinct";
 import {
   eventDayStr,
   next7AM,
@@ -82,8 +82,8 @@ import {
   DEBT_ACKNOWLEDGEMENT_ICON_DATA
 } from "./itemImages.js";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260807-endurance-walk-choice";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260803-counterpart-balance-01";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260808-rewrite-rune-distinct";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260808-rewrite-rune-distinct";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -516,7 +516,6 @@ function App(){
   const [contractUp,setContractUp] = useState(null);
   const [ruptureUp,setRuptureUp] = useState(null);
   const [urgentUp,setUrgentUp] = useState(null);
-  const [confirmRerollSq,setConfirmRerollSq] = useState(null);
   const [confirmRegression,setConfirmRegression] = useState(false);
   const [regressionChoiceOpen,setRegressionChoiceOpen] = useState(false);
   const [regressionUp,setRegressionUp] = useState(false);
@@ -932,7 +931,6 @@ function App(){
   const sqCooldownUntil = state.sqCooldownUntil||null;
   const sqCooldownActive = sqCooldownUntil && now < sqCooldownUntil;
   const sqReady = !activeSq && !sqCooldownActive;
-  const sqRerollUsed = state.sqRerollDay===today;
 
   // Réparation immédiate d'une carte urgente vide :
   // aucune quête active ni complétée depuis le dernier reset de 5 h.
@@ -1739,6 +1737,67 @@ function App(){
     setItemUseUp({id:"rerollToken",summoned:true});
   }
 
+  function traceRewriteRune(){
+    let rewrittenSq=null;
+
+    setState(s=>{
+      const t=Date.now();
+      const inv={...(s.inventory||{})};
+      if((Number(inv.rewriteRune)||0)<1) return s;
+
+      const list=s.specialQuests||[];
+      const active=list.find(q=>!q.completedAt&&t<(q.expiresAt||0));
+      if(!active) return s;
+
+      // La quête abandonnée reste comptabilisée dans le cycle/historique de tirage :
+      // la Rune ne permet donc pas de contourner le système de variété des urgentes.
+      const cycleBase=[...(s.sqStatCycle||[])];
+      const drawLogBeforeRewrite=appendUrgentQuestDrawLog(
+        s.sqDrawLog,
+        active,
+        active.startedAt||t
+      );
+
+      const usedIds=[active.id].filter(Boolean);
+      const result=pickRandomSq(usedIds,cycleBase,drawLogBeforeRewrite,null);
+      if(!result) return s;
+
+      const {tpl,pickedStat,cycleReset}=result;
+      const newSq={
+        ...tpl,
+        sqid:"sq_rune_"+t,
+        progress:0,
+        startedAt:t,
+        expiresAt:next7AM(t),
+        completedAt:null,
+        rewrittenByRune:true
+      };
+      const newCycle=cycleReset?[pickedStat]:[...cycleBase,pickedStat];
+
+      inv.rewriteRune=Math.max(0,(Number(inv.rewriteRune)||0)-1);
+      rewrittenSq=newSq;
+
+      return {
+        ...s,
+        inventory:inv,
+        specialQuests:[...list.filter(q=>q.completedAt),newSq],
+        sqStatCycle:newCycle,
+        sqDrawLog:appendUrgentQuestDrawLog(drawLogBeforeRewrite,newSq,t),
+        sqCooldownUntil:next7AM(t),
+        lastActiveDay:todayStr(t)
+      };
+    });
+
+    setTimeout(()=>{
+      if(!rewrittenSq)return;
+      const floatId=Date.now()+Math.random();
+      setFloats(f=>[...f,{id:floatId,y:"35%",txt:"ᚱ DESTIN RETRACÉ"}]);
+      setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==floatId)),1400);
+      setItemUseUp({id:"rewriteRune",rewritten:true});
+    },0);
+  }
+
+
   function launchNewSq(){
     setState(s=>{
       const result=pickRandomSq((s.specialQuests||[]).filter(q=>!q.completedAt).map(q=>q.id),s.sqStatCycle,s.sqDrawLog,s.urgentCompassStat);
@@ -1751,44 +1810,6 @@ function App(){
     });
   }
 
-  function rerollSq(sq){
-    if(!sq || sq.completedAt || sq.summonedByToken) return;
-    const tDay=todayStr();
-    if(state.sqRerollDay===tDay || (sq.progress||0)>0) return;
-
-    setState(s=>{
-      const active=(s.specialQuests||[]).find(q=>q.sqid===sq.sqid&&!q.completedAt);
-      if(!active || (active.progress||0)>0 || s.sqRerollDay===tDay) return s;
-
-      // Une quête passée par Relance compte comme consommée exactement comme une quête accomplie :
-      // sa statistique reste dans le cycle courant et son ID entre dans l'historique de tirage.
-      const cycleBase=[...(s.sqStatCycle||[])];
-      const drawLogBeforeReroll=appendUrgentQuestDrawLog(s.sqDrawLog,active,active.startedAt||Date.now());
-
-      const usedIds=(s.specialQuests||[]).filter(q=>!q.completedAt).map(q=>q.id).filter(Boolean);
-      const result=pickRandomSq(usedIds,cycleBase,drawLogBeforeReroll);
-      if(!result) return s;
-
-      const {tpl,pickedStat,cycleReset}=result;
-      const t=Date.now();
-      const newSq={...tpl,sqid:"sq_"+t,progress:0,startedAt:t,expiresAt:next7AM(t),completedAt:null};
-      const newCycle=cycleReset ? [pickedStat] : [...cycleBase,pickedStat];
-
-      const id=Date.now()+Math.random();
-      setFloats(f=>[...f,{id,y:"35%",txt:"↻ QUÊTE RELANCÉE"}]);
-      setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id)),1400);
-
-      return {
-        ...s,
-        specialQuests:[...(s.specialQuests||[]).filter(q=>q.completedAt),newSq],
-        sqStatCycle:newCycle,
-        sqDrawLog:appendUrgentQuestDrawLog(drawLogBeforeReroll,newSq,t),
-        sqCooldownUntil:next7AM(t),
-        sqRerollDay:tDay,
-        lastActiveDay:tDay
-      };
-    });
-  }
 
   function startRandomDungeon(){
     const forcedStat=STATS.includes(state.dungeonMapStat)?state.dungeonMapStat:null;
@@ -2551,15 +2572,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("div",{class:"qbar"},h("div",{class:"qfill"+(done?" done":pct>0?" partial":""),style:sqFillStyle}))
           ),
       !done&&h("div",{style:"font-size:10px;color:"+(urgent?"#ef4444":"#ef4444bb")+";font-family:Orbitron,sans-serif;margin-top:4px;text-align:"+(showInput?"left":"right")},"\u23F1 "+fmtCD(remaining)+" restants"),
-      showInput&&!done&&!sqRerollUsed&&(sq.progress||0)<=0&&h("div",{style:"margin-top:8px"},
-        h("button",{
-          disabled:sq.summonedByToken,
-          onClick:()=>setConfirmRerollSq(sq),
-          style:"width:100%;padding:9px;border-radius:8px;border:1px solid "+(sq.summonedByToken ? "rgba(255,255,255,0.08)" : "#f59e0b66")+";background:"+(sq.summonedByToken ? "rgba(255,255,255,0.02)" : "rgba(245,158,11,0.06)")+";color:"+(sq.summonedByToken ? "var(--td)" : "#f59e0b")+";font-family:Orbitron,sans-serif;font-size:10px;cursor:"+(sq.summonedByToken ? "default" : "pointer")+";letter-spacing:1px;text-transform:uppercase;opacity:"+(sq.summonedByToken ? ".65" : "1")
-        },
-          sq.summonedByToken ? "Relance indisponible pour une quête invoquée" : "↻ Relancer la quête (1/jour)"
-        )
-      ),
       showInput&&!done&&(
         !incrementalUrgent
           ?h("div",{style:"display:flex;gap:8px;margin-top:8px"},
@@ -3439,7 +3451,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   }
   function itemQty(id){ return ["codex","regressionOrb","debtAcknowledgement"].includes(id)?1:id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
   function Inventory(){
-    const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","mysteryMap","etherStopper","rerollToken","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape","recoveryOintment","counterpartBalance"]
+    const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","mysteryMap","etherStopper","rerollToken","rewriteRune","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape","recoveryOintment","counterpartBalance"]
       .sort((a,b)=>{
         if(inventorySort==="name"){
           return INVENTORY_ITEMS[a].name.localeCompare(INVENTORY_ITEMS[b].name,"fr",{sensitivity:"base"});
@@ -3622,6 +3634,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       if(state.urgentTokenUseDay===today){disabled=true;reason="Un Jeton de relance a déjà été utilisé aujourd’hui.";}
       else if(activeSq){disabled=true;reason="Terminez d’abord la quête urgente actuellement active.";}
       else if(!urgentDoneToday){disabled=true;reason="La quête urgente du jour doit être terminée avant d’utiliser le Jeton.";}
+    }else if(id==="rewriteRune"){
+      if(!activeSq){disabled=true;reason="Aucune quête urgente active à remplacer.";}
     }else if(id==="alchemicalCatalyst"){
       if(state.alchemicalCatalystArmed){disabled=true;reason="Un Catalyseur alchimique est déjà préparé pour la prochaine transmutation.";}
     }else if(id==="masterContract"){
@@ -3686,6 +3700,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
                 ?"Utiliser la Balance des contreparties pour sacrifier 3 objets différents et choisir 1 nouvel objet ?"
               :id==="masterContract"
                 ?"Signer le Contrat du Maître pour le prochain donjon ? La contrainte sera tirée au sort et restera cachée jusqu’au moment où elle s’activera."
+              :id==="rewriteRune"
+                ?"Tracer la Rune de Réécriture ? La quête urgente active sera remplacée par une nouvelle quête urgente aléatoire. La Rune sera consommée."
               :"Êtes-vous certain de vouloir "+(id==="regressionOrb"?"activer l’":id==="debtAcknowledgement"?"utiliser la ":id==="dungeonKey"?"utiliser une ":id==="transmutationGrimoire"?"utiliser le ":id==="destinyCompass"?"orienter la ":id==="alchemicalCatalyst"?"préparer le ":"consommer un ")+it.name+" ?"),
       h("div",{style:"display:flex;gap:10px;margin-top:22px"},
         h("button",{class:"rudis",style:"min-width:110px;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>setConfirmItemUse(null)},"Non"),
@@ -3723,6 +3739,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             }
           }else if(id==="rerollToken"){
             invokeExtraUrgentQuest();
+          }else if(id==="rewriteRune"){
+            traceRewriteRune();
           }else if(id==="alchemicalCatalyst"){
             setState(s=>({...s,alchemicalCatalystArmed:true}));
             setItemUseUp({id,armed:true});
@@ -3751,7 +3769,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               setItemUseUp({id:"teleportCrystal",alliedTeleport:true,breachName:tpl.name});
             }
           }else setElixirStatChoice({id});
-        }},eraseRecord?"Effacer":id==="teleportCrystal"?"Briser":id==="masterContract"?"Signer":id==="dungeonKey"||id==="transmutationGrimoire"||id==="supremeElixir"?"Oui":"Continuer")
+        }},eraseRecord?"Effacer":id==="teleportCrystal"?"Briser":id==="masterContract"?"Signer":id==="rewriteRune"?"Tracer":id==="dungeonKey"||id==="transmutationGrimoire"||id==="supremeElixir"?"Oui":"Continuer")
       )
     ));
   }
@@ -4537,30 +4555,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   }
 
 
-  function ConfirmReroll(){
-    if(!confirmRerollSq)return null;
-    return h("div",{class:"ruov",style:"--rc:#f59e0b;--rg:#f59e0b55;background:rgba(0,0,0,0.92)"},
-      h("div",{class:"rucont",style:"width:min(330px,calc(100vw - 38px));background:rgba(15,15,18,0.96);border:1px solid #f59e0b66;border-radius:18px;padding:20px;box-shadow:0 0 30px #f59e0b22"},
-        h("div",{class:"ruevol",style:"margin-bottom:10px;color:#f59e0b"},"CONFIRMATION"),
-        h("div",{style:"font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:#f59e0b;letter-spacing:1px;text-transform:uppercase;text-align:center;line-height:1.25"},"Relancer la quête urgente ?"),
-        h("div",{style:"font-size:12px;color:var(--td);line-height:1.5;text-align:center;margin-top:12px"},
-          "Cette action remplacera la quête actuelle par une nouvelle. Tu ne peux relancer qu'une seule quête urgente par jour."
-        ),
-        h("div",{style:"display:flex;gap:10px;width:100%;margin-top:18px"},
-          h("button",{
-            onClick:()=>setConfirmRerollSq(null),
-            style:"flex:1;padding:11px;border-radius:9px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);color:var(--td);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"
-          },"Annuler"),
-          h("button",{
-            onClick:()=>{const sq=confirmRerollSq;setConfirmRerollSq(null);rerollSq(sq);},
-            style:"flex:1;padding:11px;border-radius:9px;border:1px solid #f59e0b;background:rgba(245,158,11,0.1);color:#f59e0b;font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"
-          },"Relancer")
-        )
-      )
-    );
-  }
-
-
   function RegressionChoiceModal(){
     if(!regressionChoiceOpen)return null;
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setRegressionChoiceOpen(false)}},
@@ -4881,6 +4875,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       mysteryMap:{main:"#b7791f",accent:"#f5d08a"},
       etherStopper:{main:"#7c3aed",accent:"#60a5fa"},
       rerollToken:{main:"#d4a84f",accent:"#38bdf8"},
+      rewriteRune:{main:"#8b5cf6",accent:"#67e8f9"},
       alchemicalCatalyst:{main:"#10b981",accent:"#5eead4"},
       counterpartBalance:{main:"#eab308",accent:"#fef08a"}
     }[itemLootUp.item]||{main:rank.color||"#f59e0b",accent:"#ffffff"};
@@ -4988,7 +4983,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const it=INVENTORY_ITEMS[itemUseUp.id];
     return h("div",{class:"ruov",style:"--rc:"+rank.color+";--rg:"+rank.glow},h("div",{class:"rucont"},
       h(NotificationHeader,null),
-      h("div",{class:"ruevol",style:"color:"+rank.color},itemUseUp.id==="teleportCrystal"&&itemUseUp.alliedTeleport?"ALLIANCE SCELLÉE":itemUseUp.id==="dungeonKey"?"Vous avez utilisé une":itemUseUp.id==="debtAcknowledgement"?"Dette créée avec une":itemUseUp.id==="transmutationGrimoire"?"Transmutation accomplie":itemUseUp.id==="destinyCompass"?"Boussole orientée":itemUseUp.id==="mysteryMap"?"Carte déployée":itemUseUp.id==="etherStopper"?(itemUseUp.resumed?"Élixir réactivé":"Élixir suspendu"):itemUseUp.id==="rerollToken"?"Quête urgente invoquée":itemUseUp.id==="alchemicalCatalyst"?"Catalyseur préparé":itemUseUp.id==="counterpartBalance"?"Échange accompli":itemUseUp.id==="masterContract"?"Vous avez signé un":"Vous avez consommé un"),
+      h("div",{class:"ruevol",style:"color:"+rank.color},itemUseUp.id==="teleportCrystal"&&itemUseUp.alliedTeleport?"ALLIANCE SCELLÉE":itemUseUp.id==="dungeonKey"?"Vous avez utilisé une":itemUseUp.id==="debtAcknowledgement"?"Dette créée avec une":itemUseUp.id==="transmutationGrimoire"?"Transmutation accomplie":itemUseUp.id==="destinyCompass"?"Boussole orientée":itemUseUp.id==="mysteryMap"?"Carte déployée":itemUseUp.id==="etherStopper"?(itemUseUp.resumed?"Élixir réactivé":"Élixir suspendu"):itemUseUp.id==="rerollToken"?"Quête urgente invoquée":itemUseUp.id==="rewriteRune"?"Destin retracé":itemUseUp.id==="alchemicalCatalyst"?"Catalyseur préparé":itemUseUp.id==="counterpartBalance"?"Échange accompli":itemUseUp.id==="masterContract"?"Vous avez signé un":"Vous avez consommé un"),
       h("div",{class:"rurank",style:responsiveItemAnimationTitleStyle(it.name,56),"data-r":it.name},it.name),
       itemUseUp.stat&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Vous bénéficiez de +"+Math.round(itemUseUp.pct*100)+" % d’XP dans ",h("span",{style:"color:"+(STAT_COLOR[itemUseUp.stat]||rank.color)},STAT_LBL[itemUseUp.stat]||itemUseUp.stat)," pendant 24 h."),
       itemUseUp.global&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:#c084fc"},"Vous bénéficiez de +"+Math.round(itemUseUp.pct*100)+" % d’XP sur toutes les statistiques pendant 24 h."),
@@ -4999,6 +4994,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       itemUseUp.paused&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Le temps restant de l’élixir est conservé pendant 24 h maximum."),
       itemUseUp.resumed&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"L’élixir reprend avec exactement le temps qui lui restait."),
       itemUseUp.summoned&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Une seconde quête urgente a été invoquée. Elle accorde ses XP et ses objets normaux, mais ne peut pas être relancée."),
+      itemUseUp.rewritten&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"La quête urgente active a été remplacée par une nouvelle quête urgente aléatoire."),
       itemUseUp.alliedTeleport&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:350px;line-height:1.55;color:#dbeafe"},"Vous choisissez de vous allier à un pays voisin pour l’aider à refermer une Brèche."),
       itemUseUp.alliedTeleport&&itemUseUp.breachName&&h("div",{class:"rulabel",style:"margin-top:8px;max-width:350px;line-height:1.45;color:#60a5fa"},"Brèche la plus proche : "+itemUseUp.breachName),
       itemUseUp.armed&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:#5eead4"},"La prochaine transmutation ne coûtera que 3 Élixirs d’expérience mineurs."),
@@ -5451,7 +5447,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(RegressionUp,null),
       h(ConfirmDebtModal,null),
       h(ConfirmDungeonChoice,null),
-      h(ConfirmReroll,null),
       h(ImportModal,null),
       h(ExportCopiedModal,null),
       h(ExportManualModal,null),

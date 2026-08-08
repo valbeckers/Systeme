@@ -21,6 +21,7 @@ const BASE_INVENTORY_ITEMS={
     etherStopper:{name:"BOUCHON D’ÉTHER",short:"BOUCHON D’ÉTHER",emoji:"🔮",action:"SUSPENDRE",desc:"Permet au joueur de mettre en pause la durée restante d’un élixir actif. L’élixir peut être réactivé manuellement avec exactement le temps qu’il lui restait. La suspension dure au maximum 24 h, puis l’élixir reprend automatiquement. Aucun autre élixir ne peut être activé pendant la suspension.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon de l’Alchimiste (Taux : 10 %)."]},
     mysteryMap:{name:"CARTE DES PROFONDEURS",short:"CARTE DES PROFONDEURS",emoji:"🗺️",action:"DÉPLIER",desc:"Permet au joueur de choisir la statistique du prochain donjon. La carte doit être dépliée avant d’utiliser une Clé de Donjon. Lorsqu’une statistique correspond à plusieurs donjons, un tirage aléatoire est effectué.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon du Pèlerin (Taux : 10 %)."]},
     rerollToken:{name:"JETON DE RELANCE",short:"JETON DE RELANCE",emoji:"🔄",action:"INVOQUER",desc:"Après avoir terminé la quête urgente du jour, permet au joueur d’invoquer immédiatement une nouvelle quête urgente. Cette nouvelle quête urgente ne peut pas être relancée. Utilisable une seule fois par jour.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %)."]},
+    rewriteRune:{name:"RUNE DE RÉÉCRITURE",short:"RUNE DE RÉÉCRITURE",emoji:"ᚱ",action:"TRACER",desc:"Permet de remplacer la quête urgente active par une nouvelle quête urgente aléatoire.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon du Gardien (Taux : 10 %)."]},
     alchemicalCatalyst:{name:"CATALYSEUR ALCHIMIQUE",short:"CATALYSEUR ALCHIMIQUE",emoji:"⚗️",action:"PRÉPARER",desc:"Permet au joueur de réduire le coût de 5 à 3 Élixirs d’expérience mineurs lors de la prochaine utilisation du Grimoire de l’Alchimiste. Le Catalyseur doit être utilisé avant le Grimoire.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon de l’Alchimiste (Taux : 10 %)."]},
     masterContract:{name:"CONTRAT DU MAÎTRE",short:"CONTRAT DU MAÎTRE",emoji:"📜",action:"UTILISER",desc:"À signer avant le lancement d’un donjon. Au cours du prochain donjon, une contrainte aléatoire sera imposée au joueur. Celle-ci reste cachée et peut survenir à n’importe quel moment du donjon. Si le donjon est terminé malgré la contrainte, ses récompenses sont augmentées de 20 %. Contraintes possibles : Surcharge — objectifs multipliés par 1,5 ; Épreuve cachée — une des quatre salles devient une Salle du Maître et sa contrainte spéciale n’est révélée qu’à l’ouverture de la salle ; Enchaînement — deux salles sont liées et, dès que la première est accomplie, la seconde doit être terminée dans les 30 minutes ; Sous pression — lorsque la quatrième salle est terminée, un compte à rebours aléatoire de 1 à 6 heures démarre pour vaincre le Boss ; Double donjon — une fois le Boss vaincu, une des quatre salles déjà accomplies est tirée au sort et devient un nouveau Boss avec un objectif ×3. Ce nouveau Boss doit être vaincu pour terminer le donjon.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon du Guerrier (Taux : 10 %)."]},
     recordHammer:{name:"MARQUE DU DÉPASSEMENT",short:"MARQUE DU DÉPASSEMENT",emoji:"✨",action:"DESSINER",desc:"Permet au joueur de marquer un record comme objectif officiel de la semaine. Le battre avant la fin de semaine rapporte +500 XP. L’objet est perdu en cas d’échec.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété toutes les quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon du Guerrier (Taux : 10 %)."]},
@@ -58,6 +59,7 @@ export const STANDARD_ITEM_DROPS=[
   ["mysteryMap",0.01],
   ["etherStopper",0.01],
   ["rerollToken",0.01],
+  ["rewriteRune",0.01],
   ["alchemicalCatalyst",0.01],
   ["recoveryOintment",0.01],
   ["counterpartBalance",0.01]
@@ -78,6 +80,7 @@ export const DUNGEON_GENERIC_DROPS=[
   ["mysteryMap",0.10],
   ["etherStopper",0.10],
   ["rerollToken",0.10],
+  ["rewriteRune",0.10],
   ["alchemicalCatalyst",0.10],
   ["recoveryOintment",0.10],
   ["counterpartBalance",0.10]
@@ -90,5 +93,6 @@ export const DUNGEON_SPECIFIC_DROPS={
   warrior:[["masterContract",0.10],["recordHammer",0.10]],
   hunter:[["teleportCrystal",0.10]],
   monk:[["recoveryOintment",0.10],["counterpartBalance",0.10]],
+  guardian:[["rewriteRune",0.10]],
   steward:[]
 };

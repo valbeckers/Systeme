@@ -158,7 +158,7 @@ export function buildInitialState(){
     dungeonSkipDay:saved.dungeonSkipDay||null,
     dungeonRunsByWeek:saved.dungeonRunsByWeek||{},
     dungeonLog:saved.dungeonLog||[],
-    inventory:saved.inventory||{majorElixir:0,minorElixir:0,supremeElixir:0,transmutationGrimoire:0,masterContract:0,recordHammer:0,teleportCrystal:0,invisibilityCape:0,debtAcknowledgement:0,destinyCompass:0,mysteryMap:0,etherStopper:0,rerollToken:0,alchemicalCatalyst:0,recoveryOintment:0,counterpartBalance:0},
+    inventory:saved.inventory||{majorElixir:0,minorElixir:0,supremeElixir:0,transmutationGrimoire:0,masterContract:0,recordHammer:0,teleportCrystal:0,invisibilityCape:0,debtAcknowledgement:0,destinyCompass:0,mysteryMap:0,etherStopper:0,rerollToken:0,rewriteRune:0,alchemicalCatalyst:0,recoveryOintment:0,counterpartBalance:0},
     masterContractArmed:saved.masterContractArmed===true,
     recordChallenge:saved.recordChallenge||null,
     urgentCompassStat:saved.urgentCompassStat||null,

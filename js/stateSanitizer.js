@@ -294,6 +294,7 @@ export function cleanSystemState(raw){
       mysteryMap:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.mysteryMap)||0)),
       etherStopper:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.etherStopper)||0)),
       rerollToken:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.rerollToken)||0)),
+      rewriteRune:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.rewriteRune)||0)),
       alchemicalCatalyst:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.alchemicalCatalyst)||0)),
       recoveryOintment:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.recoveryOintment)||0)),
       counterpartBalance:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.counterpartBalance)||0))
