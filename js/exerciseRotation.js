@@ -87,21 +87,21 @@ export function rotatedQuestObjects(baseObjs,rotation,stats,totalXp){
   const abs=byId("abs",rotation&&rotation.abs);
   const legs=byId("legs",rotation&&rotation.legs);
   return (baseObjs||[]).map(obj=>{
-    if(obj.id==="push") return {...obj,name:"Pecs & Triceps - "+chest.label,icon:"🦾",exerciseIcon:chest.icon,rotationExercise:chest.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3,stat2:null,xpPer2:null};
+    if(obj.id==="push") return {...obj,name:"Pecs & Triceps - "+chest.label,icon:chest.icon,exerciseId:chest.id,exerciseIcon:chest.icon,rotationExercise:chest.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3,stat2:null,xpPer2:null};
     if(obj.id==="negative_pullups"){
-      if(back.id==="australian_pullups") return {...obj,name:"Dos & Biceps - Tractions australiennes",icon:"🦾",exerciseIcon:back.icon,rotationExercise:back.label,target:getStatLevelTarget("squats",stats),unit:"rep",xpPer:6,stat2:null,xpPer2:null};
-      return {...obj,name:"Dos & Biceps - Tractions négatives",icon:"🦾",exerciseIcon:back.icon,rotationExercise:back.label,target:getStatLevelTarget("negative_pullups",stats),unit:"rep",xpPer:12,stat2:null,xpPer2:null};
+      if(back.id==="australian_pullups") return {...obj,name:"Dos & Biceps - Tractions australiennes",icon:back.icon,exerciseId:back.id,exerciseIcon:back.icon,rotationExercise:back.label,target:getStatLevelTarget("squats",stats),unit:"rep",xpPer:6,stat2:null,xpPer2:null};
+      return {...obj,name:"Dos & Biceps - Tractions négatives",icon:back.icon,exerciseId:back.id,exerciseIcon:back.icon,rotationExercise:back.label,target:getStatLevelTarget("negative_pullups",stats),unit:"rep",xpPer:12,stat2:null,xpPer2:null};
     }
     if(obj.id==="abs"){
-      if(abs.id==="crunches") return {...obj,name:"Abdos - Crunches",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:getStatLevelTarget("abs",stats),unit:"rep",xpPer:1.5};
-      if(abs.id==="leg_raises") return {...obj,name:"Abdos - Levées de jambes",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:legRaiseTargetForForceLevel(force),unit:"rep",xpPer:3};
-      if(abs.id==="side_plank") return {...obj,name:"Abdos - Gainage obliques",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3};
-      return {...obj,name:"Abdos - Gainage",icon:"🧱",exerciseIcon:abs.icon,rotationExercise:abs.label,target:Math.max(1,Math.ceil(force/10)),unit:"min",xpPer:50};
+      if(abs.id==="crunches") return {...obj,name:"Abdos - Crunches",icon:abs.icon,exerciseId:abs.id,exerciseIcon:abs.icon,rotationExercise:abs.label,target:getStatLevelTarget("abs",stats),unit:"rep",xpPer:1.5};
+      if(abs.id==="leg_raises") return {...obj,name:"Abdos - Levées de jambes",icon:abs.icon,exerciseId:abs.id,exerciseIcon:abs.icon,rotationExercise:abs.label,target:legRaiseTargetForForceLevel(force),unit:"rep",xpPer:3};
+      if(abs.id==="side_plank") return {...obj,name:"Abdos - Gainage obliques",icon:abs.icon,exerciseId:abs.id,exerciseIcon:abs.icon,rotationExercise:abs.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3};
+      return {...obj,name:"Abdos - Gainage",icon:abs.icon,exerciseId:abs.id,exerciseIcon:abs.icon,rotationExercise:abs.label,target:Math.max(1,Math.ceil(force/10)),unit:"min",xpPer:50};
     }
     if(obj.id==="squats"){
-      if(legs.id==="calves") return {...obj,name:"Jambes - Mollets",icon:"🦿",exerciseIcon:legs.icon,rotationExercise:legs.label,target:getStatLevelTarget("calves",stats),unit:"rep",xpPer:2,stat2:"Agilite",xpPer2:1};
-      if(legs.id==="lunges") return {...obj,name:"Jambes - Fentes",icon:"🦿",exerciseIcon:legs.icon,rotationExercise:legs.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3,stat2:null,xpPer2:null};
-      return {...obj,name:"Jambes - Squats",icon:"🦿",exerciseIcon:legs.icon,rotationExercise:legs.label,target:getStatLevelTarget("squats",stats),unit:"rep",xpPer:3,stat2:"Agilite",xpPer2:3};
+      if(legs.id==="calves") return {...obj,name:"Jambes - Mollets",icon:legs.icon,exerciseId:legs.id,exerciseIcon:legs.icon,rotationExercise:legs.label,target:getStatLevelTarget("calves",stats),unit:"rep",xpPer:2,stat2:"Agilite",xpPer2:1};
+      if(legs.id==="lunges") return {...obj,name:"Jambes - Fentes",icon:legs.icon,exerciseId:legs.id,exerciseIcon:legs.icon,rotationExercise:legs.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3,stat2:null,xpPer2:null};
+      return {...obj,name:"Jambes - Squats",icon:legs.icon,exerciseId:legs.id,exerciseIcon:legs.icon,rotationExercise:legs.label,target:getStatLevelTarget("squats",stats),unit:"rep",xpPer:3,stat2:"Agilite",xpPer2:3};
     }
     return obj;
   });

@@ -5,7 +5,6 @@ import {
   LEGACY_EXERCISE_DEFAULTS,
   isExerciseFamilyQuestId,
   exerciseFamilyLabel,
-  exerciseFamilyIcon,
   rotatedQuestObjects
 } from "./exerciseRotation.js";
 import { RECORD_EXERCISE_DEFS, recordExerciseValueForDay } from "./records.js";
@@ -159,10 +158,9 @@ export function HistoryTab({
           const marks=weekDays.map(d=>dayMarkFor(obj,d));
           const isFamily=isExerciseFamilyQuestId(obj.id);
           const displayName=exerciseFamilyLabel(obj.id,obj.name);
-          const displayIcon=exerciseFamilyIcon(obj.id,obj.icon);
           return h("div",{key:obj.id,style:"display:grid;grid-template-columns:minmax(0,1fr) repeat(7,22px);gap:5px;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,0.04)"},
             h("div",{style:"display:flex;align-items:center;gap:6px;min-width:0;color:var(--tx);font-size:12px"},
-              QuestIcon(obj.id,displayIcon,14),
+              !isFamily&&QuestIcon(obj.id,obj.icon,14),
               h("span",{style:"overflow:hidden;text-overflow:ellipsis;white-space:nowrap"},displayName)
             ),
             marks.map((mark,i)=>h("div",{key:obj.id+"_d"+i,style:"text-align:center;font-family:Orbitron,sans-serif;font-size:12px;font-weight:700;color:"+mark.color+";opacity:"+mark.opacity},mark.txt))

@@ -58,7 +58,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260807-marche-complete";
 import { StatsTab } from "./statsView.js?v=20260806-remove-radar";
-import { HistoryTab } from "./historyView.js?v=20260808-icon-batch-01-approved";
+import { HistoryTab } from "./historyView.js?v=20260808-drawn-exercise-icons-v1";
 import {
   RANK_BASES,
   ROMAN,
@@ -92,7 +92,7 @@ import {
   exerciseFamilyLabel,
   ensureExerciseRotationForDay,
   rotatedQuestObjects
-} from "./exerciseRotation.js";
+} from "./exerciseRotation.js?v=20260808-drawn-exercise-icons-v1";
 import {
   questRecordUnit,
   recordRotationIdForDay,
@@ -2173,7 +2173,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const succFlex = validated && done ? 3 : 1;
       return h("div",{class:"qi "+(done?"done":"")},
         h("div",{class:"qhdr",style:"align-items:center",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:5px"},
-          h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:center;gap:7px;line-height:1.25;white-space:normal;overflow:visible;min-height:18px"},QuestIcon(obj.id,obj.icon,14,"width:18px;height:18px;margin-top:0"),h("span",{style:"line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip;display:inline-flex;align-items:center;min-height:18px"},obj.name)),
+          h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:center;gap:7px;line-height:1.25;white-space:normal;overflow:visible;min-height:18px"},QuestIcon(obj.exerciseId||obj.id,obj.exerciseIcon||obj.icon,14,"width:18px;height:18px;margin-top:0"),h("span",{style:"line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip;display:inline-flex;align-items:center;min-height:18px"},obj.name)),
           h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.25;padding-top:0"},
             (obj.binaryXp+" XP · "+(STAT_LBL[obj.stat]||obj.stat))
           )
@@ -2207,7 +2207,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     return h("div",{class:"qi "+(d>=effectiveT&&effectiveT>0?"done":"")},
       h("div",{class:"qhdr",style:"align-items:center",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
         h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:center;gap:8px;white-space:normal;overflow:visible;line-height:1.25;min-height:18px;flex-wrap:wrap"},
-          QuestIcon(obj.id,obj.icon,14,"width:18px;height:18px;margin-top:0;line-height:1"),
+          QuestIcon(obj.exerciseId||obj.id,obj.exerciseIcon||obj.icon,14,"width:18px;height:18px;margin-top:0;line-height:1"),
           h("span",{style:"white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;word-break:normal;display:inline-flex;align-items:center;min-height:18px"},obj.name),
           isWeekly&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
         ),
@@ -2348,7 +2348,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const validated=isWeeklyRow?(wLog[obj.id]!==undefined):(tLog[obj.id]!==undefined);
     if(obj.binary){
       return h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
-        QuestIcon(obj.id,obj.icon,14),
+        QuestIcon(obj.exerciseId||obj.id,obj.exerciseIcon||obj.icon,14),
         h("div",{style:"flex:1"},
           h("div",{style:"font-size:12px;color:var(--tx);display:flex;justify-content:space-between;align-items:center"},
             h("span",null,obj.name),
@@ -2371,7 +2371,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       : (done ? " done" : (pct>0 ? " partial" : ""));
     const barInnerStyle = "width:"+(isCapped?100:Math.min(100,pct))+"%";
     return h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
-      QuestIcon(obj.id,obj.icon,14),
+      QuestIcon(obj.exerciseId||obj.id,obj.exerciseIcon||obj.icon,14),
       h("div",{style:"flex:1"},
         h("div",{style:"font-size:12px;color:var(--tx);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center"},
           h("div",{style:"display:flex;align-items:flex-start;gap:6px;min-width:0;flex:1;white-space:normal;line-height:1.25"},
@@ -5173,32 +5173,29 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const sideTarget=pushTarget;
       const squatTarget=getStatLevelTarget("squats",state.stats);
       const calvesTarget=getStatLevelTarget("calves",state.stats);
-      function FamilyTitle({iconKey,icon,label}){
-        return h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px;display:flex;align-items:center;gap:7px"},
-          h(UiIcon,{iconKey:"exercise-family."+iconKey,fallback:icon,slotSize:22,glyphSize:15}),
-          h("span",null,label)
-        );
+      function FamilyTitle({label}){
+        return h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:"+STAT_COLOR.Force+";letter-spacing:1px"},label);
       }
       return h(Fragment,null,
         h("div",{style:familyStyle},
-          h(FamilyTitle,{iconKey:"push",icon:"🦾",label:"PECS & TRICEPS"}),
+          h(FamilyTitle,{label:"PECS & TRICEPS"}),
           h(Exercise,{iconKey:"pushups",icon:"💪🏼",name:"Pompes",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
           h(Exercise,{iconKey:"dips",icon:"💪🏼",name:"Dips",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]})
         ),
         h("div",{style:familyStyle},
-          h(FamilyTitle,{iconKey:"back",icon:"🦾",label:"DOS & BICEPS"}),
+          h(FamilyTitle,{label:"DOS & BICEPS"}),
           h(Exercise,{iconKey:"negative_pullups",icon:"💪🏼",name:"Tractions négatives",target:backTarget,unit:"reps",rewards:[{stat:"Force",xp:"12/rep"}]}),
           h(Exercise,{iconKey:"australian_pullups",icon:"💪🏼",name:"Tractions australiennes",target:australianTarget,unit:"reps",rewards:[{stat:"Force",xp:"6/rep"}]})
         ),
         h("div",{style:familyStyle},
-          h(FamilyTitle,{iconKey:"abs",icon:"🧱",label:"ABDOS"}),
+          h(FamilyTitle,{label:"ABDOS"}),
           h(Exercise,{iconKey:"crunches",icon:"🧎🏻",name:"Crunches",target:absTarget,unit:"reps",rewards:[{stat:"Force",xp:"1,5/rep"}]}),
           h(Exercise,{iconKey:"leg_raises",icon:"🦵🏻",name:"Levées de jambes",target:legRaiseTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
           h(Exercise,{iconKey:"plank",icon:"🫳🏼",name:"Gainage",target:plankTarget,unit:"min",rewards:[{stat:"Force",xp:"50/min"}]}),
           h(Exercise,{iconKey:"side_plank",icon:"🧎🏻‍♂️‍➡️",name:"Gainage obliques",target:sideTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
         ),
         h("div",{style:familyStyle},
-          h(FamilyTitle,{iconKey:"legs",icon:"🦿",label:"JAMBES"}),
+          h(FamilyTitle,{label:"JAMBES"}),
           h(Exercise,{iconKey:"squats",icon:"🦵🏻",name:"Squats",target:squatTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"},{stat:"Agilite",xp:"3/rep"}]}),
           h(Exercise,{iconKey:"calves",icon:"🦵🏻",name:"Mollets",target:calvesTarget,unit:"reps",rewards:[{stat:"Force",xp:"2/rep"},{stat:"Agilite",xp:"1/rep"}]}),
           h(Exercise,{iconKey:"lunges",icon:"🦵🏻",name:"Fentes",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]})
