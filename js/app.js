@@ -5405,25 +5405,20 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         floats.map(f=>h("div",{key:f.id,class:"xpfloat",style:"top:"+(f.y||"40%")+(typeof f.y==="number"?"px":"")+";left:50%;transform:translateX(-50%);white-space:pre-line;text-align:center"},f.txt))
       ),
       h("nav",{class:"nav"},
-        h("button",{class:"nbtn "+(tab==="home"?"on":""),onClick:()=>switchTab("home")},
-          h("img",{src:"./assets/nav/accueil.png?v=20260808-nav-v1",alt:"","aria-hidden":"true",draggable:false}),
-          h("span",null,"Accueil")
+        h("button",{class:"nbtn "+(tab==="home"?"on":""),onClick:()=>switchTab("home"),"aria-label":"Accueil",title:"Accueil"},
+          h("img",{src:"./assets/nav/accueil.png?v=20260808-nav-v1",alt:"","aria-hidden":"true",draggable:false})
         ),
-        h("button",{class:"nbtn "+(tab==="quests"?"on":""),onClick:()=>switchTab("quests")},
-          h("img",{src:"./assets/nav/quetes.png?v=20260808-nav-v1",alt:"","aria-hidden":"true",draggable:false}),
-          h("span",null,"Quêtes")
+        h("button",{class:"nbtn "+(tab==="quests"?"on":""),onClick:()=>switchTab("quests"),"aria-label":"Quêtes",title:"Quêtes"},
+          h("img",{src:"./assets/nav/quetes.png?v=20260808-nav-v1",alt:"","aria-hidden":"true",draggable:false})
         ),
-        h("button",{class:"nbtn "+(tab==="stats"?"on":""),onClick:()=>switchTab("stats")},
-          h("img",{src:"./assets/nav/stats.png?v=20260808-nav-v1",alt:"","aria-hidden":"true",draggable:false}),
-          h("span",null,"Stats")
+        h("button",{class:"nbtn "+(tab==="stats"?"on":""),onClick:()=>switchTab("stats"),"aria-label":"Stats",title:"Stats"},
+          h("img",{src:"./assets/nav/stats.png?v=20260808-nav-v1",alt:"","aria-hidden":"true",draggable:false})
         ),
-        h("button",{class:"nbtn "+(tab==="inventory"?"on":""),onClick:()=>switchTab("inventory")},
-          h("img",{src:"./assets/nav/inventaire.png?v=20260808-nav-v1",alt:"","aria-hidden":"true",draggable:false}),
-          h("span",null,"Inventaire")
+        h("button",{class:"nbtn "+(tab==="inventory"?"on":""),onClick:()=>switchTab("inventory"),"aria-label":"Inventaire",title:"Inventaire"},
+          h("img",{src:"./assets/nav/inventaire.png?v=20260808-nav-v1",alt:"","aria-hidden":"true",draggable:false})
         ),
-        h("button",{class:"nbtn "+(tab==="history"?"on":""),onClick:()=>switchTab("history")},
-          h("img",{src:"./assets/nav/historique.png?v=20260808-nav-v1",alt:"","aria-hidden":"true",draggable:false}),
-          h("span",null,"Historique")
+        h("button",{class:"nbtn "+(tab==="history"?"on":""),onClick:()=>switchTab("history"),"aria-label":"Historique",title:"Historique"},
+          h("img",{src:"./assets/nav/historique.png?v=20260808-nav-v1",alt:"","aria-hidden":"true",draggable:false})
         ),
 
       ),
