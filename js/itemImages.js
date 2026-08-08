@@ -3,7 +3,7 @@
 // Les anciens noms de constantes sont conservés pour limiter les changements
 // dans la couche d’interface.
 
-const ASSET_VERSION="20260808-rewrite-rune-art";
+const ASSET_VERSION="20260808-items-normalized-v1";
 
 function itemAsset(fileName){
   const url=new URL(`../assets/items/${fileName}`,import.meta.url);
