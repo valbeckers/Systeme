@@ -3493,8 +3493,17 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   }
   function itemQty(id){ return ["codex","regressionOrb","debtAcknowledgement"].includes(id)?1:id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
   function Inventory(){
+    const permanentOrder=["codex","regressionOrb","debtAcknowledgement"];
     const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","mysteryMap","etherStopper","rerollToken","rewriteRune","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape","recoveryOintment","counterpartBalance"]
       .sort((a,b)=>{
+        const permanentIndexA=permanentOrder.indexOf(a);
+        const permanentIndexB=permanentOrder.indexOf(b);
+        if(permanentIndexA!==-1||permanentIndexB!==-1){
+          if(permanentIndexA===-1)return 1;
+          if(permanentIndexB===-1)return -1;
+          return permanentIndexA-permanentIndexB;
+        }
+
         if(inventorySort==="name"){
           return INVENTORY_ITEMS[a].name.localeCompare(INVENTORY_ITEMS[b].name,"fr",{sensitivity:"base"});
         }
