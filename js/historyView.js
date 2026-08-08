@@ -9,7 +9,7 @@ import {
   rotatedQuestObjects
 } from "./exerciseRotation.js";
 import { RECORD_EXERCISE_DEFS, recordExerciseValueForDay } from "./records.js";
-import { UiIcon } from "./uiIcons.js?v=20260808-icon-slots-v1";
+import { UiIcon } from "./uiIcons.js?v=20260808-icon-batch-01-approved";
 
 const { h, Fragment } = window.preact;
 

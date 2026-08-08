@@ -11,6 +11,12 @@ const { h } = window.preact;
 // même emplacement fixe. Les nouveaux visuels pourront donc être ajoutés par
 // lots, sans modifier la mise en page des cartes.
 export const UI_ICON_IMAGES=Object.freeze({
+  "quest.water":"./assets/ui/quest-water.png?v=20260808-icon-batch-01-approved",
+  "quest.sleep":"./assets/ui/quest-sleep.png?v=20260808-icon-batch-01-approved",
+  "quest.reading":"./assets/ui/quest-reading.png?v=20260808-icon-batch-01-approved",
+  "quest.breach_reading1h":"./assets/ui/quest-reading.png?v=20260808-icon-batch-01-approved",
+  "quest.walk":"./assets/ui/quest-walk.png?v=20260808-icon-batch-01-approved",
+  "quest.sp_sun":"./assets/ui/quest-sp-sun.png?v=20260808-icon-batch-01-approved",
   "item.dungeonKey":DUNGEON_KEY_ICON_DATA,
   "item.masterContract":NEW_ITEM_ICON_DATA.masterContract,
   "item.regressionOrb":REGRESSION_ORB_ICON_DATA,
