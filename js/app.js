@@ -2130,6 +2130,13 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
   function QI({obj}){
     const isWeekly = obj.weekly;
+    const isTwoLinePullupTitle = obj.exerciseId==="negative_pullups" || obj.exerciseId==="australian_pullups";
+    const questTitle = isTwoLinePullupTitle
+      ? h("span",{style:"display:flex;flex-direction:column;line-height:1.25;min-width:0"},
+          h("span",{style:"white-space:nowrap"},"Dos & Biceps - Tractions"),
+          h("span",{style:"white-space:nowrap"},obj.exerciseId==="australian_pullups"?"australiennes":"négatives")
+        )
+      : h("span",{style:"white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;word-break:normal;display:inline-flex;align-items:center;min-height:18px"},obj.name);
     const t = getEffectiveTarget(obj.id, isWeekly);
     // Si obj.target est défini sans binary, on l'utilise pour l'affichage (ex: protein 1/2 → 2/2)
     const displayTarget = (obj.target && !obj.binary) ? obj.target : t;
@@ -2206,9 +2213,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const barInnerStyle = "width:"+(isCapped?100:Math.min(100,pct))+"%";
     return h("div",{class:"qi "+(d>=effectiveT&&effectiveT>0?"done":"")},
       h("div",{class:"qhdr",style:"align-items:center",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
-        h("div",{class:"qname",style:"align-items:center;gap:8px",style:"flex:1;min-width:0;display:flex;align-items:center;gap:8px;white-space:normal;overflow:visible;line-height:1.25;min-height:18px;flex-wrap:wrap"},
+        h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:"+(isTwoLinePullupTitle?"flex-start":"center")+";gap:8px;white-space:normal;overflow:visible;line-height:1.25;min-height:18px;flex-wrap:"+(isTwoLinePullupTitle?"nowrap":"wrap")},
           QuestIcon(obj.exerciseId||obj.id,obj.exerciseIcon||obj.icon,14,"width:18px;height:18px;margin-top:0;line-height:1"),
-          h("span",{style:"white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;word-break:normal;display:inline-flex;align-items:center;min-height:18px"},obj.name),
+          questTitle,
           isWeekly&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
         ),
         h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.25;align-self:flex-start;padding-top:0"},
