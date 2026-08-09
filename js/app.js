@@ -5297,7 +5297,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         b.xp3&&b.stat3?{stat:b.stat3,xp:b.xp3}:null
       ].filter(Boolean);
       return h("div",{key:b.id,style:"margin-bottom:9px;padding:9px 10px;border-radius:9px;border:1px solid "+color+"33;background:"+color+"08"},
-        h("div",{style:"font-size:11px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;line-height:1.3"},boss?boss.name:b.name),
+        h("div",{style:"display:flex;align-items:center;gap:8px"},
+          QuestIcon(b.id,b.icon||"•",14,"line-height:1.1;min-width:24px;text-align:center"),
+          h("div",{style:"font-size:11px;color:"+color+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;line-height:1.3;min-width:0"},boss?boss.name:b.name)
+        ),
         h("div",{style:"font-size:10px;color:var(--td);line-height:1.4;margin-top:4px"},"Objectif du Boss : "+b.name),
         rewards.length>0&&h("div",{style:"margin-top:7px"},rewards.map((r,i)=>h(StatPill,{key:i,stat:r.stat,xp:r.xp}))),
         boss&&h(Fragment,null,
