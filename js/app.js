@@ -58,7 +58,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260807-marche-complete";
 import { StatsTab } from "./statsView.js?v=20260806-remove-radar";
-import { HistoryTab } from "./historyView.js?v=20260809-medallions-v3";
+import { HistoryTab } from "./historyView.js?v=20260809-medallions-v4";
 import {
   RANK_BASES,
   ROMAN,
@@ -81,7 +81,7 @@ import {
   GRIMOIRE_ICON_DATA,
   DEBT_ACKNOWLEDGEMENT_ICON_DATA
 } from "./itemImages.js?v=20260808-items-normalized-v1";
-import { UiIcon } from "./uiIcons.js?v=20260809-medallions-v3";
+import { UiIcon } from "./uiIcons.js?v=20260809-medallions-v4";
 import { saveStoredState } from "./storage.js";
 import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260808-rewrite-rune-distinct";
 import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260808-rewrite-rune-distinct";
