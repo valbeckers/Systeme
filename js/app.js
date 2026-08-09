@@ -58,7 +58,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260807-marche-complete";
 import { StatsTab } from "./statsView.js?v=20260806-remove-radar";
-import { HistoryTab } from "./historyView.js?v=20260809-medallions-v4";
+import { HistoryTab } from "./historyView.js?v=20260809-medallions-v5";
 import {
   RANK_BASES,
   ROMAN,
@@ -81,7 +81,7 @@ import {
   GRIMOIRE_ICON_DATA,
   DEBT_ACKNOWLEDGEMENT_ICON_DATA
 } from "./itemImages.js?v=20260808-items-normalized-v1";
-import { UiIcon } from "./uiIcons.js?v=20260809-medallions-v4";
+import { UiIcon } from "./uiIcons.js?v=20260809-medallions-v5";
 import { saveStoredState } from "./storage.js";
 import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260808-rewrite-rune-distinct";
 import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260808-rewrite-rune-distinct";
@@ -5155,7 +5155,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         });
         return h("div",{style:subStyle},
           h("div",{style:"display:flex;align-items:center;gap:8px"},
-            h(UiIcon,{iconKey:"exercise."+iconKey,fallback:icon,slotSize:24,glyphSize:15}),
+            h(UiIcon,{iconKey:"exercise."+iconKey,fallback:icon,slotSize:18,glyphSize:14}),
             h("div",{style:"flex:1;min-width:0"},
               h("div",{style:"font-size:12px;color:var(--tx);font-weight:800"},name),
               h("div",{style:"margin-top:5px"},rewardNodes),

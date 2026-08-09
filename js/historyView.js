@@ -8,7 +8,7 @@ import {
   rotatedQuestObjects
 } from "./exerciseRotation.js";
 import { RECORD_EXERCISE_DEFS, recordExerciseValueForDay } from "./records.js";
-import { UiIcon } from "./uiIcons.js?v=20260809-medallions-v4";
+import { UiIcon } from "./uiIcons.js?v=20260809-medallions-v5";
 
 const { h, Fragment } = window.preact;
 

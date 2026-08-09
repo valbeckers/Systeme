@@ -12,7 +12,7 @@ const { h } = window.preact;
 // lots, sans modifier la mise en page des cartes.
 export const UI_ICON_IMAGES=Object.freeze({
   "quest.water":"./assets/ui/quest-water.png?v=20260809-medallions-v4",
-  "quest.sleep":"./assets/ui/quest-sleep.png?v=20260809-medallions-v4",
+  "quest.sleep":"./assets/ui/quest-sleep.png?v=20260809-medallions-v5",
   "quest.reading":"./assets/ui/quest-reading.png?v=20260809-medallions-v4",
   "quest.breach_reading1h":"./assets/ui/quest-reading.png?v=20260809-medallions-v4",
   "quest.med":"./assets/ui/quest-meditation.png?v=20260809-medallions-v4",
@@ -41,6 +41,7 @@ export const UI_ICON_IMAGES=Object.freeze({
   "quest.sp_declutter":"./assets/ui/quest-declutter.png?v=20260809-medallions-v4",
 
   "quest.pushups":"./assets/ui/quest-pushups.png?v=20260809-medallions-v4",
+  "quest.push":"./assets/ui/quest-pushups.png?v=20260809-medallions-v4",
   "exercise.pushups":"./assets/ui/quest-pushups.png?v=20260809-medallions-v4",
   "quest.ex_pushups":"./assets/ui/quest-pushups.png?v=20260809-medallions-v4",
   "quest.dips":"./assets/ui/quest-dips.png?v=20260809-medallions-v4",
@@ -48,6 +49,7 @@ export const UI_ICON_IMAGES=Object.freeze({
   "quest.ex_dips":"./assets/ui/quest-dips.png?v=20260809-medallions-v4",
 
   "quest.crunches":"./assets/ui/quest-abs.png?v=20260809-medallions-v4",
+  "quest.abs":"./assets/ui/quest-abs.png?v=20260809-medallions-v4",
   "exercise.crunches":"./assets/ui/quest-abs.png?v=20260809-medallions-v4",
   "quest.ex_crunches":"./assets/ui/quest-abs.png?v=20260809-medallions-v4",
   "quest.leg_raises":"./assets/ui/quest-abs.png?v=20260809-medallions-v4",
@@ -83,6 +85,13 @@ export const UI_ICON_IMAGES=Object.freeze({
   "quest.run":"./assets/ui/quest-run.png?v=20260809-medallions-v4",
   "quest.breach_run10":"./assets/ui/quest-run.png?v=20260809-medallions-v4",
   "quest.sp_fruits":"./assets/ui/quest-fruits.png?v=20260809-medallions-v4",
+  "dungeon.alchemist":"./assets/ui/dungeon-alchemist.png?v=20260809-medallions-v5",
+  "dungeon.warrior":"./assets/ui/dungeon-warrior.png?v=20260809-medallions-v5",
+  "dungeon.monk":"./assets/ui/quest-meditation.png?v=20260809-medallions-v4",
+  "dungeon.pilgrim":"./assets/ui/quest-walk.png?v=20260809-medallions-v4",
+  "dungeon.hunter":"./assets/ui/dungeon-hunter.png?v=20260809-medallions-v5",
+  "dungeon.guardian":"./assets/ui/dungeon-guardian.png?v=20260809-medallions-v5",
+  "dungeon.steward":"./assets/ui/dungeon-steward.png?v=20260809-medallions-v5",
   "item.dungeonKey":DUNGEON_KEY_ICON_DATA,
   "item.masterContract":NEW_ITEM_ICON_DATA.masterContract,
   "item.regressionOrb":REGRESSION_ORB_ICON_DATA,
