@@ -11,6 +11,16 @@ const { h } = window.preact;
 // même emplacement fixe. Les nouveaux visuels pourront donc être ajoutés par
 // lots, sans modifier la mise en page des cartes.
 export const UI_ICON_IMAGES=Object.freeze({
+  "interface.settings":"./assets/ui/interface-settings.png?v=20260809-medallions-v6",
+  "interface.ascension":"./assets/ui/interface-ascension.png?v=20260809-medallions-v6",
+  "interface.warning":"./assets/ui/interface-warning.png?v=20260809-medallions-v6",
+  "interface.rupture":"./assets/ui/interface-rupture.png?v=20260809-medallions-v6",
+  "interface.regression":"./assets/ui/interface-rupture.png?v=20260809-medallions-v6",
+  "interface.lock":"./assets/ui/interface-lock.png?v=20260809-medallions-v6",
+  "interface.notification":"./assets/ui/interface-notification.png?v=20260809-medallions-v6",
+  "interface.chain":"./assets/ui/interface-chain.png?v=20260809-medallions-v6",
+  "interface.countdown":"./assets/ui/interface-countdown.png?v=20260809-medallions-v6",
+
   "quest.water":"./assets/ui/quest-water.png?v=20260809-medallions-v4",
   "quest.sleep":"./assets/ui/quest-sleep.png?v=20260809-medallions-v5",
   "quest.reading":"./assets/ui/quest-reading.png?v=20260809-medallions-v4",
@@ -18,6 +28,7 @@ export const UI_ICON_IMAGES=Object.freeze({
   "quest.med":"./assets/ui/quest-meditation.png?v=20260809-medallions-v4",
   "quest.walk":"./assets/ui/quest-walk.png?v=20260809-medallions-v4",
   "quest.march":"./assets/ui/quest-walk.png?v=20260809-medallions-v4",
+  "quest.endurance_choice":"./assets/ui/quest-walk.png?v=20260809-medallions-v6",
   "quest.sp_walk30":"./assets/ui/quest-walk.png?v=20260809-medallions-v4",
   "quest.sp_sun":"./assets/ui/quest-sp-sun.png?v=20260809-medallions-v4",
   "quest.sp_breath":"./assets/ui/quest-heart.png?v=20260809-medallions-v4",
@@ -81,10 +92,20 @@ export const UI_ICON_IMAGES=Object.freeze({
   "quest.ex_lunges":"./assets/ui/quest-legs.png?v=20260809-medallions-v4",
   "quest.breach_squats150":"./assets/ui/quest-legs.png?v=20260809-medallions-v4",
 
+  "quest.breach_cold5":"./assets/ui/quest-breach-cold-shower.png?v=20260809-medallions-v6",
+  "quest.breach_wallsit15":"./assets/ui/quest-breach-wall-sit.png?v=20260809-medallions-v6",
+  "quest.breach_push300":"./assets/ui/quest-pushups.png?v=20260809-medallions-v6",
+  "quest.breach_pullups50":"./assets/ui/quest-pullups.png?v=20260809-medallions-v6",
+  "quest.breach_plank15":"./assets/ui/quest-abs.png?v=20260809-medallions-v6",
+  "quest.breach_learning2h":"./assets/ui/quest-breach-learning.png?v=20260809-medallions-v6",
+  "quest.breach_sprint10":"./assets/ui/quest-run.png?v=20260809-medallions-v6",
+  "quest.breach_rope30":"./assets/ui/quest-breach-rope.png?v=20260809-medallions-v6",
+
   "quest.balance":"./assets/ui/quest-balance.png?v=20260809-medallions-v4",
   "quest.run":"./assets/ui/quest-run.png?v=20260809-medallions-v4",
   "quest.breach_run10":"./assets/ui/quest-run.png?v=20260809-medallions-v4",
   "quest.sp_fruits":"./assets/ui/quest-fruits.png?v=20260809-medallions-v4",
+  "quest.reg_red":"./assets/ui/quest-regression.png?v=20260809-medallions-v6",
   "dungeon.alchemist":"./assets/ui/dungeon-alchemist.png?v=20260809-medallions-v5",
   "dungeon.warrior":"./assets/ui/dungeon-warrior.png?v=20260809-medallions-v5",
   "dungeon.monk":"./assets/ui/quest-meditation.png?v=20260809-medallions-v4",

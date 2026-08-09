@@ -58,7 +58,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260807-marche-complete";
 import { StatsTab } from "./statsView.js?v=20260806-remove-radar";
-import { HistoryTab } from "./historyView.js?v=20260809-medallions-v5";
+import { HistoryTab } from "./historyView.js?v=20260809-medallions-v6";
 import {
   RANK_BASES,
   ROMAN,
@@ -81,7 +81,7 @@ import {
   GRIMOIRE_ICON_DATA,
   DEBT_ACKNOWLEDGEMENT_ICON_DATA
 } from "./itemImages.js?v=20260808-items-normalized-v1";
-import { UiIcon } from "./uiIcons.js?v=20260809-medallions-v5";
+import { UiIcon } from "./uiIcons.js?v=20260809-medallions-v6";
 import { saveStoredState } from "./storage.js";
 import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260808-rewrite-rune-distinct";
 import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260808-rewrite-rune-distinct";
@@ -2696,7 +2696,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{style:"position:relative;z-index:2"},
           h("div",{class:"ctitle",style:"margin:0 0 10px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"BRÈCHE ALLIÉE EN RUPTURE":"BRÈCHE ALLIÉE ACTIVE"):(isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE ACTIVE")),
           h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:0"},
-            QuestIcon(b.id,isRupture?"☠️":b.icon,14),
+            isRupture
+              ? h(UiIcon,{iconKey:"interface.rupture",fallback:"☠️",slotSize:18,glyphSize:14})
+              : QuestIcon(b.id,b.icon,14),
             h("div",{style:"flex:1;min-width:0"},
               h("div",{style:"font-size:12px;color:#fff;margin-bottom:3px;display:flex;justify-content:space-between;align-items:center;gap:8px"},
                 h("span",{style:"white-space:normal;line-height:1.25;word-break:normal;min-width:0;font-weight:800"},isRupture?rupture.name:b.name),
@@ -2719,7 +2721,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{style:"padding:12px;border-radius:12px;border:1px solid rgba(219,234,254,.24);background:rgba(2,10,24,.36);box-shadow:inset 0 0 18px rgba(141,187,255,.05)"},
           h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px"},
           h("div",{style:"display:flex;align-items:center;gap:9px;min-width:0"},
-            QuestIcon(b.id,isRupture?"☠️":b.icon,18,"min-width:26px"),
+            isRupture
+              ? h(UiIcon,{iconKey:"interface.rupture",fallback:"☠️",slotSize:26,glyphSize:18})
+              : QuestIcon(b.id,b.icon,18,"min-width:26px"),
             h("div",{style:"min-width:0"},
               h("div",{style:"font-size:13px;font-weight:800;color:#fff;line-height:1.25"},isRupture?rupture.name:b.name),
               !compact&&h("div",{style:"font-size:10px;color:#cbd5e1;line-height:1.4;margin-top:3px"},isRupture?b.desc:b.desc)
@@ -2731,7 +2735,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{class:"qbar"},h("div",{class:"qfill partial",style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,#274f88,#274f88 5px,#7aa7df 5px,#7aa7df 10px);background-size:14px 14px;opacity:.95"})),
           h("div",{class:"qxp",style:"color:#dbeafe;white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},progressText)
         ),
-        h("div",{style:"font-size:10px;color:#8dbbff;font-family:Orbitron,sans-serif;margin-top:4px;text-align:left"},"⏱ "+fmtCD(remaining)+" restants"),
+        h("div",{style:"font-size:10px;color:#8dbbff;font-family:Orbitron,sans-serif;margin-top:4px;text-align:left;display:flex;align-items:center;gap:4px"},
+          h(UiIcon,{iconKey:"interface.countdown",fallback:"⏱",slotSize:14,glyphSize:10}),
+          fmtCD(remaining)+" restants"
+        ),
 
         !isRupture&&!mainDone&&h("div",{style:"margin-top:9px;display:flex;gap:8px"},
           h("button",{onClick:()=>addMain(1),style:standardButtonStyle},"+1 "+b.unit),
@@ -2874,7 +2881,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
           h("div",{style:"min-width:0"},
             h("div",{class:"ctitle",style:"margin:0;color:#f59e0b"},"DONJON EN COURS"),
-            h("div",{style:"font-size:10px;color:#f59e0b;font-family:Orbitron,sans-serif;margin-top:4px;text-align:left"},"⏱ "+fmtCD(remaining)+" restantes"),
+            h("div",{style:"font-size:10px;color:#f59e0b;font-family:Orbitron,sans-serif;margin-top:4px;text-align:left;display:flex;align-items:center;gap:4px"},
+              h(UiIcon,{iconKey:"interface.countdown",fallback:"⏱",slotSize:14,glyphSize:10}),
+              fmtCD(remaining)+" restantes"
+            ),
             h(MasterContractStatus,{d})
           ),
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap"},STAT_LBL[d.stat]||d.stat)
@@ -3104,7 +3114,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{class:"qbar"},h("div",{class:"qfill"+(pct>=100?" done":pct>0?" partial":""),style:"width:"+pct+"%;background:"+color})),
           h("div",{class:"qxp",style:"color:"+(paid>=amount?"#4ade80":color)+";white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},fmtNum(paid)+"/"+fmtNum(amount)+" "+debt.unit)
         ),
-        h("div",{style:"font-size:10px;color:"+colorLight+";font-family:Orbitron,sans-serif;margin-top:4px;text-align:left"},"⏱ "+fmtCD(debtRemaining)+" restants")
+        h("div",{style:"font-size:10px;color:"+colorLight+";font-family:Orbitron,sans-serif;margin-top:4px;text-align:left;display:flex;align-items:center;gap:4px"},
+          h(UiIcon,{iconKey:"interface.countdown",fallback:"⏱",slotSize:14,glyphSize:10}),
+          fmtCD(debtRemaining)+" restants"
+        )
       )
     );
   }
@@ -3193,7 +3206,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         )
       ),
       h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:7px;font-family:Orbitron,sans-serif;font-size:9px"},
-        h("span",{style:"color:"+color+";white-space:nowrap"},"⏱ "+fmtCD(remaining)+" restants"),
+        h("span",{style:"color:"+color+";white-space:nowrap;display:inline-flex;align-items:center;gap:4px"},
+          h(UiIcon,{iconKey:"interface.countdown",fallback:"⏱",slotSize:14,glyphSize:10}),
+          fmtCD(remaining)+" restants"
+        ),
         h("span",{style:"color:var(--td);text-align:right"},"Récompense : +500 XP "+(STAT_LBL[stat]||stat||""))
       )
     );
@@ -3992,16 +4008,19 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function SpecialItemChoiceModal(){
     if(!specialItemChoice)return null;const type=specialItemChoice.type;
     let options=[];
-    if(type==="recordHammer")options=recordOptions().map(x=>({id:x.obj.id,label:x.obj.icon+" "+x.obj.name+" — "+fmtNum(x.best)+" "+x.obj.unit,obj:x.obj,best:x.best}));
-    if(type==="debtAcknowledgement")options=objs.filter(o=>o.daily&&!o.optional&&isDebtEligibleQuest(o)&&(Number(tLog[o.id])||0)<getEffectiveTarget(o.id)).map(o=>({id:o.id,label:o.icon+" "+o.name+" — "+fmtNum(getEffectiveTarget(o.id)-(Number(tLog[o.id])||0))+" "+o.unit+" manquants",obj:o}));
+    if(type==="recordHammer")options=recordOptions().map(x=>({id:x.obj.id,label:x.obj.name+" — "+fmtNum(x.best)+" "+x.obj.unit,obj:x.obj,best:x.best}));
+    if(type==="debtAcknowledgement")options=objs.filter(o=>o.daily&&!o.optional&&isDebtEligibleQuest(o)&&(Number(tLog[o.id])||0)<getEffectiveTarget(o.id)).map(o=>({id:o.id,label:o.name+" — "+fmtNum(getEffectiveTarget(o.id)-(Number(tLog[o.id])||0))+" "+o.unit+" manquants",obj:o}));
     if(type==="recoveryOintment"){
-      options=objs.filter(o=>o.daily&&(Number(tLog[o.id])||0)<getEffectiveTarget(o.id)).map(o=>({id:"regular:"+o.id,label:o.icon+" "+o.name,obj:o,questKind:"regular"}));
+      options=objs.filter(o=>o.daily&&(Number(tLog[o.id])||0)<getEffectiveTarget(o.id)).map(o=>({id:"regular:"+o.id,label:o.name,obj:o,questKind:"regular"}));
     }
     if(type==="invisibilityCape"||type==="cape"){const d=activeDungeon;options=d?d.rooms.slice(0,-1).map((r,i)=>!(d.completedRooms||[]).includes(i)&&canValidateDungeonRoom(d,d,i)?{id:i,label:(i+1)+". "+r.name}:null).filter(Boolean):[];}
     return h("div",{class:"modal-ov"},h("div",{class:"modal",style:"max-width:410px;width:calc(100% - 28px)"},h("div",{class:"mtitle"},type==="recordHammer"?"CHOISIR UN RECORD":type==="debtAcknowledgement"?"CRÉER UNE DETTE":type==="recoveryOintment"?"CHOISIR UNE QUÊTE":"PASSER UNE SALLE"),h("div",{style:"display:flex;flex-direction:column;gap:8px;margin-top:12px"},options.map(x=>h("button",{key:x.id,onClick:()=>{
       setSpecialItemChoice(null);
       setConfirmTargetedItemUse({type:type==="cape"?"invisibilityCape":type,choice:x});
-    },style:"padding:11px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:var(--tx);font-family:Orbitron,sans-serif;font-size:9px"},x.label))),!options.length&&h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:10px"},"Aucun choix disponible."),h("button",{onClick:()=>setSpecialItemChoice(null),style:"width:100%;margin-top:12px;padding:10px"},"Annuler")));
+    },style:"padding:11px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:var(--tx);font-family:Orbitron,sans-serif;font-size:9px;display:flex;align-items:center;justify-content:flex-start;gap:8px;text-align:left"},
+      x.obj&&QuestIcon(x.obj.recordRotationId||x.obj.exerciseId||x.obj.id,x.obj.exerciseIcon||x.obj.icon,14),
+      h("span",{style:"min-width:0;line-height:1.35"},x.label)
+    ))),!options.length&&h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:10px"},"Aucun choix disponible."),h("button",{onClick:()=>setSpecialItemChoice(null),style:"width:100%;margin-top:12px;padding:10px"},"Annuler")));
   }
   function ConfirmTargetedItemUseModal(){
     if(!confirmTargetedItemUse)return null;

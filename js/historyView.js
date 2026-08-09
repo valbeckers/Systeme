@@ -8,7 +8,7 @@ import {
   rotatedQuestObjects
 } from "./exerciseRotation.js";
 import { RECORD_EXERCISE_DEFS, recordExerciseValueForDay } from "./records.js";
-import { UiIcon } from "./uiIcons.js?v=20260809-medallions-v5";
+import { UiIcon } from "./uiIcons.js?v=20260809-medallions-v6";
 
 const { h, Fragment } = window.preact;
 
@@ -156,11 +156,10 @@ export function HistoryTab({
       h("div",{style:"display:flex;flex-direction:column;gap:7px"},
         ordered.map(obj=>{
           const marks=weekDays.map(d=>dayMarkFor(obj,d));
-          const isFamily=isExerciseFamilyQuestId(obj.id);
           const displayName=exerciseFamilyLabel(obj.id,obj.name);
           return h("div",{key:obj.id,style:"display:grid;grid-template-columns:minmax(0,1fr) repeat(7,22px);gap:5px;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,0.04)"},
             h("div",{style:"display:flex;align-items:center;gap:6px;min-width:0;color:var(--tx);font-size:12px"},
-              !isFamily&&QuestIcon(obj.id,obj.icon,14),
+              QuestIcon(obj.id,obj.icon,14),
               h("span",{style:"overflow:hidden;text-overflow:ellipsis;white-space:nowrap"},displayName)
             ),
             marks.map((mark,i)=>h("div",{key:obj.id+"_d"+i,style:"text-align:center;font-family:Orbitron,sans-serif;font-size:12px;font-weight:700;color:"+mark.color+";opacity:"+mark.opacity},mark.txt))
