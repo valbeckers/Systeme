@@ -4293,10 +4293,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   const GOLD = "#fbbf24";
   const congratsStyle = "font-family:Orbitron,sans-serif;font-size:clamp(20px,5.4vw,27px);font-weight:900;letter-spacing:3px;text-transform:uppercase;color:#ffffff;text-shadow:none";
   function NotificationHeader(){
-    return h("div",{style:"display:grid;grid-template-columns:34px auto 34px;align-items:center;justify-content:center;margin-bottom:14px;width:100%"},
-      h(UiIcon,{iconKey:"interface.notification",fallback:"❕",slotSize:34,glyphSize:26}),
-      h("span",{style:congratsStyle},"NOTIFICATION"),
-      h("span",{style:"width:34px"})
+    return h("div",{style:"display:grid;grid-template-columns:48px auto 48px;column-gap:7px;align-items:center;justify-content:center;margin-bottom:14px;width:100%"},
+      h("span",{style:"width:48px;height:48px;display:flex;align-items:center;justify-content:center"},
+        h(UiIcon,{iconKey:"interface.notification",fallback:"❕",slotSize:34,glyphSize:26})
+      ),
+      h("span",{style:congratsStyle+";white-space:nowrap"},"NOTIFICATION"),
+      h("span",{style:"width:48px;height:48px"})
     );
   }
 
