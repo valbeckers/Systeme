@@ -1,5 +1,5 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
-import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260807-endurance-walk-choice";
+import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260810-endurance-xp-v2";
 import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js";
 import {
   isDebtEligibleQuest,
@@ -1586,7 +1586,7 @@ function App(){
       if(totalAfter>=b*2) xp+=Math.round(effectiveVal*obj.xpPer*0.5);
     }
     else if(obj.id==="march"){
-      // Marche : strictement linéaire à 50 XP Endurance / km.
+      // Marche : strictement linéaire à 35 XP Endurance / km.
       xp=effectiveVal*obj.xpPer;
     }
     else{const nt=cur+val; if(cur>=b)xp=val*obj.xpPer; else if(nt<=b)xp=val*obj.xpPer; else xp=val*obj.xpPer;}

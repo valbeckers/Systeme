@@ -20,9 +20,9 @@ const DEFS = [
   
   {id:"med",    name:"M\u00e9ditation", unit:"min",   xpPer:15,  daily:true, weekly:false,optional:true, stat:"Esprit",  icon:"\uD83E\uDDD8\uD83C\uDFFB\u200D\u2642\uFE0F", base:15, fixedBase:true},
   // ─── ENDURANCE ────────────────────────────────────────────────────────
-  {id:"run",    name:"Running",         iconKey:"run",          unit:"km",    xpPer:200, daily:true, weekly:false,optional:true, stat:"Endurance",      icon:"\uD83C\uDFC3\uD83C\uDFFB",   base:5,  stat2:"Agilite", xpPer2:50},
-  {id:"walk",   name:"Rando",       unit:"km",    xpPer:100, daily:true, weekly:false,optional:true, stat:"Endurance",      icon:"\uD83E\uDD7E",               base:5, stat2:"Agilite", xpPer2:25},
-  {id:"march",  name:"Marche",      unit:"km",    xpPer:50,  daily:true, weekly:false,optional:true, stat:"Endurance",      icon:"🚶🏻",                         base:5},
+  {id:"run",    name:"Running",         iconKey:"run",          unit:"km",    xpPer:150, daily:true, weekly:false,optional:true, stat:"Endurance",      icon:"\uD83C\uDFC3\uD83C\uDFFB",   base:5,  stat2:"Agilite", xpPer2:30},
+  {id:"walk",   name:"Rando",       unit:"km",    xpPer:75,  daily:true, weekly:false,optional:true, stat:"Endurance",      icon:"\uD83E\uDD7E",               base:5, stat2:"Agilite", xpPer2:15},
+  {id:"march",  name:"Marche",      unit:"km",    xpPer:35,  daily:true, weekly:false,optional:true, stat:"Endurance",      icon:"🚶🏻",                         base:5},
   // ─── AGILITÉ ──────────────────────────────────────────────────────────
     {id:"balance",name:"Équilibre",unit:"min",xpPer:10,daily:true,weekly:false,optional:true,stat:"Agilite", icon:"\uD83E\uDDB6\uD83C\uDFFB", base:10, fixedBase:true, startDate:"2026-05-15", stat2:"Esprit", xpPer2:5},
   // ─── DISCIPLINE ───────────────────────────────────────────────────────
