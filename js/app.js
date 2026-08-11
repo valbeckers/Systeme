@@ -710,7 +710,7 @@ function App(){
         ? marchQuestObj
         : null;
   const enduranceChoicePlaceholder = {
-    id:"endurance_choice",name:"Running/Rando/Marche",icon:"🏃🏻 / 🥾 / 🚶🏻",unit:"choix",
+    id:"endurance_choice",name:"Endurance",icon:"🏃🏻 / 🥾 / 🚶🏻",unit:"choix",
     daily:true,weekly:false,optional:true,stat:"Endurance",base:1,isEnduranceChoice:true
   };
 
@@ -2426,7 +2426,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h("div",{class:"qhdr",style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
         h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:center;gap:8px;line-height:1.25"},
           QuestIcon("endurance_choice","🏃🏻",14,"width:18px;height:18px"),
-          h("span",null,"Running/Rando/Marche")
+          h("span",null,"Endurance")
         ),
         h(QuestBadge,{label:"CHOIX",color})
       ),
