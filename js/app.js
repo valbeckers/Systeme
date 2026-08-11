@@ -1586,7 +1586,7 @@ function App(){
       if(totalAfter>=b*2) xp+=Math.round(effectiveVal*obj.xpPer*0.5);
     }
     else if(obj.id==="march"){
-      // Marche : strictement linéaire à 35 XP Endurance / km.
+      // Marche : strictement linéaire à 25 XP Endurance / km.
       xp=effectiveVal*obj.xpPer;
     }
     else{const nt=cur+val; if(cur>=b)xp=val*obj.xpPer; else if(nt<=b)xp=val*obj.xpPer; else xp=val*obj.xpPer;}

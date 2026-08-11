@@ -54,7 +54,7 @@ export function calcXp(obj,total,baseOverride){
     if(effectiveTotal >= t*2) xp += Math.round(effectiveTotal*xpPer*0.5);
     return xp;
   }
-  // Marche : 35 XP Endurance / km, strictement linéaire.
+  // Marche : 25 XP Endurance / km, strictement linéaire.
   if(obj.id==="march") return effectiveTotal*xpPer;
   // Cas standard
   if(obj.optional){
