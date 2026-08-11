@@ -48,26 +48,14 @@ export function calcXp(obj,total,baseOverride){
   if(obj.id==="reading") return effectiveTotal*xpPer;
   // Cas spécial water : linéaire dès le 1er
   if(obj.id==="water") return effectiveTotal*xpPer;
-  // Cas spécial run : linéaire + 50% si ≥ 2x objectif
-  if(obj.id==="run"){
-    let xp = effectiveTotal*xpPer;
-    if(effectiveTotal >= t*2) xp += Math.round(effectiveTotal*xpPer*0.5);
-    return xp;
-  }
-  // Marche : 25 XP Endurance / km, strictement linéaire.
-  if(obj.id==="march") return effectiveTotal*xpPer;
-  // Cas standard
+  // Quêtes bonus : XP strictement linéaire dès la première unité.
   if(obj.optional){
-    let xp = effectiveTotal*xpPer;
-    const mult = Math.floor(effectiveTotal/t);
-    if(mult>=2) xp += (mult-1)*t*xpPer;
-    return xp;
+    return effectiveTotal*xpPer;
   } else {
+    // Quêtes journalières obligatoires : l'XP est débloquée à l'objectif,
+    // puis reste strictement linéaire au-delà, sans palier bonus.
     if(effectiveTotal < t) return 0;
-    let xp = effectiveTotal*xpPer;
-    const mult = Math.floor(effectiveTotal/t);
-    if(mult>=2) xp += (mult-1)*t*xpPer;
-    return xp;
+    return effectiveTotal*xpPer;
   }
 }
 

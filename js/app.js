@@ -56,7 +56,7 @@ import {
   getGlobalLevelInfo,
   calcXp,
   calcQuestTotalXp
-} from "./xp.js?v=20260807-marche-complete";
+} from "./xp.js?v=20260811-linear-xp-v1";
 import { StatsTab } from "./statsView.js?v=20260806-remove-radar";
 import { HistoryTab } from "./historyView.js?v=20260809-medallions-v6";
 import {
@@ -1485,7 +1485,7 @@ function App(){
     const alreadyCapped_DISABLED = false;
     const effectiveNext = next;
     const effectiveVal = val;
-    // Tout objectif avec un base, non-binary, hors cas spéciaux (water/run) entre dans le système palier
+    // Tout objectif avec une base, non binaire, hors suivi strictement linéaire dédié.
     const isPalier = obj.base && !obj.binary && obj.id!=="water" && obj.id!=="run" && obj.id!=="march";
 
     // Cas spécial : quête avec tiers (repas équilibré x/2, etc.)
@@ -1557,33 +1557,22 @@ function App(){
     else if(isPalier){
       // Utilise effectiveVal
       if(obj.optional){
-        // Quêtes bonus : XP linéaire dès le début + 1 bonus par palier franchi à partir du palier 2
+        // Quêtes bonus : XP strictement linéaire dès le début.
         xp=effectiveVal*obj.xpPer;
-        const prevMult=prev<b?0:Math.floor(prev/b);
-        const nextMult=effectiveNext<b?0:Math.floor(effectiveNext/b);
-        for(let m=Math.max(2,prevMult+1);m<=nextMult;m++){
-          xp+=b*obj.xpPer;
-        }
       } else {
-        // Quêtes journalières : 0 XP si objectif non atteint
+        // Quêtes journalières : 0 XP avant l'objectif, puis XP linéaire,
+        // y compris au-delà de 100 %, sans palier bonus.
         if(effectiveNext<b){xp=0;}
         else {
           const xpNext=effectiveNext*obj.xpPer;
           const xpPrev=prev>=b?prev*obj.xpPer:0;
           xp=xpNext-xpPrev;
-          const prevMult=prev<b?1:Math.floor(prev/b);
-          const nextMult=Math.floor(effectiveNext/b);
-          for(let m=Math.max(2,prevMult+1);m<=nextMult;m++){
-            xp+=b*obj.xpPer;
-          }
         }
       }
     }
     else if(obj.id==="run"){
-      // Course : linéaire + bonus spécifique Running si total >= 2x objectif
+      // Course : XP strictement linéaire, sans bonus de dépassement automatique.
       xp=effectiveVal*obj.xpPer;
-      const totalAfter=effectiveNext;
-      if(totalAfter>=b*2) xp+=Math.round(effectiveVal*obj.xpPer*0.5);
     }
     else if(obj.id==="march"){
       // Marche : strictement linéaire à 25 XP Endurance / km.
