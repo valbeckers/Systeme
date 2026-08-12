@@ -3440,7 +3440,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     return h("div",{class:"tab"},
       h(DebtCard,null),
       activeBreach&&h(BreachCard,null),
-      (!completedSq||activeSq)&&h("div",{class:"card"+(activeSq&&activeSq.expiresAt-now<86400000&&!activeSq.completedAt?" sq-urgent":""),style:"border-color:#ef444444;background:linear-gradient(145deg,#140303,#260606)"},
+      !activeBreach&&(!completedSq||activeSq)&&h("div",{class:"card"+(activeSq&&activeSq.expiresAt-now<86400000&&!activeSq.completedAt?" sq-urgent":""),style:"border-color:#ef444444;background:linear-gradient(145deg,#140303,#260606)"},
         h("div",{class:"shdr"},
           h("div",null,
             h("div",{class:"ctitle",style:"margin:0;color:#ef4444"},"Quête urgente"+(activeSq&&activeSq.tier?" · "+(SQ_TIER_LABEL[activeSq.tier]||""):""))
