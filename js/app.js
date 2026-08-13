@@ -81,7 +81,7 @@ import {
   GRIMOIRE_ICON_DATA,
   DEBT_ACKNOWLEDGEMENT_ICON_DATA
 } from "./itemImages.js?v=20260808-items-normalized-v1";
-import { UiIcon } from "./uiIcons.js?v=20260809-medallions-v6";
+import { UiIcon } from "./uiIcons.js?v=20260813-countdown-transparent-v1";
 import { saveStoredState } from "./storage.js";
 import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260808-rewrite-rune-distinct";
 import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260808-rewrite-rune-distinct";
@@ -2574,7 +2574,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         : h("div",{class:"qrow",style:"align-items:center;margin-top:6px"},
             h("div",{class:"qbar"},h("div",{class:"qfill"+(done?" done":pct>0?" partial":""),style:sqFillStyle}))
           ),
-      !done&&h("div",{style:"font-size:10px;color:"+(urgent?"#ef4444":"#ef4444bb")+";font-family:Orbitron,sans-serif;margin-top:4px;text-align:"+(showInput?"left":"right")},"\u23F1 "+fmtCD(remaining)+" restants"),
+      !done&&h("div",{style:"font-size:10px;color:"+(urgent?"#ef4444":"#ef4444bb")+";font-family:Orbitron,sans-serif;margin-top:4px;text-align:"+(showInput?"left":"right")+";display:flex;align-items:center;gap:4px;justify-content:"+(showInput?"flex-start":"flex-end")},
+        h(UiIcon,{iconKey:"interface.countdown",fallback:"⏱",slotSize:14,glyphSize:10}),
+        fmtCD(remaining)+" restants"
+      ),
       showInput&&!done&&(
         !incrementalUrgent
           ?h("div",{style:"display:flex;gap:8px;margin-top:8px"},

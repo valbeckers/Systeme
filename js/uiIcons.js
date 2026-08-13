@@ -19,7 +19,7 @@ export const UI_ICON_IMAGES=Object.freeze({
   "interface.lock":"./assets/ui/interface-lock.png?v=20260809-medallions-v6",
   "interface.notification":"./assets/ui/interface-notification.png?v=20260809-medallions-v6",
   "interface.chain":"./assets/ui/interface-chain.png?v=20260809-medallions-v6",
-  "interface.countdown":"./assets/ui/interface-countdown.png?v=20260809-medallions-v6",
+  "interface.countdown":"./assets/ui/interface-countdown.png?v=20260813-transparent-v1",
 
   "quest.water":"./assets/ui/quest-water.png?v=20260809-medallions-v4",
   "quest.sleep":"./assets/ui/quest-sleep.png?v=20260809-medallions-v5",
