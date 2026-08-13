@@ -2724,10 +2724,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{class:"ctitle",style:"margin:0 0 12px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"BRÈCHE ALLIÉE EN RUPTURE":"BRÈCHE ALLIÉE ACTIVE"):(isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE ACTIVE")),
         h("div",{style:"padding:12px;border-radius:12px;border:1px solid rgba(219,234,254,.24);background:rgba(2,10,24,.36);box-shadow:inset 0 0 18px rgba(141,187,255,.05)"},
           h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px"},
-          h("div",{style:"display:flex;align-items:center;gap:9px;min-width:0"},
+          h("div",{style:"display:flex;align-items:center;gap:8px;min-width:0"},
             isRupture
-              ? h(UiIcon,{iconKey:"interface.rupture",fallback:"☠️",slotSize:26,glyphSize:18})
-              : QuestIcon(b.id,b.icon,18,"min-width:26px"),
+              ? h(UiIcon,{iconKey:"interface.rupture",fallback:"☠️",slotSize:24,glyphSize:14})
+              : QuestIcon(b.id,b.icon,14,"line-height:1.1;min-width:24px;text-align:center"),
             h("div",{style:"min-width:0"},
               h("div",{style:"font-size:13px;font-weight:800;color:#fff;line-height:1.25"},isRupture?rupture.name:b.name),
               !compact&&h("div",{style:"font-size:10px;color:#cbd5e1;line-height:1.4;margin-top:3px"},isRupture?b.desc:b.desc)
