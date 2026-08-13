@@ -2687,6 +2687,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       : breachProgressText();
 
     const standardButtonStyle="flex:1;padding:9px;border-radius:8px;border:1px solid rgba(255,255,255,.38);background:rgba(255,255,255,.05);color:#fff;font-family:Orbitron,sans-serif;font-size:9px;cursor:pointer";
+    const breachUnitLabel=(unit,amount)=>{
+      if(Number(amount)===1)return unit;
+      const plurals={rep:"reps",mot:"mots",idée:"idées",verre:"verres",jour:"jours",portion:"portions",objet:"objets",contact:"contacts",action:"actions"};
+      return plurals[unit]||unit;
+    };
     const renderBreachTrail=()=>h(BreachFxOverlay,{variant:compact?"home":"quests"});
 
     if(compact){
@@ -2740,8 +2745,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         ),
 
         !isRupture&&!mainDone&&h("div",{style:"margin-top:9px;display:flex;gap:8px"},
-          h("button",{onClick:()=>addMain(1),style:standardButtonStyle},"+1 "+b.unit),
-          h("button",{onClick:()=>addMain(b.step||10),style:standardButtonStyle},"+"+(b.step||10)+" "+b.unit)
+          h("button",{onClick:()=>addMain(1),style:standardButtonStyle},"+1 "+breachUnitLabel(b.unit,1)),
+          h("button",{onClick:()=>addMain(b.step||10),style:standardButtonStyle},"+"+(b.step||10)+" "+breachUnitLabel(b.unit,b.step||10))
         ),
 
         !compact&&isRupture&&h("div",{style:"margin-top:10px"},
@@ -2751,8 +2756,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               h("div",{style:"font-family:Orbitron,sans-serif;font-size:8.5px;color:"+(mainDone?"#4ade80":"#dbeafe")},mainProgressText)
             ),
             !mainDone&&h("div",{style:"display:flex;gap:7px;margin-top:8px"},
-              h("button",{onClick:()=>addMain(1),style:standardButtonStyle},"+1 "+b.unit),
-              h("button",{onClick:()=>addMain(b.step||10),style:standardButtonStyle},"+"+(b.step||10)+" "+b.unit)
+              h("button",{onClick:()=>addMain(1),style:standardButtonStyle},"+1 "+breachUnitLabel(b.unit,1)),
+              h("button",{onClick:()=>addMain(b.step||10),style:standardButtonStyle},"+"+(b.step||10)+" "+breachUnitLabel(b.unit,b.step||10))
             )
           ),
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#fff;letter-spacing:1px;text-transform:uppercase;margin:11px 0 7px"},"GARDE RAPPROCHÉE — "+guardDoneCount+"/"+guards.length),
@@ -2768,7 +2773,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
                 h("div",{style:"font-family:Orbitron,sans-serif;font-size:8.5px;color:"+(done?"#4ade80":"#dbeafe")+";white-space:nowrap"},done?"✓":fmtNum(progress)+"/"+g.target+" "+g.unit)
               ),
               !done&&h("div",{style:"display:flex;gap:7px;margin-top:8px"},
-                h("button",{onClick:()=>updateGuard(g.id,Number(g.step)||1),style:standardButtonStyle},"+"+fmtNum(g.step||1)+" "+g.unit),
+                h("button",{onClick:()=>updateGuard(g.id,Number(g.step)||1),style:standardButtonStyle},"+"+fmtNum(g.step||1)+" "+breachUnitLabel(g.unit,g.step||1)),
                 h("button",{onClick:()=>updateGuard(g.id,0,true),style:standardButtonStyle},"TERMINER ✓")
               )
             );
