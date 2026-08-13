@@ -81,7 +81,7 @@ import {
   GRIMOIRE_ICON_DATA,
   DEBT_ACKNOWLEDGEMENT_ICON_DATA
 } from "./itemImages.js?v=20260808-items-normalized-v1";
-import { UiIcon } from "./uiIcons.js?v=20260813-countdown-transparent-v1";
+import { UiIcon } from "./uiIcons.js?v=20260813-countdown-beige-v1";
 import { saveStoredState } from "./storage.js";
 import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260808-rewrite-rune-distinct";
 import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260808-rewrite-rune-distinct";
@@ -2679,7 +2679,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
     const breachProgressText=()=>{
       const unit=b.unit==="rep"?"reps":b.unit;
-      return fmtNum(mainProgress)+"/"+fmtNum(target)+(unit||"");
+      return fmtNum(mainProgress)+"/"+fmtNum(target)+(unit?" "+unit:"");
     };
     const mainProgressText=breachProgressText();
     const progressText=isRupture
