@@ -20,7 +20,7 @@ import {
   urgentQuestCompletedOnDay,
   applyDailyStreakRewardState
 } from "./dailyEngine.js";
-import { BREACH_POOL } from "./breachDefs.js?v=20260804-breach-progress-01";
+import { BREACH_POOL } from "./breachDefs.js?v=20260813-breach-loot-wording-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20260805-master-contract-random-01";
 import {
   dungeonRoomRewardPairs,
@@ -32,7 +32,7 @@ import {
   expireActiveDungeonState,
   canValidateDungeonRoom
 } from "./dungeonEngine.js?v=20260805-master-contract-random-01";
-import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260808-rewrite-rune-distinct";
+import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260813-breach-loot-wording-v1";
 import {
   incrementLootState,
   pickRandomBreachLoot,

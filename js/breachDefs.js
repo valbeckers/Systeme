@@ -5,7 +5,7 @@
 
 // Brèches : événement rare tiré une seule fois au reset quotidien.
 const BREACH_COLOR="#163a70";
-const BREACH_LOOT_TEXT="Après avoir refermé une Brèche (Taux : 100 %, puis tirage aléatoire parmi les objets de l’inventaire).";
+const BREACH_LOOT_TEXT="Après avoir refermé une brèche : 1 objet aléatoire garanti.";
 const BREACH_POOL=[
   {id:"breach_cold5",name:"Douche froide · 10min",icon:"🚿",unit:"min",target:10,step:10,binary:true,xp:1500,stat:"Sante",xp2:500,stat2:"Discipline",desc:""},
   {id:"breach_wallsit15",name:"Wall sit · 20min",icon:"🪑",unit:"min",target:20,step:5,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
