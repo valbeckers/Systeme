@@ -224,7 +224,7 @@ function __drawBreachElectricFrame(ctx, metrics, t, variant, theme="breach"){
   const palette=theme==="dungeon"
     ? {main:"#f59e0b",mid:"#fbbf24",inner:"#fde68a",core:"#fff7d6",trace:"#fcd34d",shadow:"#f59e0b"}
     : theme==="rupture"
-      ? {main:"#ff1744",mid:"#ff5b72",inner:"#ffd1d9",core:"#ffffff",trace:"#ff8798",shadow:"#ff1744"}
+      ? {main:"#ef4444",mid:"#ef4444",inner:"#ef4444",core:"#ef4444",trace:"#ef4444",shadow:"#ef4444"}
       : {main:"#29c9ff",mid:"#69dcff",inner:"#dcf9ff",core:"#ffffff",trace:"#baf4ff",shadow:"#59d1ff"};
   const themeBoost=theme==="rupture"?1.28:1;
   const pulse=__breachFxPulse(t);
@@ -2699,7 +2699,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const breachBossObjective=(BREACH_POOL.find(entry=>entry.id===b.id)||{}).bossObjective||b.desc||b.name;
 
     if(compact){
-      return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:#8dbbff44;background:linear-gradient(145deg,#07162f,#102e5c);padding-top:13px;padding-bottom:13px"},
+      return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:"+(isRupture?"#ef444444":"#8dbbff44")+";background:linear-gradient(145deg,#07162f,#102e5c);padding-top:13px;padding-bottom:13px"},
         renderBreachTrail(),
         h("div",{style:"position:relative;z-index:2"},
           h("div",{class:"ctitle",style:"margin:0 0 10px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"BRÈCHE ALLIÉE EN RUPTURE":"BRÈCHE ALLIÉE ACTIVE"):(isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE ACTIVE")),
@@ -2722,7 +2722,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       );
     }
 
-    return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:#8dbbff44;background:linear-gradient(145deg,#07162f,#102e5c)"},
+    return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:"+(isRupture?"#ef444444":"#8dbbff44")+";background:linear-gradient(145deg,#07162f,#102e5c)"},
       renderBreachTrail(),
       h("div",{style:"position:relative;z-index:2"},
         h("div",{class:"ctitle",style:"margin:0 0 12px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},isRupture?"RUPTURE DE BRÈCHE":(b.alliedTeleport?"BRÈCHE ALLIÉE ACTIVE":"BRÈCHE ACTIVE")),
