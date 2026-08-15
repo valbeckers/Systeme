@@ -20,7 +20,7 @@ import {
   urgentQuestCompletedOnDay,
   applyDailyStreakRewardState
 } from "./dailyEngine.js";
-import { BREACH_POOL } from "./breachDefs.js?v=20260813-breach-loot-wording-v1";
+import { BREACH_POOL } from "./breachDefs.js?v=20260815-rupture-card-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20260805-master-contract-random-01";
 import {
   dungeonRoomRewardPairs,
@@ -223,7 +223,9 @@ function __roundedRectPoint(m,d){
 function __drawBreachElectricFrame(ctx, metrics, t, variant, theme="breach"){
   const palette=theme==="dungeon"
     ? {main:"#f59e0b",mid:"#fbbf24",inner:"#fde68a",core:"#fff7d6",trace:"#fcd34d",shadow:"#f59e0b"}
-    : {main:"#29c9ff",mid:"#69dcff",inner:"#dcf9ff",core:"#ffffff",trace:"#baf4ff",shadow:"#59d1ff"};
+    : theme==="rupture"
+      ? {main:"#dc2626",mid:"#ef4444",inner:"#fca5a5",core:"#fff1f2",trace:"#fb7185",shadow:"#ef4444"}
+      : {main:"#29c9ff",mid:"#69dcff",inner:"#dcf9ff",core:"#ffffff",trace:"#baf4ff",shadow:"#59d1ff"};
   const pulse=__breachFxPulse(t);
   const peri=metrics.total;
   const sampleDist=variant==="home"?4.8:5.2;
@@ -2692,7 +2694,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const plurals={rep:"reps",mot:"mots",idée:"idées",verre:"verres",jour:"jours",portion:"portions",objet:"objets",contact:"contacts",action:"actions"};
       return plurals[unit]||unit;
     };
-    const renderBreachTrail=()=>h(BreachFxOverlay,{variant:compact?"home":"quests"});
+    const renderBreachTrail=()=>h(BreachFxOverlay,{variant:compact?"home":"quests",theme:!compact&&isRupture?"rupture":"breach"});
+    const breachBossObjective=(BREACH_POOL.find(entry=>entry.id===b.id)||{}).bossObjective||b.desc||b.name;
 
     if(compact){
       return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:#8dbbff44;background:linear-gradient(145deg,#07162f,#102e5c);padding-top:13px;padding-bottom:13px"},
@@ -2721,7 +2724,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:#8dbbff44;background:linear-gradient(145deg,#07162f,#102e5c)"},
       renderBreachTrail(),
       h("div",{style:"position:relative;z-index:2"},
-        h("div",{class:"ctitle",style:"margin:0 0 12px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"BRÈCHE ALLIÉE EN RUPTURE":"BRÈCHE ALLIÉE ACTIVE"):(isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE ACTIVE")),
+        h("div",{class:"ctitle",style:"margin:0 0 12px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},isRupture?"RUPTURE DE BRÈCHE":(b.alliedTeleport?"BRÈCHE ALLIÉE ACTIVE":"BRÈCHE ACTIVE")),
         h("div",{style:"padding:12px;border-radius:12px;border:1px solid rgba(219,234,254,.24);background:rgba(2,10,24,.36);box-shadow:inset 0 0 18px rgba(141,187,255,.05)"},
           h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px"},
           h("div",{style:"display:flex;align-items:center;gap:8px;min-width:0"},
@@ -2755,6 +2758,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#fff;letter-spacing:1px;text-transform:uppercase"},"OBJECTIF DU BOSS"),
               h("div",{style:"font-family:Orbitron,sans-serif;font-size:8.5px;color:"+(mainDone?"#4ade80":"#dbeafe")},mainProgressText)
             ),
+            h("div",{style:"font-size:9.5px;color:var(--td);line-height:1.4;margin-top:3px"},breachBossObjective),
             !mainDone&&h("div",{style:"display:flex;gap:7px;margin-top:8px"},
               h("button",{onClick:()=>addMain(1),style:standardButtonStyle},"+1 "+breachUnitLabel(b.unit,1)),
               h("button",{onClick:()=>addMain(b.step||10),style:standardButtonStyle},"+"+(b.step||10)+" "+breachUnitLabel(b.unit,b.step||10))
@@ -2778,11 +2782,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               )
             );
           })),
-          h("button",{
-            disabled:!ruptureComplete,
+          ruptureComplete&&h("button",{
             onClick:finish,
-            style:"width:100%;margin-top:10px;padding:11px;border-radius:8px;border:1px solid "+(ruptureComplete?"#4ade8088":"rgba(255,255,255,.12)")+";background:"+(ruptureComplete?"rgba(74,222,128,.12)":"rgba(255,255,255,.025)")+";color:"+(ruptureComplete?"#4ade80":"var(--td)")+";font-family:Orbitron,sans-serif;font-size:10px;cursor:"+(ruptureComplete?"pointer":"default")+";letter-spacing:1px;text-transform:uppercase"
-          },ruptureComplete?"MAÎTRISER LA RUPTURE ✓":"4 OBJECTIFS À ACCOMPLIR")
+            style:"width:100%;margin-top:10px;padding:11px;border-radius:8px;border:1px solid #4ade8088;background:rgba(74,222,128,.12);color:#4ade80;font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer;letter-spacing:1px;text-transform:uppercase"
+          },"MAÎTRISER LA RUPTURE ✓")
         ),
 
         )

@@ -7,19 +7,19 @@
 const BREACH_COLOR="#163a70";
 const BREACH_LOOT_TEXT="Après avoir refermé une brèche : 1 objet aléatoire garanti.";
 const BREACH_POOL=[
-  {id:"breach_cold5",name:"Douche froide · 10min",icon:"🚿",unit:"min",target:10,step:10,binary:true,xp:1500,stat:"Sante",xp2:500,stat2:"Discipline",desc:""},
-  {id:"breach_wallsit15",name:"Wall sit · 20min",icon:"🪑",unit:"min",target:20,step:5,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
-  {id:"breach_push300",name:"Pompes · 500reps",icon:"🦾",unit:"rep",target:500,step:25,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
-  {id:"breach_squats150",name:"Squats · 250reps",icon:"🦿",unit:"rep",target:250,step:10,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
-  {id:"breach_pullups50",name:"Tractions · 50reps",icon:"🦾",unit:"rep",target:50,step:5,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
-  {id:"breach_plank15",name:"Gainage · 20min",icon:"🫳🏼",unit:"min",target:20,step:5,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
-  {id:"breach_learning2h",name:"Apprentissage actif · 2h",icon:"🎓",unit:"min",target:120,step:10,binary:true,xp:1500,stat:"Esprit",xp2:500,stat2:"Discipline",desc:""},
-  {id:"breach_reading1h",name:"Lecture · 2h",icon:"📚",unit:"min",target:120,step:10,binary:true,xp:1500,stat:"Esprit",xp2:500,stat2:"Discipline",desc:""},
-  {id:"breach_run10",name:"Running · 10km",icon:"🏃🏻",unit:"km",target:10,step:5,binary:true,xp:2000,stat:"Endurance",desc:""},
-  {id:"breach_sprint10",name:"Running fractionné · 10 × 200 mètres",icon:"⚡",unit:"sér.",target:10,step:1,xp:1500,stat:"Endurance",xp2:500,stat2:"Agilite",desc:""},
-  {id:"breach_rope30",name:"Corde à sauter · 30min",icon:"💦",unit:"min",target:30,step:5,xp:1500,stat:"Endurance",xp2:500,stat2:"Agilite",desc:""},
-  {id:"breach_flex60",name:"Animal flow · 1h",icon:"🤸🏻",unit:"min",target:60,step:10,xp:1500,stat:"Agilite",xp2:500,stat2:"Endurance",desc:""},
-  {id:"breach_martialflow60",name:"Flow martial · 1h",icon:"🌊",unit:"min",target:60,step:10,xp:1500,stat:"Agilite",xp2:500,stat2:"Endurance",desc:""}
+  {id:"breach_cold5",name:"Douche froide · 10min",bossObjective:"Prendre une douche froide pendant 10 minutes",icon:"🚿",unit:"min",target:10,step:10,binary:true,xp:1500,stat:"Sante",xp2:500,stat2:"Discipline",desc:""},
+  {id:"breach_wallsit15",name:"Wall sit · 20min",bossObjective:"Faire 20 minutes de wall sit",icon:"🪑",unit:"min",target:20,step:5,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
+  {id:"breach_push300",name:"Pompes · 500reps",bossObjective:"Faire 500 pompes",icon:"🦾",unit:"rep",target:500,step:25,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
+  {id:"breach_squats150",name:"Squats · 250reps",bossObjective:"Faire 250 squats",icon:"🦿",unit:"rep",target:250,step:10,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
+  {id:"breach_pullups50",name:"Tractions · 50reps",bossObjective:"Faire 50 tractions",icon:"🦾",unit:"rep",target:50,step:5,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
+  {id:"breach_plank15",name:"Gainage · 20min",bossObjective:"Faire 20 minutes de gainage",icon:"🫳🏼",unit:"min",target:20,step:5,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
+  {id:"breach_learning2h",name:"Apprentissage actif · 2h",bossObjective:"Faire 2 heures d’apprentissage actif",icon:"🎓",unit:"min",target:120,step:10,binary:true,xp:1500,stat:"Esprit",xp2:500,stat2:"Discipline",desc:""},
+  {id:"breach_reading1h",name:"Lecture · 2h",bossObjective:"Lire pendant 2 heures",icon:"📚",unit:"min",target:120,step:10,binary:true,xp:1500,stat:"Esprit",xp2:500,stat2:"Discipline",desc:""},
+  {id:"breach_run10",name:"Running · 10km",bossObjective:"Courir 10 kilomètres",icon:"🏃🏻",unit:"km",target:10,step:5,binary:true,xp:2000,stat:"Endurance",desc:""},
+  {id:"breach_sprint10",name:"Running fractionné · 10 × 200 mètres",bossObjective:"Faire 10 séries de 200 mètres",icon:"⚡",unit:"sér.",target:10,step:1,xp:1500,stat:"Endurance",xp2:500,stat2:"Agilite",desc:""},
+  {id:"breach_rope30",name:"Corde à sauter · 30min",bossObjective:"Faire 30 minutes de corde à sauter",icon:"💦",unit:"min",target:30,step:5,xp:1500,stat:"Endurance",xp2:500,stat2:"Agilite",desc:""},
+  {id:"breach_flex60",name:"Animal flow · 1h",bossObjective:"Faire 1 heure d’animal flow",icon:"🤸🏻",unit:"min",target:60,step:10,xp:1500,stat:"Agilite",xp2:500,stat2:"Endurance",desc:""},
+  {id:"breach_martialflow60",name:"Flow martial · 1h",bossObjective:"Faire 1 heure de flow martial",icon:"🌊",unit:"min",target:60,step:10,xp:1500,stat:"Agilite",xp2:500,stat2:"Endurance",desc:""}
 ];
 
 // Chaque Brèche possède un Boss de Rupture attitré. En Rupture, le Boss reprend
