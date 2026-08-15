@@ -224,8 +224,9 @@ function __drawBreachElectricFrame(ctx, metrics, t, variant, theme="breach"){
   const palette=theme==="dungeon"
     ? {main:"#f59e0b",mid:"#fbbf24",inner:"#fde68a",core:"#fff7d6",trace:"#fcd34d",shadow:"#f59e0b"}
     : theme==="rupture"
-      ? {main:"#dc2626",mid:"#ef4444",inner:"#fca5a5",core:"#fff1f2",trace:"#fb7185",shadow:"#ef4444"}
+      ? {main:"#ff1744",mid:"#ff5b72",inner:"#ffd1d9",core:"#ffffff",trace:"#ff8798",shadow:"#ff1744"}
       : {main:"#29c9ff",mid:"#69dcff",inner:"#dcf9ff",core:"#ffffff",trace:"#baf4ff",shadow:"#59d1ff"};
+  const themeBoost=theme==="rupture"?1.28:1;
   const pulse=__breachFxPulse(t);
   const peri=metrics.total;
   const sampleDist=variant==="home"?4.8:5.2;
@@ -278,10 +279,10 @@ function __drawBreachElectricFrame(ctx, metrics, t, variant, theme="breach"){
     ctx.restore();
   };
 
-  strokePath(mainPts,palette.main,4.5,glowA,8);
-  strokePath(mainPts,palette.mid,2.15,glowB,2.6);
-  strokePath(innerPts,palette.inner,1.02,.72*pulse,1.2);
-  strokePath(innerPts,palette.core,.56,coreA,.45);
+  strokePath(mainPts,palette.main,4.5*themeBoost,Math.min(1,glowA*themeBoost),8*themeBoost);
+  strokePath(mainPts,palette.mid,2.15*themeBoost,Math.min(1,glowB*themeBoost),2.6*themeBoost);
+  strokePath(innerPts,palette.inner,1.02*themeBoost,Math.min(1,.72*pulse*themeBoost),1.2*themeBoost);
+  strokePath(innerPts,palette.core,.56*themeBoost,Math.min(1,coreA*themeBoost),.45*themeBoost);
 
   ctx.save();
   ctx.beginPath();
@@ -294,8 +295,8 @@ function __drawBreachElectricFrame(ctx, metrics, t, variant, theme="breach"){
   ctx.closePath();
   ctx.strokeStyle=palette.trace;
   ctx.lineWidth=.48;
-  ctx.globalAlpha=.12*pulse;
-  ctx.shadowBlur=1.8;
+  ctx.globalAlpha=Math.min(1,.12*pulse*themeBoost);
+  ctx.shadowBlur=1.8*themeBoost;
   ctx.shadowColor=palette.shadow;
   ctx.stroke();
   ctx.restore();
@@ -2694,7 +2695,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const plurals={rep:"reps",mot:"mots",idée:"idées",verre:"verres",jour:"jours",portion:"portions",objet:"objets",contact:"contacts",action:"actions"};
       return plurals[unit]||unit;
     };
-    const renderBreachTrail=()=>h(BreachFxOverlay,{variant:compact?"home":"quests",theme:!compact&&isRupture?"rupture":"breach"});
+    const renderBreachTrail=()=>h(BreachFxOverlay,{variant:compact?"home":"quests",theme:isRupture?"rupture":"breach"});
     const breachBossObjective=(BREACH_POOL.find(entry=>entry.id===b.id)||{}).bossObjective||b.desc||b.name;
 
     if(compact){
