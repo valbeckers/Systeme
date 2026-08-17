@@ -1,5 +1,5 @@
 import { REGRESSION_DEF, hasValidatedDailyCompletion } from "./dailyEngine.js";
-import { hasResolvedQuestDebt, inferLegacyResolvedDebtQuestId } from "./debtEngine.js?v=20260817-debt-history-v2";
+import { hasResolvedQuestDebt, inferLegacyResolvedDebtQuestId } from "./debtEngine.js?v=20260817-debt-history-v3";
 import { wkStr } from "./dayCycle.js";
 import { getRankBase, sortStat } from "./progression.js";
 import {

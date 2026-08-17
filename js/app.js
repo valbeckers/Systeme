@@ -60,7 +60,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260811-linear-xp-v1";
 import { StatsTab } from "./statsView.js?v=20260806-remove-radar";
-import { HistoryTab } from "./historyView.js?v=20260817-debt-history-v2";
+import { HistoryTab } from "./historyView.js?v=20260817-debt-history-v3";
 import {
   RANK_BASES,
   ROMAN,

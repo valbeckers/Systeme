@@ -43,7 +43,27 @@ export function inferLegacyResolvedDebtQuestId(state,day,requiredObjectives,targ
     isDebtEligibleQuest(obj)&&
     (Number(log[obj.id])||0)<Number(targetFor(obj,day)||0)
   );
-  return candidates.length===1?candidates[0].id:null;
+  if(candidates.length===1) return candidates[0].id;
+  if(candidates.length<2) return null;
+
+  // Si les objectifs ont évolué depuis, plusieurs lignes peuvent sembler
+  // incomplètes. Le montant d'XP réellement versé lors du remboursement permet
+  // alors d'identifier la bonne quête (ex. Sommeil plutôt que Dos & Biceps).
+  const d=new Date(day+"T12:00:00Z");
+  d.setUTCDate(d.getUTCDate()+1);
+  const nextDay=d.toISOString().slice(0,10);
+  const extras=state.dailyExtraXp||{};
+  const paidXp=Number((extras[day]||{}).debt)||Number((extras[nextDay]||{}).debt)||0;
+  if(paidXp>0){
+    const exact=candidates.filter(obj=>{
+      const current=Number(log[obj.id])||0;
+      const target=Number(targetFor(obj,day))||0;
+      const expected=debtRewardPairs(obj,current,target).reduce((sum,reward)=>sum+(Number(reward.xp)||0),0);
+      return Math.abs(expected-paidXp)<1e-9;
+    });
+    if(exact.length===1) return exact[0].id;
+  }
+  return null;
 }
 
 export function debtRewardPairs(obj,current,target){
