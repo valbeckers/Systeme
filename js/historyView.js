@@ -1,4 +1,5 @@
 import { REGRESSION_DEF, hasValidatedDailyCompletion } from "./dailyEngine.js";
+import { hasResolvedQuestDebt } from "./debtEngine.js?v=20260817-debt-history-v1";
 import { wkStr } from "./dayCycle.js";
 import { getRankBase, sortStat } from "./progression.js";
 import {
@@ -113,7 +114,8 @@ export function HistoryTab({
     const target=dayTargetFor(dayObj,day);
     const validationTarget=obj.optional?Math.ceil(target*0.5):target;
     const previouslyValidated=day<today&&!!obj.daily&&!obj.optional&&hasValidatedDailyCompletion(state,day);
-    const ok=previouslyValidated||value>=validationTarget;
+    const debtValidated=hasResolvedQuestDebt(state,day,obj.id);
+    const ok=previouslyValidated||debtValidated||value>=validationTarget;
 
     if(ok) return {txt:"✓",color:"#4ade80",opacity:1};
     if(day>today) return {txt:"·",color:"var(--td)",opacity:.45};

@@ -23,6 +23,16 @@ export function isDebtEligibleQuest(obj){
   );
 }
 
+export function hasResolvedQuestDebt(state,day,questId){
+  if(!state||!day||!questId) return false;
+  const ids=((state.debtResolvedQuestIdsByDay||{})[day]||[]);
+  if(Array.isArray(ids)&&ids.includes(questId)) return true;
+  const debt=state.questDebt;
+  return !!(
+    debt&&debt.status==="paid"&&debt.sourceDay===day&&debt.id===questId
+  );
+}
+
 export function debtRewardPairs(obj,current,target){
   const missing=Math.max(0,(Number(target)||0)-(Number(current)||0));
   if(missing<=0) return [];
@@ -119,10 +129,13 @@ export function reconcileSameDayQuestDebtState(state,today,now=Date.now()){
   if(amount<=0 || postCreationProgress<amount) return state;
 
   const resolved={...(state.debtResolvedDays||{}),[debt.sourceDay]:true};
+  const resolvedIds={...(state.debtResolvedQuestIdsByDay||{})};
+  resolvedIds[debt.sourceDay]=Array.from(new Set([...(resolvedIds[debt.sourceDay]||[]),debt.id]));
   return {
     ...state,
     questDebt:{...debt,paid:amount,status:"paid",completedAt:now,reconciledFromDailyLog:true},
-    debtResolvedDays:resolved
+    debtResolvedDays:resolved,
+    debtResolvedQuestIdsByDay:resolvedIds
   };
 }
 
@@ -140,6 +153,8 @@ export function applyQuestDebtPaymentState(state,used,today,now=Date.now()){
   }
 
   const resolved={...(state.debtResolvedDays||{}),[current.sourceDay]:true};
+  const resolvedIds={...(state.debtResolvedQuestIdsByDay||{})};
+  resolvedIds[current.sourceDay]=Array.from(new Set([...(resolvedIds[current.sourceDay]||[]),current.id]));
   const daily={...(state.dailyExtraXp||{})};
   const dayLog={...(daily[today]||{})};
   const totalDebtXp=(current.rewards||[]).reduce((sum,reward)=>sum+(reward.xp||0),0);
@@ -150,6 +165,7 @@ export function applyQuestDebtPaymentState(state,used,today,now=Date.now()){
     ...state,
     questDebt:{...current,paid,status:"paid",completedAt:now},
     debtResolvedDays:resolved,
+    debtResolvedQuestIdsByDay:resolvedIds,
     dailyExtraXp:daily
   };
 }
@@ -162,4 +178,3 @@ export function expireQuestDebtState(state,today,now=Date.now()){
     questDebt:{...debt,status:"failed",failedAt:now}
   };
 }
-

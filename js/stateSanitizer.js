@@ -322,6 +322,12 @@ export function cleanSystemState(raw){
     debtUseDay:data.debtUseDay||null,
     debtStreakRollMilestones:Array.isArray(data.debtStreakRollMilestones)?data.debtStreakRollMilestones:[],
     debtResolvedDays:data.debtResolvedDays||{},
+    debtResolvedQuestIdsByDay:Object.fromEntries(
+      Object.entries(data.debtResolvedQuestIdsByDay||{}).map(([day,ids])=>[
+        day,
+        Array.from(new Set((Array.isArray(ids)?ids:[]).map(String).filter(id=>dailyIds.has(id))))
+      ]).filter(([,ids])=>ids.length)
+    ),
     regressionLog:cleanRegressionLog(data.regressionLog),
     enduranceChoiceByDay:cleanEnduranceChoiceByDay(data.enduranceChoiceByDay),
     exerciseRotationByDay:cleanExerciseRotationByDay(data.exerciseRotationByDay),
