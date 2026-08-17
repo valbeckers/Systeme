@@ -33,6 +33,19 @@ export function hasResolvedQuestDebt(state,day,questId){
   );
 }
 
+// Les anciennes sauvegardes ne mémorisaient que le jour remboursé, sans l'id
+// de la quête. On peut le reconstruire sans ambiguïté lorsqu'une seule quête
+// éligible à la dette est restée sous son objectif ce jour-là.
+export function inferLegacyResolvedDebtQuestId(state,day,requiredObjectives,targetFor){
+  if(!state||!day||!((state.debtResolvedDays||{})[day])) return null;
+  const log=(state.dailyLog||{})[day]||{};
+  const candidates=(requiredObjectives||[]).filter(obj=>
+    isDebtEligibleQuest(obj)&&
+    (Number(log[obj.id])||0)<Number(targetFor(obj,day)||0)
+  );
+  return candidates.length===1?candidates[0].id:null;
+}
+
 export function debtRewardPairs(obj,current,target){
   const missing=Math.max(0,(Number(target)||0)-(Number(current)||0));
   if(missing<=0) return [];
