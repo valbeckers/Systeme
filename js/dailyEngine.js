@@ -1,3 +1,5 @@
+import { xpMomentumAdjustment } from "./xpMomentum.js?v=20260817-xp-momentum-v1";
+
 export const REGRESSION_DEFS = [{
   id:"reg_red",
   name:"Régression actuelle",
@@ -84,6 +86,46 @@ export function computeQuestStreak(state,today,{activeObjectivesOnDay,targetForD
   return streak;
 }
 
+function nextDay(day){
+  const d=new Date(day+"T12:00:00Z");
+  d.setUTCDate(d.getUTCDate()+1);
+  return d.toISOString().slice(0,10);
+}
+
+// Finalise les journées dans l'ordre. Une dette encore active suspend la
+// décision : elle ne crée aucun jour manqué avant son échéance.
+export function reconcileXpMomentumState(state,today,{activeObjectivesOnDay,targetForDay}){
+  if(!state||!today) return state;
+  let last=state.xpMomentumLastProcessedDay||today;
+  let missed=Math.max(0,Math.floor(Number(state.inertiaMissedDays)||0));
+  let inertia=Math.min(5,Math.max(0,Number(state.inertiaPercent)||0));
+  let changed=false;
+  let day=nextDay(last);
+
+  for(let guard=0;guard<400&&day<today;guard++,day=nextDay(day)){
+    const debt=state.questDebt;
+    const resolved=!!((state.debtResolvedDays||{})[day]);
+    if(debt&&debt.sourceDay===day&&debt.status==="active"&&!resolved) break;
+
+    const log=(state.dailyLog||{})[day]||{};
+    const complete=resolved || hasValidatedDailyCompletion(state,day) ||
+      (activeObjectivesOnDay(day)||[]).every(obj=>(Number(log[obj.id])||0)>=targetForDay(obj,day));
+
+    if(complete){
+      missed=0;
+      inertia=0;
+    }else{
+      missed+=1;
+      inertia=Math.min(5,Math.max(0,missed-1));
+    }
+    last=day;
+    changed=true;
+  }
+
+  if(!changed) return state;
+  return {...state,xpMomentumLastProcessedDay:last,inertiaMissedDays:missed,inertiaPercent:inertia};
+}
+
 export function urgentQuestCompletedOnDay(specialQuests,day,toDayString){
   return (specialQuests||[]).some(quest=>{
     if(!quest || !quest.completedAt) return false;
@@ -101,11 +143,13 @@ export function applyDailyStreakRewardState(state,{today,getLevel}){
 
   const beforeXp=next.totalXp;
   const beforeStats={...next.stats};
-  let streakXpToday=250;
-  const statXp={...next.statXp,Discipline:(next.statXp.Discipline||0)+250};
+  const baseStreakXp=250;
+  const firstGain=xpMomentumAdjustment(baseStreakXp,next).gain;
+  let streakXpToday=firstGain;
+  const statXp={...next.statXp,Discipline:(next.statXp.Discipline||0)+firstGain};
   next={
     ...next,
-    totalXp:next.totalXp+250,
+    totalXp:next.totalXp+firstGain,
     statXp,
     stats:{...next.stats,Discipline:getLevel(statXp.Discipline)},
     streakBonusDay:today
@@ -116,12 +160,12 @@ export function applyDailyStreakRewardState(state,{today,getLevel}){
   let animation={
     title:"STREAK BONUS !",
     streak:newStreak,
-    xp:250,
-    subtitle:"+250 XP Discipline"
+    xp:firstGain,
+    subtitle:"+"+Math.round(firstGain*100)/100+" XP Discipline"
   };
 
   if(newStreak>0 && newStreak%7===0 && !milestones.includes(newStreak)){
-    const milestoneXp=500;
+    const milestoneXp=xpMomentumAdjustment(500,next).gain;
     streakXpToday+=milestoneXp;
     const milestoneStatXp={...statXp,Discipline:(statXp.Discipline||0)+milestoneXp};
     next={
@@ -135,7 +179,7 @@ export function applyDailyStreakRewardState(state,{today,getLevel}){
       title:"MILESTONE !",
       streak:newStreak,
       xp:streakXpToday,
-      subtitle:"+750 XP Discipline",
+      subtitle:"+"+(Math.round(streakXpToday*100)/100)+" XP Discipline",
       detail:newStreak+" jours de streak"
     };
   }

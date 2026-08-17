@@ -17,9 +17,11 @@ import {
   areRequiredDailyQuestsComplete,
   areBonusQuestsComplete,
   computeQuestStreak,
+  reconcileXpMomentumState,
   urgentQuestCompletedOnDay,
   applyDailyStreakRewardState
-} from "./dailyEngine.js";
+} from "./dailyEngine.js?v=20260817-xp-momentum-v1";
+import { elanBonusPercent, xpMomentumAdjustment } from "./xpMomentum.js?v=20260817-xp-momentum-v1";
 import { BREACH_POOL } from "./breachDefs.js?v=20260815-rupture-card-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20260805-master-contract-random-01";
 import {
@@ -83,8 +85,8 @@ import {
 } from "./itemImages.js?v=20260808-items-normalized-v1";
 import { UiIcon } from "./uiIcons.js?v=20260813-countdown-beige-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260808-rewrite-rune-distinct";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260808-rewrite-rune-distinct";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260817-xp-momentum-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260817-xp-momentum-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -650,16 +652,6 @@ function App(){
   },[rankLootChoice,completionUp,completionQueue]);
 
 
-  // Penalite jours manques (une seule fois au montage)
-  useEffect(()=>{
-    const t=todayStr();
-    if(state.lastActiveDay&&state.lastActiveDay!==t){
-      const diff=Math.round((new Date(t)-new Date(state.lastActiveDay))/86400000);
-      if(diff>=2)setState(s=>({...s,totalXp:Math.max(0,s.totalXp-diff*10),streak:0}));
-    }
-  },[]);
-
-
   // ─── CALCULS DERIVES (dans l'ordre, sans circularite) ──────────────────
 
 
@@ -1215,6 +1207,16 @@ function App(){
     setState(s=>reconcileSameDayQuestDebtState(s,today));
   },[today,state.questDebt?.status,state.questDebt?.sourceDay,state.questDebt?.id,state.dailyLog]);
 
+  // Élan / Inertie : seule la clôture des quêtes journalières obligatoires
+  // compte. L'onguent remplit le journal normalement ; une dette active met
+  // la journée en attente jusqu'à son remboursement ou son expiration.
+  useEffect(()=>{
+    setState(s=>reconcileXpMomentumState(s,today,{
+      activeObjectivesOnDay:activeOn,
+      targetForDay:getValidateThreshold
+    }));
+  },[today,state.dailyLog,state.streakBonusDay,state.questDebt?.status,state.questDebt?.sourceDay,state.debtResolvedDays]);
+
   // Animations de complétion des groupes de quêtes — une seule fois par jour.
   // Clé de donjon : une clé garantie par journée totalement complétée
   // (toutes les journalières, la quête urgente et toutes les quêtes bonus).
@@ -1409,12 +1411,14 @@ function App(){
     const el=s.activeElixir;
     const bonus=skipEventBonus?0:elixirBonusForStat(el,stat,base,Date.now());
     const malus=s.ruptureMalus&&Date.now()<(s.ruptureMalus.expiresAt||0)?-Math.round(base*0.25):0;
-    return {bonus,malus,gain:Math.max(0,base+bonus+malus)};
+    const momentum=xpMomentumAdjustment(base,s);
+    return {bonus,malus,momentum,gain:Math.max(0,base+bonus+malus+momentum.delta)};
   }
   function addXp(amount,stat,e,silent,showStat,skipEventBonus=false){
     setState(s=>{
       const adjusted=xpAdjustment(s,amount,stat,skipEventBonus);
       const eventBonus=adjusted.bonus;
+      const momentumDelta=adjusted.momentum.delta;
       const gain=adjusted.gain;
       const nt=s.totalXp+gain;
       const sx={...s.statXp,[stat]:(s.statXp[stat]||0)+gain};
@@ -1426,8 +1430,15 @@ function App(){
         dayLog.eventBonus=(dayLog.eventBonus||0)+eventBonus;
         daily[day]=dayLog;
       }
+      if(Math.abs(momentumDelta)>1e-9){
+        const day=todayStr();
+        const dayLog={...(daily[day]||{})};
+        const key=momentumDelta>0?"elanBonus":"inertiaMalus";
+        dayLog[key]=(dayLog[key]||0)+momentumDelta;
+        daily[day]=dayLog;
+      }
       triggerProgressOverlay(s.totalXp,s.stats,nt,newStats,100);
-      return {...s,totalXp:nt,statXp:sx,stats:newStats,dailyExtraXp:eventBonus>0?daily:(s.dailyExtraXp||{}),lastActiveDay:todayStr()};
+      return {...s,totalXp:nt,statXp:sx,stats:newStats,dailyExtraXp:(eventBonus>0||Math.abs(momentumDelta)>1e-9)?daily:(s.dailyExtraXp||{}),lastActiveDay:todayStr()};
     });
     if(e&&!silent){
       const lbl=showStat?("+"+Math.round(amount)+" XP "+( STAT_LBL2[showStat]||showStat)):("+"+Math.round(amount)+" XP");
@@ -3357,6 +3368,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("div",{style:"display:flex;flex-direction:column;align-items:center;justify-content:center"},
               h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:#fff;line-height:0.9"},state.streak),
               h("div",{style:"font-size:11px;color:#fff;text-transform:uppercase;letter-spacing:1px;margin-top:3px"},"STREAK"),
+              elanBonusPercent(state.streak)>0&&h("div",{style:"font-size:9px;color:#4ade80;font-family:Orbitron,sans-serif;margin-top:3px"},"ÉLAN +"+elanBonusPercent(state.streak)+" %"),
+              Number(state.inertiaPercent)>0&&h("div",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;margin-top:3px"},"INERTIE −"+Number(state.inertiaPercent)+" %"),
               bonusGiven&&h("div",{style:"font-size:10px;color:#c084fc;font-family:Orbitron,sans-serif;margin-top:3px"},"+250 XP ✓")
             )
           ),
