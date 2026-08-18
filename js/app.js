@@ -818,7 +818,8 @@ function App(){
   if(legacySqTodayXp)extraXpTodayRows.push({key:"legacy_sq",label:"Quête urgente",xp:legacySqTodayXp});
   if(legacyActiveDungeonTodayXp)extraXpTodayRows.push({key:"legacy_dungeon_active",label:"Donjon",xp:legacyActiveDungeonTodayXp});
   if(legacyCompletedDungeonTodayXp)extraXpTodayRows.push({key:"legacy_dungeon_done",label:"Donjon terminé",xp:legacyCompletedDungeonTodayXp});
-  const todayXpRows=[...questXpTodayRows,...extraXpTodayRows];
+  const todayXpRows=[...questXpTodayRows,...extraXpTodayRows]
+    .sort((a,b)=>b.xp-a.xp);
 
   // 7. Quetes journalieres obligatoires toutes faites ?
   const reqDailyObjs  = objs.filter(o=>!o.optional&&o.daily);
