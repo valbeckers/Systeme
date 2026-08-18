@@ -2423,7 +2423,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const done=progress>=target;
     const over=progress>target;
     const fillStateClass=over ? " over" : (done ? " done" : (pct>0 ? " partial" : ""));
-    const unit=((progress>1||target>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[sq.unit])||sq.unit;
+    const unit=((progress>1||target>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",portion:"portions",objet:"objets",jour:"jours",contact:"contacts",action:"actions"}[sq.unit])||sq.unit;
     const progressText=fmtNum(progress)+"/"+fmtNum(target)+(sq.compactUnit?"":" ")+(unit||"");
     return h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:0"},
       QuestIcon(sq.id,sq.icon,14),
@@ -2573,7 +2573,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const tier = sq.tier || "majeure";
     const tierColor = SQ_TIER_COLOR[tier] || "#f59e0b";
 
-    const progressText = sq.progress+"/"+sq.target+(sq.compactUnit?"":" ")+sq.unit;
+    const progressText = sq.progress+"/"+sq.target+(sq.compactUnit?"":" ")+urgentUnitLabel(sq.unit,numericTarget);
     const sqFillStyle = done
       ? "width:"+pct+"%;background:linear-gradient(90deg,#991b1b,#ef4444)"
       : (pct>0
@@ -3423,7 +3423,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{style:"width:100%;display:flex;align-items:center;justify-content:center;gap:5px;padding:0"},
             h("div",{style:"display:flex;flex-direction:column;align-items:center;justify-content:center"},
               h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:#fff;line-height:0.9"},reqRemaining),
-              h("div",{style:"font-size:11px;color:#fff;text-transform:uppercase;letter-spacing:1px;margin-top:3px"},"RESTANTES")
+              h("div",{style:"font-size:11px;color:#fff;text-transform:uppercase;letter-spacing:1px;margin-top:3px"},reqRemaining===1?"RESTANTE":"RESTANTES")
             )
           )
         )
