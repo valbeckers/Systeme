@@ -3368,8 +3368,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("div",{style:"display:flex;flex-direction:column;align-items:center;justify-content:center"},
               h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:#fff;line-height:0.9"},state.streak),
               h("div",{style:"font-size:11px;color:#fff;text-transform:uppercase;letter-spacing:1px;margin-top:3px"},"STREAK"),
-              elanBonusPercent(state.streak)>0&&h("div",{style:"font-size:9px;color:#4ade80;font-family:Orbitron,sans-serif;margin-top:3px"},"ÉLAN +"+elanBonusPercent(state.streak)+" %"),
-              Number(state.inertiaPercent)>0&&h("div",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;margin-top:3px"},"INERTIE −"+Number(state.inertiaPercent)+" %"),
+              elanBonusPercent(state.streak)>0&&h("div",{style:"font-size:9px;color:#4ade80;font-family:Orbitron,sans-serif;margin-top:3px"},"ÉLAN +"+elanBonusPercent(state.streak)+"% XP"),
+              Number(state.inertiaPercent)>0&&h("div",{style:"font-size:9px;color:#ef4444;font-family:Orbitron,sans-serif;margin-top:3px"},"INERTIE −"+Number(state.inertiaPercent)+"% XP"),
               bonusGiven&&h("div",{style:"font-size:10px;color:#c084fc;font-family:Orbitron,sans-serif;margin-top:3px"},"+250 XP ✓")
             )
           ),
