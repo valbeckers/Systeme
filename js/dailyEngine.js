@@ -92,10 +92,55 @@ function nextDay(day){
   return d.toISOString().slice(0,10);
 }
 
+function previousDay(day){
+  const d=new Date(day+"T12:00:00Z");
+  d.setUTCDate(d.getUTCDate()-1);
+  return d.toISOString().slice(0,10);
+}
+
+function xpMomentumDayComplete(state,day,activeObjectivesOnDay,targetForDay){
+  const resolved=!!((state.debtResolvedDays||{})[day]);
+  if(resolved||hasValidatedDailyCompletion(state,day)) return true;
+  const log=(state.dailyLog||{})[day]||{};
+  return (activeObjectivesOnDay(day)||[]).every(obj=>(Number(log[obj.id])||0)>=targetForDay(obj,day));
+}
+
+// La première version initialisait par erreur le marqueur sur la journée en
+// cours, avant sa clôture. Cette migration reconstruit donc l'Inertie à partir
+// des journées réellement terminées, en remontant depuis hier.
+function migrateXpMomentumV2(state,today,{activeObjectivesOnDay,targetForDay}){
+  let day=previousDay(today);
+  let missed=0;
+  let pendingDay=null;
+
+  for(let guard=0;guard<400;guard++,day=previousDay(day)){
+    const debt=state.questDebt;
+    const resolved=!!((state.debtResolvedDays||{})[day]);
+    const pending=!!(debt&&debt.sourceDay===day&&debt.status==="active"&&!resolved);
+    if(pending){
+      pendingDay=day;
+      continue;
+    }
+    if(xpMomentumDayComplete(state,day,activeObjectivesOnDay,targetForDay)) break;
+    missed+=1;
+  }
+
+  return {
+    ...state,
+    xpMomentumVersion:2,
+    xpMomentumLastProcessedDay:pendingDay?previousDay(pendingDay):previousDay(today),
+    inertiaMissedDays:missed,
+    inertiaPercent:Math.min(5,Math.max(0,missed-1))
+  };
+}
+
 // Finalise les journées dans l'ordre. Une dette encore active suspend la
 // décision : elle ne crée aucun jour manqué avant son échéance.
 export function reconcileXpMomentumState(state,today,{activeObjectivesOnDay,targetForDay}){
   if(!state||!today) return state;
+  if((Number(state.xpMomentumVersion)||1)<2){
+    return migrateXpMomentumV2(state,today,{activeObjectivesOnDay,targetForDay});
+  }
   let last=state.xpMomentumLastProcessedDay||today;
   let missed=Math.max(0,Math.floor(Number(state.inertiaMissedDays)||0));
   let inertia=Math.min(5,Math.max(0,Number(state.inertiaPercent)||0));
@@ -107,9 +152,7 @@ export function reconcileXpMomentumState(state,today,{activeObjectivesOnDay,targ
     const resolved=!!((state.debtResolvedDays||{})[day]);
     if(debt&&debt.sourceDay===day&&debt.status==="active"&&!resolved) break;
 
-    const log=(state.dailyLog||{})[day]||{};
-    const complete=resolved || hasValidatedDailyCompletion(state,day) ||
-      (activeObjectivesOnDay(day)||[]).every(obj=>(Number(log[obj.id])||0)>=targetForDay(obj,day));
+    const complete=xpMomentumDayComplete(state,day,activeObjectivesOnDay,targetForDay);
 
     if(complete){
       missed=0;
@@ -123,7 +166,7 @@ export function reconcileXpMomentumState(state,today,{activeObjectivesOnDay,targ
   }
 
   if(!changed) return state;
-  return {...state,xpMomentumLastProcessedDay:last,inertiaMissedDays:missed,inertiaPercent:inertia};
+  return {...state,xpMomentumVersion:2,xpMomentumLastProcessedDay:last,inertiaMissedDays:missed,inertiaPercent:inertia};
 }
 
 export function urgentQuestCompletedOnDay(specialQuests,day,toDayString){

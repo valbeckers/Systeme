@@ -260,6 +260,7 @@ export function cleanSystemState(raw){
     lastStreakDay:data.lastStreakDay||null,
     streakMilestones:Array.isArray(data.streakMilestones)?data.streakMilestones:[],
     xpMomentumLastProcessedDay:data.xpMomentumLastProcessedDay||todayStr(),
+    xpMomentumVersion:Math.max(1,Math.floor(Number(data.xpMomentumVersion)||1)),
     inertiaMissedDays:Math.max(0,Math.floor(Number(data.inertiaMissedDays)||0)),
     inertiaPercent:Math.min(5,Math.max(0,Number(data.inertiaPercent)||0)),
     prestige:Number(data.prestige)||0,
@@ -322,12 +323,6 @@ export function cleanSystemState(raw){
     debtUseDay:data.debtUseDay||null,
     debtStreakRollMilestones:Array.isArray(data.debtStreakRollMilestones)?data.debtStreakRollMilestones:[],
     debtResolvedDays:data.debtResolvedDays||{},
-    debtResolvedQuestIdsByDay:Object.fromEntries(
-      Object.entries(data.debtResolvedQuestIdsByDay||{}).map(([day,ids])=>[
-        day,
-        Array.from(new Set((Array.isArray(ids)?ids:[]).map(String).filter(id=>dailyIds.has(id))))
-      ]).filter(([,ids])=>ids.length)
-    ),
     regressionLog:cleanRegressionLog(data.regressionLog),
     enduranceChoiceByDay:cleanEnduranceChoiceByDay(data.enduranceChoiceByDay),
     exerciseRotationByDay:cleanExerciseRotationByDay(data.exerciseRotationByDay),

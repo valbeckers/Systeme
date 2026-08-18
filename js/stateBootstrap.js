@@ -4,10 +4,10 @@
 // Il conserve également les migrations ponctuelles encore nécessaires.
 
 import { DEFS, SP } from "./questDefs.js";
-import { next7AM, todayStr } from "./dayCycle.js";
+import { next7AM, todayStr, addDaysStr } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
 import { loadStoredState } from "./storage.js";
-import { cleanSystemState } from "./stateSanitizer.js?v=20260817-xp-momentum-v1";
+import { cleanSystemState } from "./stateSanitizer.js?v=20260818-xp-momentum-v2";
 import { normalizeActiveBreach } from "./breachEngine.js";
 
 const loadState = () => loadStoredState(cleanSystemState);
@@ -16,7 +16,7 @@ const loadState = () => loadStoredState(cleanSystemState);
 
 const IMPORTED = {
   totalXp:45775, streak:6, lastActiveDay:"2026-05-11",
-  xpMomentumLastProcessedDay:todayStr(), inertiaMissedDays:0, inertiaPercent:0,
+  xpMomentumVersion:2, xpMomentumLastProcessedDay:addDaysStr(todayStr(),-1), inertiaMissedDays:0, inertiaPercent:0,
   streakBonusDay:"2026-05-10", weeklyBonusWk:"2026-W15", lastStreakDay:"2026-05-10",
   streakMilestones:[7,14],
   prestige:0,

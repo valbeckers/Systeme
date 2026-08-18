@@ -20,7 +20,7 @@ import {
   reconcileXpMomentumState,
   urgentQuestCompletedOnDay,
   applyDailyStreakRewardState
-} from "./dailyEngine.js?v=20260817-xp-momentum-v1";
+} from "./dailyEngine.js?v=20260818-xp-momentum-v2";
 import { elanBonusPercent, xpMomentumAdjustment } from "./xpMomentum.js?v=20260817-xp-momentum-v1";
 import { BREACH_POOL } from "./breachDefs.js?v=20260815-rupture-card-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20260805-master-contract-random-01";
@@ -85,8 +85,8 @@ import {
 } from "./itemImages.js?v=20260808-items-normalized-v1";
 import { UiIcon } from "./uiIcons.js?v=20260813-countdown-beige-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260817-xp-momentum-v1";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260817-xp-momentum-v1";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260818-xp-momentum-v2";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260818-xp-momentum-v2";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
