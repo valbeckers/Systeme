@@ -811,13 +811,33 @@ function App(){
       icon:obj.exerciseIcon||obj.icon
     };
   }).filter(Boolean);
-  const extraXpTodayRows=Object.entries(extraToday).map(([key,value])=>({
-    key:"extra_"+key,label:extraXpLabels[key]||key,xp:Number(value)||0
-  })).filter(row=>Math.abs(row.xp)>1e-9);
+  const urgentQuestToday=[...(state.specialQuests||[])]
+    .reverse()
+    .find(q=>sameDayTs(q.completedAt))||null;
+  const completedDungeonToday=[...(state.dungeonLog||[])]
+    .reverse()
+    .find(entry=>sameDayTs(entry.completedAt))||null;
+  const dungeonSourceToday=completedDungeonToday||state.activeDungeon||null;
+  const dungeonDefToday=dungeonSourceToday
+    ?DUNGEONS.find(d=>d.id===dungeonSourceToday.id)
+    :null;
+  const extraXpTodayRows=Object.entries(extraToday).map(([key,value])=>{
+    const row={key:"extra_"+key,label:extraXpLabels[key]||key,xp:Number(value)||0};
+    if(key==="sq"&&urgentQuestToday){
+      row.iconId=urgentQuestToday.id;
+      row.icon=urgentQuestToday.icon;
+    }
+    if(key==="dungeon"&&dungeonSourceToday){
+      row.iconKind="dungeon";
+      row.iconId=dungeonSourceToday.id;
+      row.icon=dungeonDefToday?.icon||dungeonSourceToday.icon;
+    }
+    return row;
+  }).filter(row=>Math.abs(row.xp)>1e-9);
   if(legacyStreakTodayXp)extraXpTodayRows.push({key:"legacy_streak",label:"Bonus de streak",xp:legacyStreakTodayXp});
-  if(legacySqTodayXp)extraXpTodayRows.push({key:"legacy_sq",label:"Quête urgente",xp:legacySqTodayXp});
-  if(legacyActiveDungeonTodayXp)extraXpTodayRows.push({key:"legacy_dungeon_active",label:"Donjon",xp:legacyActiveDungeonTodayXp});
-  if(legacyCompletedDungeonTodayXp)extraXpTodayRows.push({key:"legacy_dungeon_done",label:"Donjon terminé",xp:legacyCompletedDungeonTodayXp});
+  if(legacySqTodayXp)extraXpTodayRows.push({key:"legacy_sq",label:"Quête urgente",xp:legacySqTodayXp,iconId:urgentQuestToday?.id,icon:urgentQuestToday?.icon});
+  if(legacyActiveDungeonTodayXp)extraXpTodayRows.push({key:"legacy_dungeon_active",label:"Donjon",xp:legacyActiveDungeonTodayXp,iconKind:"dungeon",iconId:dungeonSourceToday?.id,icon:dungeonDefToday?.icon||dungeonSourceToday?.icon});
+  if(legacyCompletedDungeonTodayXp)extraXpTodayRows.push({key:"legacy_dungeon_done",label:"Donjon terminé",xp:legacyCompletedDungeonTodayXp,iconKind:"dungeon",iconId:dungeonSourceToday?.id,icon:dungeonDefToday?.icon||dungeonSourceToday?.icon});
   const todayXpRows=[...questXpTodayRows,...extraXpTodayRows]
     .sort((a,b)=>b.xp-a.xp);
 
@@ -3260,7 +3280,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               key:row.key+"_"+index,
               style:"display:flex;align-items:center;gap:8px;padding:10px 0;border-top:1px solid rgba(255,255,255,.06)"
             },
-              row.iconId?QuestIcon(row.iconId,row.icon,14):h("span",{style:"width:18px;text-align:center;color:var(--rc)"},"•"),
+              row.iconId
+                ?(row.iconKind==="dungeon"
+                    ?h(UiIcon,{iconKey:"dungeon."+row.iconId,fallback:row.icon,slotSize:18,glyphSize:14})
+                    :QuestIcon(row.iconId,row.icon,14))
+                :h("span",{style:"width:18px;text-align:center;color:var(--rc)"},"•"),
               h("span",{style:"flex:1;min-width:0;font-size:12px;color:var(--tx);line-height:1.3"},row.label),
               h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;white-space:nowrap;color:"+(row.xp<0?"#ef4444":row.xp>0?"#4ade80":"var(--td)")},(row.xp>0?"+":"")+fmtNum(row.xp)+" XP")
             )))
