@@ -1,5 +1,6 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
 import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260810-endurance-xp-v2";
+import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20260818-selectable-bonus-v1";
 import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js";
 import {
   isDebtEligibleQuest,
@@ -34,7 +35,7 @@ import {
   expireActiveDungeonState,
   canValidateDungeonRoom
 } from "./dungeonEngine.js?v=20260805-master-contract-random-01";
-import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260813-breach-loot-wording-v1";
+import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260818-selectable-bonus-v1";
 import {
   incrementLootState,
   pickRandomBreachLoot,
@@ -85,8 +86,8 @@ import {
 } from "./itemImages.js?v=20260808-items-normalized-v1";
 import { UiIcon } from "./uiIcons.js?v=20260813-countdown-beige-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260818-xp-momentum-v2";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260818-xp-momentum-v2";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260818-selectable-bonus-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260818-selectable-bonus-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -99,7 +100,7 @@ import {
   questRecordUnit,
   recordRotationIdForDay,
   buildRecordOptions
-} from "./records.js?v=20260807-marche-record-hammer";
+} from "./records.js?v=20260818-selectable-bonus-v1";
 import {
   buildBreachRuptureBoss,
   normalizeActiveBreach,
@@ -548,6 +549,7 @@ function App(){
   const [mobOpen,setMobOpen] = useState(false);
   const [floats,setFloats] = useState([]);
   const [showSet,setShowSet]       = useState(false);
+  const [bonusPickerOpen,setBonusPickerOpen] = useState(false);
   const [confirmReset,setConfirmReset] = useState(false);
   const [wkOff,setWkOff]  = useState(0);
   const inputs = useRef({});
@@ -682,52 +684,24 @@ function App(){
     );
   },[wk,state.recordChallenge?.week]);
 
-  // Une seule sortie bonus par jour : Running, Rando ou Marche.
-  const runQuestObj = objs.find(o=>o.id==="run") || DEFS.find(o=>o.id==="run");
-  const hikeQuestObj = objs.find(o=>o.id==="walk") || DEFS.find(o=>o.id==="walk");
-  const marchQuestObj = objs.find(o=>o.id==="march") || DEFS.find(o=>o.id==="march");
-  const savedEnduranceChoice = (state.enduranceChoiceByDay||{})[today];
-  const enduranceProgress = [
-    ["run",Number(tLog.run)||0],
-    ["walk",Number(tLog.walk)||0],
-    ["march",Number(tLog.march)||0]
-  ];
-  const progressedEndurance = enduranceProgress.filter(([,value])=>value>0).sort((a,b)=>b[1]-a[1]);
-  const inferredEnduranceChoice = progressedEndurance.length ? progressedEndurance[0][0] : null;
-  const enduranceChoiceId = ["run","walk","march"].includes(savedEnduranceChoice)
-    ? savedEnduranceChoice
-    : inferredEnduranceChoice;
-  const selectedEnduranceQuest = enduranceChoiceId==="run"
-    ? runQuestObj
-    : enduranceChoiceId==="walk"
-      ? hikeQuestObj
-      : enduranceChoiceId==="march"
-        ? marchQuestObj
-        : null;
-  const enduranceChoicePlaceholder = {
-    id:"endurance_choice",name:"Endurance",icon:"🏃🏻 / 🥾 / 🚶🏻",unit:"choix",
-    daily:true,weekly:false,optional:true,stat:"Endurance",base:1,isEnduranceChoice:true
-  };
-
-  function chooseEnduranceQuest(id){
-    if(!["run","walk","march"].includes(id)) return;
-    setState(s=>{
-      const choices={...(s.enduranceChoiceByDay||{})};
-      if(["run","walk","march"].includes(choices[today])) return s;
-      const row=((s.dailyLog||{})[today])||{};
-      const progressed=[
-        ["run",Number(row.run)||0],
-        ["walk",Number(row.walk)||0],
-        ["march",Number(row.march)||0]
-      ].filter(([,value])=>value>0).sort((a,b)=>b[1]-a[1]);
-      choices[today]=(progressed[0]&&progressed[0][0])||id;
-      return {...s,enduranceChoiceByDay:choices,lastActiveDay:todayStr()};
-    });
+  function dailyBonusQuestObjects(){
+    const ids=(state.selectedBonusQuestIdsByDay&&state.selectedBonusQuestIdsByDay[today])||[];
+    return sortStat(ids.map(id=>BONUS_QUEST_BY_ID[id]).filter(Boolean));
   }
 
-  function dailyBonusQuestObjects(){
-    const others=objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden&&!["run","walk","march"].includes(o.id));
-    return sortStat([...others,selectedEnduranceQuest||enduranceChoicePlaceholder]);
+  function toggleBonusQuest(id){
+    if(!BONUS_QUEST_BY_ID[id]) return;
+    setState(s=>{
+      const byDay={...(s.selectedBonusQuestIdsByDay||{})};
+      const ids=[...(byDay[today]||[])];
+      const index=ids.indexOf(id);
+      if(index>=0){
+        if(Number((((s.dailyLog||{})[today]||{})[id])||0)>0) return s;
+        ids.splice(index,1);
+      }else ids.push(id);
+      byDay[today]=ids;
+      return {...s,selectedBonusQuestIdsByDay:byDay,lastActiveDay:todayStr()};
+    });
   }
 
   const effectiveXp = state.totalXp;
@@ -801,7 +775,7 @@ function App(){
     .reduce((s,e)=>s+(Number(e.xp)||0),0);
 
   const todayXp = Object.entries(tLog).reduce((s,[id,a])=>{
-    const o=objs.find(x=>x.id===id); if(!o) return s;
+    const o=BONUS_QUEST_BY_ID[id]||objs.find(x=>x.id===id); if(!o) return s;
     const b = o.validateAt != null
       ? Number(o.validateAt)
       : (Number.isFinite(Number(o.target)) ? Number(o.target) : (o.base && !RANK_BASES[o.id] ? o.base : getRankBase(o.id, ri, prestige, state.stats)));
@@ -845,7 +819,7 @@ function App(){
   };
 
   function getEffectiveTarget(objId, isWeekly=false){
-    const obj = objs.find(o=>o.id===objId);
+    const obj = BONUS_QUEST_BY_ID[objId]||objs.find(o=>o.id===objId);
     if(obj && obj.validateAt != null) return obj.validateAt;
     if(obj && Number.isFinite(Number(obj.target))) return Number(obj.target);
     return getRankBase(objId, ri, prestige, state.stats);
@@ -865,11 +839,11 @@ function App(){
   );
 
   const bonusQuestObjsForCompletion = dailyBonusQuestObjects();
-  const allBonusDone = areBonusQuestsComplete(
-    bonusQuestObjsForCompletion,
-    tLog,
-    obj=>getEffectiveTarget(obj.id)
-  );
+  const completedBonusCount = bonusQuestObjsForCompletion.filter(obj=>{
+    const value=Number(tLog[obj.id])||0;
+    return obj.binary ? value>=1 : value>=getEffectiveTarget(obj.id);
+  }).length;
+  const allBonusDone = completedBonusCount>=BONUS_QUEST_GOAL;
 
   // 8. Streak : on remonte à partir d'hier (aujourd'hui peut être incomplet sans casser le streak)
   const computedStreak = computeQuestStreak(state,today,{
@@ -1313,20 +1287,20 @@ function App(){
   useEffect(()=>{
     const wasDone=bonusCompletionSeenRef.current;
     bonusCompletionSeenRef.current=allBonusDone;
-    if(!allBonusDone || state.bonusCompletionAnimDay===today) return;
+    if(!allBonusDone || state.bonusFiveCompletionDay===today) return;
 
     if(wasDone){
-      setState(s=>s.bonusCompletionAnimDay===today?s:{...s,bonusCompletionAnimDay:today});
+      setState(s=>s.bonusFiveCompletionDay===today?s:{...s,bonusFiveCompletionDay:today});
       return;
     }
 
-    setState(s=>s.bonusCompletionAnimDay===today?s:{...s,bonusCompletionAnimDay:today});
+    setState(s=>s.bonusFiveCompletionDay===today?s:{...s,bonusFiveCompletionDay:today});
     setCompletionQueue(q=>[...q,{
       type:"bonus",
       text:"Toutes les quêtes bonus ont été complétées"
     }]);
     tryRareDungeonKeyDrop();
-  },[allBonusDone,today,state.bonusCompletionAnimDay]);
+  },[allBonusDone,today,state.bonusFiveCompletionDay]);
 
   // Animation de journée complète : après les animations de groupes, avant les objets.
   useEffect(()=>{
@@ -1335,7 +1309,7 @@ function App(){
     if(!dungeonLootConditionsMet || state.allQuestsCompletionAnimDay===today) return;
     // Laisse d’abord s’enregistrer les animations Journalières/Bonus du même rendu.
     if(allDailyDone && state.dailyCompletionAnimDay!==today) return;
-    if(allBonusDone && state.bonusCompletionAnimDay!==today) return;
+    if(allBonusDone && state.bonusFiveCompletionDay!==today) return;
 
     if(wasDone){
       setState(s=>s.allQuestsCompletionAnimDay===today?s:{...s,allQuestsCompletionAnimDay:today});
@@ -1347,7 +1321,7 @@ function App(){
       type:"all",
       text:"L'ensemble des quêtes disponibles a été complété."
     }]);
-  },[dungeonLootConditionsMet,allDailyDone,allBonusDone,today,state.dailyCompletionAnimDay,state.bonusCompletionAnimDay,state.allQuestsCompletionAnimDay]);
+  },[dungeonLootConditionsMet,allDailyDone,allBonusDone,today,state.dailyCompletionAnimDay,state.bonusFiveCompletionDay,state.allQuestsCompletionAnimDay]);
 
   // Bonus streak + increment streak au moment ou toutes les quetes sont faites
   useEffect(()=>{
@@ -3262,8 +3236,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       dailyObjs.length>0 && remainingDaily.length===0
         ? {key:"daily",text:"Toutes les quêtes journalières ont été complétées.",color:"#4ade80"}
         : null,
-      bonusObjs.length>0 && remainingBonus.length===0
-        ? {key:"bonus",text:"Toutes les quêtes bonus ont été complétées.",color:BONUS_BADGE_COLOR}
+      allBonusDone
+        ? {key:"bonus",text:"5 quêtes bonus ont été complétées.",color:BONUS_BADGE_COLOR}
         : null,
       completedSq
         ? {
@@ -3420,6 +3394,39 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
   // ─── ONGLET QUETES ────────────────────────────────────────────────────
 
+  function BonusQuestPicker(){
+    if(!bonusPickerOpen)return null;
+    const selected=(state.selectedBonusQuestIdsByDay&&state.selectedBonusQuestIdsByDay[today])||[];
+    const groups=STATS.map(stat=>({stat,items:BONUS_QUESTS.filter(q=>q.category===stat)})).filter(g=>g.items.length);
+    return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setBonusPickerOpen(false)}},
+      h("div",{class:"modal",style:"max-width:440px;width:calc(100% - 24px);max-height:88vh;overflow:auto"},
+        h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px"},
+          h("div",{class:"mtitle",style:"margin:0"},"CHOISIR LES QUÊTES BONUS"),
+          h("button",{onClick:()=>setBonusPickerOpen(false),style:"border:0;background:transparent;color:#fff;font-size:22px"},"×")
+        ),
+        h("div",{style:"font-size:10px;color:var(--td);line-height:1.5;margin-bottom:14px"},"Sélection quotidienne libre. Une quête commencée reste sélectionnée jusqu’au reset."),
+        groups.map(group=>h("div",{key:group.stat,style:"margin-bottom:14px"},
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1px;color:"+(STAT_COLOR[group.stat]||"var(--rc)")+";margin-bottom:7px;text-transform:uppercase"},STAT_LBL[group.stat]||group.stat),
+          group.items.map(obj=>{
+            const active=selected.includes(obj.id);
+            const progress=Number(tLog[obj.id])||0;
+            const locked=active&&progress>0;
+            const reward=obj.binary
+              ? obj.binaryXp+" XP"
+              : obj.xpPer+" XP/"+obj.unit+(obj.stat2?" + "+obj.xpPer2+" XP "+(STAT_LBL[obj.stat2]||obj.stat2)+"/"+obj.unit:"");
+            return h("button",{key:obj.id,onClick:()=>toggleBonusQuest(obj.id),disabled:locked,
+              style:"width:100%;display:flex;align-items:center;gap:9px;text-align:left;padding:10px;margin-bottom:7px;border-radius:9px;border:1px solid "+(active?(STAT_COLOR[group.stat]||"#a855f7"):"rgba(255,255,255,.09)")+";background:"+(active?"rgba(168,85,247,.09)":"rgba(255,255,255,.025)")+";color:var(--tx);opacity:"+(locked?.8:1)},
+              QuestIcon(obj.iconKey||obj.id,obj.icon,16),
+              h("span",{style:"flex:1;min-width:0"},h("span",{style:"display:block;font-size:12px;font-weight:700"},obj.name),h("span",{style:"display:block;font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;margin-top:2px"},reward)),
+              h("span",{style:"color:"+(active?"#4ade80":"var(--td)")+";font-size:15px"},locked?"🔒":active?"✓":"+")
+            );
+          })
+        )),
+        h("button",{class:"mbtn mprim",style:"width:100%;margin-top:2px",onClick:()=>setBonusPickerOpen(false)},"Terminer")
+      )
+    );
+  }
+
   function Quests(){
     const reqBase=sortStat(objs.filter(o=>o.daily&&!o.optional));
     const bonBase=dailyBonusQuestObjects();
@@ -3445,8 +3452,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
     const reqDone=reqBase.filter(isQuestDone).length;
     const reqTotal=reqBase.length;
-    const bonDone=bonBase.filter(isQuestDone).length;
-    const bonTotal=bonBase.length;
+    const bonDone=Math.min(BONUS_QUEST_GOAL,bonBase.filter(isQuestDone).length);
+    const bonTotal=BONUS_QUEST_GOAL;
     const wkDone=wkBase.filter(isQuestDone).length;
     const wkTotal=wkBase.length;
     const regressionDoneToday=!!((state.regressionLog||{})[today]);
@@ -3481,9 +3488,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h(SectionHeader,{title:"Quêtes hebdomadaires",done:wkDone,total:wkTotal}),
         wkq.map(o=>h(QI,{key:o.id,obj:o}))
       ),
-      bon.length>0&&h("div",{class:"card"},
+      h("div",{class:"card"},
         h(SectionHeader,{title:"Quêtes bonus",done:bonDone,total:bonTotal}),
-        bon.map(o=>o.isEnduranceChoice?h(EnduranceChoiceItem,{key:o.id,mode:"quest"}):h(QI,{key:o.id,obj:o}))
+        h("button",{class:"mbtn mprim",style:"width:100%;margin-bottom:"+(bon.length?"12px":"0"),onClick:()=>setBonusPickerOpen(true)},"Choisir mes quêtes bonus"),
+        bon.length?bon.map(o=>h(QI,{key:o.id,obj:o})):h("div",{style:"text-align:center;color:var(--td);font-size:11px;padding:10px 0 2px"},"Aucune quête bonus sélectionnée.")
       ),
       !activeDungeon&&h(DungeonChoiceCard,null),
       !activeBreach&&h(BreachInactiveCard,null),
@@ -4015,7 +4023,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
   function recordOptions(){
     return buildRecordOptions({
-      questDefs:DEFS,
+      questDefs:[...DEFS.filter(q=>!q.optional),...BONUS_QUESTS],
       dailyLog:state.dailyLog,
       exerciseRotationByDay:state.exerciseRotationByDay
     });
@@ -4026,7 +4034,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     if(type==="recordHammer")options=recordOptions().map(x=>({id:x.obj.id,label:x.obj.name+" — "+fmtNum(x.best)+" "+x.obj.unit,obj:x.obj,best:x.best}));
     if(type==="debtAcknowledgement")options=objs.filter(o=>o.daily&&!o.optional&&isDebtEligibleQuest(o)&&(Number(tLog[o.id])||0)<getEffectiveTarget(o.id)).map(o=>({id:o.id,label:o.name+" — "+fmtNum(getEffectiveTarget(o.id)-(Number(tLog[o.id])||0))+" "+o.unit+" manquants",obj:o}));
     if(type==="recoveryOintment"){
-      options=objs.filter(o=>o.daily&&(Number(tLog[o.id])||0)<getEffectiveTarget(o.id)).map(o=>({id:"regular:"+o.id,label:o.name,obj:o,questKind:"regular"}));
+      options=[...objs.filter(o=>o.daily&&!o.optional),...dailyBonusQuestObjects()].filter(o=>(Number(tLog[o.id])||0)<getEffectiveTarget(o.id)).map(o=>({id:"regular:"+o.id,label:o.name,obj:o,questKind:"regular"}));
     }
     if(type==="invisibilityCape"||type==="cape"){const d=activeDungeon;options=d?d.rooms.slice(0,-1).map((r,i)=>!(d.completedRooms||[]).includes(i)&&canValidateDungeonRoom(d,d,i)?{id:i,label:(i+1)+". "+r.name}:null).filter(Boolean):[];}
     return h("div",{class:"modal-ov"},h("div",{class:"modal",style:"max-width:410px;width:calc(100% - 28px)"},h("div",{class:"mtitle"},type==="recordHammer"?"CHOISIR UN RECORD":type==="debtAcknowledgement"?"CRÉER UNE DETTE":type==="recoveryOintment"?"CHOISIR UNE QUÊTE":"PASSER UNE SALLE"),h("div",{style:"display:flex;flex-direction:column;gap:8px;margin-top:12px"},options.map(x=>h("button",{key:x.id,onClick:()=>{
@@ -4177,7 +4185,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function History(){
     return h(HistoryTab,{
       state,
-      objs,
+      objs:objs.filter(o=>!o.optional),
       baseObjs,
       today,
       ri,
@@ -4195,7 +4203,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
   function Settings(){
     if(!showSet)return null;
-    const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional)),...sortStat(objs.filter(o=>o.weekly)),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden))];
+    const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional)),...sortStat(objs.filter(o=>o.weekly))];
     function applyEdit(){
       setState(s=>{
         let xpD=0;
@@ -5422,8 +5430,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
     const required = objs.filter(o=>o.daily&&!o.optional);
     const weeklyCodex = objs.filter(o=>o.weekly);
-    const bonus = objs.filter(o=>o.optional&&!o.weekly&&!o.bonusHidden);
-    const hiddenBonus = objs.filter(o=>o.optional&&!o.weekly&&o.bonusHidden);
+    const bonus = BONUS_QUESTS;
+    const hiddenBonus = [];
     const specialList = STATS.flatMap(stat=>(SP[stat]||[]).map(q=>({...q,stat:q.stat||stat})));
     const breachList=BREACH_POOL.map(q=>({...q,isBreach:true}));
 
@@ -5532,6 +5540,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
       ),
       h(Settings,null),
+      h(BonusQuestPicker,null),
       h(RankUp,null),
       h(RankLootChoiceModal,null),
       h(LevelUp,null),

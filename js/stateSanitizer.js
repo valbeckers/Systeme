@@ -1,5 +1,6 @@
 import { STATS } from "./config.js";
 import { DEFS, SP } from "./questDefs.js";
+import { BONUS_QUESTS } from "./bonusQuestDefs.js";
 import { DUNGEONS } from "./dungeonDefs.js";
 import { todayStr, next7AM } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
@@ -201,6 +202,23 @@ function cleanEnduranceChoiceByDay(obj){
   return out;
 }
 
+function cleanSelectedBonusQuestIdsByDay(obj,dailyLog){
+  const allowed=new Set(BONUS_QUESTS.map(q=>q.id));
+  const out={};
+  Object.entries(obj||{}).forEach(([day,ids])=>{
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(day)||!Array.isArray(ids))return;
+    const clean=[...new Set(ids.filter(id=>allowed.has(id)))];
+    if(clean.length)out[day]=clean;
+  });
+  // Migration douce : toute ancienne quête bonus réellement renseignée reste
+  // sélectionnée sur son jour, sans inventer de sélection vide.
+  Object.entries(dailyLog||{}).forEach(([day,row])=>{
+    const progressed=Object.keys(row||{}).filter(id=>allowed.has(id)&&Number(row[id])>0);
+    if(progressed.length)out[day]=[...new Set([...(out[day]||[]),...progressed])];
+  });
+  return out;
+}
+
 function cleanRegressionLog(obj){
   const out={};
   Object.entries(obj||{}).forEach(([day,activated])=>{
@@ -229,7 +247,7 @@ function cleanRegressionLog(obj){
 
 export function cleanSystemState(raw){
   const data=migrateRuntimeQuestDefinitions(migrateMergedEspritState({...((raw&&typeof raw==="object")?raw:{})}));
-  const dailyIds=new Set(DEFS.filter(o=>o.daily).map(o=>o.id));
+  const dailyIds=new Set([...DEFS.filter(o=>o.daily).map(o=>o.id),...BONUS_QUESTS.map(o=>o.id)]);
   const weeklyIds=new Set(DEFS.filter(o=>o.weekly).map(o=>o.id));
   const spMap=activeSpecialQuestMap();
   const statPack=cleanStatLevelsFromXp(data.statXp,data.stats);
@@ -325,9 +343,11 @@ export function cleanSystemState(raw){
     debtResolvedDays:data.debtResolvedDays||{},
     regressionLog:cleanRegressionLog(data.regressionLog),
     enduranceChoiceByDay:cleanEnduranceChoiceByDay(data.enduranceChoiceByDay),
+    selectedBonusQuestIdsByDay:cleanSelectedBonusQuestIdsByDay(data.selectedBonusQuestIdsByDay,data.dailyLog),
     exerciseRotationByDay:cleanExerciseRotationByDay(data.exerciseRotationByDay),
     dailyCompletionAnimDay:data.dailyCompletionAnimDay||null,
     bonusCompletionAnimDay:data.bonusCompletionAnimDay||null,
+    bonusFiveCompletionDay:data.bonusFiveCompletionDay||null,
     completedSqLog,
     sqDrawLog,
     sqStatCycle

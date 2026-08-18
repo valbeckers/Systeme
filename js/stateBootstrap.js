@@ -7,7 +7,7 @@ import { DEFS, SP } from "./questDefs.js";
 import { next7AM, todayStr, addDaysStr } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
 import { loadStoredState } from "./storage.js";
-import { cleanSystemState } from "./stateSanitizer.js?v=20260818-xp-momentum-v2";
+import { cleanSystemState } from "./stateSanitizer.js?v=20260818-selectable-bonus-v1";
 import { normalizeActiveBreach } from "./breachEngine.js";
 
 const loadState = () => loadStoredState(cleanSystemState);
@@ -80,9 +80,11 @@ const IMPORTED = {
   sqStatCycle:[],
   regressionLog:{},
   enduranceChoiceByDay:{},
+  selectedBonusQuestIdsByDay:{},
   exerciseRotationByDay:{},
   dailyCompletionAnimDay:null,
   bonusCompletionAnimDay:null,
+  bonusFiveCompletionDay:null,
   masterContractArmed:false,
   recordChallenge:null,
   urgentCompassStat:null,
@@ -173,6 +175,8 @@ export function buildInitialState(){
     dailyExtraXp:saved.dailyExtraXp||IMPORTED.dailyExtraXp||{},
     regressionLog:saved.regressionLog||{},
     enduranceChoiceByDay:saved.enduranceChoiceByDay||{},
+    selectedBonusQuestIdsByDay:saved.selectedBonusQuestIdsByDay||{},
+    bonusFiveCompletionDay:saved.bonusFiveCompletionDay||null,
     exerciseRotationByDay:saved.exerciseRotationByDay||{},
     completedSqLog:saved.completedSqLog||[],
     sqDrawLog:saved.sqDrawLog||[],

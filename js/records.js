@@ -58,7 +58,7 @@ export function buildRecordOptions({questDefs,dailyLog,exerciseRotationByDay}){
   }).filter(Boolean);
 
   const standardOptions=(questDefs||[])
-    .filter(quest=>!quest.binary&&!quest.weekly&&!exerciseIds.has(quest.id))
+    .filter(quest=>(!quest.binary||quest.selectableBonus)&&!quest.weekly&&!exerciseIds.has(quest.id))
     .map(quest=>{
       let best=0;
       Object.values(dailyLog||{}).forEach(log=>{
@@ -68,7 +68,7 @@ export function buildRecordOptions({questDefs,dailyLog,exerciseRotationByDay}){
       // Marche est une nouvelle quête : tant qu'aucun record réel n'existe,
       // sa valeur de référence est son objectif de base afin qu'elle soit
       // immédiatement disponible dans la Marque du dépassement.
-      if(quest.id==="march" && best<=0){
+      if((quest.id==="march" || quest.selectableBonus) && best<=0){
         const baseline=Math.max(0,Number(quest.base)||0);
         return baseline>0?{obj:quest,best:baseline}:null;
       }
