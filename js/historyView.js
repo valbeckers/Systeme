@@ -165,11 +165,11 @@ export function HistoryTab({
         h("div",null,"Quête"),
         weekLbls.map((dayLabel,i)=>h("div",{key:"h"+i,style:"text-align:center;color:#fff"},dayLabel))
       ),
-      h("div",{style:"display:flex;flex-direction:column;gap:7px"},
+      h("div",{style:"display:flex;flex-direction:column;gap:0"},
         ordered.map(obj=>{
           const marks=weekDays.map(d=>dayMarkFor(obj,d));
           const displayName=exerciseFamilyLabel(obj.id,obj.name);
-          return h("div",{key:obj.id,style:"display:grid;grid-template-columns:minmax(0,1fr) repeat(7,22px);gap:5px;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,0.04)"},
+          return h("div",{key:obj.id,style:"display:grid;grid-template-columns:minmax(0,1fr) repeat(7,22px);gap:5px;align-items:center;padding:9.5px 0;border-top:1px solid rgba(255,255,255,0.04)"},
             h("div",{style:"display:flex;align-items:center;gap:6px;min-width:0;color:var(--tx);font-size:12px"},
               QuestIcon(obj.id,obj.icon,14),
               h("span",{style:"overflow:hidden;text-overflow:ellipsis;white-space:nowrap"},displayName)
@@ -177,7 +177,7 @@ export function HistoryTab({
             marks.map((mark,i)=>h("div",{key:obj.id+"_d"+i,style:"text-align:center;font-family:Orbitron,sans-serif;font-size:12px;font-weight:700;color:"+mark.color+";opacity:"+mark.opacity},mark.txt))
           );
         }),
-        h("div",{key:REGRESSION_DEF.id,style:"display:grid;grid-template-columns:minmax(0,1fr) repeat(7,22px);gap:5px;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,0.04)"},
+        h("div",{key:REGRESSION_DEF.id,style:"display:grid;grid-template-columns:minmax(0,1fr) repeat(7,22px);gap:5px;align-items:center;padding:9.5px 0;border-top:1px solid rgba(255,255,255,0.04)"},
           h("div",{style:"display:flex;align-items:center;min-width:0;color:var(--tx);font-size:12px"},
             QuestIcon(REGRESSION_DEF.id,REGRESSION_DEF.icon,14)
           ),
