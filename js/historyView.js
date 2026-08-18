@@ -79,6 +79,7 @@ export function HistoryTab({
 
   const exerciseHistoryDefs=RECORD_EXERCISE_DEFS;
   const rotatingSourceIds=new Set(["push","negative_pullups","abs","squats","calves"]);
+  const hiddenFromRecordsAndTotals=new Set(["water","sleep"]);
   function dailyQuestForHistoryDay(obj,day){
     if(!isExerciseFamilyQuestId(obj.id)) return obj;
     const rotation=(state.exerciseRotationByDay||{})[day]||{
@@ -90,7 +91,7 @@ export function HistoryTab({
     return rotatedQuestObjects(baseObjs,rotation,state.stats,state.totalXp).find(q=>q.id===obj.id)||obj;
   }
   const standardDailyRecordObjs=[
-    ...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary&&!rotatingSourceIds.has(o.id))),
+    ...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary&&!rotatingSourceIds.has(o.id)&&!hiddenFromRecordsAndTotals.has(o.id))),
     ...sortStat(objs.filter(o=>o.weekly&&!o.binary&&!rotatingSourceIds.has(o.id))),
     ...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden&&!rotatingSourceIds.has(o.id)))
   ];
