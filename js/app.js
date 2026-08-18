@@ -2935,13 +2935,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           disabled:!selectedRoom,
           style:"width:100%;margin-top:10px;padding:11px;border-radius:9px;border:1px solid "+color+(selectedRoom?"66":"33")+";background:"+color+(selectedRoom?"12":"08")+";color:"+(selectedRoom?color:"var(--td)")+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:"+(selectedRoom?"pointer":"not-allowed")+";opacity:"+(selectedRoom?"1":"0.55")
         },"Valider la salle"),
-        h("div",{style:"display:flex;gap:8px;margin-top:8px"},
-          
-          itemQty("teleportCrystal")>0&&h("button",{onClick:()=>setSpecialItemChoice({type:"teleport"}),style:"flex:1;padding:9px;border-radius:8px;border:1px solid #60a5fa66;background:#60a5fa0d;color:#60a5fa;font-family:Orbitron,sans-serif;font-size:8px;letter-spacing:.8px;display:flex;align-items:center;justify-content:center;gap:6px"},
-            h(UiIcon,{iconKey:"item.teleportCrystal",fallback:"💠",slotSize:18,glyphSize:13}),
-            h("span",null,"QUITTER LE DONJON")
-          )
-        )
+        null
       );
     }
     return h("div",{class:"card",style:"border-color:var(--rc)44"},
