@@ -84,7 +84,7 @@ import {
   GRIMOIRE_ICON_DATA,
   DEBT_ACKNOWLEDGEMENT_ICON_DATA
 } from "./itemImages.js?v=20260808-items-normalized-v1";
-import { UiIcon } from "./uiIcons.js?v=20260818-bonus-icons-v2";
+import { UiIcon } from "./uiIcons.js?v=20260818-xp-icons-v1";
 import { saveStoredState } from "./storage.js";
 import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260818-urgent-dungeon-v1";
 import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260818-urgent-dungeon-v1";
@@ -797,6 +797,11 @@ function App(){
     inertiaMalus:"Inertie",
     ruptureMalusXp:"Malus de Rupture"
   };
+  const extraXpIconKeys={
+    streak:"interface.xpStreak",
+    elanBonus:"interface.xpElan",
+    inertiaMalus:"interface.xpInertia"
+  };
   const questXpTodayRows=Object.entries(tLog).map(([id,amount])=>{
     const obj=BONUS_QUEST_BY_ID[id]||objs.find(x=>x.id===id);
     if(!obj||!Number(amount))return null;
@@ -823,6 +828,7 @@ function App(){
     :null;
   const extraXpTodayRows=Object.entries(extraToday).map(([key,value])=>{
     const row={key:"extra_"+key,label:extraXpLabels[key]||key,xp:Number(value)||0};
+    if(extraXpIconKeys[key]) row.iconKey=extraXpIconKeys[key];
     if(key==="sq"&&urgentQuestToday){
       row.iconId=urgentQuestToday.id;
       row.icon=urgentQuestToday.icon;
@@ -834,7 +840,7 @@ function App(){
     }
     return row;
   }).filter(row=>Math.abs(row.xp)>1e-9);
-  if(legacyStreakTodayXp)extraXpTodayRows.push({key:"legacy_streak",label:"Bonus de streak",xp:legacyStreakTodayXp});
+  if(legacyStreakTodayXp)extraXpTodayRows.push({key:"legacy_streak",label:"Bonus de streak",xp:legacyStreakTodayXp,iconKey:"interface.xpStreak"});
   if(legacySqTodayXp)extraXpTodayRows.push({key:"legacy_sq",label:"Quête urgente",xp:legacySqTodayXp,iconId:urgentQuestToday?.id,icon:urgentQuestToday?.icon});
   if(legacyActiveDungeonTodayXp)extraXpTodayRows.push({key:"legacy_dungeon_active",label:"Donjon",xp:legacyActiveDungeonTodayXp,iconKind:"dungeon",iconId:dungeonSourceToday?.id,icon:dungeonDefToday?.icon||dungeonSourceToday?.icon});
   if(legacyCompletedDungeonTodayXp)extraXpTodayRows.push({key:"legacy_dungeon_done",label:"Donjon terminé",xp:legacyCompletedDungeonTodayXp,iconKind:"dungeon",iconId:dungeonSourceToday?.id,icon:dungeonDefToday?.icon||dungeonSourceToday?.icon});
@@ -3280,11 +3286,13 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               key:row.key+"_"+index,
               style:"display:flex;align-items:center;gap:8px;padding:10px 0;border-top:1px solid rgba(255,255,255,.06)"
             },
-              row.iconId
-                ?(row.iconKind==="dungeon"
-                    ?h(UiIcon,{iconKey:"dungeon."+row.iconId,fallback:row.icon,slotSize:18,glyphSize:14})
-                    :QuestIcon(row.iconId,row.icon,14))
-                :h("span",{style:"width:18px;text-align:center;color:var(--rc)"},"•"),
+              row.iconKey
+                ?h(UiIcon,{iconKey:row.iconKey,slotSize:18,glyphSize:14})
+                :row.iconId
+                  ?(row.iconKind==="dungeon"
+                      ?h(UiIcon,{iconKey:"dungeon."+row.iconId,fallback:row.icon,slotSize:18,glyphSize:14})
+                      :QuestIcon(row.iconId,row.icon,14))
+                  :h("span",{style:"width:18px;text-align:center;color:var(--rc)"},"•"),
               h("span",{style:"flex:1;min-width:0;font-size:12px;color:var(--tx);line-height:1.3"},row.label),
               h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;white-space:nowrap;color:"+(row.xp<0?"#ef4444":row.xp>0?"#4ade80":"var(--td)")},(row.xp>0?"+":"")+fmtNum(row.xp)+" XP")
             )))
