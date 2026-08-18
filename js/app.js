@@ -550,6 +550,7 @@ function App(){
   const [floats,setFloats] = useState([]);
   const [showSet,setShowSet]       = useState(false);
   const [bonusPickerOpen,setBonusPickerOpen] = useState(false);
+  const [xpTodayOpen,setXpTodayOpen] = useState(false);
   const [confirmReset,setConfirmReset] = useState(false);
   const [wkOff,setWkOff]  = useState(0);
   const inputs = useRef({});
@@ -698,7 +699,10 @@ function App(){
       if(index>=0){
         if(Number((((s.dailyLog||{})[today]||{})[id])||0)>0) return s;
         ids.splice(index,1);
-      }else ids.push(id);
+      }else{
+        if(ids.length>=BONUS_QUEST_GOAL) return s;
+        ids.push(id);
+      }
       byDay[today]=ids;
       return {...s,selectedBonusQuestIdsByDay:byDay,lastActiveDay:todayStr()};
     });
@@ -781,6 +785,40 @@ function App(){
       : (Number.isFinite(Number(o.target)) ? Number(o.target) : (o.base && !RANK_BASES[o.id] ? o.base : getRankBase(o.id, ri, prestige, state.stats)));
     return s + calcQuestTotalXp(o, a, b);
   },0) + extraTodayXp + legacyStreakTodayXp + legacySqTodayXp + legacyActiveDungeonTodayXp + legacyCompletedDungeonTodayXp;
+
+  const extraXpLabels={
+    eventBonus:"Bonus d’XP (élixir/événement)",
+    sq:"Quête urgente",
+    breach:"Brèche",
+    dungeon:"Donjon",
+    streak:"Bonus de streak",
+    debt:"Remboursement de dette",
+    elanBonus:"Élan",
+    inertiaMalus:"Inertie",
+    ruptureMalusXp:"Malus de Rupture"
+  };
+  const questXpTodayRows=Object.entries(tLog).map(([id,amount])=>{
+    const obj=BONUS_QUEST_BY_ID[id]||objs.find(x=>x.id===id);
+    if(!obj||!Number(amount))return null;
+    const target=obj.validateAt!=null
+      ?Number(obj.validateAt)
+      :(Number.isFinite(Number(obj.target))?Number(obj.target):(obj.base&&!RANK_BASES[obj.id]?obj.base:getRankBase(obj.id,ri,prestige,state.stats)));
+    return {
+      key:"quest_"+id,
+      label:(BONUS_QUEST_BY_ID[id]?"Bonus · ":"")+(obj.name||id),
+      xp:calcQuestTotalXp(obj,amount,target),
+      iconId:obj.iconKey||obj.exerciseId||obj.id,
+      icon:obj.exerciseIcon||obj.icon
+    };
+  }).filter(Boolean);
+  const extraXpTodayRows=Object.entries(extraToday).map(([key,value])=>({
+    key:"extra_"+key,label:extraXpLabels[key]||key,xp:Number(value)||0
+  })).filter(row=>Math.abs(row.xp)>1e-9);
+  if(legacyStreakTodayXp)extraXpTodayRows.push({key:"legacy_streak",label:"Bonus de streak",xp:legacyStreakTodayXp});
+  if(legacySqTodayXp)extraXpTodayRows.push({key:"legacy_sq",label:"Quête urgente",xp:legacySqTodayXp});
+  if(legacyActiveDungeonTodayXp)extraXpTodayRows.push({key:"legacy_dungeon_active",label:"Donjon",xp:legacyActiveDungeonTodayXp});
+  if(legacyCompletedDungeonTodayXp)extraXpTodayRows.push({key:"legacy_dungeon_done",label:"Donjon terminé",xp:legacyCompletedDungeonTodayXp});
+  const todayXpRows=[...questXpTodayRows,...extraXpTodayRows];
 
   // 7. Quetes journalieres obligatoires toutes faites ?
   const reqDailyObjs  = objs.filter(o=>!o.optional&&o.daily);
@@ -1411,8 +1449,14 @@ function App(){
         dayLog[key]=(dayLog[key]||0)+momentumDelta;
         daily[day]=dayLog;
       }
+      if(adjusted.malus<0){
+        const day=todayStr();
+        const dayLog={...(daily[day]||{})};
+        dayLog.ruptureMalusXp=(dayLog.ruptureMalusXp||0)+adjusted.malus;
+        daily[day]=dayLog;
+      }
       triggerProgressOverlay(s.totalXp,s.stats,nt,newStats,100);
-      return {...s,totalXp:nt,statXp:sx,stats:newStats,dailyExtraXp:(eventBonus>0||Math.abs(momentumDelta)>1e-9)?daily:(s.dailyExtraXp||{}),lastActiveDay:todayStr()};
+      return {...s,totalXp:nt,statXp:sx,stats:newStats,dailyExtraXp:(eventBonus>0||Math.abs(momentumDelta)>1e-9||adjusted.malus<0)?daily:(s.dailyExtraXp||{}),lastActiveDay:todayStr()};
     });
     if(e&&!silent){
       const lbl=showStat?("+"+Math.round(amount)+" XP "+( STAT_LBL2[showStat]||showStat)):("+"+Math.round(amount)+" XP");
@@ -3202,6 +3246,33 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
+  function XpTodayModal(){
+    if(!xpTodayOpen)return null;
+    return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setXpTodayOpen(false)}},
+      h("div",{class:"modal",style:"max-width:420px;width:calc(100% - 28px);max-height:82vh;overflow:auto"},
+        h("div",{style:"display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px"},
+          h("div",{class:"mtitle",style:"margin:0"},"XP DU JOUR"),
+          h("button",{onClick:()=>setXpTodayOpen(false),style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer"},"×")
+        ),
+        todayXpRows.length
+          ?h("div",{style:"display:flex;flex-direction:column"},todayXpRows.map((row,index)=>h("div",{
+              key:row.key+"_"+index,
+              style:"display:flex;align-items:center;gap:8px;padding:10px 0;border-top:1px solid rgba(255,255,255,.06)"
+            },
+              row.iconId?QuestIcon(row.iconId,row.icon,14):h("span",{style:"width:18px;text-align:center;color:var(--rc)"},"•"),
+              h("span",{style:"flex:1;min-width:0;font-size:12px;color:var(--tx);line-height:1.3"},row.label),
+              h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;white-space:nowrap;color:"+(row.xp<0?"#ef4444":row.xp>0?"#4ade80":"var(--td)")},(row.xp>0?"+":"")+fmtNum(row.xp)+" XP")
+            )))
+          :h("div",{style:"padding:18px 0;text-align:center;color:var(--td);font-size:12px"},"Aucun XP gagné aujourd’hui."),
+        h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:13px;border-top:1px solid var(--rc);font-family:Orbitron,sans-serif"},
+          h("span",{style:"font-size:11px;color:var(--tx);letter-spacing:1px"},"TOTAL"),
+          h("span",{style:"font-size:14px;color:var(--rc);font-weight:900"},Math.round(todayXp).toLocaleString("fr-FR")+" XP")
+        ),
+        h("button",{class:"mbtn mprim",style:"width:100%;margin-top:16px",onClick:()=>setXpTodayOpen(false)},"Fermer")
+      )
+    );
+  }
+
   function Home(){
     const dailyObjs = sortStat(objs.filter(o=>o.daily&&!o.optional));
     const weeklyObjs = sortStat(objs.filter(o=>o.weekly));
@@ -3342,7 +3413,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             )
           ),
           h("div",{style:"width:1px;height:38px;background:rgba(255,255,255,0.06);justify-self:center"}),
-          h("div",{style:"width:100%;display:flex;align-items:center;justify-content:center;gap:5px;padding:0"},
+          h("div",{role:"button",tabIndex:0,"aria-label":"Afficher le détail de l’XP du jour",onClick:()=>setXpTodayOpen(true),onKeyDown:e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setXpTodayOpen(true);}},style:"width:100%;display:flex;align-items:center;justify-content:center;gap:5px;padding:4px 0;cursor:pointer;border-radius:8px;transition:background .2s"},
             h("div",{style:"display:flex;flex-direction:column;align-items:center;justify-content:center"},
               h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:#fff;line-height:0.9"},todayXp.toFixed(0)),
               h("div",{style:"font-size:11px;color:#fff;text-transform:uppercase;letter-spacing:1px;margin-top:3px"},"XP DU JOUR")
@@ -3404,21 +3475,23 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{class:"mtitle",style:"margin:0"},"CHOISIR LES QUÊTES BONUS"),
           h("button",{onClick:()=>setBonusPickerOpen(false),style:"border:0;background:transparent;color:#fff;font-size:22px"},"×")
         ),
-        h("div",{style:"font-size:10px;color:var(--td);line-height:1.5;margin-bottom:14px"},"Sélection quotidienne libre. Une quête commencée reste sélectionnée jusqu’au reset."),
+        h("div",{style:"font-size:10px;color:var(--td);line-height:1.5;margin-bottom:6px"},"Sélection quotidienne libre. Une quête commencée reste sélectionnée jusqu’au reset."),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+(selected.length>=BONUS_QUEST_GOAL?"#f59e0b":"var(--rc)")+";margin-bottom:14px"},selected.length+"/"+BONUS_QUEST_GOAL+" sélectionnées"+(selected.length>=BONUS_QUEST_GOAL?" · LIMITE ATTEINTE":"")),
         groups.map(group=>h("div",{key:group.stat,style:"margin-bottom:14px"},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1px;color:"+(STAT_COLOR[group.stat]||"var(--rc)")+";margin-bottom:7px;text-transform:uppercase"},STAT_LBL[group.stat]||group.stat),
           group.items.map(obj=>{
             const active=selected.includes(obj.id);
             const progress=Number(tLog[obj.id])||0;
             const locked=active&&progress>0;
+            const atLimit=!active&&selected.length>=BONUS_QUEST_GOAL;
             const reward=obj.binary
               ? obj.binaryXp+" XP"
               : obj.xpPer+" XP/"+obj.unit+(obj.stat2?" + "+obj.xpPer2+" XP "+(STAT_LBL[obj.stat2]||obj.stat2)+"/"+obj.unit:"");
-            return h("button",{key:obj.id,onClick:()=>toggleBonusQuest(obj.id),disabled:locked,
-              style:"width:100%;display:flex;align-items:center;gap:9px;text-align:left;padding:10px;margin-bottom:7px;border-radius:9px;border:1px solid "+(active?(STAT_COLOR[group.stat]||"#a855f7"):"rgba(255,255,255,.09)")+";background:"+(active?"rgba(168,85,247,.09)":"rgba(255,255,255,.025)")+";color:var(--tx);opacity:"+(locked?.8:1)},
+            return h("button",{key:obj.id,onClick:()=>toggleBonusQuest(obj.id),disabled:locked||atLimit,
+              style:"width:100%;display:flex;align-items:center;gap:9px;text-align:left;padding:10px;margin-bottom:7px;border-radius:9px;border:1px solid "+(active?(STAT_COLOR[group.stat]||"#a855f7"):"rgba(255,255,255,.09)")+";background:"+(active?"rgba(168,85,247,.09)":"rgba(255,255,255,.025)")+";color:var(--tx);opacity:"+(locked?.8:atLimit?.42:1)+";cursor:"+((locked||atLimit)?"not-allowed":"pointer")},
               QuestIcon(obj.iconKey||obj.id,obj.icon,16),
               h("span",{style:"flex:1;min-width:0"},h("span",{style:"display:block;font-size:12px;font-weight:700"},obj.name),h("span",{style:"display:block;font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;margin-top:2px"},reward)),
-              h("span",{style:"color:"+(active?"#4ade80":"var(--td)")+";font-size:15px"},locked?"🔒":active?"✓":"+")
+              h("span",{style:"color:"+(active?"#4ade80":"var(--td)")+";font-size:15px"},locked?"🔒":active?"✓":atLimit?"—":"+")
             );
           })
         )),
@@ -3457,6 +3530,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const wkDone=wkBase.filter(isQuestDone).length;
     const wkTotal=wkBase.length;
     const regressionDoneToday=!!((state.regressionLog||{})[today]);
+    const selectedBonusIds=(state.selectedBonusQuestIdsByDay&&state.selectedBonusQuestIdsByDay[today])||[];
+    const fiveBonusStarted=selectedBonusIds.length>=BONUS_QUEST_GOAL&&selectedBonusIds.every(id=>(Number(tLog[id])||0)>0);
 
     const SectionHeader = ({title,done,total}) => h("div",{class:"shdr",style:"margin-bottom:10px"},
       h("div",{class:"ctitle",style:"margin:0"+(title==="Régressions"?";color:#ef4444":"")},title),
@@ -3490,7 +3565,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       ),
       h("div",{class:"card"},
         h(SectionHeader,{title:"Quêtes bonus",done:bonDone,total:bonTotal}),
-        h("button",{class:"mbtn mprim",style:"width:100%;margin-bottom:"+(bon.length?"12px":"0"),onClick:()=>setBonusPickerOpen(true)},"Choisir mes quêtes bonus"),
+        !fiveBonusStarted&&h("button",{class:"mbtn mprim",style:"width:100%;margin-bottom:"+(bon.length?"12px":"0"),onClick:()=>setBonusPickerOpen(true)},"Choisir les quêtes bonus"),
         bon.length?bon.map(o=>h(QI,{key:o.id,obj:o})):h("div",{style:"text-align:center;color:var(--td);font-size:11px;padding:10px 0 2px"},"Aucune quête bonus sélectionnée.")
       ),
       !activeDungeon&&h(DungeonChoiceCard,null),
@@ -5541,6 +5616,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       ),
       h(Settings,null),
       h(BonusQuestPicker,null),
+      h(XpTodayModal,null),
       h(RankUp,null),
       h(RankLootChoiceModal,null),
       h(LevelUp,null),
