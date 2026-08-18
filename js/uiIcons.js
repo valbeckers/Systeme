@@ -64,7 +64,7 @@ export const UI_ICON_IMAGES=Object.freeze({
   "quest.bonus_jumping_jacks":"./assets/ui/quest-legs.png?v=20260809-medallions-v4",
   "quest.bonus_animal_flow":"./assets/ui/quest-animal-flow.png?v=20260809-medallions-v4",
   "quest.bonus_martial_flow":"./assets/ui/quest-martial-flow.png?v=20260809-medallions-v4",
-  "quest.bonus_silent":"./assets/ui/quest-task.png?v=20260809-medallions-v4",
+  "quest.bonus_silent":"./assets/ui/quest-silent-movement.png?v=20260809-medallions-v4",
   "quest.bonus_delayed_task":"./assets/ui/quest-task.png?v=20260809-medallions-v4",
   "quest.bonus_vacuum":"./assets/ui/dungeon-steward.png?v=20260809-medallions-v5",
 
