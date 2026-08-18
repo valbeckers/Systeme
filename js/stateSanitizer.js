@@ -1,7 +1,7 @@
 import { STATS } from "./config.js";
-import { DEFS, SP } from "./questDefs.js";
+import { DEFS, SP } from "./questDefs.js?v=20260818-urgent-dungeon-v1";
 import { BONUS_QUESTS } from "./bonusQuestDefs.js";
-import { DUNGEONS } from "./dungeonDefs.js";
+import { DUNGEONS } from "./dungeonDefs.js?v=20260818-urgent-dungeon-v1";
 import { todayStr, next7AM } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
 import { normalizeActiveBreach } from "./breachEngine.js";

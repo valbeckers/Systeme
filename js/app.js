@@ -1,7 +1,7 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
-import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260810-endurance-xp-v2";
+import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260818-urgent-dungeon-v1";
 import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20260818-selectable-bonus-v1";
-import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js";
+import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20260818-urgent-dungeon-v1";
 import {
   isDebtEligibleQuest,
   createQuestDebtState,
@@ -24,7 +24,7 @@ import {
 } from "./dailyEngine.js?v=20260818-xp-momentum-v2";
 import { elanBonusPercent, xpMomentumAdjustment } from "./xpMomentum.js?v=20260817-xp-momentum-v1";
 import { BREACH_POOL } from "./breachDefs.js?v=20260815-rupture-card-v1";
-import { DUNGEONS } from "./dungeonDefs.js?v=20260805-master-contract-random-01";
+import { DUNGEONS } from "./dungeonDefs.js?v=20260818-urgent-dungeon-v1";
 import {
   dungeonRoomRewardPairs,
   dungeonRewardPairs,
@@ -86,8 +86,8 @@ import {
 } from "./itemImages.js?v=20260808-items-normalized-v1";
 import { UiIcon } from "./uiIcons.js?v=20260818-bonus-icons-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260818-selectable-bonus-v1";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260818-selectable-bonus-v1";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260818-urgent-dungeon-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260818-urgent-dungeon-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,

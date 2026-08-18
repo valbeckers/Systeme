@@ -1,4 +1,4 @@
-import { SP } from "./questDefs.js";
+import { SP } from "./questDefs.js?v=20260818-urgent-dungeon-v1";
 
 // ─── MOTEUR DE TIRAGE DES QUÊTES URGENTES ───────────────────────────────────
 // Sélection pure de la prochaine quête urgente : cycle des six statistiques,
