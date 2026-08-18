@@ -19,7 +19,7 @@ export const UI_ICON_IMAGES=Object.freeze({
   "interface.lock":"./assets/ui/interface-lock.png?v=20260809-medallions-v6",
   "interface.notification":"./assets/ui/interface-notification.png?v=20260809-medallions-v6",
   "interface.chain":"./assets/ui/interface-chain.png?v=20260809-medallions-v6",
-  "interface.countdown":"./assets/ui/interface-countdown.png?v=20260813-transparent-v1",
+  "interface.countdown":"./assets/ui/interface-countdown.png?v=20260809-medallions-v6",
 
   "quest.water":"./assets/ui/quest-water.png?v=20260809-medallions-v4",
   "quest.sleep":"./assets/ui/quest-sleep.png?v=20260809-medallions-v5",
@@ -50,6 +50,23 @@ export const UI_ICON_IMAGES=Object.freeze({
   "quest.sp_no_passive":"./assets/ui/quest-no-screen.png?v=20260809-medallions-v4",
   "quest.sp_task":"./assets/ui/quest-task.png?v=20260809-medallions-v4",
   "quest.sp_declutter":"./assets/ui/quest-declutter.png?v=20260809-medallions-v4",
+
+  // Quêtes bonus sélectionnables : réutilisation stricte des visuels demandés.
+  "quest.bonus_sun":"./assets/ui/quest-sp-sun.png?v=20260809-medallions-v4",
+  "quest.bonus_cold_shower":"./assets/ui/quest-breach-cold-shower.png?v=20260809-medallions-v6",
+  "quest.bonus_coherence":"./assets/ui/quest-heart.png?v=20260809-medallions-v4",
+  "quest.bonus_wall_sit":"./assets/ui/quest-breach-wall-sit.png?v=20260809-medallions-v6",
+  "quest.bonus_pullups":"./assets/ui/quest-pullups.png?v=20260809-medallions-v4",
+  "quest.bonus_dead_hang":"./assets/ui/quest-pullups.png?v=20260809-medallions-v4",
+  "quest.bonus_memory":"./assets/ui/quest-memory.png?v=20260809-medallions-v4",
+  "quest.bonus_stairs":"./assets/ui/quest-stairs.png?v=20260809-medallions-v4",
+  "quest.bonus_shadow_boxing":"./assets/ui/quest-shadow-boxing.png?v=20260809-medallions-v4",
+  "quest.bonus_jumping_jacks":"./assets/ui/quest-legs.png?v=20260809-medallions-v4",
+  "quest.bonus_animal_flow":"./assets/ui/quest-animal-flow.png?v=20260809-medallions-v4",
+  "quest.bonus_martial_flow":"./assets/ui/quest-martial-flow.png?v=20260809-medallions-v4",
+  "quest.bonus_silent":"./assets/ui/quest-task.png?v=20260809-medallions-v4",
+  "quest.bonus_delayed_task":"./assets/ui/quest-task.png?v=20260809-medallions-v4",
+  "quest.bonus_vacuum":"./assets/ui/dungeon-steward.png?v=20260809-medallions-v5",
 
   "quest.pushups":"./assets/ui/quest-pushups.png?v=20260809-medallions-v4",
   "quest.push":"./assets/ui/quest-pushups.png?v=20260809-medallions-v4",
