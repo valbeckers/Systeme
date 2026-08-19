@@ -555,6 +555,7 @@ function App(){
   const [wkOff,setWkOff]  = useState(0);
   const inputs = useRef({});
   const completedBreachRef = useRef(null);
+  const bonusPickerScrollRef = useRef(null);
 
   function enqueueDungeonKeyLoot(kind){
     setKeyLootQueue(q=>[...q,{kind:kind==="rare"?"rare":"guaranteed",id:Date.now()+Math.random()}]);
@@ -705,6 +706,14 @@ function App(){
       }
       byDay[today]=ids;
       return {...s,selectedBonusQuestIdsByDay:byDay,lastActiveDay:todayStr()};
+    });
+  }
+
+  function toggleBonusQuestKeepingScroll(id){
+    const scrollTop=bonusPickerScrollRef.current?.scrollTop||0;
+    toggleBonusQuest(id);
+    requestAnimationFrame(()=>{
+      if(bonusPickerScrollRef.current) bonusPickerScrollRef.current.scrollTop=scrollTop;
     });
   }
 
@@ -3503,7 +3512,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const selected=(state.selectedBonusQuestIdsByDay&&state.selectedBonusQuestIdsByDay[today])||[];
     const groups=STATS.map(stat=>({stat,items:BONUS_QUESTS.filter(q=>q.category===stat)})).filter(g=>g.items.length);
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setBonusPickerOpen(false)}},
-      h("div",{class:"modal",style:"max-width:440px;width:calc(100% - 24px);max-height:88vh;overflow:auto"},
+      h("div",{ref:bonusPickerScrollRef,class:"modal",style:"max-width:440px;width:calc(100% - 24px);max-height:88vh;overflow:auto"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px"},
           h("div",{class:"mtitle",style:"margin:0"},"CHOISIR LES QUÊTES BONUS"),
           h("button",{onClick:()=>setBonusPickerOpen(false),style:"border:0;background:transparent;color:#fff;font-size:22px"},"×")
@@ -3520,7 +3529,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             const reward=obj.binary
               ? obj.binaryXp+" XP"
               : obj.xpPer+" XP/"+obj.unit+(obj.stat2?" + "+obj.xpPer2+" XP "+(STAT_LBL[obj.stat2]||obj.stat2)+"/"+obj.unit:"");
-            return h("button",{key:obj.id,onClick:()=>toggleBonusQuest(obj.id),disabled:locked||atLimit,
+            return h("button",{key:obj.id,onClick:()=>toggleBonusQuestKeepingScroll(obj.id),disabled:locked||atLimit,
               style:"width:100%;display:flex;align-items:center;gap:9px;text-align:left;padding:10px;margin-bottom:7px;border-radius:9px;border:1px solid "+(active?(STAT_COLOR[group.stat]||"#a855f7"):"rgba(255,255,255,.09)")+";background:"+(active?"rgba(168,85,247,.09)":"rgba(255,255,255,.025)")+";color:var(--tx);opacity:"+(locked?.8:atLimit?.42:1)+";cursor:"+((locked||atLimit)?"not-allowed":"pointer")},
               QuestIcon(obj.iconKey||obj.id,obj.icon,16),
               h("span",{style:"flex:1;min-width:0"},h("span",{style:"display:block;font-size:12px;font-weight:700"},obj.name),h("span",{style:"display:block;font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;margin-top:2px"},reward)),
