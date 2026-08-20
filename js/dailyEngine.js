@@ -21,11 +21,22 @@ export function applyRegressionState(state,regression,{day,stats,getLevel}){
     nextStats[stat]=getLevel(statXp[stat]);
   });
 
+  const totalXpBefore=Math.max(0,Number(state.totalXp)||0);
+  const totalXpAfter=Math.max(0,totalXpBefore-regression.globalPenalty);
+  const appliedGlobalPenalty=totalXpAfter-totalXpBefore;
+  const dailyExtraXp={...(state.dailyExtraXp||{})};
+  const dayExtra={...(dailyExtraXp[day]||{})};
+  if(appliedGlobalPenalty<0){
+    dayExtra.regressionMalus=(Number(dayExtra.regressionMalus)||0)+appliedGlobalPenalty;
+    dailyExtraXp[day]=dayExtra;
+  }
+
   return {
     ...state,
-    totalXp:Math.max(0,(Number(state.totalXp)||0)-regression.globalPenalty),
+    totalXp:totalXpAfter,
     statXp,
     stats:nextStats,
+    dailyExtraXp,
     regressionLog:{...(state.regressionLog||{}),[day]:regression.id||true},
     lastActiveDay:day
   };

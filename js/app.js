@@ -21,7 +21,7 @@ import {
   reconcileXpMomentumState,
   urgentQuestCompletedOnDay,
   applyDailyStreakRewardState
-} from "./dailyEngine.js?v=20260820-running-milestones-v1";
+} from "./dailyEngine.js?v=20260820-regression-xp-log-v1";
 import { elanBonusPercent, xpMomentumAdjustment } from "./xpMomentum.js?v=20260817-xp-momentum-v1";
 import { BREACH_POOL } from "./breachDefs.js?v=20260815-rupture-card-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20260818-urgent-dungeon-v1";
@@ -802,12 +802,14 @@ function App(){
     debt:"Remboursement de dette",
     elanBonus:"Élan",
     inertiaMalus:"Inertie",
-    ruptureMalusXp:"Malus de Rupture"
+    ruptureMalusXp:"Malus de Rupture",
+    regressionMalus:"Régression"
   };
   const extraXpIconKeys={
     streak:"interface.xpStreak",
     elanBonus:"interface.xpElan",
-    inertiaMalus:"interface.xpInertia"
+    inertiaMalus:"interface.xpInertia",
+    regressionMalus:"interface.regression"
   };
   const questXpTodayRows=Object.entries(tLog).map(([id,amount])=>{
     const obj=BONUS_QUEST_BY_ID[id]||objs.find(x=>x.id===id);
