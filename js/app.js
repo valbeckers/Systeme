@@ -4392,26 +4392,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               setImportValue("");
               setImportModal(true);
             }},"Importer")
-          ),
-          h("button",{class:"mbtn mprim",style:"width:100%",onClick:()=>{
-            const json=JSON.stringify(exportSystemState(state),null,2);
-            const blob=new Blob([json],{type:"application/json"});
-            const url=URL.createObjectURL(blob);
-            const a=document.createElement("a");
-            const d=new Date();
-            const dateStr=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
-            a.href=url; a.download="kaizen-backup-"+dateStr+".json";
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-          }},"Télécharger fichier"),
-          h("div",{style:"font-size:10px;color:var(--td);margin-top:6px;line-height:1.4"},
-            "L'app conserve automatiquement 4 sauvegardes internes (rotation \u00e0 chaque modification). En cas de probl\u00e8me, fais un t\u00e9l\u00e9chargement r\u00e9gulier."
           )
         ),
         h("div",{class:"divider"}),
         h("div",{class:"msec"},
-          h("div",{class:"mlbl"},"Actualiser l'application"),
-          h("div",{style:"font-size:11px;color:var(--td);margin-bottom:10px;line-height:1.5"},"Si l'app ne se charge pas correctement, actualise pour recharger tous les scripts."),
           h("button",{class:"mbtn",style:"width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.2);color:var(--tx)",onClick:()=>window.location.reload(true)},"Actualiser l'app")
         ),
 
