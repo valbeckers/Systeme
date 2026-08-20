@@ -14,7 +14,7 @@ export const BONUS_QUESTS = [
   {id:"bonus_coherence",name:"Cohérence cardiaque",icon:"💓",unit:"min",base:10,fixedBase:true,xpPer:10,stat:"Sante",xpPer2:5,stat2:"Esprit",category:"Esprit"},
   {id:"bonus_memory",name:"Mémorisation",icon:"🧠",unit:"min",base:10,fixedBase:true,xpPer:30,stat:"Esprit"},
 
-  {id:"run",name:"Running",icon:"🏃🏻",iconKey:"run",unit:"km",base:5,xpPer:200,stat:"Endurance",stat2:"Agilite",xpPer2:50,dynamicEndurance:true},
+  {id:"run",name:"Running",icon:"🏃🏻",iconKey:"run",unit:"km",base:5,xpPer:200,stat:"Endurance",stat2:"Agilite",xpPer2:50,dynamicEndurance:true,completionRatio:0.5,finalTargetCap:10},
   {id:"walk",name:"Rando",icon:"🥾",unit:"km",base:5,xpPer:100,stat:"Endurance",stat2:"Agilite",xpPer2:25,dynamicEndurance:true},
   {id:"march",name:"Marche",icon:"🚶🏻",unit:"km",base:5,xpPer:50,stat:"Endurance",dynamicEndurance:true},
   {id:"bonus_stairs",name:"Escaliers",icon:"🪜",unit:"A/R",base:15,fixedBase:true,xpPer:10,stat:"Endurance",xpPer2:5,stat2:"Agilite"},

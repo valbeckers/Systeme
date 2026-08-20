@@ -48,7 +48,10 @@ export function areBonusQuestsComplete(bonusObjectives,dailyLog,targetFor){
   if(!objectives.length) return false;
   return objectives.every(obj=>{
     if(obj.isEnduranceChoice) return false;
-    const target=(obj.target&&!obj.binary)?obj.target:targetFor(obj);
+    const finalTarget=(obj.target&&!obj.binary)?obj.target:targetFor(obj);
+    const target=obj.completionRatio
+      ? finalTarget*Number(obj.completionRatio)
+      : finalTarget;
     const value=Number((dailyLog||{})[obj.id])||0;
     return obj.binary ? value>=1 : value>=target;
   });

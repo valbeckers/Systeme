@@ -1,6 +1,6 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
 import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260818-urgent-dungeon-v1";
-import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20260818-selectable-bonus-v1";
+import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20260820-running-milestones-v1";
 import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20260818-urgent-dungeon-v1";
 import {
   isDebtEligibleQuest,
@@ -21,7 +21,7 @@ import {
   reconcileXpMomentumState,
   urgentQuestCompletedOnDay,
   applyDailyStreakRewardState
-} from "./dailyEngine.js?v=20260818-xp-momentum-v2";
+} from "./dailyEngine.js?v=20260820-running-milestones-v1";
 import { elanBonusPercent, xpMomentumAdjustment } from "./xpMomentum.js?v=20260817-xp-momentum-v1";
 import { BREACH_POOL } from "./breachDefs.js?v=20260815-rupture-card-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20260818-urgent-dungeon-v1";
@@ -789,9 +789,7 @@ function App(){
 
   const todayXp = Object.entries(tLog).reduce((s,[id,a])=>{
     const o=BONUS_QUEST_BY_ID[id]||objs.find(x=>x.id===id); if(!o) return s;
-    const b = o.validateAt != null
-      ? Number(o.validateAt)
-      : (Number.isFinite(Number(o.target)) ? Number(o.target) : (o.base && !RANK_BASES[o.id] ? o.base : getRankBase(o.id, ri, prestige, state.stats)));
+    const b = getEffectiveTarget(o.id);
     return s + calcQuestTotalXp(o, a, b);
   },0) + extraTodayXp + legacyStreakTodayXp + legacySqTodayXp + legacyActiveDungeonTodayXp + legacyCompletedDungeonTodayXp;
 
@@ -814,9 +812,7 @@ function App(){
   const questXpTodayRows=Object.entries(tLog).map(([id,amount])=>{
     const obj=BONUS_QUEST_BY_ID[id]||objs.find(x=>x.id===id);
     if(!obj||!Number(amount))return null;
-    const target=obj.validateAt!=null
-      ?Number(obj.validateAt)
-      :(Number.isFinite(Number(obj.target))?Number(obj.target):(obj.base&&!RANK_BASES[obj.id]?obj.base:getRankBase(obj.id,ri,prestige,state.stats)));
+    const target=getEffectiveTarget(obj.id);
     return {
       key:"quest_"+id,
       label:(BONUS_QUEST_BY_ID[id]?"Bonus · ":"")+(obj.name||id),
@@ -894,9 +890,20 @@ function App(){
 
   function getEffectiveTarget(objId, isWeekly=false){
     const obj = BONUS_QUEST_BY_ID[objId]||objs.find(o=>o.id===objId);
-    if(obj && obj.validateAt != null) return obj.validateAt;
-    if(obj && Number.isFinite(Number(obj.target))) return Number(obj.target);
-    return getRankBase(objId, ri, prestige, state.stats);
+    let target;
+    if(obj && obj.validateAt != null) target=Number(obj.validateAt);
+    else if(obj && Number.isFinite(Number(obj.target))) target=Number(obj.target);
+    else target=getRankBase(objId, ri, prestige, state.stats);
+    return obj&&Number.isFinite(Number(obj.finalTargetCap))
+      ? Math.min(target,Number(obj.finalTargetCap))
+      : target;
+  }
+
+  function getCompletionTarget(obj,finalTarget=getEffectiveTarget(obj.id,obj.weekly)){
+    const ratio=Number(obj&&obj.completionRatio);
+    return Number.isFinite(ratio)&&ratio>0&&ratio<=1
+      ? finalTarget*ratio
+      : finalTarget;
   }
 
   // Une journée ayant déjà accordé le bonus de streak est définitivement validée.
@@ -915,7 +922,7 @@ function App(){
   const bonusQuestObjsForCompletion = dailyBonusQuestObjects();
   const completedBonusCount = bonusQuestObjsForCompletion.filter(obj=>{
     const value=Number(tLog[obj.id])||0;
-    return obj.binary ? value>=1 : value>=getEffectiveTarget(obj.id);
+    return obj.binary ? value>=1 : value>=getCompletionTarget(obj);
   }).length;
   const allBonusDone = completedBonusCount>=BONUS_QUEST_GOAL;
 
@@ -1545,9 +1552,7 @@ function App(){
     const cur=(obj.weekly)?(wLog[obj.id]||0):(tLog[obj.id]||0);
     let xp=0;
     let capJustReached_DISABLED=false;
-    const b=obj.validateAt != null
-      ? Number(obj.validateAt)
-      : (Number.isFinite(Number(obj.target)) ? Number(obj.target) : getRankBase(obj.id,ri,prestige,state.stats));
+    const b=getEffectiveTarget(obj.id);
     const prev=cur, next=cur+val;
     maybeTriggerQuestRecord(obj,prev,next);
     const alreadyCapped_DISABLED = false;
@@ -2199,7 +2204,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const displayTarget = (obj.target && !obj.binary) ? obj.target : t;
     const d = isWeekly ? (wLog[obj.id]||0) : (tLog[obj.id]||0);
 
-    const effectiveT = t;
+    const effectiveT = getCompletionTarget(obj,displayTarget);
     const done=obj.binary?(d>=1):(d>=effectiveT);
 
 
@@ -2308,6 +2313,14 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("div",{class:"qbar"},h("div",{class:"qfill"+fillStateClass,style:barInnerStyle})),
             h("div",{class:"qxp",style:"white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},fmtNum(d)+"/"+fmtNum(displayTarget)+" "+((d>1||displayTarget>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[obj.unit]||obj.unit))
           )
+      ),
+      obj.completionRatio&&h("div",{
+        style:"margin-top:7px;font-family:Orbitron,sans-serif;font-size:8px;letter-spacing:.7px;color:"+(d>=displayTarget?"#4ade80":d>=effectiveT?"var(--rc)":"var(--td)")+";text-transform:uppercase"
+      },d>=displayTarget
+        ? "Palier 2 ✓ · Objectif final atteint"
+        : d>=effectiveT
+          ? "Palier 1 ✓ · Quête validée · Palier 2 : "+fmtNum(displayTarget)+" "+obj.unit
+          : "Palier 1 : "+fmtNum(effectiveT)+" "+obj.unit+" · Palier 2 : "+fmtNum(displayTarget)+" "+obj.unit
       ),
       (!obj.optional&&!obj.weekly&&isDebtEligibleQuest(obj)&&d<effectiveT&&state.questDebt&&state.questDebt.status==="active"&&state.questDebt.id===obj.id)&&h("div",{style:"margin-top:8px;font-family:Orbitron,sans-serif;font-size:9px;color:#6E9A8E;letter-spacing:.8px;text-transform:uppercase"},"Dette active : "+fmtNum(state.questDebt.paid||0)+"/"+fmtNum(state.questDebt.amount)+" "+state.questDebt.unit),
       (()=>{
@@ -3323,7 +3336,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const isDone=(obj,isWeeklyRow)=>{
       if(obj.isEnduranceChoice) return false;
       const isW = isWeeklyRow || obj.weekly;
-      const target = obj.target && !obj.binary ? obj.target : getEffectiveTarget(obj.id,isW);
+      const finalTarget = obj.target && !obj.binary ? obj.target : getEffectiveTarget(obj.id,isW);
+      const target = getCompletionTarget(obj,finalTarget);
       const doneVal = isW ? (wLog[obj.id]||0) : (tLog[obj.id]||0);
       return obj.binary ? doneVal>=1 : doneVal>=target;
     };
@@ -3551,8 +3565,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       if(obj.isEnduranceChoice) return false;
       const isWeekly = obj.weekly;
       const t = getEffectiveTarget(obj.id, isWeekly);
-      const effectiveT = t;
-      const target = (obj.target && !obj.binary) ? obj.target : effectiveT;
+      const finalTarget = (obj.target && !obj.binary) ? obj.target : t;
+      const target = getCompletionTarget(obj,finalTarget);
       const d = isWeekly ? (wLog[obj.id]||0) : (tLog[obj.id]||0);
       return obj.binary ? d>=1 : d>=target;
     };
@@ -5296,7 +5310,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const period = isWeekly ? " / semaine" : " / jour";
       if(obj.binary) return "Validation simple";
       if(obj.tiers) return (obj.target||obj.base||1)+" "+unitPlural(obj.unit,obj.target||obj.base||1)+period;
-      const base = getRankBase(obj.id, ri, prestige, state.stats);
+      const base = getEffectiveTarget(obj.id,isWeekly);
       return base+" "+unitPlural(obj.unit,base)+period;
     }
 
