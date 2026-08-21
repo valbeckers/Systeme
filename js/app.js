@@ -2386,6 +2386,30 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             },"+10 "+unitPlur)
           );
         }
+        const BONUS_QUICK_AMOUNTS={
+          bonus_shadow_boxing:[1,5,10],
+          bonus_coherence:[1,5,10],
+          bonus_silent:[1,5,10],
+          bonus_martial_flow:[1,5,10],
+          bonus_animal_flow:[1,5,10],
+          bonus_memory:[1,5,10],
+          bonus_sun:[1,5,10],
+          bonus_pullups:[1,5,10],
+          bonus_jumping_jacks:[50,100],
+          bonus_dead_hang:[1,5],
+          bonus_wall_sit:[1,5]
+        };
+        const bonusQuickAmounts=BONUS_QUICK_AMOUNTS[obj.id];
+        if(bonusQuickAmounts){
+          const quickUnit=amount=>obj.unit==="rep"&&amount>1?"reps":obj.unit;
+          return h("div",{style:"display:flex;gap:8px;margin-top:8px"},
+            bonusQuickAmounts.map(amount=>h("button",{
+              key:amount,
+              onClick:e=>{inputs.current[obj.id]=String(amount);validate(obj,e);},
+              style:"flex:1;padding:10px 4px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:.7px;transition:all .2s;white-space:nowrap"
+            },"+"+amount+" "+quickUnit(amount)))
+          );
+        }
         const QUICK_IDS=["sleep","push","abs","squats","negative_pullups","calves","reading","flex","balance","grips","med","water","mob"];
         const unitLabel={sleep:"h",push:obj.unit,abs:obj.unit,squats:obj.unit,negative_pullups:"rep",calves:obj.unit,reading:"min",flex:"min",balance:"min",grips:"min",med:"min",water:"verre",mob:"min"};
         const unitLabelPlural={sleep:"h",push:obj.unit==="rep"?"reps":obj.unit,abs:obj.unit==="rep"?"reps":obj.unit,squats:obj.unit==="rep"?"reps":obj.unit,negative_pullups:"reps",calves:"reps",reading:"min",flex:"min",balance:"min",grips:"min",med:"min",water:"verres",mob:"min"};
