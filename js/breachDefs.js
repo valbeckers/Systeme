@@ -40,10 +40,10 @@ const BREACH_RUPTURE_BOSSES = {
     ]
   },
   breach_push300:{
-    id:"breach_boss_berserker",name:"Le Berserker",guards:[
-      {id:"armurier",name:"La Gorgone",objective:"Faire 10 minutes de mobilité des épaules et des poignets",unit:"min",target:10,step:5},
-      {id:"brise_appuis",name:"La Gargouille",objective:"Effectuer 100 dips",unit:"rep",target:100,step:25},
-      {id:"grimpeur_rouge",name:"La Coulée de Lave",objective:"Effectuer 20 tractions",unit:"rep",target:20,step:5},
+    id:"breach_boss_berserker",name:"Alduin",guards:[
+      {id:"armurier",name:"Vulthuryol",objective:"Faire 10 minutes de mobilité des épaules et des poignets",unit:"min",target:10,step:5},
+      {id:"brise_appuis",name:"Sahrotaar",objective:"Effectuer 100 dips",unit:"rep",target:100,step:25},
+      {id:"grimpeur_rouge",name:"Nahagliiv",objective:"Effectuer 20 tractions",unit:"rep",target:20,step:5},
     ]
   },
   breach_squats150:{
