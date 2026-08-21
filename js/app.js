@@ -23,7 +23,7 @@ import {
   applyDailyStreakRewardState
 } from "./dailyEngine.js?v=20260820-regression-xp-log-v1";
 import { elanBonusPercent, xpMomentumAdjustment } from "./xpMomentum.js?v=20260817-xp-momentum-v1";
-import { BREACH_POOL } from "./breachDefs.js?v=20260815-rupture-card-v1";
+import { BREACH_POOL } from "./breachDefs.js?v=20260821-sauron-rupture-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20260818-urgent-dungeon-v1";
 import {
   dungeonRoomRewardPairs,
@@ -106,7 +106,7 @@ import {
   normalizeActiveBreach,
   processDailyBreachRoll,
   pickBreachRuptureBoss
-} from "./breachEngine.js?v=20260804-breach-progress-01";
+} from "./breachEngine.js?v=20260821-sauron-rupture-v1";
 import {
   ELIXIR_STATS,
   ELIXIR_DURATION_MS,

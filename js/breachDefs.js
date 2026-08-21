@@ -26,10 +26,10 @@ const BREACH_POOL=[
 // l’objectif initial et invoque une garde rapprochée de trois sous-quêtes.
 const BREACH_RUPTURE_BOSSES = {
   breach_cold5:{
-    id:"breach_boss_cryomancien",name:"Le Cryomancien",guards:[
-      {id:"hydromancien",name:"L’Hydromancien",objective:"Boire 2 litres d’eau pendant la période de Rupture",unit:"L",target:2,step:0.5},
-      {id:"purificateur",name:"La Sorcière Déguisée",objective:"Prendre 2 repas propres consécutifs",unit:"repas",target:2,step:1},
-      {id:"porte_lumiere",name:"L’Ombre Noire",objective:"Passer 30 minutes à la lumière naturelle",unit:"min",target:30,step:10},
+    id:"breach_boss_cryomancien",name:"Sauron",guards:[
+      {id:"hydromancien",name:"Le Roi-Sorcier d’Angmar",objective:"Boire 2 litres d’eau pendant la période de Rupture",unit:"L",target:2,step:0.5},
+      {id:"purificateur",name:"Khamûl, l’Ombre de l’Orient",objective:"Prendre 2 repas propres consécutifs",unit:"repas",target:2,step:1},
+      {id:"porte_lumiere",name:"Suladàn, l’Immortel",objective:"Passer 30 minutes à la lumière naturelle",unit:"min",target:30,step:10},
     ]
   },
   breach_wallsit15:{
