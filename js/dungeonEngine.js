@@ -36,8 +36,11 @@ export function drawRandomDungeonId(dungeons, random=Math.random){
 
 export function activeDungeonView(activeDungeon, dungeons, now=Date.now()){
   const tpl=activeDungeon ? (dungeons||[]).find(d=>d.id===activeDungeon.id) : null;
-  if(!activeDungeon || !tpl || activeDungeon.completedAt || now>=(activeDungeon.expiresAt||0)) return null;
-  return {...tpl,...activeDungeon,tpl};
+  if(!activeDungeon || !tpl || activeDungeon.completedAt) return null;
+  const minimumExpiresAt=(Number(activeDungeon.startedAt)||0)+24*60*60*1000;
+  const expiresAt=Math.max(Number(activeDungeon.expiresAt)||0,minimumExpiresAt);
+  if(now>=expiresAt) return null;
+  return {...tpl,...activeDungeon,expiresAt,tpl};
 }
 
 export function countDungeonRunsThisWeek(state, week, weekKeyForDate){
@@ -76,7 +79,7 @@ export function launchDungeonState(state, options){
   const dungeon=(dungeons||[]).find(d=>d.id===id);
   if(!dungeon) return state;
 
-  const expiresAt=nextResetAt;
+  const expiresAt=now+24*60*60*1000;
 
   return {
     ...state,
@@ -100,8 +103,12 @@ export function launchDungeonState(state, options){
 
 export function expireActiveDungeonState(state, now=Date.now()){
   const current=state.activeDungeon;
-  return current && !current.completedAt && now>=(current.expiresAt||0)
-    ? {...state,activeDungeon:null}
+  if(!current||current.completedAt)return state;
+  const minimumExpiresAt=(Number(current.startedAt)||0)+24*60*60*1000;
+  const expiresAt=Math.max(Number(current.expiresAt)||0,minimumExpiresAt);
+  if(now>=expiresAt)return {...state,activeDungeon:null};
+  return expiresAt!==current.expiresAt
+    ? {...state,activeDungeon:{...current,expiresAt}}
     : state;
 }
 

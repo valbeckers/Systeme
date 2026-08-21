@@ -34,7 +34,7 @@ import {
   launchDungeonState,
   expireActiveDungeonState,
   canValidateDungeonRoom
-} from "./dungeonEngine.js?v=20260805-master-contract-random-01";
+} from "./dungeonEngine.js?v=20260821-dungeon-24h-v1";
 import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260818-selectable-bonus-v1";
 import {
   incrementLootState,
