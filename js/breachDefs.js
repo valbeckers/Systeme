@@ -33,10 +33,10 @@ const BREACH_RUPTURE_BOSSES = {
     ]
   },
   breach_wallsit15:{
-    id:"breach_boss_titan",name:"Le Titan",guards:[
-      {id:"delieur_jambes",name:"La Gorgone",objective:"Faire 10 minutes de mobilité du bas du corps",unit:"min",target:10,step:5},
-      {id:"lancier",name:"La Strige",objective:"Effectuer 50 fentes",unit:"rep",target:50,step:10},
-      {id:"porte_colonne",name:"Le Golem du Soléaire",objective:"Effectuer 100 élévations de mollets",unit:"rep",target:100,step:25},
+    id:"breach_boss_titan",name:"Antares, Monarque des Dragons",guards:[
+      {id:"delieur_jambes",name:"Baran, Monarque des Démons",objective:"Faire 10 minutes de mobilité du bas du corps",unit:"min",target:10,step:5},
+      {id:"lancier",name:"Sillad, Monarque des Glaces",objective:"Effectuer 50 fentes",unit:"rep",target:50,step:10},
+      {id:"porte_colonne",name:"Rakan, Monarque des Bêtes",objective:"Effectuer 100 élévations de mollets",unit:"rep",target:100,step:25},
     ]
   },
   breach_push300:{
