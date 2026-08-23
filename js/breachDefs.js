@@ -1,11 +1,11 @@
-// ─── DÉFINITIONS DES BRÈCHES ───────────────────────────────────────────────
-// Ce fichier contient uniquement les données statiques des Brèches et de leurs
+// ─── DÉFINITIONS DES PORTAILS ──────────────────────────────────────────────
+// Ce fichier contient uniquement les données statiques des portails et de leurs
 // Boss de Rupture. Il ne dépend ni de Preact, ni de l’état de l’application,
 // ni du stockage local.
 
-// Brèches : événement rare tiré une seule fois au reset quotidien.
+// Portails : événement rare tiré une seule fois au reset quotidien.
 const BREACH_COLOR="#163a70";
-const BREACH_LOOT_TEXT="Après avoir refermé une brèche : 1 objet aléatoire garanti.";
+const BREACH_LOOT_TEXT="Après avoir fermé un portail : 1 objet aléatoire garanti.";
 const BREACH_POOL=[
   {id:"breach_cold5",name:"Douche froide · 10min",bossObjective:"Prendre une douche froide pendant 10 minutes",icon:"🚿",unit:"min",target:10,step:10,binary:true,xp:1500,stat:"Sante",xp2:500,stat2:"Discipline",desc:""},
   {id:"breach_wallsit15",name:"Wall sit · 20min",bossObjective:"Faire 20 minutes de wall sit",icon:"🪑",unit:"min",target:20,step:5,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
@@ -22,7 +22,7 @@ const BREACH_POOL=[
   {id:"breach_martialflow60",name:"Flow martial · 1h",bossObjective:"Faire 1 heure de flow martial",icon:"🌊",unit:"min",target:60,step:10,xp:1500,stat:"Agilite",xp2:500,stat2:"Endurance",desc:""}
 ];
 
-// Chaque Brèche possède un Boss de Rupture attitré. En Rupture, le Boss reprend
+// Chaque portail possède un Boss de rupture attitré. En rupture, le Boss reprend
 // l’objectif initial et invoque une garde rapprochée de trois sous-quêtes.
 const BREACH_RUPTURE_BOSSES = {
   breach_cold5:{

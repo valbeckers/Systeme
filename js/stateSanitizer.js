@@ -291,7 +291,7 @@ export function cleanSystemState(raw){
     activeBreach:normalizeActiveBreach(data.activeBreach),
     alliedGiftPending:(data.alliedGiftPending&&data.alliedGiftPending.breachId)?{
       breachId:String(data.alliedGiftPending.breachId),
-      breachName:String(data.alliedGiftPending.breachName||"Brèche alliée"),
+      breachName:String(data.alliedGiftPending.breachName||"Portail allié"),
       createdAt:Number(data.alliedGiftPending.createdAt)||Date.now()
     }:null,
     breachRollDay:data.breachRollDay||null,

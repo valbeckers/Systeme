@@ -23,7 +23,7 @@ import {
   applyDailyStreakRewardState
 } from "./dailyEngine.js?v=20260820-regression-xp-log-v1";
 import { elanBonusPercent, xpMomentumAdjustment } from "./xpMomentum.js?v=20260817-xp-momentum-v1";
-import { BREACH_POOL } from "./breachDefs.js?v=20260821-alduin-rupture-v1";
+import { BREACH_POOL } from "./breachDefs.js?v=20260823-portails-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20260818-urgent-dungeon-v1";
 import {
   dungeonRoomRewardPairs,
@@ -35,7 +35,7 @@ import {
   expireActiveDungeonState,
   canValidateDungeonRoom
 } from "./dungeonEngine.js?v=20260821-dungeon-24h-v1";
-import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260818-selectable-bonus-v1";
+import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260823-portails-v1";
 import {
   incrementLootState,
   pickRandomBreachLoot,
@@ -86,7 +86,7 @@ import {
 } from "./itemImages.js?v=20260808-items-normalized-v1";
 import { UiIcon } from "./uiIcons.js?v=20260818-xp-icons-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260818-urgent-dungeon-v1";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260823-portails-v1";
 import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260821-reading-xp-v1";
 import {
   EXERCISE_ROTATIONS,
@@ -468,7 +468,7 @@ function App(){
     let base=buildInitialState();
     base=ensureExerciseRotationForDay(base,todayStr());
     base=processDailyBreachRoll(base,now);
-    // Auto-init quête urgente si aucune Brèche ne la remplace aujourd’hui
+    // Auto-init quête urgente si aucun portail ne la remplace aujourd’hui
     const sqs=base.specialQuests||[];
     const hasActive=sqs.find(q=>!q.completedAt&&now<(q.expiresAt||0));
     const resetStart=current7AMStart(now);
@@ -796,7 +796,7 @@ function App(){
   const extraXpLabels={
     eventBonus:"Bonus d’XP (élixir/événement)",
     sq:"Quête urgente",
-    breach:"Brèche",
+    breach:"Portail",
     dungeon:"Donjon",
     streak:"Bonus de streak",
     debt:"Remboursement de dette",
@@ -1220,7 +1220,7 @@ function App(){
     setState(s=>expireActiveDungeonState(s,Date.now()));
   },[now,state.activeDungeon?.expiresAt]);
 
-  // Une Brèche non refermée après 72 h entre en Rupture pendant 24 h.
+  // Un portail non fermé après 72 h entre en rupture pendant 24 h.
   useEffect(()=>{
     const b=state.activeBreach;
     if(!b||b.completedAt||now<(b.expiresAt||0))return;
@@ -1245,7 +1245,7 @@ function App(){
       if(!cur||cur.ruptureBoss||t<(cur.expiresAt||0))return s;
       return {...s,activeBreach:{...cur,progress:0,rupturedAt:t,ruptureBoss,expiresAt:ruptureBoss.expiresAt}};
     });
-    setRuptureUp({dungeonTitle:"Brèche en Rupture",icon:"⚡",name:boss.name,objective:b.desc,ruptureColor:"#ef4444"});
+    setRuptureUp({dungeonTitle:"Portail en rupture",icon:"⚡",name:boss.name,objective:b.desc,ruptureColor:"#ef4444"});
   },[now,state.activeBreach?.expiresAt,state.activeBreach?.ruptureBoss?.id]);
 
   // Échec automatique d’une dette non remboursée après son jour d’échéance
@@ -2806,7 +2806,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:"+(isRupture?"#ef444444":"#8dbbff44")+";background:linear-gradient(145deg,#07162f,#102e5c);padding-top:13px;padding-bottom:13px"},
         renderBreachTrail(),
         h("div",{style:"position:relative;z-index:2"},
-          h("div",{class:"ctitle",style:"margin:0 0 10px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"BRÈCHE ALLIÉE EN RUPTURE":"BRÈCHE ALLIÉE ACTIVE"):(isRupture?"BRÈCHE EN RUPTURE":"BRÈCHE ACTIVE")),
+          h("div",{class:"ctitle",style:"margin:0 0 10px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"PORTAIL ALLIÉ EN RUPTURE":"PORTAIL ALLIÉ ACTIF"):(isRupture?"PORTAIL EN RUPTURE":"PORTAIL ACTIF")),
           h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:0"},
             isRupture
               ? h(UiIcon,{iconKey:"interface.rupture",fallback:"☠️",slotSize:18,glyphSize:14})
@@ -2829,7 +2829,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:"+(isRupture?"#ef444444":"#8dbbff44")+";background:linear-gradient(145deg,#07162f,#102e5c)"},
       renderBreachTrail(),
       h("div",{style:"position:relative;z-index:2"},
-        h("div",{class:"ctitle",style:"margin:0 0 12px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},isRupture?"RUPTURE DE BRÈCHE":(b.alliedTeleport?"BRÈCHE ALLIÉE ACTIVE":"BRÈCHE ACTIVE")),
+        h("div",{class:"ctitle",style:"margin:0 0 12px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},isRupture?"RUPTURE DE PORTAIL":(b.alliedTeleport?"PORTAIL ALLIÉ ACTIF":"PORTAIL ACTIF")),
         h("div",{style:"padding:12px;border-radius:12px;border:1px solid rgba(219,234,254,.24);background:rgba(2,10,24,.36);box-shadow:inset 0 0 18px rgba(141,187,255,.05)"},
           h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px"},
           h("div",{style:"display:flex;align-items:center;gap:8px;min-width:0"},
@@ -3152,9 +3152,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function BreachInactiveCard(){
     if(activeBreach) return null;
     return h("div",{class:"card",style:"border-color:#8dbbff44;background:linear-gradient(145deg,#07162f,#102e5c)"},
-      h("div",{class:"ctitle",style:"margin:0;color:#dbeafe"},"BRÈCHE INACTIVE"),
+      h("div",{class:"ctitle",style:"margin:0;color:#dbeafe"},"PORTAIL INACTIF"),
       h("div",{style:"text-align:center;padding:10px 0 2px;color:var(--td);font-size:11px;line-height:1.45"},
-        "Aucune brèche active n'a été détectée à proximité."
+        "Aucun portail actif n'a été détecté à proximité."
       )
     );
   }
@@ -3901,7 +3901,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const eligible=counterpartBalanceSacrificeEligibleIds(state);
       if(eligible.length<3){disabled=true;reason="Trois objets différents sont nécessaires pour utiliser la Balance ("+eligible.length+"/3 disponibles).";}
     }else if(id==="teleportCrystal"){
-      if(activeBreach){disabled=true;reason="Une Brèche est déjà active.";}
+      if(activeBreach){disabled=true;reason="Un portail est déjà actif.";}
       else if(state.alliedGiftPending){disabled=true;reason="Choisissez d’abord l’objet offert par le pays allié.";}
     }else if(id==="invisibilityCape"){
       if(!activeDungeon){disabled=true;reason="Aucun donjon n’est actuellement actif.";}
@@ -3950,7 +3950,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         :id==="etherStopper"&&suspendedElixir
           ?"Réactiver l’élixir suspendu avec exactement "+fmtCD(suspendedElixir.remainingMs)+" restants ?"
           :id==="teleportCrystal"
-            ?"Briser le Cristal de téléportation pour rejoindre un pays voisin et ouvrir une Brèche aléatoire ?"
+            ?"Briser le Cristal de téléportation pour rejoindre un pays voisin et ouvrir un portail aléatoire ?"
             :id==="mysteryMap"
               ?"Déplier la Carte des profondeurs pour choisir la statistique du prochain donjon ?"
               :id==="counterpartBalance"
@@ -4434,7 +4434,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function triggerUrgentUp(sq,pairs){
     if(!sq || !pairs || !pairs.length) return;
     setTimeout(()=>setUrgentUp({
-      title:sq.forceBreachClosed?"BRÈCHE REFERMÉE":sq.isRupture?"RUPTURE MAÎTRISÉE":(sq.isBreach?"BRÈCHE REFERMÉE":"QUÊTE URGENTE COMPLÉTÉE"),
+      title:sq.forceBreachClosed?"PORTAIL FERMÉ":sq.isRupture?"RUPTURE MAÎTRISÉE":(sq.isBreach?"PORTAIL FERMÉ":"QUÊTE URGENTE COMPLÉTÉE"),
       name:sq.name,
       color:rank.color||"#fbbf24",
       glow:rank.glow||"#fbbf2455",
@@ -4696,7 +4696,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       )),
       h("div",{class:"rucont"},
         h(NotificationHeader,null),
-        h("div",{class:"ruevol",style:"color:"+((urgentUp.title==="BRÈCHE REFERMÉE"||urgentUp.title==="RUPTURE MAÎTRISÉE")?"#8dbbff":"#ef4444")+";text-shadow:0 0 16px "+((urgentUp.title==="BRÈCHE REFERMÉE"||urgentUp.title==="RUPTURE MAÎTRISÉE")?"rgba(141,187,255,.7)":"rgba(239,68,68,.7)")},urgentUp.title==="RUPTURE MAÎTRISÉE"?"RUPTURE MAÎTRISÉE !":urgentUp.title==="BRÈCHE REFERMÉE"?"BRÈCHE REFERMÉE !":"QUÊTE URGENTE COMPLÉTÉE !"),
+        h("div",{class:"ruevol",style:"color:"+((urgentUp.title==="PORTAIL FERMÉ"||urgentUp.title==="RUPTURE MAÎTRISÉE")?"#8dbbff":"#ef4444")+";text-shadow:0 0 16px "+((urgentUp.title==="PORTAIL FERMÉ"||urgentUp.title==="RUPTURE MAÎTRISÉE")?"rgba(141,187,255,.7)":"rgba(239,68,68,.7)")},urgentUp.title==="RUPTURE MAÎTRISÉE"?"RUPTURE MAÎTRISÉE !":urgentUp.title==="PORTAIL FERMÉ"?"PORTAIL FERMÉ !":"QUÊTE URGENTE COMPLÉTÉE !"),
         h("div",{class:"rurank",style:"--rc:"+(urgentUp.nameColor||color)+";--rg:"+(urgentUp.nameColor||color)+"66;color:"+(urgentUp.nameColor||color)+";text-shadow:0 0 18px "+(urgentUp.nameColor||color)+"66;font-size:"+urgentTitleSize+";letter-spacing:-1px;white-space:normal;width:calc(100vw - 32px);max-width:360px;line-height:1.08;overflow-wrap:anywhere;word-break:normal;hyphens:auto","data-r":urgentTitle},urgentTitle),
         h("div",{style:"margin-top:14px;display:flex;flex-direction:column;gap:6px;align-items:center"},
           (urgentUp.rewards||[]).map((r,i)=>{
@@ -5253,8 +5253,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       itemUseUp.resumed&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"L’élixir reprend avec exactement le temps qui lui restait."),
       itemUseUp.summoned&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Une seconde quête urgente a été invoquée. Elle accorde ses XP et ses objets normaux, mais ne peut pas être relancée."),
       itemUseUp.rewritten&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"La quête urgente active a été remplacée par une nouvelle quête urgente aléatoire."),
-      itemUseUp.alliedTeleport&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:350px;line-height:1.55;color:#dbeafe"},"Vous choisissez de vous allier à un pays voisin pour l’aider à refermer une Brèche."),
-      itemUseUp.alliedTeleport&&itemUseUp.breachName&&h("div",{class:"rulabel",style:"margin-top:8px;max-width:350px;line-height:1.45;color:#60a5fa"},"Brèche la plus proche : "+itemUseUp.breachName),
+      itemUseUp.alliedTeleport&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:350px;line-height:1.55;color:#dbeafe"},"Vous choisissez de vous allier à un pays voisin pour l’aider à fermer un portail."),
+      itemUseUp.alliedTeleport&&itemUseUp.breachName&&h("div",{class:"rulabel",style:"margin-top:8px;max-width:350px;line-height:1.45;color:#60a5fa"},"Portail le plus proche : "+itemUseUp.breachName),
       itemUseUp.armed&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:#5eead4"},"La prochaine transmutation ne coûtera que 3 Élixirs d’expérience mineurs."),
       itemUseUp.recordWon&&h("div",{class:"rulabel",style:"margin-top:12px"},"Record officiel battu : +500 XP."),
       itemUseUp.exchangeRewardId&&INVENTORY_ITEMS[itemUseUp.exchangeRewardId]&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:350px;line-height:1.55;color:#facc15"},"La Balance vous accorde : "+INVENTORY_ITEMS[itemUseUp.exchangeRewardId].name+"."),
@@ -5584,10 +5584,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         ),
         h("div",{style:"display:flex;justify-content:center;align-items:center;margin:14px 0 8px"},InventoryItemIcon("codex",128)),
         h("div",{style:"font-size:12px;line-height:1.6;color:var(--tx);text-align:center;margin-bottom:15px"},"Permet au joueur de consulter les quêtes et systèmes de l’application."),
-        h(Section,{id:"breach",title:"Brèches",count:breachList.length},
+        h(Section,{id:"breach",title:"Portails",count:breachList.length},
           h(Fragment,null,
-            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:6px"},"Une Brèche a 1 % de chance d’apparaître au reset quotidien. Elle remplace la quête urgente du jour et reste ouverte 72 h. Si elle n’est pas refermée après 72 h, elle entre en Rupture pendant 24 h : son Boss reprend l’objectif initial et invoque une garde rapprochée de 3 sous-quêtes."),
-            h("div",{style:"font-size:10px;color:#ef4444;font-family:Orbitron,sans-serif;line-height:1.5;font-weight:800;margin-bottom:10px"},"−25 % XP si la Brèche rompue n’est pas fermée dans les 24 h."),
+            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:6px"},"Un portail a 1 % de chance d’apparaître au reset quotidien. Il remplace la quête urgente du jour et reste ouvert 72 h. S’il n’est pas fermé après 72 h, il entre en rupture pendant 24 h : son Boss reprend l’objectif initial et invoque une garde rapprochée de 3 sous-quêtes."),
+            h("div",{style:"font-size:10px;color:#ef4444;font-family:Orbitron,sans-serif;line-height:1.5;font-weight:800;margin-bottom:10px"},"−25 % XP si le portail en rupture n’est pas fermé dans les 24 h."),
             groupByDominantStat(breachList,renderBreachCodex,b=>b.stat)
           )
         ),
