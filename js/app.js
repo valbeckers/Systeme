@@ -1552,6 +1552,12 @@ function App(){
     if(val<=0)return;
     if(el){el.value="";setTimeout(()=>{try{el.focus();}catch(_){}},50);}
     const cur=(obj.weekly)?(wLog[obj.id]||0):(tLog[obj.id]||0);
+    const hasDoubleBonusCap=!!BONUS_QUEST_BY_ID[obj.id]&&!obj.binary&&!['run','walk','march'].includes(obj.id);
+    if(hasDoubleBonusCap){
+      const bonusCap=Math.max(0,getEffectiveTarget(obj.id))*2;
+      val=Math.min(val,Math.max(0,bonusCap-cur));
+      if(val<=0)return;
+    }
     let xp=0;
     let capJustReached_DISABLED=false;
     const b=getEffectiveTarget(obj.id);
@@ -2265,7 +2271,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
     const pct=(d/displayTarget)*100, over=d>displayTarget;
     const rankColor = rank.color || "#9ca3af";
-    const isCapped = false;
+    const hasDoubleBonusCap=!!BONUS_QUEST_BY_ID[obj.id]&&!['run','walk','march'].includes(obj.id);
+    const doubleBonusCap=hasDoubleBonusCap?displayTarget*2:null;
+    const isCapped=doubleBonusCap!==null&&d>=doubleBonusCap;
     let barColor = rankColor;
     // Barre alignée sur Historique :
     // en cours = hachurée, complétée = pleine, dépassée = pleine + glow
@@ -2316,6 +2324,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("div",{class:"qxp",style:"white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},fmtNum(d)+"/"+fmtNum(displayTarget)+" "+((d>1||displayTarget>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[obj.unit]||obj.unit))
           )
       ),
+      isCapped&&h("div",{
+        style:"margin-top:7px;font-family:Orbitron,sans-serif;font-size:8px;letter-spacing:.7px;color:#4ade80;text-transform:uppercase"
+      },"CAP ×2 ATTEINT"),
       obj.completionRatio&&h("div",{
         style:"margin-top:7px;font-family:Orbitron,sans-serif;font-size:8px;letter-spacing:.7px;color:"+(d>=displayTarget?"#4ade80":d>=effectiveT?"var(--rc)":"var(--td)")+";text-transform:uppercase"
       },d>=displayTarget
@@ -2357,6 +2368,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         },"Marque du dépassement active : "+fmtNum(bestThisWeek)+"/"+fmtNum(goal)+" "+shownUnit);
       })(),
       (()=>{
+        if(isCapped)return null;
         // Repas sans stimulation : un seul bouton +1 repas
         if(obj.id==="sp_mealnostim"){
           const isMax = d >= (obj.target||2);
