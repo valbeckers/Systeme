@@ -23,7 +23,7 @@ import {
   applyDailyStreakRewardState
 } from "./dailyEngine.js?v=20260820-regression-xp-log-v1";
 import { elanBonusPercent, xpMomentumAdjustment } from "./xpMomentum.js?v=20260817-xp-momentum-v1";
-import { BREACH_POOL } from "./breachDefs.js?v=20260823-portails-v1";
+import { BREACH_POOL, BREACH_RUPTURE_BOSSES } from "./breachDefs.js?v=20260831-portail-boss-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20260818-urgent-dungeon-v1";
 import {
   dungeonRoomRewardPairs,
@@ -2801,6 +2801,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     };
     const renderBreachTrail=()=>h(BreachFxOverlay,{variant:compact?"home":"quests",theme:isRupture?"rupture":"breach"});
     const breachBossObjective=(BREACH_POOL.find(entry=>entry.id===b.id)||{}).bossObjective||b.desc||b.name;
+    const breachBossName=(BREACH_RUPTURE_BOSSES[b.id]||{}).name||"Boss inconnu";
+    const mainStep=b.id==="breach_sprint10"?10:(b.step||10);
 
     if(compact){
       return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:"+(isRupture?"#ef444444":"#8dbbff44")+";background:linear-gradient(145deg,#07162f,#102e5c);padding-top:13px;padding-bottom:13px"},
@@ -2819,6 +2821,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
                   h("span",{style:"width:10px;flex-shrink:0"},"")
                 )
               ),
+              !isRupture&&h("div",{style:"font-size:10px;color:#8dbbff;line-height:1.25;margin-bottom:4px"},"Boss : "+breachBossName),
               h("div",{class:"qbar"},h("div",{class:"qfill partial",style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,#274f88,#274f88 5px,#7aa7df 5px,#7aa7df 10px);background-size:14px 14px;opacity:.95"}))
             )
           )
@@ -2838,7 +2841,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               : QuestIcon(b.id,b.icon,14,"line-height:1.1;min-width:24px;text-align:center"),
             h("div",{style:"min-width:0"},
               h("div",{style:"font-size:13px;font-weight:800;color:#fff;line-height:1.25"},isRupture?rupture.name:b.name),
-              !compact&&h("div",{style:"font-size:10px;color:#cbd5e1;line-height:1.4;margin-top:3px"},isRupture?b.desc:b.desc)
+              !isRupture&&h("div",{style:"font-size:10px;color:#8dbbff;line-height:1.4;margin-top:3px"},"Boss : "+breachBossName),
+              !compact&&b.desc&&h("div",{style:"font-size:10px;color:#cbd5e1;line-height:1.4;margin-top:3px"},b.desc)
             )
           ),
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#dbeafe;line-height:1.35;text-align:right;white-space:nowrap"},pairs.map((p,i)=>h("div",{key:i},fmtNum(p.xp||0)+" XP · "+(STAT_LBL[p.stat]||p.stat||""))))
@@ -2854,7 +2858,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
         !isRupture&&!mainDone&&h("div",{style:"margin-top:9px;display:flex;gap:8px"},
           h("button",{onClick:()=>addMain(1),style:standardButtonStyle},"+1 "+breachUnitLabel(b.unit,1)),
-          h("button",{onClick:()=>addMain(b.step||10),style:standardButtonStyle},"+"+(b.step||10)+" "+breachUnitLabel(b.unit,b.step||10))
+          h("button",{onClick:()=>addMain(mainStep),style:standardButtonStyle},"+"+mainStep+" "+breachUnitLabel(b.unit,mainStep))
         ),
 
         !compact&&isRupture&&h("div",{style:"margin-top:10px"},
@@ -2866,7 +2870,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             h("div",{style:"font-size:9.5px;color:var(--td);line-height:1.4;margin-top:3px"},breachBossObjective),
             !mainDone&&h("div",{style:"display:flex;gap:7px;margin-top:8px"},
               h("button",{onClick:()=>addMain(1),style:standardButtonStyle},"+1 "+breachUnitLabel(b.unit,1)),
-              h("button",{onClick:()=>addMain(b.step||10),style:standardButtonStyle},"+"+(b.step||10)+" "+breachUnitLabel(b.unit,b.step||10))
+              h("button",{onClick:()=>addMain(mainStep),style:standardButtonStyle},"+"+mainStep+" "+breachUnitLabel(b.unit,mainStep))
             )
           ),
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#fff;letter-spacing:1px;text-transform:uppercase;margin:11px 0 7px"},"GARDE RAPPROCHÉE — "+guardDoneCount+"/"+guards.length),
