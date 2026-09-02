@@ -1,6 +1,6 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
-import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260821-reading-xp-v1";
-import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20260820-running-milestones-v1";
+import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260902-pullups-bonus-v1";
+import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20260902-pullups-bonus-v1";
 import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20260818-urgent-dungeon-v1";
 import {
   isDebtEligibleQuest,
@@ -87,7 +87,7 @@ import {
 import { UiIcon } from "./uiIcons.js?v=20260818-xp-icons-v1";
 import { saveStoredState } from "./storage.js";
 import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260823-portails-v1";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260821-reading-xp-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260902-pullups-bonus-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -893,7 +893,8 @@ function App(){
   function getEffectiveTarget(objId, isWeekly=false){
     const obj = BONUS_QUEST_BY_ID[objId]||objs.find(o=>o.id===objId);
     let target;
-    if(obj && obj.validateAt != null) target=Number(obj.validateAt);
+    if(obj && obj.dynamicTargetKey) target=getStatLevelTarget(obj.dynamicTargetKey,state.stats);
+    else if(obj && obj.validateAt != null) target=Number(obj.validateAt);
     else if(obj && Number.isFinite(Number(obj.target))) target=Number(obj.target);
     else target=getRankBase(objId, ri, prestige, state.stats);
     return obj&&Number.isFinite(Number(obj.finalTargetCap))
@@ -2407,6 +2408,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           bonus_memory:[1,5,10],
           bonus_sun:[1,5,10],
           bonus_pullups:[1,5,10],
+          bonus_negative_pullups:[1,10],
+          bonus_australian_pullups:[1,10],
           bonus_jumping_jacks:[50,100],
           bonus_dead_hang:[1,5],
           bonus_wall_sit:[1,5]
@@ -5366,8 +5369,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         );
       }
       const pushTarget=getStatLevelTarget("push",state.stats);
-      const backTarget=getStatLevelTarget("negative_pullups",state.stats);
-      const australianTarget=getStatLevelTarget("squats",state.stats);
       const absTarget=getStatLevelTarget("abs",state.stats);
       const legRaiseTarget=legRaiseTargetForForceLevel(force);
       const plankTarget=Math.max(1,Math.ceil(force/10));
@@ -5382,11 +5383,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h(FamilyTitle,{label:"PECS & TRICEPS"}),
           h(Exercise,{iconKey:"pushups",icon:"💪🏼",name:"Pompes",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
           h(Exercise,{iconKey:"dips",icon:"💪🏼",name:"Dips",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]})
-        ),
-        h("div",{style:familyStyle},
-          h(FamilyTitle,{label:"DOS & BICEPS"}),
-          h(Exercise,{iconKey:"negative_pullups",icon:"💪🏼",name:"Tractions négatives",target:backTarget,unit:"reps",rewards:[{stat:"Force",xp:"12/rep"}]}),
-          h(Exercise,{iconKey:"australian_pullups",icon:"💪🏼",name:"Tractions australiennes",target:australianTarget,unit:"reps",rewards:[{stat:"Force",xp:"6/rep"}]})
         ),
         h("div",{style:familyStyle},
           h(FamilyTitle,{label:"ABDOS"}),

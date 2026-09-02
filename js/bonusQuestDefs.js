@@ -8,6 +8,8 @@ export const BONUS_QUESTS = [
   {id:"grips",name:"Grip",icon:"✊🏻",unit:"min",base:10,fixedBase:true,xpPer:15,stat:"Force"},
   {id:"bonus_wall_sit",name:"Wall-sit",icon:"🧱",unit:"min",base:5,fixedBase:true,xpPer:50,stat:"Force"},
   {id:"bonus_pullups",name:"Tractions",icon:"💪🏼",unit:"rep",base:10,fixedBase:true,xpPer:30,stat:"Force"},
+  {id:"bonus_negative_pullups",name:"Tractions négatives",icon:"💪🏼",exerciseId:"negative_pullups",unit:"rep",base:8,dynamicTargetKey:"negative_pullups",xpPer:12,stat:"Force"},
+  {id:"bonus_australian_pullups",name:"Tractions australiennes",icon:"💪🏼",exerciseId:"australian_pullups",unit:"rep",base:15,dynamicTargetKey:"squats",xpPer:6,stat:"Force"},
   {id:"bonus_dead_hang",name:"Dead hang",icon:"🫳🏼",unit:"min",base:5,fixedBase:true,xpPer:30,stat:"Force"},
 
   {id:"med",name:"Méditation",icon:"🧘🏻‍♂️",unit:"min",base:10,fixedBase:true,xpPer:15,stat:"Esprit"},
@@ -28,7 +30,7 @@ export const BONUS_QUESTS = [
 
   {id:"bonus_delayed_task",name:"Accomplir 1 tâche repoussée",icon:"🕗",unit:"succès",base:1,binary:true,binaryXp:150,stat:"Discipline"},
   {id:"bonus_vacuum",name:"Aspirer",icon:"🧹",unit:"succès",base:1,binary:true,binaryXp:150,stat:"Discipline"}
-].map(q=>({...q,category:q.category||q.stat,target:q.dynamicEndurance?undefined:q.base,daily:true,weekly:false,optional:true,selectableBonus:true}));
+].map(q=>({...q,category:q.category||q.stat,target:(q.dynamicEndurance||q.dynamicTargetKey)?undefined:q.base,daily:true,weekly:false,optional:true,selectableBonus:true}));
 
 export const BONUS_QUEST_BY_ID = Object.fromEntries(BONUS_QUESTS.map(q=>[q.id,q]));
 export const BONUS_QUEST_GOAL = 5;
