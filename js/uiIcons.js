@@ -71,6 +71,11 @@ export const UI_ICON_IMAGES=Object.freeze({
   "quest.bonus_delayed_task":"./assets/ui/quest-task.png?v=20260809-medallions-v4",
   "quest.bonus_vacuum":"./assets/ui/dungeon-steward.png?v=20260809-medallions-v5",
 
+  // Objectifs professionnels hebdomadaires.
+  "quest.weekly_pro_meetings":"./assets/ui/quest-pro-meetings.png?v=20260903-pro-icons-v2",
+  "quest.weekly_pro_actions":"./assets/ui/quest-pro-actions.png?v=20260903-pro-icons-v2",
+  "quest.weekly_pro_anticipation":"./assets/ui/quest-pro-anticipation.png?v=20260903-pro-icons-v2",
+
   "quest.pushups":"./assets/ui/quest-pushups.png?v=20260809-medallions-v4",
   "quest.push":"./assets/ui/quest-pushups.png?v=20260809-medallions-v4",
   "exercise.pushups":"./assets/ui/quest-pushups.png?v=20260809-medallions-v4",
