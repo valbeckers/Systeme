@@ -2748,6 +2748,35 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
+  function ChallengeHeader({title,color,badge,badgeColor,remaining}){
+    return h("div",{style:"margin-bottom:10px"},
+      h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:10px"},
+        h("div",{class:"ctitle",style:"margin:0;color:"+color+";min-width:0;text-shadow:0 0 10px "+color+"55"},title),
+        badge&&h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+(badgeColor||color)+";border:1px solid "+(badgeColor||color)+"55;border-radius:999px;padding:4px 7px;white-space:nowrap;flex-shrink:0"},badge)
+      ),
+      h("div",{style:"font-size:9px;color:"+color+";font-family:Orbitron,sans-serif;margin-top:5px;text-align:left;display:flex;align-items:center;gap:4px"},
+        h(UiIcon,{iconKey:"interface.countdown",fallback:"⏱",slotSize:14,glyphSize:10}),
+        fmtCD(Math.max(0,remaining))+" restants"
+      )
+    );
+  }
+
+  function ChallengeSummary({icon,name,subtitle,progressText,pct,color}){
+    return h("div",{style:"padding:10px;border-radius:11px;border:1px solid rgba(255,255,255,.12);background:rgba(2,10,24,.28)"},
+      h("div",{style:"display:flex;align-items:center;gap:8px"},
+        icon,
+        h("div",{style:"flex:1;min-width:0"},
+          h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:8px"},
+            h("div",{style:"font-size:12px;color:#fff;font-weight:800;line-height:1.25;min-width:0"},name),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+color+";white-space:nowrap;flex-shrink:0"},progressText)
+          ),
+          subtitle&&h("div",{style:"font-size:9.5px;color:var(--td);line-height:1.35;margin-top:3px"},subtitle),
+          h("div",{class:"qbar",style:"margin-top:7px"},h("div",{class:"qfill partial",style:"width:"+Math.max(0,Math.min(100,pct))+"%;background-image:repeating-linear-gradient(-45deg,"+color+"99,"+color+"99 5px,"+color+" 5px,"+color+" 10px);background-size:14px 14px;opacity:.95"}))
+        )
+      )
+    );
+  }
+
   function BreachCard({compact=false}={}){
     const b=activeBreach;if(!b)return null;
     const remaining=Math.max(0,b.expiresAt-now);
@@ -2844,28 +2873,19 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const breachBossObjective=(BREACH_POOL.find(entry=>entry.id===b.id)||{}).bossObjective||b.desc||b.name;
     const breachBossName=(BREACH_RUPTURE_BOSSES[b.id]||{}).name||"Boss inconnu";
     const mainStep=b.id==="breach_sprint10"?10:(b.step||10);
+    const breachColor=isRupture?(rupture.ruptureColor||"#ef4444"):"#8dbbff";
+    const breachTitle=isRupture?"RUPTURE DE PORTAIL":(b.alliedTeleport?"PORTAIL ALLIÉ ACTIF":"PORTAIL ACTIF");
+    const breachBadge=STAT_LBL[b.stat]||b.stat;
+    const breachIcon=isRupture
+      ? h(UiIcon,{iconKey:"interface.rupture",fallback:"☠️",slotSize:24,glyphSize:14})
+      : QuestIcon(b.id,b.icon,14,"line-height:1.1;min-width:24px;text-align:center");
 
     if(compact){
       return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:"+(isRupture?"#ef444444":"#8dbbff44")+";background:linear-gradient(145deg,#07162f,#102e5c);padding-top:13px;padding-bottom:13px"},
         renderBreachTrail(),
         h("div",{style:"position:relative;z-index:2"},
-          h("div",{class:"ctitle",style:"margin:0 0 10px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},b.alliedTeleport?(isRupture?"PORTAIL ALLIÉ EN RUPTURE":"PORTAIL ALLIÉ ACTIF"):(isRupture?"PORTAIL EN RUPTURE":"PORTAIL ACTIF")),
-          h("div",{style:"display:flex;align-items:center;gap:8px;margin-bottom:0"},
-            isRupture
-              ? h(UiIcon,{iconKey:"interface.rupture",fallback:"☠️",slotSize:18,glyphSize:14})
-              : QuestIcon(b.id,b.icon,14),
-            h("div",{style:"flex:1;min-width:0"},
-              h("div",{style:"font-size:12px;color:#fff;margin-bottom:3px;display:flex;justify-content:space-between;align-items:center;gap:8px"},
-                h("span",{style:"white-space:normal;line-height:1.25;word-break:normal;min-width:0;font-weight:800"},isRupture?rupture.name:b.name),
-                h("div",{style:"display:flex;align-items:center;gap:6px"},
-                  h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:#dbeafe;white-space:nowrap;flex-shrink:0"},progressText),
-                  h("span",{style:"width:10px;flex-shrink:0"},"")
-                )
-              ),
-              !isRupture&&h("div",{style:"font-size:10px;color:#8dbbff;line-height:1.25;margin-bottom:4px"},"Boss : "+breachBossName),
-              h("div",{class:"qbar"},h("div",{class:"qfill partial",style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,#274f88,#274f88 5px,#7aa7df 5px,#7aa7df 10px);background-size:14px 14px;opacity:.95"}))
-            )
-          )
+          h(ChallengeHeader,{title:breachTitle,color:breachColor,badge:breachBadge,badgeColor:STAT_COLOR[b.stat]||breachColor,remaining}),
+          h(ChallengeSummary,{icon:breachIcon,name:isRupture?rupture.name:b.name,subtitle:!isRupture?"Boss : "+breachBossName:null,progressText,pct,color:breachColor})
         )
       );
     }
@@ -2873,7 +2893,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:"+(isRupture?"#ef444444":"#8dbbff44")+";background:linear-gradient(145deg,#07162f,#102e5c)"},
       renderBreachTrail(),
       h("div",{style:"position:relative;z-index:2"},
-        h("div",{class:"ctitle",style:"margin:0 0 12px;color:"+(isRupture?(rupture.ruptureColor||"#ef4444"):"#dbeafe")+";text-shadow:0 0 10px rgba(255,255,255,.55)"},isRupture?"RUPTURE DE PORTAIL":(b.alliedTeleport?"PORTAIL ALLIÉ ACTIF":"PORTAIL ACTIF")),
+        h(ChallengeHeader,{title:breachTitle,color:breachColor,badge:breachBadge,badgeColor:STAT_COLOR[b.stat]||breachColor,remaining}),
         h("div",{style:"padding:12px;border-radius:12px;border:1px solid rgba(219,234,254,.24);background:rgba(2,10,24,.36);box-shadow:inset 0 0 18px rgba(141,187,255,.05)"},
           h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px"},
           h("div",{style:"display:flex;align-items:center;gap:8px;min-width:0"},
@@ -2892,11 +2912,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{class:"qbar"},h("div",{class:"qfill partial",style:"width:"+pct+"%;background-image:repeating-linear-gradient(-45deg,#274f88,#274f88 5px,#7aa7df 5px,#7aa7df 10px);background-size:14px 14px;opacity:.95"})),
           h("div",{class:"qxp",style:"color:#dbeafe;white-space:nowrap;min-width:82px;text-align:right;flex-shrink:0"},progressText)
         ),
-        h("div",{style:"font-size:10px;color:#8dbbff;font-family:Orbitron,sans-serif;margin-top:4px;text-align:left;display:flex;align-items:center;gap:4px"},
-          h(UiIcon,{iconKey:"interface.countdown",fallback:"⏱",slotSize:14,glyphSize:10}),
-          fmtCD(remaining)+" restants"
-        ),
-
         !isRupture&&!mainDone&&h("div",{style:"margin-top:9px;display:flex;gap:8px"},
           h("button",{onClick:()=>addMain(1),style:standardButtonStyle},"+1 "+breachUnitLabel(b.unit,1)),
           h("button",{onClick:()=>addMain(mainStep),style:standardButtonStyle},"+"+mainStep+" "+breachUnitLabel(b.unit,mainStep))
@@ -2980,6 +2995,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const completedRooms=d ? (d.completedRooms||[]) : [];
     const selectedRoom=d&&Number.isInteger(selectedDungeonRoom)?d.rooms[selectedDungeonRoom]:null;
     const color=d ? d.color : rank.color;
+    const dungeonBoss=d&&d.rooms&&d.rooms.length?d.rooms[d.rooms.length-1]:null;
+    const dungeonRoomCount=d&&d.rooms?d.rooms.length:0;
+    const dungeonPct=dungeonRoomCount?completedRooms.length/dungeonRoomCount*100:0;
+    const dungeonIcon=d?h(UiIcon,{iconKey:"dungeon."+d.id,fallback:d.icon,slotSize:24,glyphSize:16}):null;
     if(compact && !d) return null;
     if(d&&d.ruptureBoss){
       const rb=d.ruptureBoss;
@@ -3035,17 +3054,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     if(d){
       return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:#f59e0b44;background:linear-gradient(145deg,#140e03,#261b06)"},
         h(BreachFxOverlay,{variant:"quests",theme:"dungeon"}),
-        h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
-          h("div",{style:"min-width:0"},
-            h("div",{class:"ctitle",style:"margin:0;color:#f59e0b"},"DONJON EN COURS"),
-            h("div",{style:"font-size:10px;color:#f59e0b;font-family:Orbitron,sans-serif;margin-top:4px;text-align:left;display:flex;align-items:center;gap:4px"},
-              h(UiIcon,{iconKey:"interface.countdown",fallback:"⏱",slotSize:14,glyphSize:10}),
-              fmtCD(remaining)+" restantes"
-            ),
-            h(MasterContractStatus,{d})
-          ),
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap"},STAT_LBL[d.stat]||d.stat)
-        ),
+        h(ChallengeHeader,{title:"DONJON EN COURS",color:"#f59e0b",badge:STAT_LBL[d.stat]||d.stat,badgeColor:color,remaining}),
+        h(ChallengeSummary,{icon:dungeonIcon,name:d.title||d.short,subtitle:dungeonBoss?"Boss : "+dungeonBoss.name:null,progressText:completedRooms.length+"/"+dungeonRoomCount+" salles",pct:dungeonPct,color:"#f59e0b"}),
+        h(MasterContractStatus,{d}),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:#fff;letter-spacing:1px;text-transform:uppercase;margin:12px 0 7px"},"SALLES DU DONJON — "+completedRooms.length+"/"+dungeonRoomCount),
         h("div",{style:"display:flex;flex-direction:column;gap:6px;margin-top:10px"},d.rooms.map((room,i)=>{
           const done=completedRooms.includes(i);
           const boss=i===d.rooms.length-1;
@@ -3094,6 +3106,9 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const remaining=d.expiresAt-now;
     const completedRooms=d.completedRooms||[];
     const color=d.color||rank.color;
+    const bossRoom=d.rooms&&d.rooms.length?d.rooms[d.rooms.length-1]:null;
+    const roomCount=d.rooms?d.rooms.length:0;
+    const progressPct=roomCount?completedRooms.length/roomCount*100:0;
 
     // Sur l'accueil, un donjon en rupture doit être présenté comme tel
     // et non comme un donjon normal fraîchement ouvert.
@@ -3148,20 +3163,16 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
     return h("div",{class:"card breach-electric",style:"position:relative;overflow:visible;border-color:#f59e0b44;background:linear-gradient(145deg,#140e03,#261b06)"},
       h(BreachFxOverlay,{variant:"home",theme:"dungeon"}),
-      h("div",{style:"margin-bottom:8px"},
-        h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:10px"},
-          h("div",{class:"ctitle",style:"margin:0;color:#f59e0b;min-width:0"},"DONJON EN COURS"),
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap;flex-shrink:0"},STAT_LBL[d.stat]||d.stat)
-        ),
-        h(MasterContractStatus,{d,compact:true})
-      ),
-      h("div",{style:"display:flex;flex-direction:column;gap:5px;margin-top:10px"},d.rooms.map((room,i)=>{
-        const done=completedRooms.includes(i);
-        return h("div",{key:i,style:"display:flex;gap:8px;align-items:center;padding:7px 8px;border-radius:9px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.045);opacity:"+(done?"0.7":"1")},
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:"+(done?"#4ade80":"var(--td)")+";width:18px;text-align:center;flex-shrink:0"},done?"✓":(i+1)),
-          h("div",{style:"font-size:12px;color:var(--tx);font-weight:"+(i===d.rooms.length-1?"700":"400")+";line-height:1.25;min-width:0"},(i===d.rooms.length-1?"Boss — ":"")+room.name)
-        );
-      }))
+      h(ChallengeHeader,{title:"DONJON EN COURS",color:"#f59e0b",badge:STAT_LBL[d.stat]||d.stat,badgeColor:color,remaining}),
+      h(ChallengeSummary,{
+        icon:h(UiIcon,{iconKey:"dungeon."+d.id,fallback:d.icon,slotSize:24,glyphSize:16}),
+        name:d.title||d.short,
+        subtitle:bossRoom?"Boss : "+bossRoom.name:null,
+        progressText:completedRooms.length+"/"+roomCount+" salles",
+        pct:progressPct,
+        color:"#f59e0b"
+      }),
+      h(MasterContractStatus,{d,compact:true})
     );
   }
 
