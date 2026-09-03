@@ -1,5 +1,5 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
-import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260903-objectifs-pro-v1";
+import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260903-libelles-entretiens-v1";
 import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20260903-pullups-icons-v1";
 import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20260818-urgent-dungeon-v1";
 import {
@@ -61,7 +61,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260811-linear-xp-v1";
 import { StatsTab } from "./statsView.js?v=20260806-remove-radar";
-import { HistoryTab } from "./historyView.js?v=20260818-activity-row-centering-v1";
+import { HistoryTab } from "./historyView.js?v=20260903-hide-pro-history-v1";
 import {
   RANK_BASES,
   ROMAN,

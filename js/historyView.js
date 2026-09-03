@@ -15,6 +15,11 @@ const { h, Fragment } = window.preact;
 
 const WEEKLY_BADGE_COLOR = "#818cf8";
 const BONUS_BADGE_COLOR = "#fbbf24";
+const HIDDEN_FROM_HISTORY_IDS = new Set([
+  "weekly_pro_meetings",
+  "weekly_pro_actions",
+  "weekly_pro_anticipation"
+]);
 
 function QuestIcon(id, fallback, size=14, extraStyle=""){
   const slotSize=size>=18?26:18;
@@ -75,7 +80,8 @@ export function HistoryTab({
   const we=new Date(ws); we.setDate(ws.getDate()+6);
   const fmt=d=>d.getDate().toString().padStart(2,"0")+"/"+(d.getMonth()+1).toString().padStart(2,"0");
   const lbl=wkOff===0?"Cette semaine":wkOff===1?"Semaine derni\u00e8re":fmt(ws)+" \u2013 "+fmt(we);
-  const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional)),...sortStat(objs.filter(o=>o.weekly)),...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.bonusHidden))];
+  const visibleInHistory=o=>!HIDDEN_FROM_HISTORY_IDS.has(o.id);
+  const ordered=[...sortStat(objs.filter(o=>visibleInHistory(o)&&o.daily&&!o.optional)),...sortStat(objs.filter(o=>visibleInHistory(o)&&o.weekly)),...sortStat(objs.filter(o=>visibleInHistory(o)&&o.daily&&o.optional&&!o.bonusHidden))];
 
   const exerciseHistoryDefs=RECORD_EXERCISE_DEFS;
   const rotatingSourceIds=new Set(["push","negative_pullups","abs","squats","calves"]);
@@ -91,9 +97,9 @@ export function HistoryTab({
     return rotatedQuestObjects(baseObjs,rotation,state.stats,state.totalXp).find(q=>q.id===obj.id)||obj;
   }
   const standardDailyRecordObjs=[
-    ...sortStat(objs.filter(o=>o.daily&&!o.optional&&!o.binary&&!rotatingSourceIds.has(o.id)&&!hiddenFromRecordsAndTotals.has(o.id))),
-    ...sortStat(objs.filter(o=>o.weekly&&!o.binary&&!rotatingSourceIds.has(o.id))),
-    ...sortStat(objs.filter(o=>o.daily&&o.optional&&!o.binary&&!o.bonusHidden&&!rotatingSourceIds.has(o.id)))
+    ...sortStat(objs.filter(o=>visibleInHistory(o)&&o.daily&&!o.optional&&!o.binary&&!rotatingSourceIds.has(o.id)&&!hiddenFromRecordsAndTotals.has(o.id))),
+    ...sortStat(objs.filter(o=>visibleInHistory(o)&&o.weekly&&!o.binary&&!rotatingSourceIds.has(o.id))),
+    ...sortStat(objs.filter(o=>visibleInHistory(o)&&o.daily&&o.optional&&!o.binary&&!o.bonusHidden&&!rotatingSourceIds.has(o.id)))
   ];
   const recordDisplayObjs=[...exerciseHistoryDefs,...standardDailyRecordObjs];
 
