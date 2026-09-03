@@ -1,6 +1,6 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
-import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260902-pullups-bonus-v1";
-import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20260902-pullups-bonus-v1";
+import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260903-objectifs-pro-v1";
+import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20260903-pullups-icons-v1";
 import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20260818-urgent-dungeon-v1";
 import {
   isDebtEligibleQuest,
@@ -87,7 +87,7 @@ import {
 import { UiIcon } from "./uiIcons.js?v=20260818-xp-icons-v1";
 import { saveStoredState } from "./storage.js";
 import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260823-portails-v1";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260902-pullups-bonus-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260903-objectifs-pro-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -787,10 +787,27 @@ function App(){
     .filter(e=>sameDayTs(e.completedAt))
     .reduce((s,e)=>s+(Number(e.xp)||0),0);
 
+  const questXpEarnedToday=(obj,amount,target)=>{
+    if(obj.weekly&&obj.tiers&&obj.tiers.length){
+      const prior=Object.entries(state.dailyLog||{}).reduce((sum,[day,log])=>{
+        if(day>=today)return sum;
+        const date=new Date(day+"T12:00:00");
+        return !Number.isNaN(date.getTime())&&wkStr(date)===wk
+          ?sum+(Number(log&&log[obj.id])||0)
+          :sum;
+      },0);
+      const after=prior+(Number(amount)||0);
+      return obj.tiers.reduce((sum,tier)=>prior<tier.at&&after>=tier.at
+        ?sum+(tier.xp||0)+(tier.xp2||0)+(tier.xp3||0)
+        :sum,0);
+    }
+    return calcQuestTotalXp(obj,amount,target);
+  };
+
   const todayXp = Object.entries(tLog).reduce((s,[id,a])=>{
     const o=BONUS_QUEST_BY_ID[id]||objs.find(x=>x.id===id); if(!o) return s;
     const b = getEffectiveTarget(o.id);
-    return s + calcQuestTotalXp(o, a, b);
+    return s + questXpEarnedToday(o,a,b);
   },0) + extraTodayXp + legacyStreakTodayXp + legacySqTodayXp + legacyActiveDungeonTodayXp + legacyCompletedDungeonTodayXp;
 
   const extraXpLabels={
@@ -818,11 +835,11 @@ function App(){
     return {
       key:"quest_"+id,
       label:(BONUS_QUEST_BY_ID[id]?"Bonus · ":"")+(obj.name||id),
-      xp:calcQuestTotalXp(obj,amount,target),
+      xp:questXpEarnedToday(obj,amount,target),
       iconId:obj.iconKey||obj.exerciseId||obj.id,
       icon:obj.exerciseIcon||obj.icon
     };
-  }).filter(Boolean);
+  }).filter(row=>row&&Math.abs(row.xp)>1e-9);
   const urgentQuestToday=[...(state.specialQuests||[])]
     .reverse()
     .find(q=>sameDayTs(q.completedAt))||null;
@@ -1559,6 +1576,11 @@ function App(){
       val=Math.min(val,Math.max(0,bonusCap-cur));
       if(val<=0)return;
     }
+    if(obj.hardCap){
+      const hardCap=Math.max(0,getEffectiveTarget(obj.id,obj.weekly));
+      val=Math.min(val,Math.max(0,hardCap-cur));
+      if(val<=0)return;
+    }
     let xp=0;
     let capJustReached_DISABLED=false;
     const b=getEffectiveTarget(obj.id);
@@ -2274,7 +2296,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const rankColor = rank.color || "#9ca3af";
     const hasDoubleBonusCap=!!BONUS_QUEST_BY_ID[obj.id]&&!['run','walk','march'].includes(obj.id);
     const doubleBonusCap=hasDoubleBonusCap?displayTarget*2:null;
-    const isCapped=doubleBonusCap!==null&&d>=doubleBonusCap;
+    const isHardCapped=!!obj.hardCap&&d>=displayTarget;
+    const isCapped=isHardCapped||(doubleBonusCap!==null&&d>=doubleBonusCap);
     let barColor = rankColor;
     // Barre alignée sur Historique :
     // en cours = hachurée, complétée = pleine, dépassée = pleine + glow
@@ -2327,7 +2350,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       ),
       isCapped&&h("div",{
         style:"margin-top:7px;font-family:Orbitron,sans-serif;font-size:8px;letter-spacing:.7px;color:#4ade80;text-transform:uppercase"
-      },"CAP ×2 ATTEINT"),
+      },isHardCapped?"OBJECTIF HEBDOMADAIRE ATTEINT":"CAP ×2 ATTEINT"),
       obj.completionRatio&&h("div",{
         style:"margin-top:7px;font-family:Orbitron,sans-serif;font-size:8px;letter-spacing:.7px;color:"+(d>=displayTarget?"#4ade80":d>=effectiveT?"var(--rc)":"var(--td)")+";text-transform:uppercase"
       },d>=displayTarget
@@ -2410,13 +2433,16 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           bonus_pullups:[1,5,10],
           bonus_negative_pullups:[1,10],
           bonus_australian_pullups:[1,10],
+          weekly_pro_meetings:[1],
+          weekly_pro_actions:[1,10],
+          weekly_pro_anticipation:[1],
           bonus_jumping_jacks:[50,100],
           bonus_dead_hang:[1,5],
           bonus_wall_sit:[1,5]
         };
         const bonusQuickAmounts=BONUS_QUICK_AMOUNTS[obj.id];
         if(bonusQuickAmounts){
-          const quickUnit=amount=>obj.unit==="rep"&&amount>1?"reps":obj.unit;
+          const quickUnit=amount=>({rep:"reps",action:"actions"}[obj.unit]&&amount>1?{rep:"reps",action:"actions"}[obj.unit]:obj.unit);
           return h("div",{style:"display:flex;gap:8px;margin-top:8px"},
             bonusQuickAmounts.map(amount=>h("button",{
               key:amount,

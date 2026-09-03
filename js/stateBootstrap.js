@@ -3,7 +3,7 @@
 // sauvegarde courante ou, à défaut, des données historiques importées.
 // Il conserve également les migrations ponctuelles encore nécessaires.
 
-import { DEFS, SP } from "./questDefs.js?v=20260902-pullups-bonus-v1";
+import { DEFS, SP } from "./questDefs.js?v=20260903-objectifs-pro-v1";
 import { next7AM, todayStr, addDaysStr } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
 import { loadStoredState } from "./storage.js";
