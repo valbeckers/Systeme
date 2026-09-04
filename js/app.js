@@ -2324,7 +2324,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{class:"qname",style:"flex:1;min-width:0;display:flex;align-items:"+(isTwoLinePullupTitle?"flex-start":"center")+";gap:8px;white-space:normal;overflow:visible;line-height:1.25;min-height:18px;flex-wrap:"+(isTwoLinePullupTitle?"nowrap":"wrap")},
           QuestIcon(obj.exerciseId||obj.id,obj.exerciseIcon||obj.icon,14,"width:18px;height:18px;margin-top:0;line-height:1"),
           questTitle,
-          isWeekly&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
         ),
         h("div",{style:"font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:0.5px;text-align:right;white-space:nowrap;flex-shrink:0;line-height:1.25;align-self:flex-start;padding-top:0"},
           obj.tiers
