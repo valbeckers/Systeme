@@ -14,9 +14,9 @@ const DEFS = [
   {id:"calves", name:"Mollets",unit:"rep", xpPer:2, daily:false, weekly:false,optional:false,legacyRotation:true,stat:"Force", icon:"🦵🏻", base:30, stat2:"Agilite", xpPer2:1},
   {id:"grips",  name:"Grip",      unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Force",         icon:"\u270A\uD83C\uDFFB",         base:10, fixedBase:true},
   // ─── OBJECTIFS PROFESSIONNELS HEBDOMADAIRES ───────────────────────────
-  {id:"weekly_pro_meetings",name:"Entretiens/RDV",unit:"RDV",xpPer:25,completionBonusXp:200,daily:false,weekly:true,optional:false,stat:"Discipline",icon:"🤝",target:12,hardCap:true},
-  {id:"weekly_pro_actions",name:"Actions commerciales",unit:"action",xpPer:6,completionBonusXp:200,daily:false,weekly:true,optional:false,stat:"Discipline",icon:"📞",target:50,hardCap:true},
-  {id:"weekly_pro_anticipation",name:"Entretiens/RDV S+1",unit:"RDV",daily:false,weekly:true,optional:false,stat:"Discipline",icon:"📅",target:10,hardCap:true,tiers:[{at:10,xp:200,stat:"Discipline"}]},
+  {id:"weekly_pro_meetings",name:"Entretiens/RDV",unit:"RDV",xpPer:25,completionBonusXp:200,daily:false,weekly:true,workweekOnly:true,optional:false,stat:"Discipline",icon:"🤝",target:12,hardCap:true},
+  {id:"weekly_pro_actions",name:"Actions commerciales",unit:"action",xpPer:6,completionBonusXp:200,daily:false,weekly:true,workweekOnly:true,optional:false,stat:"Discipline",icon:"📞",target:50,hardCap:true},
+  {id:"weekly_pro_anticipation",name:"Entretiens/RDV S+1",unit:"RDV",daily:false,weekly:true,workweekOnly:true,optional:false,stat:"Discipline",icon:"📅",target:10,hardCap:true,tiers:[{at:10,xp:200,stat:"Discipline"}]},
   // ─── ESPRIT ───────────────────────────────────────────────────────────
   {id:"reading",name:"Lecture",unit:"min",xpPer:10,daily:true,weekly:false,optional:false,stat:"Esprit",icon:"📚",base:20,startDate:"2026-05-21"},
   // ─── ESPRIT ───────────────────────────────────────────────────────────

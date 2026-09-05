@@ -1,5 +1,5 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
-import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260904-objectifs-pro-safe-v1";
+import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260905-workweek-window-v1";
 import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20260903-pullups-icons-v1";
 import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20260818-urgent-dungeon-v1";
 import {
@@ -372,6 +372,17 @@ function QuestIcon(id, fallback, size=14, extraStyle=""){
     extraStyle
   });
 }
+
+// Fenêtre des objectifs professionnels : lundi dès le reset de 7 h,
+// puis mardi-vendredi inclus. Ils sont masqués le week-end.
+function isWorkweekWindowOpen(at=Date.now()){
+  const date=new Date(at);
+  const day=date.getDay();
+  if(day===0||day===6)return false;
+  return day!==1||date.getHours()>=7;
+}
+
+const isQuestActiveNow=(obj,at=Date.now())=>!obj?.workweekOnly||isWorkweekWindowOpen(at);
 
 const getRank    = xp => { for(let i=RANKS.length-1;i>=0;i--)if(xp>=RANKS[i].xpRequired)return RANKS[i]; return RANKS[0]; };
 const getNext    = id => { const i=RANKS.findIndex(r=>r.id===id); return i<RANKS.length-1?RANKS[i+1]:null; };
@@ -1574,6 +1585,7 @@ function App(){
 
   function validate(obj,e,forceVal){
     if(e){e.preventDefault();e.stopPropagation();}
+    if(!isQuestActiveNow(obj))return;
     const el=document.getElementById("qi_"+obj.id);
     const raw=(inputs.current[obj.id]||"").toString().replace(",",".");
     let val=parseFloat(raw); if(!val||val<=0)return;
@@ -3430,7 +3442,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
   function Home(){
     const dailyObjs = sortStat(objs.filter(o=>o.daily&&!o.optional));
-    const weeklyObjs = sortStat(objs.filter(o=>o.weekly));
+    const weeklyObjs = sortStat(objs.filter(o=>o.weekly&&isQuestActiveNow(o,now)));
     const bonusObjs = dailyBonusQuestObjects();
 
     const isDone=(obj,isWeeklyRow)=>{
@@ -3659,7 +3671,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function Quests(){
     const reqBase=sortStat(objs.filter(o=>o.daily&&!o.optional));
     const bonBase=dailyBonusQuestObjects();
-    const wkBase=sortStat(objs.filter(o=>o.weekly));
+    const wkBase=sortStat(objs.filter(o=>o.weekly&&isQuestActiveNow(o,now)));
 
     const isQuestDone=(obj)=>{
       if(obj.isEnduranceChoice) return false;
