@@ -851,9 +851,11 @@ function App(){
       icon:obj.exerciseIcon||obj.icon
     };
   }).filter(row=>row&&Math.abs(row.xp)>1e-9);
-  const urgentQuestToday=[...(state.specialQuests||[])]
-    .reverse()
-    .find(q=>sameDayTs(q.completedAt))||null;
+  // La quête terminée peut avoir déjà quitté la liste active lors d'un
+  // renouvellement. Le journal permanent conserve alors son id et son icône.
+  const urgentQuestToday=[...(state.specialQuests||[]),...(state.completedSqLog||[])]
+    .filter(q=>sameDayTs(q.completedAt))
+    .sort((a,b)=>(b.completedAt||0)-(a.completedAt||0))[0]||null;
   const completedDungeonToday=[...(state.dungeonLog||[])]
     .reverse()
     .find(entry=>sameDayTs(entry.completedAt))||null;
