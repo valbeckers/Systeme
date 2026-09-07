@@ -127,6 +127,8 @@ const EXACT=new Map([
   ["OBJECTIF DU BOSS","Boss objective"],["OBJET OFFERT","Gift item"],["SALLES DU DONJON — ","Dungeon rooms — "],["DOUBLE DONJON","Double dungeon"],
   ["CARTE DES PROFONDEURS DISPONIBLE","Map of the depths available"],["CATALYSEUR ALCHIMIQUE DISPONIBLE","Alchemical catalyst available"],["UTILISER LE CATALYSEUR","Use catalyst"],
   ["Totaux depuis le début","All-time totals"],["Tout sélectionner","Select all"],["Ouvrir les réglages","Open settings"],
+  ["TOTAUX DEPUIS LE DÉBUT","All-time totals"],["APPLIQUER","Apply"],["Validation simple","Single completion"],
+  ["PECS & TRICEPS","CHEST & TRICEPS"],["verre","glass"],["verres","glasses"],
   ["Termine toutes les salles pour accéder au boss","Clear every room to reach the boss"],["Venez à bout du nouveau Boss pour sortir du donjon","Defeat the new boss to leave the dungeon"],
   ["Tous les objectifs du donjon sont multipliés par 1,5.","All dungeon objectives are multiplied by 1.5."],["Une contrainte spéciale s’applique à cette salle.","A special constraint applies to this room."],
   ["10 min au lieu de 5 min et aucune stimulation","10 min instead of 5 min with no stimulation"],
@@ -345,6 +347,18 @@ const INLINE=[
   ["Mémorisation","Memory training"],["Méditation","Meditation"],["Hydratation","Hydration"],["Équilibre","Balance"],["Lecture","Reading"],
   ["Tractions","Pull-ups"],["Pompes","Push-ups"],["Fentes","Lunges"],["Abdos","Abs"],["Gainage","Plank"],["Mollets","Calf raises"],
   ["Escaliers","Stairs"],["Aspirer","Vacuuming"],["Récurer","Deep cleaning"],["Poussière","Dusting"],["Rangement","Tidying up"],["Linge","Laundry"],
+  ["Éveil corporel","Body activation"],["Bloc profond","Deep work"],
+  ["Le Troll des Cavernes","The Cave Troll"],["La Horde","The Horde"],["Le Changeforme","The Shapeshifter"],["Le Détraqueur","The Dementor"],["Le Grand Gobelin","The Great Goblin"],
+  ["Le Balrog de Morgoth","Morgoth’s Balrog"],["Le Roi-Sorcier d’Angmar","The Witch-king of Angmar"],["Khamûl, l’Ombre de l’Orient","Khamûl, the Shadow of the East"],
+  ["Suladàn, l’Immortel","Suladàn, the Immortal"],["Antares, Monarque des Dragons","Antares, Monarch of Dragons"],["Baran, Monarque des Démons","Baran, Monarch of Demons"],
+  ["Sillad, Monarque des Glaces","Sillad, Monarch of Frost"],["Rakan, Monarque des Bêtes","Rakan, Monarch of Beasts"],["Le Colosse","The Colossus"],
+  ["La Gorgone","The Gorgon"],["Le Golem du Soléaire","The Solar Golem"],["Le Piège Mécanique","The Mechanical Trap"],["Le Minotaure","The Minotaur"],
+  ["La Harpie","The Harpy"],["Le Piège de Roches","The Rock Trap"],["Le Cyclope","The Cyclops"],["Le Ver Pourpre","The Purple Worm"],["Le Naga","The Naga"],
+  ["L’Archiviste Noir","The Dark Archivist"],["Le Scribe Déchu","The Fallen Scribe"],["Le Palantír","The Palantír"],["Le Sage Déchu","The Fallen Sage"],
+  ["La Chimère","The Chimera"],["La Gargouille","The Gargoyle"],["Le Satyre","The Satyr"],["Le Draugr","The Draugr"],["Le Warg Alpha","The Alpha Warg"],
+  ["Le Léviathan","The Leviathan"],["Le Métamorphe","The Shapeshifter"],["Le Doyen des Invisibles","The Elder of the Unseen"],["Le Djinn des Vents","The Djinn of Winds"],
+  ["Le Shinobi","The Shinobi"],["Jörmungandr","Jörmungandr"],["TOTAUX DEPUIS LE DÉBUT","ALL-TIME TOTALS"],["Validation simple","Single completion"],
+  ["Objectif","Objective"],["SALLES","ROOMS"],["Salles","Rooms"],["Salle","Room"],
   ["Rando","Hike"],["Marche","Walk"],
   ["Agilité","Agility"],["Agilite","Agility"],["Santé","Health"],["Sante","Health"],["Endurance","Stamina"],["Esprit","Mind"],["Force","Strength"],
 ];
@@ -377,7 +391,11 @@ export function translateUiText(value){
     .replace(/\bDonjons\b/g,"Dungeons")
     .replace(/\bDonjon\b/g,"Dungeon")
     .replace(/\bQuêtes\b/g,"Quests")
-    .replace(/\bQuête\b/g,"Quest");
+    .replace(/\bQuête\b/g,"Quest")
+    .replace(/(\d)(min|reps|km)\b/g,"$1 $2")
+    .replace(/Health\/verre\b/g,"Health\/glass")
+    .replace(/\bverres\b/g,"glasses")
+    .replace(/\bverre\b/g,"glass");
   return out;
 }
 
