@@ -1,5 +1,5 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
-import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260905-workweek-window-v1";
+import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260907-commercial-actions-7-5xp-v1";
 import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20260903-pullups-icons-v1";
 import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20260818-urgent-dungeon-v1";
 import {
@@ -462,6 +462,7 @@ const fmtNum = (v, max=2) => {
   if(Math.abs(n - Math.round(n)) < 1e-9) return String(Math.round(n));
   return n.toFixed(max).replace(/\.0+$/,"").replace(/(\.\d*?)0+$/,"$1");
 };
+const fmtFrNum = (v, max=2) => fmtNum(v,max).replace(".",",");
 
 // Le nettoyage et les migrations de la sauvegarde sont centralisés dans
 // stateSanitizer.js ; storage.js ne gère que localStorage et la rotation
@@ -476,7 +477,7 @@ const RUN_RECORD_RESET_DAY = "2026-07-13";
 function App(){
   const [state,setState]   = useState(()=>{
     const now=Date.now();
-    let base=buildInitialState();
+    let base={...buildInitialState(),objectives:DEFS};
     base=ensureExerciseRotationForDay(base,todayStr());
     base=processDailyBreachRoll(base,now);
     // Auto-init quête urgente si aucun portail ne la remplace aujourd’hui
@@ -2361,15 +2362,15 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               ?(obj.binaryXp+" XP · "+(STAT_LBL[obj.stat]||obj.stat))
               :obj.completionBonusXp
                 ?h(Fragment,null,
-                    h("div",null,obj.xpPer+" XP/"+obj.unit+" · "+(STAT_LBL[obj.stat]||obj.stat)),
+                    h("div",null,fmtFrNum(obj.xpPer)+" XP/"+obj.unit+" · "+(STAT_LBL[obj.stat]||obj.stat)),
                     h("div",{style:"opacity:"+(d>=displayTarget?"1":"0.6")+";white-space:nowrap"},(d>=displayTarget?"✓ ":"")+"BONUS · "+obj.completionBonusXp+" XP · "+(STAT_LBL[obj.stat]||obj.stat))
                   )
               :obj.stat2
                 ?h(Fragment,null,
-                    h("div",null,obj.xpPer+" XP/"+obj.unit+" · "+(STAT_LBL[obj.stat]||obj.stat)),
+                    h("div",null,fmtFrNum(obj.xpPer)+" XP/"+obj.unit+" · "+(STAT_LBL[obj.stat]||obj.stat)),
                     h("div",null,(obj.xpPer2||obj.xpPer)+" XP/"+obj.unit+" · "+(STAT_LBL[obj.stat2]||obj.stat2))
                   )
-                :(obj.xpPer+" XP/"+obj.unit+" · "+(STAT_LBL[obj.stat]||obj.stat))
+                :(fmtFrNum(obj.xpPer)+" XP/"+obj.unit+" · "+(STAT_LBL[obj.stat]||obj.stat))
         )
       ),
       h("div",{class:"qrow"},
@@ -3428,7 +3429,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
                       :QuestIcon(row.iconId,row.icon,14))
                   :h("span",{style:"width:18px;text-align:center;color:var(--rc)"},"•"),
               h("span",{style:"flex:1;min-width:0;font-size:12px;color:var(--tx);line-height:1.3"},row.label),
-              h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;white-space:nowrap;color:"+(row.xp<0?"#ef4444":row.xp>0?"#4ade80":"var(--td)")},(row.xp>0?"+":"")+fmtNum(row.xp)+" XP")
+              h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;white-space:nowrap;color:"+(row.xp<0?"#ef4444":row.xp>0?"#4ade80":"var(--td)")},(row.xp>0?"+":"")+fmtFrNum(row.xp)+" XP")
             )))
           :h("div",{style:"padding:18px 0;text-align:center;color:var(--td);font-size:12px"},"Aucun XP gagné aujourd’hui."),
         h("div",{style:"display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:13px;border-top:1px solid var(--rc);font-family:Orbitron,sans-serif"},
@@ -3654,7 +3655,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             const atLimit=!active&&selected.length>=BONUS_QUEST_GOAL;
             const reward=obj.binary
               ? obj.binaryXp+" XP"
-              : obj.xpPer+" XP/"+obj.unit+(obj.stat2?" + "+obj.xpPer2+" XP "+(STAT_LBL[obj.stat2]||obj.stat2)+"/"+obj.unit:"");
+              : fmtFrNum(obj.xpPer)+" XP/"+obj.unit+(obj.stat2?" + "+fmtFrNum(obj.xpPer2)+" XP "+(STAT_LBL[obj.stat2]||obj.stat2)+"/"+obj.unit:"");
             return h("button",{key:obj.id,onClick:()=>toggleBonusQuestKeepingScroll(obj.id),disabled:locked||atLimit,
               style:"width:100%;display:flex;align-items:center;gap:9px;text-align:left;padding:10px;margin-bottom:7px;border-radius:9px;border:1px solid "+(active?(STAT_COLOR[group.stat]||"#a855f7"):"rgba(255,255,255,.09)")+";background:"+(active?"rgba(168,85,247,.09)":"rgba(255,255,255,.025)")+";color:var(--tx);opacity:"+(locked?.8:atLimit?.42:1)+";cursor:"+((locked||atLimit)?"not-allowed":"pointer")},
               QuestIcon(obj.iconKey||obj.id,obj.icon,16),
