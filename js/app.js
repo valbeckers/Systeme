@@ -4448,7 +4448,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
   function Settings(){
     if(!showSet)return null;
-    const ordered=[...sortStat(objs.filter(o=>o.daily&&!o.optional)),...sortStat(objs.filter(o=>o.weekly))];
+    const settingsHiddenQuestIds=new Set(["weekly_pro_meetings","weekly_pro_actions","weekly_pro_anticipation"]);
+    const ordered=[
+      ...sortStat(objs.filter(o=>o.daily&&!o.optional)),
+      ...sortStat(objs.filter(o=>o.weekly&&!settingsHiddenQuestIds.has(o.id)))
+    ];
     function applyEdit(){
       setState(s=>{
         let xpD=0;
