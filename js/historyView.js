@@ -255,7 +255,7 @@ export function HistoryTab({
       });
       return h("div",{class:"card"},
         h("div",{style:"display:flex;align-items:center;justify-content:space-between;cursor:pointer",onClick:()=>toggle("totals")},
-          h("div",{class:"ctitle",style:"margin:0"},"All-time totals"+(firstDay?" \u2014 "+fmtFirst(firstDay):"")),
+          h("div",{class:"ctitle",style:"margin:0"},"Totaux depuis le d\u00e9but"+(firstDay?" \u2014 "+fmtFirst(firstDay):"")),
           h(ChevronBtn,{k:"totals"})
         ),
         open.totals&&h(Fragment,null,
