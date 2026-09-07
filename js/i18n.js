@@ -111,6 +111,75 @@ const EXACT=new Map([
   ["Pour vous remercier, le pays allié vous offre l’objet de votre choix.","As thanks, the allied country offers you an item of your choice."],
   ["Choisissez la statistique de la prochaine quête urgente. La quête précise restera aléatoire et le cycle anti-répétition actuel ne sera pas modifié.","Choose the attribute of the next emergency quest. The exact quest will remain random and the current anti-repeat cycle will not change."],
   ["Choisissez la statistique du prochain donjon. Si plusieurs donjons correspondent à cette statistique, le donjon précis restera tiré au sort.","Choose the attribute of the next dungeon. If several dungeons match it, the exact dungeon will remain random."],
+  ["Utilise une Clé de Donjon depuis ton inventaire pour ouvrir l’accès.","Use a dungeon key from your inventory to unlock access."],
+  ["Tri · Par quantité","Sort · By quantity"],["Tri · Par nom","Sort · By name"],["Par nom","By name"],
+  ["Succès ✓","Success ✓"],["✘ Échec","✘ Failure"],["× Échec","× Failure"],
+  ["JOURS DE STREAK","Streak days"],["OBJECTIF HEBDOMADAIRE ATTEINT","Weekly objective reached"],
+  ["RUPTURE DE DONJON","Dungeon break"],["QUÊTE URGENTE COMPLÉTÉE","Emergency quest completed"],["QUÊTE URGENTE COMPLÉTÉE !","Emergency quest completed!"],
+  ["PORTAIL FERMÉ !","Portal cleared!"],["RUPTURE MAÎTRISÉE !","Portal break contained!"],
+  ["Faire 10 minutes de mobilité complète","Do 10 minutes of full-body mobility"],["Réaliser 5 minutes de Wall Sit","Do 5 minutes of wall sit"],
+  ["Effectuer 10 minutes de mobilité des épaules et du dos","Do 10 minutes of shoulder and back mobility"],
+  ["Boss objective : Pompes · 500reps","Boss objective: Push-ups · 500 reps"],["Boss objective : Tractions · 50reps","Boss objective: Pull-ups · 50 reps"],
+  ["Boss objective : Gainage · 20min","Boss objective: Plank · 20 min"],["Boss objective : Squats · 250reps","Boss objective: Squats · 250 reps"],
+  ["Boss objective : Douche froide · 10min","Boss objective: Cold shower · 10 min"],
+  ["CHOISIR LES QUÊTES BONUS","Select bonus quests"],["CHOISIR UNE STATISTIQUE","Select an attribute"],["CHOISIR 3 CONTREPARTIES","Select 3 sacrifices"],["CHOISIR LA CONTREPARTIE","Select the reward"],
+  ["CONTINUER SANS CET OBJET","Continue without this item"],["ENTRER DANS LE DONJON","Enter the dungeon"],["ENTRER DANS LE DONJON ?","Enter the dungeon?"],
+  ["OBJECTIF DU BOSS","Boss objective"],["OBJET OFFERT","Gift item"],["SALLES DU DONJON — ","Dungeon rooms — "],["DOUBLE DONJON","Double dungeon"],
+  ["CARTE DES PROFONDEURS DISPONIBLE","Map of the depths available"],["CATALYSEUR ALCHIMIQUE DISPONIBLE","Alchemical catalyst available"],["UTILISER LE CATALYSEUR","Use catalyst"],
+  ["Totaux depuis le début","All-time totals"],["Tout sélectionner","Select all"],["Ouvrir les réglages","Open settings"],
+  ["Termine toutes les salles pour accéder au boss","Clear every room to reach the boss"],["Venez à bout du nouveau Boss pour sortir du donjon","Defeat the new boss to leave the dungeon"],
+  ["Tous les objectifs du donjon sont multipliés par 1,5.","All dungeon objectives are multiplied by 1.5."],["Une contrainte spéciale s’applique à cette salle.","A special constraint applies to this room."],
+  ["10 min au lieu de 5 min et aucune stimulation","10 min instead of 5 min with no stimulation"],
+  ["Terminez d’abord la quête urgente actuellement active.","Complete the currently active emergency quest first."],
+  ["La quête urgente du jour doit être terminée avant d’utiliser le Jeton.","Today’s emergency quest must be completed before using the token."],
+  ["La quantité manquante sera ajoutée à demain et devra être remboursée avant le reset suivant. Cette dette ne pourra pas être reportée.","The missing amount will be added to tomorrow and must be repaid before the following reset. This debt cannot be postponed."],
+  ["La statistique sera tirée au sort, puis le donjon sera tiré parmi ceux de cette statistique. Êtes-vous certain de vouloir entrer ?","An attribute will be drawn at random, followed by a matching dungeon. Are you sure you want to enter?"],
+  ["Signer le Contrat du Maître pour le prochain donjon ? La contrainte sera tirée au sort et restera cachée jusqu’au moment où elle s’activera.","Sign the Master’s contract for the next dungeon? The constraint will be drawn at random and remain hidden until it activates."],
+  ["Déplier la Carte des profondeurs pour choisir la statistique du prochain donjon ?","Unfold the Map of the depths to choose the next dungeon’s attribute?"],
+  ["Briser le Cristal de téléportation pour rejoindre un pays voisin et ouvrir un portail aléatoire ?","Shatter the teleportation crystal to travel to a neighbouring country and open a random portal?"],
+  ["Tracer la Rune de Réécriture ? La quête urgente active sera remplacée par une nouvelle quête urgente aléatoire. La Rune sera consommée.","Draw the Rune of rewriting? The active emergency quest will be replaced with a new random emergency quest. The rune will be consumed."],
+  ["Utiliser la Balance des contreparties pour sacrifier 3 objets différents et choisir 1 nouvel objet ?","Use the Balance of exchange to sacrifice 3 different items and choose 1 new item?"],
+  ["Une reconnaissance de dette a déjà été utilisée aujourd’hui.","An acknowledgement of debt has already been used today."],["Une régression a déjà été déclarée aujourd’hui.","A regression has already been declared today."],
+  ["Un Jeton de relance a déjà été utilisé aujourd’hui.","A reroll token has already been used today."],["Un accès au donjon est déjà ouvert.","Dungeon access is already open."],
+  ["Un donjon a déjà été lancé aujourd’hui.","A dungeon has already been started today."],["Un donjon est déjà actif.","A dungeon is already active."],
+  ["Un donjon est déjà actif. La Carte des profondeurs doit être utilisée avant le prochain lancement.","A dungeon is already active. The Map of the depths must be used before the next start."],
+  ["Un Contrat du Maître est déjà préparé pour le prochain donjon.","A Master’s contract is already prepared for the next dungeon."],
+  ["Un Catalyseur alchimique est déjà préparé pour la prochaine transmutation.","An alchemical catalyst is already prepared for the next transmutation."],
+  ["Un élixir est actuellement suspendu. Réactivez-le avant d’en consommer un autre.","An elixir is currently paused. Resume it before consuming another one."],
+  ["Une seconde quête urgente a été invoquée. Elle accorde ses XP et ses objets normaux, mais ne peut pas être relancée.","A second emergency quest has been summoned. It grants its usual XP and items, but cannot be rerolled."],
+  ["Vous choisissez de vous allier à un pays voisin pour l’aider à fermer un portail.","You choose to ally with a neighbouring country and help it clear a portal."],
+  ["Le prochain donjon sera soumis à une contrainte aléatoire, cachée jusqu’au moment où elle s’activera. Récompenses : +20 % XP si le donjon est terminé.","The next dungeon will have a random constraint, hidden until it activates. Rewards: +20% XP if the dungeon is cleared."],
+  ["5 Élixirs d’expérience mineurs ont été fusionnés en 1 Élixir d’expérience magistral.","5 minor experience elixirs were merged into 1 supreme experience elixir."],
+  ["Le Catalyseur et le Grimoire ont fusionné 3 Élixirs d’expérience mineurs en 1 Élixir d’expérience magistral.","The catalyst and grimoire merged 3 minor experience elixirs into 1 supreme experience elixir."],
+  ["You have succombé à la tentation, une pénalité vous est imposée :","You gave in to temptation. A penalty has been imposed:"],
+  ["ABDOS","ABS"],["CRÉER UNE DETTE ?","Create a debt?"],["Clause révélée","Clause revealed"],["Salle","Room"],["Salle ","Room "],["la salle liée","the linked room"],
+  ["jour","day"],["jours","days"],["tâche","task"],["ÉLAN +","Momentum +"],["ÉLIXIR SUSPENDU · ","Paused elixir · "],["ᚱ DESTIN RETRACÉ","ᚱ Fate rewritten"],
+  ["XP bonus (élixir/événement)","XP bonus (elixir/event)"],["Totaux depuis le début","All-time totals"],
+  ["Catalyseur disponible · ","Catalyst available · "],["Catalyseur alchimique disponible · utilisez-le pour réaliser la transmutation avec 3 Élixirs mineurs.","Alchemical catalyst available · use it to perform the transmutation with 3 minor elixirs."],
+  ["Le Catalyseur peut compléter cette transmutation : 3 Élixirs d’expérience mineurs seront nécessaires au lieu de 5.","The catalyst can complete this transmutation: 3 minor experience elixirs will be required instead of 5."],
+  ["Le contrat doit être utilisé avant le lancement d’un donjon.","The contract must be used before starting a dungeon."],
+  ["Tu as déjà lancé un donjon aujourd'hui. Prochain lancement disponible demain.","You have already started a dungeon today. The next start is available tomorrow."],
+  ["Tu as déjà lancé un donjon aujourd’hui. Prochain lancement disponible demain.","You have already started a dungeon today. The next start is available tomorrow."],
+  ["La prochaine quête urgente est déjà orientée vers ","The next emergency quest is already set to "],["Le prochain donjon est déjà orienté vers ","The next dungeon is already set to "],
+  ["Vous pouvez déplier la Carte avant d’ouvrir le Donjon afin de choisir la statistique du prochain Donjon.","You can unfold the map before opening the dungeon to choose the next dungeon’s attribute."],
+  ["Vous pouvez signer le Contrat avant d’ouvrir le Donjon. Une contrainte aléatoire restera cachée jusqu’à son activation et accordera +20 % XP si le Donjon est terminé.","You can sign the contract before opening the dungeon. A random constraint will remain hidden until it activates and grant +20% XP if the dungeon is cleared."],
+  ["Trois objets différents sont nécessaires pour utiliser la Balance (","Three different items are required to use the Balance ("],
+  ["Utiliser la Potion d’invisibilité éphémère pour traverser la salle « ","Use the temporary invisibility potion to cross the room “"],
+  ["Utiliser l’Onguent de récupération pour valider « ","Use the recovery ointment to clear “"],
+  ["Une Marque du dépassement est actuellement dessinée sur « ","A Spark of transcendence is currently assigned to “"],
+  ["Effacer la Marque du dépassement actuellement dessinée sur « ","Remove the Spark of transcendence currently assigned to “"],
+  ["Créer une dette sur « ","Create a debt for “"],["Lancer ce donjon avec la contrainte « ","Start this dungeon with the “"],
+  ["Sacrifier ces 3 objets et consommer la Balance pour recevoir « ","Sacrifice these 3 items and consume the Balance to receive “"],
+  ["Réactiver l’élixir suspendu avec exactement ","Resume the paused elixir with exactly "],
+  ["Un élixir est déjà actif pendant encore ","An elixir is already active for another "],
+  ["Le même malus sera répercuté sur les deux compteurs : −","The same penalty will be applied to both counters: −"],
+  ["Êtes-vous certain de vouloir ","Are you sure you want to "],
+  ["TOUTES LES STATISTIQUES","ALL ATTRIBUTES"],["EFFACER LA MARQUE","Remove the mark"],["ORIENTER LA BOUSSOLE","Set the compass"],["SIGNER LE CONTRAT","Sign the contract"],
+  ["VALIDER LES 2 OBJETS","Confirm both items"],["Vaincre le nouveau Boss","Defeat the new boss"],
+  ["La Balance vous accorde : ","The Balance grants you: "],["La Carte des profondeurs oriente ce lancement vers ","The Map of the depths directs this start towards "],
+  ["Orienter la prochaine quête urgente vers la statistique ","Set the next emergency quest to the "],
+  ["Ton navigateur n'a pas pu copier automatiquement. Copie le texte ci-dessous.","Your browser could not copy automatically. Copy the text below."],
+  ["Tu as succombé à la tentation, une pénalité vous est imposée :","You gave in to temptation. A penalty has been imposed:"],
 
   // Codex and inventory descriptions
   ["Permet au joueur de consulter les quêtes et systèmes de l’application.","Lets the player view the app’s quests and systems."],
@@ -225,7 +294,35 @@ const FRAGMENTS=[
   ["La quête urgente active a été remplacée par une nouvelle quête urgente aléatoire.","The active emergency quest has been replaced with a new random emergency quest."],
   ["Vous bénéficiez de +","You gain +"],[" % d’XP supplémentaires pendant 24 h.","% additional XP for 24 hours."],[" % d’XP sur toutes les statistiques pendant 24 h.","% XP across all attributes for 24 hours."],
   [" pendant 24 h."," for 24 hours."],[" sur toutes les statistiques"," across all attributes"],[" dans "," in "],
+  ["Après chaque montée de niveau : 1 objet aléatoire garanti.","After each level-up: 1 guaranteed random item."],["Après chaque montée de rang : 2 objets au choix garantis.","After each rank-up: choose 2 guaranteed items."],
+  ["Après avoir fermé un portail : 1 objet aléatoire garanti.","After clearing a portal: 1 guaranteed random item."],
+  ["Après avoir complété la quête urgente, toutes les quêtes journalières et 5 quêtes bonus dans la même journée","After completing the emergency quest, all daily quests and 5 bonus quests on the same day"],
+  ["Après avoir complété le Donjon de l’Alchimiste","After clearing the Alchemist’s dungeon"],["Après avoir complété le Donjon du Pèlerin","After clearing the Pilgrim’s dungeon"],
+  ["Après avoir complété le Donjon du Guerrier","After clearing the Warrior’s dungeon"],["Après avoir complété le Donjon du Gardien","After clearing the Guardian’s dungeon"],
+  ["Après avoir complété le Donjon du Chasseur","After clearing the Hunter’s dungeon"],["Après avoir complété le Donjon du Moine","After clearing the Monk’s dungeon"],
+  ["En fusionnant 5 Élixirs d’expérience mineurs via le Grimoire de l’Alchimiste","By merging 5 minor experience elixirs with the Alchemist’s grimoire"],
+  ["Sélectionnez exactement 3 objets différents. Un exemplaire de chacun sera sacrifié avec la Balance.","Select exactly 3 different items. One of each will be sacrificed with the Balance."],
+  ["Choisissez d’abord l’objet offert par le pays allié.","Select the item offered by the allied country first."],
+  ["Ce choix consommera ton lancement de donjon du jour et comptera dans la limite hebdomadaire.","This choice will use today’s dungeon start and count towards the weekly limit."],
+  ["Tes données ont bien été copiées dans le presse-papiers.","Your data has been copied to the clipboard."],
+  [" seront restituées à la réactivation."," will be restored when resumed."],[" % d’XP à ","% XP to "],[" » pour ","” for "],
+  [" » ? L’objet restera consommé et cet objectif officiel sera abandonné.","”? The item will remain consumed and this official objective will be abandoned."],
+  [" » et une récompense finale augmentée de 20 % ?","” and a final reward increased by 20%?"],
+  ["Le donjon sera tiré parmi ceux de cette statistique.","The dungeon will be drawn from those matching this attribute."],
+  ["Êtes-vous certain de vouloir entrer ?","Are you sure you want to enter?"],["Le Donjon ","The dungeon "],
+  [" sont nécessaires ("," are required ("],["Catalyseur requis : vous ne possédez que ","Catalyst required: you only have "],
+  [" XP sur chacune des six statistiques et −"," XP on each of the six attributes and −"],
+  ["XP bonus (élixir/événement)","XP bonus (elixir/event)"],
   ["Récompenses :","Rewards:"],["Récompense :","Reward:"],["Objectif :","Objective:"],["Objectif du boss :","Boss objective:"],
+  ["Boss objective :","Boss objective:"],["OBJECTIF DU BOSS","Boss objective"],["Garde ","Vanguard "],
+  ["1/jour","1/day"],["cette semaine","this week"],[" mètres"," metres"],["mètres","metres"],
+  [" sélectionnés"," selected"],["sélectionnés","selected"],["sélectionné","selected"],
+  ["répétitions","repetitions"],["répétition","repetition"],["idées","ideas"],["idée","idea"],["objets","items"],["objet","item"],
+  ["sér.","sets"],["succès","success"],["échec","failure"],
+  ["Élixirs d’expérience mineurs","minor experience elixirs"],["Élixir d’expérience mineur","minor experience elixir"],
+  ["Élixir d’expérience majeur","major experience elixir"],["Élixir d’expérience magistral","supreme experience elixir"],["Élixirs mineurs","minor elixirs"],
+  ["Pendant 24 h","For 24 hours"],["pendant 24 h","for 24 hours"],[" pendant "," for "],[" avant "," before "],[" après "," after "],[" sans "," without "],[" avec "," with "],
+  ["Statistique","Attribute"],["statistique","attribute"],["prochaine quête urgente","next emergency quest"],["prochain donjon","next dungeon"],
   [" restants"," remaining"],[" restant"," remaining"],[" jours manqués"," missed days"],[" jour manqué"," missed day"],
   [" verre"," glass"],[" verres"," glasses"],[" repas"," meals"],[" objets"," items"],[" objet"," item"],[" tâches"," tasks"],[" tâche"," task"],
   [" portions"," portions"],[" portion"," portion"],[" mots"," words"],[" mot"," word"],[" idées"," ideas"],[" idée"," idea"],[" succès"," success"],[" jour"," day"],[" jours"," days"],
@@ -236,6 +333,23 @@ const FRAGMENTS=[
 
 FRAGMENTS.sort((a,b)=>b[0].length-a[0].length);
 
+// Terms that can appear inside dynamically assembled labels. Unlike EXACT,
+// these replacements deliberately work within a longer string.
+const INLINE=[
+  ["Pecs & Triceps","Chest & triceps"],["Gainage obliques","Side plank"],["Gainage oblique","Side plank"],["Levées de jambes","Leg raises"],
+  ["Tractions australiennes","Australian pull-ups"],["Tractions négatives","Negative pull-ups"],["Élévations de mollets","Calf raises"],
+  ["Running fractionné","Interval running"],["Corde à sauter","Jump rope"],["Apprentissage actif","Active learning"],
+  ["Lumière naturelle","Daylight"],["Douche froide","Cold shower"],["Cohérence cardiaque","Cardiac coherence"],
+  ["Déplacements silencieux","Silent movement"],["Flow martial","Martial flow"],["Tâches repoussées","Delayed tasks"],["Charge mentale","Mental load"],
+  ["Dormir 8h","8 hours sleep"],["Actions commerciales","Sales actions"],["Entretiens/RDV S+1","Interviews/Meetings W+1"],["Entretiens/RDV","Interviews/Meetings"],
+  ["Mémorisation","Memory training"],["Méditation","Meditation"],["Hydratation","Hydration"],["Équilibre","Balance"],["Lecture","Reading"],
+  ["Tractions","Pull-ups"],["Pompes","Push-ups"],["Fentes","Lunges"],["Abdos","Abs"],["Gainage","Plank"],["Mollets","Calf raises"],
+  ["Escaliers","Stairs"],["Aspirer","Vacuuming"],["Récurer","Deep cleaning"],["Poussière","Dusting"],["Rangement","Tidying up"],["Linge","Laundry"],
+  ["Rando","Hike"],["Marche","Walk"],
+  ["Agilité","Agility"],["Agilite","Agility"],["Santé","Health"],["Sante","Health"],["Endurance","Stamina"],["Esprit","Mind"],["Force","Strength"],
+];
+INLINE.sort((a,b)=>b[0].length-a[0].length);
+
 export function translateUiText(value){
   if(typeof value!=="string"||!value)return value;
   if(EXACT.has(value))return EXACT.get(value);
@@ -243,16 +357,21 @@ export function translateUiText(value){
   for(const [source,target] of FRAGMENTS){
     if(out.includes(source))out=out.split(source).join(target);
   }
+  for(const [source,target] of INLINE){
+    if(out.includes(source))out=out.split(source).join(target);
+  }
   // Dynamic unit and shorthand cleanup.
-  out=out.replace(/\bRDV\b/g,"meetings")
+  out=out.replace(/XP\/RDV/g,"XP/meeting")
+    .replace(/\+1 RDV\b/g,"+1 meeting")
+    .replace(/\bRDV\b/g,"meetings")
     .replace(/\bHEBDO\b/g,"Weekly")
     .replace(/\bBONUS\b/g,"Bonus")
     .replace(/\bNiv\.\b/g,"Lv.")
-    .replace(/\bSante\b|\bSanté\b/g,"Health")
+    .replace(/Sante|Santé/g,"Health")
     .replace(/\bForce\b/g,"Strength")
     .replace(/\bEsprit\b/g,"Mind")
     .replace(/\bEndurance\b/g,"Stamina")
-    .replace(/\bAgilite\b|\bAgilité\b/g,"Agility")
+    .replace(/Agilite|Agilité/g,"Agility")
     .replace(/\bPortails\b/g,"Portals")
     .replace(/\bPortail\b/g,"Portal")
     .replace(/\bDonjons\b/g,"Dungeons")

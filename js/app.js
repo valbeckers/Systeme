@@ -1,4 +1,4 @@
-import "./i18n.js?v=20260907-system-english-v2";
+import "./i18n.js?v=20260907-system-english-v3";
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
 import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260907-commercial-actions-7-5xp-v1";
 import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20260903-pullups-icons-v1";
