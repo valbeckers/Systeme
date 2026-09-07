@@ -1,4 +1,4 @@
-import "./i18n.js?v=20260907-system-english-v4";
+import "./i18n.js?v=20260907-system-english-v5";
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
 import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260907-commercial-actions-7-5xp-v1";
 import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20260903-pullups-icons-v1";
@@ -62,7 +62,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260811-linear-xp-v1";
 import { StatsTab } from "./statsView.js?v=20260806-remove-radar";
-import { HistoryTab } from "./historyView.js?v=20260903-hide-pro-history-v1";
+import { HistoryTab } from "./historyView.js?v=20260907-system-english-v1";
 import {
   RANK_BASES,
   ROMAN,
@@ -3853,7 +3853,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     if(id==="debtAcknowledgement")return "SIGNER";
     if(id==="transmutationGrimoire")return "LIRE";
     if(id==="rerollToken")return "LANCER";
-    if(id==="recoveryOintment")return "APPLIQUER";
+    if(id==="recoveryOintment")return "APPLY";
     return it.action;
   }
 
@@ -4244,7 +4244,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const choices=ELIXIR_STATS;
     return h("div",{class:"modal-ov"},h("div",{class:"modal",style:"max-width:390px;width:calc(100% - 28px)"},
       h("div",{class:"mtitle"},"CHOISIR UNE STATISTIQUE"),
-      h("div",{style:"font-size:11px;color:var(--td);line-height:1.5;margin-bottom:12px"},"Appliquer "+Math.round(it.pct*100)+" % d’XP supplémentaires pendant 24 h."),
+      h("div",{style:"font-size:11px;color:var(--td);line-height:1.5;margin-bottom:12px"},"Apply "+Math.round(it.pct*100)+"% additional XP for 24 hours."),
       h("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:8px"},choices.map(stat=>h("button",{key:stat,onClick:()=>{setElixirStatChoice(null);setConfirmElixirUse({id,stat})},style:"padding:11px;border-radius:9px;border:1px solid "+STAT_COLOR[stat]+"88;background:"+STAT_COLOR[stat]+"12;color:"+STAT_COLOR[stat]+";font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},STAT_LBL[stat]||stat))),
       h("button",{onClick:()=>setElixirStatChoice(null),style:"width:100%;margin-top:12px;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--td);font-family:Orbitron,sans-serif;cursor:pointer"},"Annuler")
     ));
@@ -4254,7 +4254,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const {id,stat}=confirmElixirUse,it=INVENTORY_ITEMS[id],c=STAT_COLOR[stat]||rank.color;
     return h("div",{class:"ruov",style:"--rc:"+c+";--rg:"+c+"66"},h("div",{class:"rucont",style:"width:min(500px,calc(100vw - 34px));background:rgba(15,15,18,.97);border:1px solid "+c+"88;border-radius:18px;padding:22px;box-shadow:0 0 30px "+c+"22"},
       h("div",{class:"ruevol",style:"color:"+c},"CONFIRMATION"),
-      h("div",{style:"font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:#fff;text-align:center;line-height:1.45;max-width:350px"},"Appliquer +"+Math.round(it.pct*100)+" % d’XP à "+(STAT_LBL[stat]||stat)+" pendant 24 h ?"),
+      h("div",{style:"font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:#fff;text-align:center;line-height:1.45;max-width:350px"},"Apply +"+Math.round(it.pct*100)+"% XP to "+(STAT_LBL[stat]||stat)+" for 24 hours?"),
       h("div",{style:"display:flex;gap:10px;margin-top:22px"},
         h("button",{class:"rudis",style:"min-width:110px;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>setConfirmElixirUse(null)},"Annuler"),
         h("button",{class:"rudis",style:"min-width:110px;--rc:"+c+";--rg:"+c+"66",onClick:()=>{
@@ -4486,7 +4486,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               h("span",{style:"font-size:11px;color:var(--td);min-width:28px"},obj.unit)
             );
           }),
-          h("button",{class:"mbtn mprim",style:"width:100%;margin-top:8px",onClick:applyEdit},"Appliquer")
+          h("button",{class:"mbtn mprim",style:"width:100%;margin-top:8px",onClick:applyEdit},"Apply")
         ),
         h("div",{class:"divider"}),
         h("div",{class:"msec"},
@@ -4930,7 +4930,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{style:"font-size:11px;color:#ef4444;line-height:1.45;text-align:center;margin-top:9px;font-family:Orbitron,sans-serif"},"Cette action est irréversible."),
         h("div",{style:"display:flex;gap:10px;width:100%;margin-top:18px"},
           h("button",{onClick:()=>setConfirmRegression(false),style:"flex:1;padding:12px;border-radius:9px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--td);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer"},"Annuler"),
-          h("button",{onClick:applyRegression,style:"flex:1;padding:12px;border-radius:9px;border:1px solid "+color+";background:"+color+"18;color:"+color+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer"},"Appliquer le malus")
+          h("button",{onClick:applyRegression,style:"flex:1;padding:12px;border-radius:9px;border:1px solid "+color+";background:"+color+"18;color:"+color+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer"},"Apply penalty")
         )
       )
     );
@@ -5461,7 +5461,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h(Exercise,{iconKey:"side_plank",icon:"🧎🏻‍♂️‍➡️",name:"Gainage obliques",target:sideTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
         ),
         h("div",{style:familyStyle},
-          h(FamilyTitle,{label:"JAMBES"}),
+          h(FamilyTitle,{label:"LEGS"}),
           h(Exercise,{iconKey:"squats",icon:"🦵🏻",name:"Squats",target:squatTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"},{stat:"Agilite",xp:"3/rep"}]}),
           h(Exercise,{iconKey:"calves",icon:"🦵🏻",name:"Mollets",target:calvesTarget,unit:"reps",rewards:[{stat:"Force",xp:"2/rep"},{stat:"Agilite",xp:"1/rep"}]}),
           h(Exercise,{iconKey:"lunges",icon:"🦵🏻",name:"Fentes",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]})
