@@ -61,7 +61,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260811-linear-xp-v1";
 import { StatsTab } from "./statsView.js?v=20260806-remove-radar";
-import { HistoryTab } from "./historyView.js?v=20260903-hide-pro-history-v1";
+import { HistoryTab } from "./historyView.js?v=20260908-hide-assisted-pullups-v1";
 import {
   RANK_BASES,
   ROMAN,

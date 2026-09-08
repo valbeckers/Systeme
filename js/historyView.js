@@ -83,7 +83,8 @@ export function HistoryTab({
   const visibleInHistory=o=>!HIDDEN_FROM_HISTORY_IDS.has(o.id);
   const ordered=[...sortStat(objs.filter(o=>visibleInHistory(o)&&o.daily&&!o.optional)),...sortStat(objs.filter(o=>visibleInHistory(o)&&o.weekly)),...sortStat(objs.filter(o=>visibleInHistory(o)&&o.daily&&o.optional&&!o.bonusHidden))];
 
-  const exerciseHistoryDefs=RECORD_EXERCISE_DEFS;
+  const hiddenExerciseHistoryIds=new Set(["ex_negative_pullups","ex_australian_pullups"]);
+  const exerciseHistoryDefs=RECORD_EXERCISE_DEFS.filter(def=>!hiddenExerciseHistoryIds.has(def.id));
   const rotatingSourceIds=new Set(["push","negative_pullups","abs","squats","calves"]);
   const hiddenFromRecordsAndTotals=new Set(["water","sleep"]);
   function dailyQuestForHistoryDay(obj,day){
