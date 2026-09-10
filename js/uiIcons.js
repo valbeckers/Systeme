@@ -20,7 +20,8 @@ export const UI_ICON_IMAGES=Object.freeze({
   "interface.notification":"./assets/ui/interface-notification.png?v=20260809-medallions-v6",
   "interface.chain":"./assets/ui/interface-chain.png?v=20260809-medallions-v6",
   "interface.countdown":"./assets/ui/interface-countdown.png?v=20260809-medallions-v6",
-  "interface.xpStreak":"./assets/ui/interface-xp-streak.png?v=20260818-xp-icons-v1",
+  "interface.xpStreak":"./assets/ui/interface-xp-streak.png?v=20260910-xp-icons-v2",
+  "interface.xpDungeon":DUNGEON_KEY_ICON_DATA,
   "interface.xpElan":"./assets/ui/interface-xp-elan.png?v=20260818-xp-icons-v1",
   "interface.xpInertia":"./assets/ui/interface-xp-inertia.png?v=20260818-xp-icons-v1",
 

@@ -87,8 +87,8 @@ import {
   NEW_ITEM_ICON_DATA,
   GRIMOIRE_ICON_DATA,
   DEBT_ACKNOWLEDGEMENT_ICON_DATA
-} from "./itemImages.js?v=20260910-dimensional-anchor-v1";
-import { UiIcon } from "./uiIcons.js?v=20260904-pullups-bonus-v2";
+} from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
+import { UiIcon } from "./uiIcons.js?v=20260910-xp-icons-v2";
 import { saveStoredState } from "./storage.js";
 import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260910-dimensional-anchor-v1";
 import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260910-dimensional-anchor-v1";
@@ -875,7 +875,8 @@ function App(){
   const completedDungeonToday=[...(state.dungeonLog||[])]
     .reverse()
     .find(entry=>sameDayTs(entry.completedAt))||null;
-  const dungeonSourceToday=completedDungeonToday||state.activeDungeon||null;
+  const recordedDungeonIdToday=state.dailyDungeonSources?.[today]||null;
+  const dungeonSourceToday=completedDungeonToday||state.activeDungeon||(recordedDungeonIdToday?{id:recordedDungeonIdToday}:null);
   const dungeonDefToday=dungeonSourceToday
     ?DUNGEONS.find(d=>d.id===dungeonSourceToday.id)
     :null;
@@ -886,17 +887,21 @@ function App(){
       row.iconId=urgentQuestToday.id;
       row.icon=urgentQuestToday.icon;
     }
-    if(key==="dungeon"&&dungeonSourceToday){
-      row.iconKind="dungeon";
-      row.iconId=dungeonSourceToday.id;
-      row.icon=dungeonDefToday?.icon||dungeonSourceToday.icon;
+    if(key==="dungeon"){
+      if(dungeonSourceToday){
+        row.iconKind="dungeon";
+        row.iconId=dungeonSourceToday.id;
+        row.icon=dungeonDefToday?.icon||dungeonSourceToday.icon;
+      }else{
+        row.iconKey="interface.xpDungeon";
+      }
     }
     return row;
   }).filter(row=>Math.abs(row.xp)>1e-9);
   if(legacyStreakTodayXp)extraXpTodayRows.push({key:"legacy_streak",label:"Bonus de streak",xp:legacyStreakTodayXp,iconKey:"interface.xpStreak"});
   if(legacySqTodayXp)extraXpTodayRows.push({key:"legacy_sq",label:"Quête urgente",xp:legacySqTodayXp,iconId:urgentQuestToday?.id,icon:urgentQuestToday?.icon});
-  if(legacyActiveDungeonTodayXp)extraXpTodayRows.push({key:"legacy_dungeon_active",label:"Donjon",xp:legacyActiveDungeonTodayXp,iconKind:"dungeon",iconId:dungeonSourceToday?.id,icon:dungeonDefToday?.icon||dungeonSourceToday?.icon});
-  if(legacyCompletedDungeonTodayXp)extraXpTodayRows.push({key:"legacy_dungeon_done",label:"Donjon terminé",xp:legacyCompletedDungeonTodayXp,iconKind:"dungeon",iconId:dungeonSourceToday?.id,icon:dungeonDefToday?.icon||dungeonSourceToday?.icon});
+  if(legacyActiveDungeonTodayXp)extraXpTodayRows.push({key:"legacy_dungeon_active",label:"Donjon",xp:legacyActiveDungeonTodayXp,...(dungeonSourceToday?{iconKind:"dungeon",iconId:dungeonSourceToday.id,icon:dungeonDefToday?.icon||dungeonSourceToday.icon}:{iconKey:"interface.xpDungeon"})});
+  if(legacyCompletedDungeonTodayXp)extraXpTodayRows.push({key:"legacy_dungeon_done",label:"Donjon terminé",xp:legacyCompletedDungeonTodayXp,...(dungeonSourceToday?{iconKind:"dungeon",iconId:dungeonSourceToday.id,icon:dungeonDefToday?.icon||dungeonSourceToday.icon}:{iconKey:"interface.xpDungeon"})});
   const todayXpRows=[...questXpTodayRows,...extraXpTodayRows]
     .sort((a,b)=>b.xp-a.xp);
 
@@ -2053,7 +2058,7 @@ function App(){
           subtitle:"Boss de Rupture · "+dungeon.short,rupture:true
         }),200);
         return {
-          ...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:null,
+          ...s,totalXp,statXp,stats,dailyExtraXp:daily,dailyDungeonSources:{...(s.dailyDungeonSources||{}),[day]:dungeon.id},activeDungeon:null,
           dungeonLog:[...(s.dungeonLog||[]),{
             id:dungeon.id,runId:ad.runId,startedAt:ad.startedAt,title:dungeon.title,stat:dungeon.stat,
             xp:priorRoomXp+awardedXp,completedAt,expiresAt:ad.expiresAt,
@@ -2086,6 +2091,7 @@ function App(){
       const awardedXp = roomRewards.reduce((sum,r)=>sum+(r.xp||0),0);
       const day=todayStr();
       const daily={...(s.dailyExtraXp||{})};
+      const dailyDungeonSources={...(s.dailyDungeonSources||{}),[day]:dungeon.id};
       const dayLog={...(daily[day]||{})};
       if(awardedXp>0) dayLog.dungeon=(dayLog.dungeon||0)+awardedXp;
       if(awardedXp>0) daily[day]=dayLog;
@@ -2146,7 +2152,7 @@ function App(){
       }
 
       if(!isComplete){
-        return {...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:nextAd,lastActiveDay:todayStr()};
+        return {...s,totalXp,statXp,stats,dailyExtraXp:daily,dailyDungeonSources,activeDungeon:nextAd,lastActiveDay:todayStr()};
       }
 
       // CONTRAT DU MAÎTRE — DOUBLE DONJON
@@ -2169,7 +2175,7 @@ function App(){
           doubleBoss
         };
         setTimeout(()=>setContractUp({kind:"double",stage:1,bossName:baseRoom.name,bossObjective:doubleBoss.objective}),120);
-        return {...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:nextAd,lastActiveDay:todayStr()};
+        return {...s,totalXp,statXp,stats,dailyExtraXp:daily,dailyDungeonSources,activeDungeon:nextAd,lastActiveDay:todayStr()};
       }
 
       const completedAt=t;
@@ -2190,7 +2196,7 @@ function App(){
         setDungeonUp({title:dungeon.title,short:dungeon.short,icon:dungeon.icon,color:dungeon.color,reward:rewardText});
         tryDungeonItemDrops(dungeon.id);
       },200);
-      return {...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:null,dungeonLog:[...(s.dungeonLog||[]),{id:dungeon.id,runId:ad.runId,startedAt:ad.startedAt,title:dungeon.title,stat:dungeon.stat,xp:rewards.reduce((a,r)=>a+(r.xp||0),0)+contractBonusXp,completedAt,expiresAt:ad.expiresAt||completedAt+86400000,contractConstraint:nextAd.contractConstraint||null}],lastActiveDay:todayStr()};
+      return {...s,totalXp,statXp,stats,dailyExtraXp:daily,dailyDungeonSources,activeDungeon:null,dungeonLog:[...(s.dungeonLog||[]),{id:dungeon.id,runId:ad.runId,startedAt:ad.startedAt,title:dungeon.title,stat:dungeon.stat,xp:rewards.reduce((a,r)=>a+(r.xp||0),0)+contractBonusXp,completedAt,expiresAt:ad.expiresAt||completedAt+86400000,contractConstraint:nextAd.contractConstraint||null}],lastActiveDay:todayStr()};
     });
   }
 
@@ -2218,6 +2224,7 @@ function App(){
       const contractBonusXp=contractBonusPairs.reduce((sum,r)=>sum+(r.xp||0),0);
       const day=todayStr();
       const daily={...(s.dailyExtraXp||{})};
+      const dailyDungeonSources={...(s.dailyDungeonSources||{}),[day]:dungeon.id};
       const dayLog={...(daily[day]||{})};
       if(contractBonusXp>0){
         dayLog.dungeon=(dayLog.dungeon||0)+contractBonusXp;
@@ -2232,7 +2239,7 @@ function App(){
         tryDungeonItemDrops(dungeon.id);
       },200);
       return {
-        ...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:null,
+        ...s,totalXp,statXp,stats,dailyExtraXp:daily,dailyDungeonSources,activeDungeon:null,
         dungeonLog:[...(s.dungeonLog||[]),{
           id:dungeon.id,runId:ad.runId,startedAt:ad.startedAt,title:dungeon.title,stat:dungeon.stat,
           xp:rewards.reduce((a,r)=>a+(r.xp||0),0)+contractBonusXp,
