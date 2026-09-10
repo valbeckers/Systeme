@@ -13,6 +13,7 @@ const BASE_INVENTORY_ITEMS={
     regressionOrb:{name:"ORBE DE RÉGRESSION",short:"ORBE DE RÉGRESSION",emoji:"🔴",action:"ACTIVER",desc:"Permet au joueur de lancer une régression. Si plusieurs régressions existent, vous pourrez choisir laquelle activer.",obtain:[],permanent:true},
     debtAcknowledgement:{name:"RECONNAISSANCE DE DETTE",short:"RECONNAISSANCE DE DETTE",emoji:"📜",action:"UTILISER",desc:"Permet au joueur de créer une dette sur une quête éligible, à rembourser le jour même ou le lendemain.",obtain:[],permanent:true},
     dungeonKey:{name:"CLÉ DE DONJON",short:"CLÉ DE DONJON",emoji:"🗝️",action:"UTILISER",desc:"Permet au joueur d’entrer dans un donjon aléatoire.",obtain:["Après avoir complété la quête urgente, toutes les quêtes journalières et 5 quêtes bonus dans la même journée (Taux : 100 %).","Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété 5 quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %)."]},
+    dimensionalAnchor:{name:"ANCRE DIMENSIONNELLE",short:"ANCRE DIMENSIONNELLE",emoji:"⛓️",action:"ANCRER",desc:"Permet au joueur de suspendre un donjon actif et de le reprendre pendant les 72 heures suivantes. Les salles terminées, l’XP acquise et le temps restant sont conservés. Le minuteur reprend uniquement lors du retour dans le donjon. Aucun autre donjon ne peut être lancé pendant la suspension. Utilisable une seule fois par donjon.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété 5 quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %)."]},
     majorElixir:{name:"ÉLIXIR D’EXPÉRIENCE MAJEUR",short:"ÉLIXIR MAJEUR",emoji:"🧪",action:"CONSOMMER",pct:.20,desc:"Permet au joueur de gagner 20 % d’XP en plus dans la statistique de son choix pendant 24 h.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 0,5 %).","Après avoir complété 5 quêtes bonus (Taux : 0,5 %).","Après avoir complété une quête urgente (Taux : 0,5 %).","Après avoir accompli un nouveau record (Taux : 0,5 %).","Après avoir complété un donjon (Taux : 5 %).","Après avoir complété le Donjon de l’Alchimiste (Taux : 5 %)."]},
     minorElixir:{name:"ÉLIXIR D’EXPÉRIENCE MINEUR",short:"ÉLIXIR MINEUR",emoji:"🧪",action:"CONSOMMER",pct:.10,desc:"Permet au joueur de gagner 10 % d’XP en plus dans la statistique de son choix pendant 24 h.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété 5 quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 100 %).","Après avoir complété le Donjon de l’Alchimiste (Taux : 10 %)."]},
     supremeElixir:{name:"ÉLIXIR D’EXPÉRIENCE MAGISTRAL",short:"ÉLIXIR MAGISTRAL",emoji:"🧪",action:"CONSOMMER",pct:.30,desc:"Permet au joueur de gagner 30 % d’XP en plus pendant 24 h.",obtain:["En fusionnant 5 Élixirs d’expérience mineurs via le Grimoire de l’Alchimiste (Taux : 100 %).","Après avoir complété toutes les quêtes journalières (Taux : 0,1 %).","Après avoir complété 5 quêtes bonus (Taux : 0,1 %).","Après avoir complété une quête urgente (Taux : 0,1 %).","Après avoir accompli un nouveau record (Taux : 0,1 %).","Après avoir complété un donjon (Taux : 1 %).","Après avoir complété le Donjon de l’Alchimiste (Taux : 1 %)."]},
@@ -47,6 +48,7 @@ export const INVENTORY_ITEMS=Object.fromEntries(
 // nouveaux records. "key" désigne la Clé de Donjon, stockée hors inventaire.
 export const STANDARD_ITEM_DROPS=[
   ["key",0.01],
+  ["dimensionalAnchor",0.01],
   ["minorElixir",0.01],
   ["majorElixir",0.005],
   ["supremeElixir",0.001],
@@ -68,6 +70,7 @@ export const STANDARD_ITEM_DROPS=[
 // Tirages indépendants effectués après n’importe quel donjon terminé.
 export const DUNGEON_GENERIC_DROPS=[
   ["key",0.10],
+  ["dimensionalAnchor",0.10],
   ["minorElixir",1],
   ["majorElixir",0.05],
   ["supremeElixir",0.01],

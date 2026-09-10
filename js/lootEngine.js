@@ -8,7 +8,7 @@ import {
   STANDARD_ITEM_DROPS,
   DUNGEON_GENERIC_DROPS,
   DUNGEON_SPECIFIC_DROPS
-} from "./itemDefs.js?v=20260808-rewrite-rune-distinct";
+} from "./itemDefs.js?v=20260910-dimensional-anchor-v1";
 
 function rollIndependentDrops(dropTable,random=Math.random){
   return (dropTable||[]).reduce((won,[id,probability])=>{
@@ -126,4 +126,3 @@ export function exchangeCounterpartBalanceState(state,sacrificeIds,rewardId){
 
   return {...state,inventory,dungeonKeys};
 }
-

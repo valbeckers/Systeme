@@ -194,6 +194,28 @@ function cleanDungeonRunWeeks(obj){
   return out;
 }
 
+function cleanSuspendedDungeon(value){
+  if(!value||typeof value!=="object"||!value.dungeon||typeof value.dungeon!=="object")return null;
+  const remainingMs=Math.max(0,Number(value.remainingMs)||0);
+  const resumeDeadline=Number(value.resumeDeadline)||0;
+  if(!remainingMs||!resumeDeadline)return null;
+  const deadlineRemaining={};
+  ["expiresAt","contractOriginalExpiresAt","chainDeadline","pressureDeadline"].forEach(field=>{
+    const n=Number(value.deadlineRemaining&&value.deadlineRemaining[field]);
+    if(Number.isFinite(n)&&n>=0)deadlineRemaining[field]=n;
+  });
+  return {
+    id:value.dungeon.id||value.id,
+    runId:value.dungeon.runId||value.runId,
+    startedAt:Number(value.dungeon.startedAt||value.startedAt)||Date.now(),
+    suspendedAt:Number(value.suspendedAt)||Date.now(),
+    resumeDeadline,
+    remainingMs,
+    deadlineRemaining,
+    dungeon:{...value.dungeon,anchorUsed:true}
+  };
+}
+
 function cleanEnduranceChoiceByDay(obj){
   const out={};
   Object.entries(obj||{}).forEach(([day,id])=>{
@@ -297,6 +319,7 @@ export function cleanSystemState(raw){
     breachRollDay:data.breachRollDay||null,
     breachTriggeredDay:data.breachTriggeredDay||null,
     activeDungeon:data.activeDungeon||null,
+    suspendedDungeon:data.activeDungeon?null:cleanSuspendedDungeon(data.suspendedDungeon),
     dungeonRunDay:data.dungeonRunDay||null,
     dungeonSkipDay:data.dungeonSkipDay||null,
     dungeonRunsByWeek:cleanDungeonRunWeeks(data.dungeonRunsByWeek),
@@ -320,6 +343,7 @@ export function cleanSystemState(raw){
       alchemicalCatalyst:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.alchemicalCatalyst)||0)),
       recoveryOintment:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.recoveryOintment)||0)),
       counterpartBalance:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.counterpartBalance)||0))
+      ,dimensionalAnchor:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.dimensionalAnchor)||0))
     },
     masterContractArmed:data.masterContractArmed===true,
     recordChallenge:data.recordChallenge||null,

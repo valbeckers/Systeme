@@ -2,6 +2,69 @@
 // Les mutations d'interface, animations, loot et application effective de l'XP
 // restent volontairement dans app.js.
 
+export const DUNGEON_SUSPEND_WINDOW_MS=72*60*60*1000;
+const DUNGEON_DEADLINE_FIELDS=["expiresAt","contractOriginalExpiresAt","chainDeadline","pressureDeadline"];
+
+function remainingDeadlineMs(value,now){
+  const timestamp=Number(value)||0;
+  return timestamp>0?Math.max(0,timestamp-now):null;
+}
+
+export function currentSuspendedDungeon(suspendedDungeon,now=Date.now()){
+  if(!suspendedDungeon||!suspendedDungeon.dungeon)return null;
+  if(now>=(Number(suspendedDungeon.resumeDeadline)||0))return null;
+  if((Number(suspendedDungeon.remainingMs)||0)<=0)return null;
+  return suspendedDungeon;
+}
+
+export function suspendActiveDungeonState(state,now=Date.now()){
+  const active=state&&state.activeDungeon;
+  if(!active||active.completedAt||state.suspendedDungeon||active.anchorUsed)return state;
+  if(now>=(Number(active.expiresAt)||0))return state;
+  const deadlineRemaining={};
+  DUNGEON_DEADLINE_FIELDS.forEach(field=>{
+    const remaining=remainingDeadlineMs(active[field],now);
+    if(remaining!=null)deadlineRemaining[field]=remaining;
+  });
+  const remainingMs=deadlineRemaining.expiresAt;
+  if(!(remainingMs>0))return state;
+  return {
+    ...state,
+    activeDungeon:null,
+    suspendedDungeon:{
+      id:active.id,
+      runId:active.runId,
+      startedAt:active.startedAt,
+      suspendedAt:now,
+      resumeDeadline:now+DUNGEON_SUSPEND_WINDOW_MS,
+      remainingMs,
+      deadlineRemaining,
+      dungeon:{...active,anchorUsed:true}
+    }
+  };
+}
+
+export function resumeSuspendedDungeonState(state,now=Date.now()){
+  if(!state||state.activeDungeon)return state;
+  const suspended=currentSuspendedDungeon(state.suspendedDungeon,now);
+  if(!suspended)return state&&state.suspendedDungeon?{...state,suspendedDungeon:null}:state;
+  const restored={...suspended.dungeon,anchorUsed:true};
+  const offsets=suspended.deadlineRemaining||{};
+  DUNGEON_DEADLINE_FIELDS.forEach(field=>{
+    const remaining=Number(offsets[field]);
+    if(Number.isFinite(remaining)&&remaining>=0)restored[field]=now+remaining;
+  });
+  restored.expiresAt=now+Math.max(1,Number(suspended.remainingMs)||1);
+  return {...state,activeDungeon:restored,suspendedDungeon:null};
+}
+
+export function expireSuspendedDungeonState(state,now=Date.now()){
+  if(!state||!state.suspendedDungeon)return state;
+  return now>=(Number(state.suspendedDungeon.resumeDeadline)||0)
+    ? {...state,suspendedDungeon:null}
+    : state;
+}
+
 export function dungeonRoomRewardPairs(dungeon, roomIdx){
   if(!dungeon || !dungeon.reward) return [];
   const isBoss = roomIdx >= (dungeon.rooms||[]).length-1;
@@ -55,6 +118,10 @@ export function countDungeonRunsThisWeek(state, week, weekKeyForDate){
   if(active && active.startedAt && weekKeyForDate(new Date(active.startedAt))===week){
     launched.add(active.runId||("active_"+active.startedAt));
   }
+  const suspended=state.suspendedDungeon&&state.suspendedDungeon.dungeon;
+  if(suspended && suspended.startedAt && weekKeyForDate(new Date(suspended.startedAt))===week){
+    launched.add(suspended.runId||("suspended_"+suspended.startedAt));
+  }
   return launched.size;
 }
 
@@ -71,7 +138,7 @@ export function launchDungeonState(state, options){
   }=options||{};
 
   const current=state.activeDungeon;
-  if(current && !current.completedAt) return state;
+  if((current && !current.completedAt)||state.suspendedDungeon) return state;
   if(state.dungeonRunDay===day) return state;
   if(countDungeonRunsThisWeek(state,week,weekKeyForDate)>=3) return state;
   if(state.dungeonAccessOpen!==true) return state;

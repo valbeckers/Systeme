@@ -33,9 +33,13 @@ import {
   countDungeonRunsThisWeek,
   launchDungeonState,
   expireActiveDungeonState,
+  currentSuspendedDungeon,
+  suspendActiveDungeonState,
+  resumeSuspendedDungeonState,
+  expireSuspendedDungeonState,
   canValidateDungeonRoom
-} from "./dungeonEngine.js?v=20260821-dungeon-24h-v1";
-import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260823-portails-v1";
+} from "./dungeonEngine.js?v=20260910-dimensional-anchor-v1";
+import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260910-dimensional-anchor-v1";
 import {
   incrementLootState,
   pickRandomBreachLoot,
@@ -46,7 +50,7 @@ import {
   counterpartBalanceSacrificeEligibleIds,
   counterpartBalanceRewardEligibleIds,
   exchangeCounterpartBalanceState
-} from "./lootEngine.js?v=20260808-rewrite-rune-distinct";
+} from "./lootEngine.js?v=20260910-dimensional-anchor-v1";
 import {
   eventDayStr,
   next7AM,
@@ -83,11 +87,11 @@ import {
   NEW_ITEM_ICON_DATA,
   GRIMOIRE_ICON_DATA,
   DEBT_ACKNOWLEDGEMENT_ICON_DATA
-} from "./itemImages.js?v=20260808-items-normalized-v1";
+} from "./itemImages.js?v=20260910-dimensional-anchor-v1";
 import { UiIcon } from "./uiIcons.js?v=20260904-pullups-bonus-v2";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260823-portails-v1";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260903-objectifs-pro-v1";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260910-dimensional-anchor-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260910-dimensional-anchor-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -1076,6 +1080,7 @@ function App(){
   },[now,state.specialQuests,state.sqCooldownUntil,breachReplacesUrgentToday]);
 
   const activeDungeon = activeDungeonView(state.activeDungeon,DUNGEONS,now);
+  const suspendedDungeon = currentSuspendedDungeon(state.suspendedDungeon,now);
   const dungeonRunDay = state.dungeonRunDay||null;
   const dungeonWeekCount = countDungeonRunsThisWeek(state,wk,wkStr);
   const dungeonDailyUsed = dungeonRunDay===today;
@@ -1109,7 +1114,7 @@ function App(){
   const dailyCompletionSeenRef = useRef(allDailyDone);
   const bonusCompletionSeenRef = useRef(allBonusDone);
   const allQuestsCompletionSeenRef = useRef(dungeonLootConditionsMet);
-  const dungeonCanStart = !state.activeDungeon && !dungeonDailyUsed && dungeonWeekCount<3 && dungeonAccessOpen;
+  const dungeonCanStart = !state.activeDungeon && !suspendedDungeon && !dungeonDailyUsed && dungeonWeekCount<3 && dungeonAccessOpen;
 
 
   // Flags bonus
@@ -1262,6 +1267,14 @@ function App(){
     if(!ad||ad.completedAt||now<(ad.expiresAt||0))return;
     setState(s=>expireActiveDungeonState(s,Date.now()));
   },[now,state.activeDungeon?.expiresAt]);
+
+  // Après 72 h hors du donjon, l'ancrage se dissipe. Les XP déjà gagnées
+  // restent acquises, mais le donjon ne peut plus être repris.
+  useEffect(()=>{
+    const sd=state.suspendedDungeon;
+    if(!sd||now<(Number(sd.resumeDeadline)||0))return;
+    setState(s=>expireSuspendedDungeonState(s,Date.now()));
+  },[now,state.suspendedDungeon?.resumeDeadline]);
 
   // Un portail non fermé après 72 h entre en rupture pendant 24 h.
   useEffect(()=>{
@@ -3207,8 +3220,46 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
+  function SuspendedDungeonCard({compact=false}={}){
+    const suspended=suspendedDungeon;
+    if(!suspended)return null;
+    const d=DUNGEONS.find(item=>item.id===suspended.dungeon.id);
+    if(!d)return null;
+    const completedRooms=suspended.dungeon.completedRooms||[];
+    const roomCount=(d.rooms||[]).length;
+    const pct=roomCount?completedRooms.length/roomCount*100:0;
+    const color=d.color||"#f59e0b";
+    return h("div",{class:"card",style:"border-color:#a78bfa77;background:linear-gradient(145deg,#100b1d,#17122a);box-shadow:0 0 20px rgba(139,92,246,.08)"},
+      h("div",{style:"display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px"},
+        h("div",{style:"min-width:0"},
+          h("div",{class:"ctitle",style:"margin:0;color:#a78bfa;display:flex;align-items:center;gap:6px"},
+            h("span",null,"DONJON SUSPENDU")
+          ),
+          h("div",{style:"font-size:"+(compact?8.5:9)+"px;color:var(--td);font-family:Orbitron,sans-serif;letter-spacing:.7px;margin-top:5px;line-height:1.45"},
+            "Temps du donjon figé : "+fmtCD(suspended.remainingMs),
+            h("br",null),
+            h("span",{style:"color:#c4b5fd"},"Ancrage disponible encore "+fmtCD(Math.max(0,suspended.resumeDeadline-now)))
+          )
+        ),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap"},STAT_LBL[d.stat]||d.stat)
+      ),
+      h(ChallengeSummary,{
+        icon:h(UiIcon,{iconKey:"dungeon."+d.id,fallback:d.icon,slotSize:24,glyphSize:16}),
+        name:d.title||d.short,
+        subtitle:"Progression et récompenses conservées",
+        progressText:completedRooms.length+"/"+roomCount+" salles",
+        pct,
+        color:"#a78bfa"
+      }),
+      h("button",{
+        onClick:()=>setConfirmItemUse({id:"dimensionalAnchor",resumeDungeon:true}),
+        style:"width:100%;margin-top:10px;padding:11px;border-radius:9px;border:1px solid #a78bfa88;background:rgba(167,139,250,.10);color:#c4b5fd;font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.35px;text-transform:uppercase;cursor:pointer"
+      },"REPRENDRE LE DONJON")
+    );
+  }
+
   function DungeonChoiceCard(){
-    if(activeDungeon) return null;
+    if(activeDungeon||suspendedDungeon) return null;
     const dungeonGold="#f59e0b";
     const subtitle="1 par jour · "+dungeonWeekCount+"/3 cette semaine";
 
@@ -3563,7 +3614,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         prestigeAvailable&&h("button",{
           onClick:()=>{
             const newPrestige=(state.prestige||0)+1;
-            setState(s=>({...s,streak:0,streakBonusDay:null,weeklyBonusWk:null,streakMilestones:[],dailyLog:{},weeklyLog:{},regressionLog:{},specialQuests:[],sqStatCycle:[],sqCooldownUntil:null,sqRerollDay:null,activeDungeon:null,dungeonRunDay:null,dungeonRunsByWeek:{},dungeonKeyRollDay:null,dungeonKeys:0,dungeonKeyDay:null,dungeonKeyRollWon:false,dungeonLog:[],enduranceChoiceByDay:{},prestige:newPrestige}));
+            setState(s=>({...s,streak:0,streakBonusDay:null,weeklyBonusWk:null,streakMilestones:[],dailyLog:{},weeklyLog:{},regressionLog:{},specialQuests:[],sqStatCycle:[],sqCooldownUntil:null,sqRerollDay:null,activeDungeon:null,suspendedDungeon:null,dungeonRunDay:null,dungeonRunsByWeek:{},dungeonKeyRollDay:null,dungeonKeys:0,dungeonKeyDay:null,dungeonKeyRollWon:false,dungeonLog:[],enduranceChoiceByDay:{},prestige:newPrestige}));
             setPrestigeUp(newPrestige);
           },
           style:"width:100%;margin-top:12px;padding:12px;background:rgba(168,85,247,0.1);border:1px solid #a855f7;border-radius:10px;color:#a855f7;font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:3px;cursor:pointer;text-transform:uppercase;text-shadow:0 0 12px #a855f7;display:flex;align-items:center;justify-content:center;gap:8px"
@@ -3615,6 +3666,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h(UrgentHomeRow,{sq:activeSq})
       ),
       activeDungeon&&h(DungeonConsultCard,null),
+      suspendedDungeon&&h(SuspendedDungeonCard,{compact:true}),
 
       secs.map(({lb,ob,iw,empty})=>
         ob.length>0
@@ -3724,6 +3776,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             )
       ),
       activeDungeon&&h(DungeonCard,null),
+      suspendedDungeon&&h(SuspendedDungeonCard,null),
       h("div",{class:"card"},
         h(SectionHeader,{title:"Quêtes journalières",done:reqDone,total:reqTotal}),
         req.map(o=>h(QI,{key:o.id,obj:o})),
@@ -3777,7 +3830,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function itemQty(id){ return ["codex","regressionOrb","debtAcknowledgement"].includes(id)?1:id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
   function Inventory(){
     const permanentOrder=["codex","regressionOrb","debtAcknowledgement"];
-    const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","mysteryMap","etherStopper","rerollToken","rewriteRune","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape","recoveryOintment","counterpartBalance"]
+    const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","mysteryMap","etherStopper","dimensionalAnchor","rerollToken","rewriteRune","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape","recoveryOintment","counterpartBalance"]
       .sort((a,b)=>{
         const permanentIndexA=permanentOrder.indexOf(a);
         const permanentIndexB=permanentOrder.indexOf(b);
@@ -3829,11 +3882,11 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         )
       ),
       h("div",{style:"display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px"},ids.map(id=>{
-        const it=INVENTORY_ITEMS[id], qty=itemQty(id), grey=!["codex","regressionOrb","debtAcknowledgement"].includes(id)&&!(id==="etherStopper"&&suspendedElixir)&&!(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk)&&(qty<1||(isElixirKind(id)&&(!!activeElixir||!!suspendedElixir)));
+        const it=INVENTORY_ITEMS[id], qty=itemQty(id), grey=!["codex","regressionOrb","debtAcknowledgement"].includes(id)&&!(id==="etherStopper"&&suspendedElixir)&&!(id==="dimensionalAnchor"&&suspendedDungeon)&&!(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk)&&(qty<1||(id==="dimensionalAnchor"&&activeDungeon&&activeDungeon.anchorUsed)||(isElixirKind(id)&&(!!activeElixir||!!suspendedElixir)));
         return h("button",{key:id,onClick:()=>{setInventoryObtainOpen(false);setInventoryItem(id);},style:"position:relative;aspect-ratio:1/1;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.025);padding:8px;color:var(--tx);cursor:pointer;opacity:"+(grey?".48":"1")+";display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px"},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;line-height:1.25;letter-spacing:.5px;text-transform:uppercase;text-align:center;min-height:20px"},it.short),
           h("div",{style:"line-height:1"},InventoryItemIcon(id,38)),
-          h("div",{style:"position:absolute;right:6px;bottom:5px;border-radius:999px;min-width:20px;padding:2px 5px;background:rgba(0,0,0,.55);font-family:Orbitron,sans-serif;font-size:9px;color:#fff"},["codex","regressionOrb","debtAcknowledgement"].includes(id)?"∞":id==="etherStopper"&&suspendedElixir?"PAUSE":"×"+qty)
+          h("div",{style:"position:absolute;right:6px;bottom:5px;border-radius:999px;min-width:20px;padding:2px 5px;background:rgba(0,0,0,.55);font-family:Orbitron,sans-serif;font-size:9px;color:#fff"},["codex","regressionOrb","debtAcknowledgement"].includes(id)?"∞":id==="etherStopper"&&suspendedElixir?"PAUSE":id==="dimensionalAnchor"&&suspendedDungeon?"ANCRÉ":"×"+qty)
         );
       }))
     );
@@ -3847,6 +3900,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
   function inventoryActionLabel(id,it){
     if(id==="minorElixir"||id==="majorElixir"||id==="supremeElixir")return "BOIRE";
     if(id==="etherStopper")return suspendedElixir?"RETIRER":"INSERER";
+    if(id==="dimensionalAnchor")return suspendedDungeon?"REPRENDRE":"ANCRER";
     if(id==="masterContract")return "SIGNER";
     if(id==="invisibilityCape")return "BOIRE";
     if(id==="debtAcknowledgement")return "SIGNER";
@@ -3940,13 +3994,14 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     if(inventoryItem==="codex")return h(Codex,null);
     const id=inventoryItem,it=INVENTORY_ITEMS[id],qty=itemQty(id);
     const isElixir=isElixirKind(id);
-    let disabled=(["regressionOrb","debtAcknowledgement"].includes(id)||(id==="etherStopper"&&suspendedElixir))?false:qty<1;
-    let reason=(!["regressionOrb","debtAcknowledgement"].includes(id)&&!(id==="etherStopper"&&suspendedElixir)&&qty<1)?"Aucun exemplaire disponible.":"";
+    let disabled=(["regressionOrb","debtAcknowledgement"].includes(id)||(id==="etherStopper"&&suspendedElixir)||(id==="dimensionalAnchor"&&suspendedDungeon))?false:qty<1;
+    let reason=(!["regressionOrb","debtAcknowledgement"].includes(id)&&!(id==="etherStopper"&&suspendedElixir)&&!(id==="dimensionalAnchor"&&suspendedDungeon)&&qty<1)?"Aucun exemplaire disponible.":"";
     if(id==="regressionOrb"){
       if((state.regressionLog||{})[today]){disabled=true;reason="Une régression a déjà été déclarée aujourd’hui.";}
     }else if(id==="dungeonKey"){
       if(dungeonAccessOpen){disabled=true;reason="Un accès au donjon est déjà ouvert.";}
       else if(activeDungeon){disabled=true;reason="Un donjon est déjà actif.";}
+      else if(suspendedDungeon){disabled=true;reason="Un donjon est actuellement suspendu. Reprenez-le ou laissez expirer son ancrage avant d’en lancer un autre.";}
       else if(dungeonDailyUsed){disabled=true;reason="Un donjon a déjà été lancé aujourd’hui.";}
       else if(dungeonWeekCount>=3){disabled=true;reason="La limite de trois donjons cette semaine est atteinte.";}
     }else if(id==="transmutationGrimoire"){
@@ -3964,6 +4019,15 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     }else if(id==="etherStopper"){
       if(suspendedElixir){disabled=false;reason="Élixir suspendu · "+fmtCD(suspendedElixir.remainingMs)+" seront restituées à la réactivation.";}
       else if(!activeElixir){disabled=true;reason="Aucun élixir n’est actuellement actif.";}
+    }else if(id==="dimensionalAnchor"){
+      if(suspendedDungeon){
+        disabled=false;
+        reason="Donjon suspendu · "+fmtCD(suspendedDungeon.remainingMs)+" de temps conservé · reprise possible encore "+fmtCD(Math.max(0,suspendedDungeon.resumeDeadline-now))+".";
+      }else if(!activeDungeon){
+        disabled=true;reason="Aucun donjon n’est actuellement actif.";
+      }else if(activeDungeon.anchorUsed){
+        disabled=true;reason="L’Ancre dimensionnelle a déjà été utilisée pendant ce donjon.";
+      }
     }else if(id==="rerollToken"){
       if(state.urgentTokenUseDay===today){disabled=true;reason="Un Jeton de relance a déjà été utilisé aujourd’hui.";}
       else if(activeSq){disabled=true;reason="Terminez d’abord la quête urgente actuellement active.";}
@@ -4003,7 +4067,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("button",{onClick:()=>setInventoryItem(null),style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
         ),
         h("div",{style:"display:flex;justify-content:center;align-items:center;margin:14px 0 8px"},InventoryItemIcon(id,128)),
-        !it.permanent&&h("div",{style:"text-align:center;font-family:Orbitron,sans-serif;font-size:10px;color:var(--td);margin-bottom:16px"},id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"MARQUE EN COURS":id==="etherStopper"&&suspendedElixir?"ÉLIXIR SUSPENDU · "+fmtCD(suspendedElixir.remainingMs):"QUANTITÉ : "+qty),
+        !it.permanent&&h("div",{style:"text-align:center;font-family:Orbitron,sans-serif;font-size:10px;color:var(--td);margin-bottom:16px"},id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"MARQUE EN COURS":id==="etherStopper"&&suspendedElixir?"ÉLIXIR SUSPENDU · "+fmtCD(suspendedElixir.remainingMs):id==="dimensionalAnchor"&&suspendedDungeon?"DONJON ANCRÉ · TEMPS CONSERVÉ : "+fmtCD(suspendedDungeon.remainingMs):"QUANTITÉ : "+qty),
         h("div",{style:"font-size:12px;line-height:1.6;color:var(--tx);margin-bottom:14px"},it.desc),
         !it.permanent&&h("div",{style:"margin-bottom:16px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);padding:10px 0"},
           h("div",{
@@ -4036,6 +4100,10 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         ?"Effacer la Marque du dépassement actuellement dessinée sur « "+((state.recordChallenge&&state.recordChallenge.name)||"ce record")+" » ? L’objet restera consommé et cet objectif officiel sera abandonné."
         :id==="etherStopper"&&suspendedElixir
           ?"Réactiver l’élixir suspendu avec exactement "+fmtCD(suspendedElixir.remainingMs)+" restants ?"
+          :id==="dimensionalAnchor"&&suspendedDungeon
+            ?"Reprendre le donjon suspendu avec exactement "+fmtCD(suspendedDungeon.remainingMs)+" de temps restant ? Le minuteur recommencera immédiatement à s’écouler."
+            :id==="dimensionalAnchor"
+              ?"Utiliser l’Ancre dimensionnelle pour sortir du donjon et figer sa progression ainsi que son temps restant ? Vous disposerez de 72 heures pour le reprendre."
           :id==="teleportCrystal"
             ?"Briser le Cristal de téléportation pour rejoindre un pays voisin et ouvrir un portail aléatoire ?"
             :id==="mysteryMap"
@@ -4081,6 +4149,20 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               setState(s=>{const el=s.activeElixir;if(!el||Date.now()>=(el.expiresAt||0)||(Number(s.inventory&&s.inventory.etherStopper)||0)<1)return s;const t=Date.now();return {...s,inventory:{...(s.inventory||{}),etherStopper:Math.max(0,(Number(s.inventory&&s.inventory.etherStopper)||0)-1)},activeElixir:null,suspendedElixir:buildSuspendedElixir(el,t)};});
               setItemUseUp({id,paused:true});
             }
+          }else if(id==="dimensionalAnchor"){
+            if(suspendedDungeon){
+              setState(s=>resumeSuspendedDungeonState(s,Date.now()));
+              setItemUseUp({id,dungeonResumed:true});
+            }else{
+              setState(s=>{
+                if((Number(s.inventory&&s.inventory.dimensionalAnchor)||0)<1)return s;
+                const next=suspendActiveDungeonState(s,Date.now());
+                if(next===s)return s;
+                return {...next,inventory:{...(next.inventory||{}),dimensionalAnchor:Math.max(0,(Number(next.inventory&&next.inventory.dimensionalAnchor)||0)-1)}};
+              });
+              setSelectedDungeonRoom(null);
+              setItemUseUp({id,dungeonPaused:true});
+            }
           }else if(id==="rerollToken"){
             invokeExtraUrgentQuest();
           }else if(id==="rewriteRune"){
@@ -4113,7 +4195,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
               setItemUseUp({id:"teleportCrystal",alliedTeleport:true,breachName:tpl.name});
             }
           }else setElixirStatChoice({id});
-        }},eraseRecord?"Effacer":id==="teleportCrystal"?"Briser":id==="masterContract"?"Signer":id==="rewriteRune"?"Tracer":id==="dungeonKey"||id==="transmutationGrimoire"||id==="supremeElixir"?"Oui":"Continuer")
+        }},eraseRecord?"Effacer":id==="dimensionalAnchor"&&suspendedDungeon?"Reprendre":id==="dimensionalAnchor"?"Ancrer":id==="teleportCrystal"?"Briser":id==="masterContract"?"Signer":id==="rewriteRune"?"Tracer":id==="dungeonKey"||id==="transmutationGrimoire"||id==="supremeElixir"?"Oui":"Continuer")
       )
     ));
   }
@@ -5216,6 +5298,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       destinyCompass:{main:"#d4a84f",accent:"#60a5fa"},
       mysteryMap:{main:"#b7791f",accent:"#f5d08a"},
       etherStopper:{main:"#7c3aed",accent:"#60a5fa"},
+      dimensionalAnchor:{main:"#8b5cf6",accent:"#fbbf24"},
       rerollToken:{main:"#d4a84f",accent:"#38bdf8"},
       rewriteRune:{main:"#8b5cf6",accent:"#67e8f9"},
       alchemicalCatalyst:{main:"#10b981",accent:"#5eead4"},
@@ -5328,7 +5411,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const it=INVENTORY_ITEMS[itemUseUp.id];
     return h("div",{class:"ruov",style:"--rc:"+rank.color+";--rg:"+rank.glow},h("div",{class:"rucont"},
       h(NotificationHeader,null),
-      h("div",{class:"ruevol",style:"color:"+rank.color},itemUseUp.id==="teleportCrystal"&&itemUseUp.alliedTeleport?"ALLIANCE SCELLÉE":itemUseUp.id==="dungeonKey"?"Vous avez utilisé une":itemUseUp.id==="debtAcknowledgement"?"Dette créée avec une":itemUseUp.id==="transmutationGrimoire"?"Transmutation accomplie":itemUseUp.id==="destinyCompass"?"Boussole orientée":itemUseUp.id==="mysteryMap"?"Carte déployée":itemUseUp.id==="etherStopper"?(itemUseUp.resumed?"Élixir réactivé":"Élixir suspendu"):itemUseUp.id==="rerollToken"?"Quête urgente invoquée":itemUseUp.id==="rewriteRune"?"Destin retracé":itemUseUp.id==="alchemicalCatalyst"?"Catalyseur préparé":itemUseUp.id==="counterpartBalance"?"Échange accompli":itemUseUp.id==="masterContract"?"Vous avez signé un":"Vous avez consommé un"),
+      h("div",{class:"ruevol",style:"color:"+rank.color},itemUseUp.id==="teleportCrystal"&&itemUseUp.alliedTeleport?"ALLIANCE SCELLÉE":itemUseUp.id==="dungeonKey"?"Vous avez utilisé une":itemUseUp.id==="debtAcknowledgement"?"Dette créée avec une":itemUseUp.id==="transmutationGrimoire"?"Transmutation accomplie":itemUseUp.id==="destinyCompass"?"Boussole orientée":itemUseUp.id==="mysteryMap"?"Carte déployée":itemUseUp.id==="etherStopper"?(itemUseUp.resumed?"Élixir réactivé":"Élixir suspendu"):itemUseUp.id==="dimensionalAnchor"?(itemUseUp.dungeonResumed?"Donjon réintégré":"Donjon suspendu"):itemUseUp.id==="rerollToken"?"Quête urgente invoquée":itemUseUp.id==="rewriteRune"?"Destin retracé":itemUseUp.id==="alchemicalCatalyst"?"Catalyseur préparé":itemUseUp.id==="counterpartBalance"?"Échange accompli":itemUseUp.id==="masterContract"?"Vous avez signé un":"Vous avez consommé un"),
       h("div",{class:"rurank",style:responsiveItemAnimationTitleStyle(it.name,56),"data-r":it.name},it.name),
       itemUseUp.stat&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Vous bénéficiez de +"+Math.round(itemUseUp.pct*100)+" % d’XP dans ",h("span",{style:"color:"+(STAT_COLOR[itemUseUp.stat]||rank.color)},STAT_LBL[itemUseUp.stat]||itemUseUp.stat)," pendant 24 h."),
       itemUseUp.global&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:#c084fc"},"Vous bénéficiez de +"+Math.round(itemUseUp.pct*100)+" % d’XP sur toutes les statistiques pendant 24 h."),
@@ -5338,6 +5421,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       itemUseUp.id==="masterContract"&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:350px;line-height:1.5;color:#fbbf24"},"Le prochain donjon sera soumis à une contrainte aléatoire, cachée jusqu’au moment où elle s’activera. Récompenses : +20 % XP si le donjon est terminé."),
       itemUseUp.paused&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Le temps restant de l’élixir est conservé pendant 24 h maximum."),
       itemUseUp.resumed&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"L’élixir reprend avec exactement le temps qui lui restait."),
+      itemUseUp.dungeonPaused&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:350px;line-height:1.5"},"Le temps et la progression du donjon sont figés. Vous disposez de 72 heures pour le reprendre."),
+      itemUseUp.dungeonResumed&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:350px;line-height:1.5"},"Le donjon reprend avec ses salles validées, son XP acquise et exactement le temps qu’il lui restait."),
       itemUseUp.summoned&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Une seconde quête urgente a été invoquée. Elle accorde ses XP et ses objets normaux, mais ne peut pas être relancée."),
       itemUseUp.rewritten&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"La quête urgente active a été remplacée par une nouvelle quête urgente aléatoire."),
       itemUseUp.alliedTeleport&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:350px;line-height:1.55;color:#dbeafe"},"Vous choisissez de vous allier à un pays voisin pour l’aider à fermer un portail."),
