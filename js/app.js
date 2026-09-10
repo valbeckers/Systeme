@@ -766,7 +766,12 @@ function App(){
 
   // 6. XP du jour : journalières + XP ponctuelle gagnée aujourd'hui
   // Inclut maintenant les quêtes urgentes et les salles de donjon.
-  const sameDayTs = ts => ts && new Date(ts).toDateString()===new Date().toDateString();
+  // Une journée Système court d'un reset à l'autre, et non de minuit à minuit.
+  // Sans cette fenêtre, les sources d'icônes (notamment la quête urgente)
+  // devenaient introuvables entre minuit et le reset du matin.
+  const xpDayStart=current7AMStart(now);
+  const xpDayEnd=next7AM(xpDayStart);
+  const sameDayTs = ts => Boolean(ts&&ts>=xpDayStart&&ts<xpDayEnd);
   const sumXpPairs = pairs => (pairs||[]).reduce((s,p)=>s+(Number(p?.xp)||0),0);
   const sqEarnedXp = q => {
     if(!q) return 0;
