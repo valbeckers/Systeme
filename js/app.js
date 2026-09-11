@@ -87,7 +87,7 @@ import {
   NEW_ITEM_ICON_DATA,
   GRIMOIRE_ICON_DATA,
   DEBT_ACKNOWLEDGEMENT_ICON_DATA
-} from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
+} from "./itemImages.js?v=20260911-dungeon-key-v2";
 import { UiIcon } from "./uiIcons.js?v=20260910-xp-icons-v2";
 import { saveStoredState } from "./storage.js";
 import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260910-dimensional-anchor-v1";
@@ -3840,6 +3840,12 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     if(NEW_ITEM_ICON_DATA[id])return EmojiStyleItemImage(NEW_ITEM_ICON_DATA[id],size);
     return h(UiIcon,{iconKey:"item."+id,fallback:INVENTORY_ITEMS[id].emoji,slotSize:size,glyphSize:size});
   }
+  function InventoryItemHero(id,status){
+    return h("div",{style:"display:grid;grid-template-rows:144px 18px;row-gap:8px;margin:18px 0 18px"},
+      h("div",{style:"display:flex;align-items:center;justify-content:center;min-width:0;min-height:0;overflow:visible"},InventoryItemIcon(id,128)),
+      status&&h("div",{style:"display:flex;align-items:center;justify-content:center;min-width:0;text-align:center;font-family:Orbitron,sans-serif;font-size:10px;line-height:18px;color:var(--td);white-space:nowrap"},status)
+    );
+  }
   function itemQty(id){ return ["codex","regressionOrb","debtAcknowledgement"].includes(id)?1:id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
   function Inventory(){
     const permanentOrder=["codex","regressionOrb","debtAcknowledgement"];
@@ -4079,8 +4085,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{class:"mtitle",style:"margin:0;line-height:1.2;min-width:0"},it.name),
           h("button",{onClick:()=>setInventoryItem(null),style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
         ),
-        h("div",{style:"display:flex;justify-content:center;align-items:center;margin:14px 0 8px"},InventoryItemIcon(id,128)),
-        !it.permanent&&h("div",{style:"text-align:center;font-family:Orbitron,sans-serif;font-size:10px;color:var(--td);margin-bottom:16px"},id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"MARQUE EN COURS":id==="etherStopper"&&suspendedElixir?"ÉLIXIR SUSPENDU · "+fmtCD(suspendedElixir.remainingMs):id==="dimensionalAnchor"&&suspendedDungeon?"DONJON ANCRÉ · TEMPS CONSERVÉ : "+fmtCD(suspendedDungeon.remainingMs):"QUANTITÉ : "+qty),
+        InventoryItemHero(id,!it.permanent?(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"MARQUE EN COURS":id==="etherStopper"&&suspendedElixir?"ÉLIXIR SUSPENDU · "+fmtCD(suspendedElixir.remainingMs):id==="dimensionalAnchor"&&suspendedDungeon?"DONJON ANCRÉ · TEMPS CONSERVÉ : "+fmtCD(suspendedDungeon.remainingMs):"QUANTITÉ : "+qty):null),
         h("div",{style:"font-size:12px;line-height:1.6;color:var(--tx);margin-bottom:14px"},it.desc),
         !it.permanent&&h("div",{style:"margin-bottom:16px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);padding:10px 0"},
           h("div",{
