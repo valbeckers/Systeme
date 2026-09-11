@@ -203,6 +203,37 @@ export function HistoryTab({
       )
     ),
     h("div",{class:"card"},
+      h("div",{class:"ctitle"},"Bilans hebdomadaires"),
+      !(state.weeklySummaries||[]).length&&h("div",{style:"font-size:12px;color:var(--td);margin-top:10px;text-align:center"},"Le premier bilan sera créé au prochain reset hebdomadaire."),
+      [...(state.weeklySummaries||[])].sort((a,b)=>String(b.weekKey).localeCompare(String(a.weekKey))).map(summary=>{
+        const key="summary_"+summary.weekKey;
+        const fmtDay=day=>{const p=String(day||"").split("-");return p.length===3?p[2]+"/"+p[1]:day;};
+        const bonusTotal=(Number(summary.professionalBonusXp)||0)+(Number(summary.streakBonusXp)||0);
+        return h("div",{key:summary.weekKey,style:"margin-top:10px;border-top:1px solid rgba(255,255,255,.06);padding-top:10px"},
+          h("div",{onClick:()=>toggle(key),style:"display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:10px;cursor:pointer"},
+            h("div",{style:"min-width:0"},
+              h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--tx);letter-spacing:.7px"},"DU "+fmtDay(summary.startDay)+" AU "+fmtDay(summary.endDay)),
+              h("div",{style:"font-size:10px;color:var(--td);margin-top:3px"},summary.successfulDays+"/7 journées validées")
+            ),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:var(--rc);white-space:nowrap"},Math.round(Number(summary.xp)||0).toLocaleString("fr-FR")+" XP"),
+            h(ChevronBtn,{k:key})
+          ),
+          open[key]&&h("div",{style:"margin-top:12px"},
+            h("div",{style:"display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px"},
+              [["Meilleur streak",(summary.bestStreak||0)+" j"],["Donjons terminés",summary.dungeons||0],["Portails contenus",summary.portals||0],["Bonus obtenus",bonusTotal>0?"+"+Math.round(bonusTotal)+" XP":"—"]].map(([label,value])=>h("div",{key:label,style:"padding:8px;border-radius:8px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);text-align:center"},
+                h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:var(--rc)"},value),
+                h("div",{style:"font-size:8.5px;color:var(--td);margin-top:3px;text-transform:uppercase"},label)
+              ))
+            ),
+            summary.professional&&summary.professional.length>0&&h("div",{style:"margin-top:10px"},summary.professional.map(item=>h("div",{key:item.id,style:"display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:7px 0;border-top:1px solid rgba(255,255,255,.05);font-size:11px"},
+              h("span",{style:"color:var(--tx);min-width:0"},item.name),
+              h("span",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+(item.done?"#4ade80":"var(--td)")+";white-space:nowrap"},fmtNum(item.value)+"/"+fmtNum(item.target)+" "+item.unit+(item.done?" ✓":""))
+            )))
+          )
+        );
+      })
+    ),
+    h("div",{class:"card"},
       h("div",{style:"display:flex;align-items:center;justify-content:space-between;cursor:pointer",onClick:()=>toggle("records")},
         h("div",{class:"ctitle",style:"margin:0"},"Records personnels"),
         h(ChevronBtn,{k:"records"})
@@ -239,47 +270,6 @@ export function HistoryTab({
           );
         })
       )
-    ),
-    (()=>{
-      const allDays=Object.keys(state.dailyLog).sort();
-      const firstDay=allDays.length>0?allDays[0]:null;
-      const fmtFirst=d=>{if(!d)return"";const p=d.split("-");return p[2]+"/"+p[1]+"/"+p[0];};
-      const totals={};
-      Object.values(state.dailyLog).forEach(log=>{
-        Object.entries(log).forEach(([id,val])=>{totals[id]=(totals[id]||0)+val;});
-      });
-      Object.values(state.weeklyLog).forEach(log=>{
-        Object.entries(log).forEach(([id,val])=>{totals[id]=(totals[id]||0)+val;});
-      });
-      exerciseHistoryDefs.forEach(def=>{
-        totals[def.id]=Object.entries(state.dailyLog||{}).reduce((sum,[day,log])=>sum+recordExerciseValueForDay(def,day,log,state.exerciseRotationByDay),0);
-      });
-      return h("div",{class:"card"},
-        h("div",{style:"display:flex;align-items:center;justify-content:space-between;cursor:pointer",onClick:()=>toggle("totals")},
-          h("div",{class:"ctitle",style:"margin:0"},"Totaux depuis le d\u00e9but"+(firstDay?" \u2014 "+fmtFirst(firstDay):"")),
-          h(ChevronBtn,{k:"totals"})
-        ),
-        open.totals&&h(Fragment,null,
-          h("div",{style:"margin-top:12px"}),
-          recordDisplayObjs.map(o=>{
-            const total=totals[o.id]||0;
-            const unitLbl=total>1?({rep:"reps",page:"pages",verre:"verres",km:"km",min:"min",contact:"contacts",action:"actions"}[o.unit]||o.unit):o.unit;
-            return h("div",{key:o.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"+(total===0?";opacity:.35":"")},
-              QuestIcon(o.id,o.icon,14),
-              h("div",{style:"flex:1"},
-                h("div",{style:"font-size:12px;color:var(--tx);display:flex;align-items:center;gap:5px"},
-                  o.name,
-                  o.weekly&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR}),
-                  o.optional&&!o.weekly&&h(QuestBadge,{label:"BONUS",color:BONUS_BADGE_COLOR})
-                )
-              ),
-              h("span",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--tx)"},
-                total===0?"—":(total%1===0?total.toLocaleString("fr-FR"):total.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2}))+(total>0?" "+unitLbl:"")
-              )
-            );
-          })
-        )
-      );
-    })()
+    )
   );
 }

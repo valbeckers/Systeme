@@ -65,7 +65,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260811-linear-xp-v1";
 import { StatsTab } from "./statsView.js?v=20260806-remove-radar";
-import { HistoryTab } from "./historyView.js?v=20260908-hide-assisted-pullups-v1";
+import { HistoryTab } from "./historyView.js?v=20260911-weekly-summary-v1";
 import {
   RANK_BASES,
   ROMAN,
@@ -90,8 +90,8 @@ import {
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
 import { UiIcon } from "./uiIcons.js?v=20260911-settings-nav-frame-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260910-dimensional-anchor-v1";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260910-dimensional-anchor-v1";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260911-weekly-summary-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260911-weekly-summary-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -476,6 +476,84 @@ const saveState = state => saveStoredState(state,exportSystemState);
 
 const RUN_RECORD_RESET_DAY = "2026-07-13";
 
+function weekDaysFromKey(weekKey){
+  const match=/^(\d{4})-W(\d{2})$/.exec(String(weekKey||""));
+  if(!match)return [];
+  const year=Number(match[1]),week=Number(match[2]);
+  const jan4=new Date(Date.UTC(year,0,4));
+  const monday=new Date(jan4);
+  monday.setUTCDate(jan4.getUTCDate()-((jan4.getUTCDay()+6)%7)+(week-1)*7);
+  return Array.from({length:7},(_,index)=>{
+    const day=new Date(monday);
+    day.setUTCDate(monday.getUTCDate()+index);
+    return day.toISOString().slice(0,10);
+  });
+}
+
+function buildWeeklySummary(state,tracking){
+  const weekKey=tracking.weekKey;
+  const days=weekDaysFromKey(weekKey);
+  const successfulDays=days.filter(day=>hasValidatedDailyCompletion(state,day));
+  let bestStreak=0,currentStreak=0;
+  days.forEach(day=>{
+    if(successfulDays.includes(day)){
+      currentStreak+=1;
+      bestStreak=Math.max(bestStreak,currentStreak);
+    }else currentStreak=0;
+  });
+  const professional=DEFS.filter(obj=>obj.weekly&&obj.workweekOnly).map(obj=>{
+    const value=Number(state.weeklyLog&&state.weeklyLog[weekKey]&&state.weeklyLog[weekKey][obj.id])||0;
+    const target=Number(obj.target||obj.base)||0;
+    const done=target>0&&value>=target;
+    let bonusXp=0;
+    if(done&&obj.completionBonusXp)bonusXp+=Number(obj.completionBonusXp)||0;
+    if(obj.tiers)bonusXp+=obj.tiers.reduce((sum,tier)=>value>=Number(tier.at||0)?sum+(Number(tier.xp)||0)+(Number(tier.xp2)||0)+(Number(tier.xp3)||0):sum,0);
+    return {id:obj.id,name:obj.name,unit:obj.unit,value,target,done,bonusXp};
+  });
+  const daySet=new Set(days);
+  const dungeons=(state.dungeonLog||[]).filter(entry=>entry&&entry.completedAt&&daySet.has(eventDayStr(entry.completedAt))).length;
+  const portals=days.filter(day=>Number(state.dailyExtraXp&&state.dailyExtraXp[day]&&state.dailyExtraXp[day].breach)>0).length;
+  const streakBonusXp=days.reduce((sum,day)=>sum+(Number(state.dailyExtraXp&&state.dailyExtraXp[day]&&state.dailyExtraXp[day].streak)||0),0);
+  const professionalBonusXp=professional.reduce((sum,item)=>sum+item.bonusXp,0);
+  return {
+    weekKey,
+    startDay:days[0]||null,
+    endDay:days[6]||null,
+    createdAt:Date.now(),
+    xp:Math.round((Number(tracking.earnedXp)||0)*100)/100,
+    successfulDays:successfulDays.length,
+    bestStreak,
+    dungeons,
+    portals,
+    professional,
+    professionalBonusXp,
+    streakBonusXp
+  };
+}
+
+function estimateRecordedWeekXp(state,weekKey){
+  const days=new Set(weekDaysFromKey(weekKey));
+  let total=0;
+  Object.entries(state.dailyLog||{}).forEach(([day,row])=>{
+    if(!days.has(day))return;
+    Object.entries(row||{}).forEach(([id,value])=>{
+      const obj=BONUS_QUEST_BY_ID[id]||DEFS.find(item=>item.id===id);
+      if(!obj||obj.weekly)return;
+      let target=Number(obj.target||obj.validateAt||obj.base)||0;
+      if(obj.dynamicTargetKey)target=getStatLevelTarget(obj.dynamicTargetKey,state.stats);
+      total+=calcQuestTotalXp(obj,Number(value)||0,target);
+    });
+    total+=Object.values((state.dailyExtraXp&&state.dailyExtraXp[day])||{}).reduce((sum,value)=>sum+(Number(value)||0),0);
+  });
+  DEFS.filter(obj=>obj.weekly).forEach(obj=>{
+    const value=Number(state.weeklyLog&&state.weeklyLog[weekKey]&&state.weeklyLog[weekKey][obj.id])||0;
+    const target=Number(obj.target||obj.base)||0;
+    total+=calcQuestTotalXp(obj,value,target);
+    if(obj.completionBonusXp&&target>0&&value>=target)total+=Number(obj.completionBonusXp)||0;
+  });
+  return Math.round(total*100)/100;
+}
+
 // ─── COMPOSANT PRINCIPAL ───────────────────────────────────────────────────
 
 function App(){
@@ -557,7 +635,7 @@ function App(){
   const [exportValue,setExportValue] = useState("");
   const [dungeonHelpOpen,setDungeonHelpOpen] = useState({});
   const [selectedDungeonRoom,setSelectedDungeonRoom] = useState(null);
-  const [historyOpen,setHistoryOpen] = useState({week:false,records:false,totals:false});
+  const [historyOpen,setHistoryOpen] = useState({week:false,records:false});
   const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,reg:false,sq:false,breach:false,debt:false,dj:false,djAlt:false,cs:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
   const [showStatReqDetail,setShowStatReqDetail] = useState(false);
@@ -567,6 +645,7 @@ function App(){
   const [showSet,setShowSet]       = useState(false);
   const [bonusPickerOpen,setBonusPickerOpen] = useState(false);
   const [xpTodayOpen,setXpTodayOpen] = useState(false);
+  const [weeklySummaryUp,setWeeklySummaryUp] = useState(null);
   const [confirmReset,setConfirmReset] = useState(false);
   const [wkOff,setWkOff]  = useState(0);
   const inputs = useRef({});
@@ -677,6 +756,31 @@ function App(){
 
   const today = todayStr();
   const wk    = wkStr();
+  const systemWeekKey=wkStr(new Date(today+"T12:00:00"));
+
+  useEffect(()=>{
+    const tracking=state.weeklySummaryTracking;
+    if(!tracking||!tracking.weekKey){
+      setState(s=>({...s,weeklySummaryTracking:{weekKey:systemWeekKey,lastTotalXp:Number(s.totalXp)||0,earnedXp:estimateRecordedWeekXp(s,systemWeekKey)}}));
+      return;
+    }
+    const currentTotal=Number(state.totalXp)||0;
+    const lastTotal=Number(tracking.lastTotalXp)||0;
+    const delta=currentTotal-lastTotal;
+    if(tracking.weekKey===systemWeekKey){
+      if(Math.abs(delta)>1e-9){
+        setState(s=>({...s,weeklySummaryTracking:{...s.weeklySummaryTracking,lastTotalXp:Number(s.totalXp)||0,earnedXp:(Number(s.weeklySummaryTracking&&s.weeklySummaryTracking.earnedXp)||0)+delta}}));
+      }
+      return;
+    }
+    const finalTracking={...tracking,earnedXp:(Number(tracking.earnedXp)||0)+delta,lastTotalXp:currentTotal};
+    const summary=buildWeeklySummary(state,finalTracking);
+    setState(s=>{
+      const summaries=[...(s.weeklySummaries||[])].filter(item=>item.weekKey!==summary.weekKey);
+      return {...s,weeklySummaries:[...summaries,summary],weeklySummaryTracking:{weekKey:systemWeekKey,lastTotalXp:Number(s.totalXp)||0,earnedXp:0}};
+    });
+    setWeeklySummaryUp(summary);
+  },[systemWeekKey,state.totalXp,state.weeklySummaryTracking&&state.weeklySummaryTracking.weekKey,state.weeklySummaryTracking&&state.weeklySummaryTracking.lastTotalXp]);
 
   useEffect(()=>{
     const row=(state.exerciseRotationByDay||{})[today]||{};
@@ -5775,6 +5879,53 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       )
     );
   }
+
+  function WeeklySummaryModal(){
+    const summary=weeklySummaryUp;
+    if(!summary)return null;
+    const fmtDay=day=>{
+      const parts=String(day||"").split("-");
+      return parts.length===3?parts[2]+"/"+parts[1]:day;
+    };
+    const previous=[...(state.weeklySummaries||[])]
+      .filter(item=>item.weekKey!==summary.weekKey&&item.createdAt<summary.createdAt)
+      .sort((a,b)=>b.createdAt-a.createdAt)[0]||null;
+    const xpDiff=previous?Math.round((summary.xp-previous.xp)*100)/100:null;
+    const bonusTotal=(Number(summary.professionalBonusXp)||0)+(Number(summary.streakBonusXp)||0);
+    const metric=(label,value)=>h("div",{style:"padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(255,255,255,.025);text-align:center"},
+      h("div",{style:"font-family:Orbitron,sans-serif;font-size:15px;font-weight:900;color:var(--rc)"},value),
+      h("div",{style:"margin-top:4px;font-size:9px;color:var(--td);text-transform:uppercase;letter-spacing:.7px"},label)
+    );
+    return h("div",{class:"modal-ov"},
+      h("div",{class:"modal",style:"position:relative;max-width:410px;width:calc(100% - 28px)"},
+        h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:12px"},
+          h("div",{class:"mtitle",style:"margin:0;line-height:1.2"},"BILAN HEBDOMADAIRE"),
+          h("button",{onClick:()=>setWeeklySummaryUp(null),style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
+        ),
+        h("div",{style:"margin-top:7px;font-family:Orbitron,sans-serif;font-size:9px;color:var(--td);letter-spacing:.8px"},"DU "+fmtDay(summary.startDay)+" AU "+fmtDay(summary.endDay)),
+        h("div",{style:"margin:20px 0 4px;text-align:center;font-family:Orbitron,sans-serif;font-size:34px;font-weight:900;color:var(--rc);text-shadow:0 0 18px var(--rg)"},Math.round(summary.xp).toLocaleString("fr-FR")+" XP"),
+        xpDiff!=null&&h("div",{style:"text-align:center;font-size:10px;color:"+(xpDiff>=0?"#4ade80":"#ef4444")+";font-family:Orbitron,sans-serif;margin-bottom:16px"},(xpDiff>=0?"+":"")+Math.round(xpDiff).toLocaleString("fr-FR")+" XP par rapport à la semaine précédente"),
+        h("div",{style:"display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:"+(xpDiff==null?"16px":"0")},
+          metric("Journées validées",summary.successfulDays+"/7"),
+          metric("Meilleur streak",summary.bestStreak+" j"),
+          metric("Donjons terminés",summary.dungeons),
+          metric("Portails contenus",summary.portals)
+        ),
+        summary.professional&&summary.professional.length>0&&h("div",{style:"margin-top:18px"},
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--rc);letter-spacing:1px;margin-bottom:8px"},"OBJECTIFS PROFESSIONNELS"),
+          summary.professional.map(item=>h("div",{key:item.id,style:"display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid rgba(255,255,255,.06)"},
+            h("div",{style:"font-size:12px;color:var(--tx);min-width:0"},item.name),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:"+(item.done?"#4ade80":"var(--td)")+";white-space:nowrap"},fmtFrNum(item.value)+"/"+fmtFrNum(item.target)+" "+item.unit+(item.done?" ✓":""))
+          ))
+        ),
+        bonusTotal>0&&h("div",{style:"margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;gap:10px;font-size:11px;color:var(--tx)"},
+          h("span",null,"Bonus obtenus"),
+          h("span",{style:"font-family:Orbitron,sans-serif;color:#4ade80;white-space:nowrap"},"+"+Math.round(bonusTotal).toLocaleString("fr-FR")+" XP")
+        ),
+        h("button",{onClick:()=>setWeeklySummaryUp(null),style:"width:100%;margin-top:18px;padding:13px;border-radius:9px;border:1px solid var(--rc);background:var(--rc)18;color:var(--rc);font-family:Orbitron,sans-serif;letter-spacing:2px;cursor:pointer"},"CONTINUER")
+      )
+    );
+  }
   // ─── RENDU PRINCIPAL ──────────────────────────────────────────────────
 
   const parts=Array.from({length:15},(_,i)=>({id:i,s:Math.random()*3+1,l:Math.random()*100,dur:Math.random()*10+8,del:Math.random()*10}));
@@ -5846,6 +5997,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
 
       ),
       h(Settings,null),
+      h(WeeklySummaryModal,null),
       h(BonusQuestPicker,null),
       h(XpTodayModal,null),
       h(RankUp,null),

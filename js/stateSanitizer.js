@@ -267,6 +267,46 @@ function cleanRegressionLog(obj){
   return out;
 }
 
+function cleanWeeklySummaries(items){
+  if(!Array.isArray(items))return [];
+  const seen=new Set();
+  return items.map(item=>{
+    if(!item||!/^\d{4}-W\d{2}$/.test(String(item.weekKey||""))||seen.has(item.weekKey))return null;
+    seen.add(item.weekKey);
+    return {
+      weekKey:item.weekKey,
+      startDay:item.startDay||null,
+      endDay:item.endDay||null,
+      createdAt:Number(item.createdAt)||Date.now(),
+      xp:Number(item.xp)||0,
+      successfulDays:Math.max(0,Math.min(7,Math.floor(Number(item.successfulDays)||0))),
+      bestStreak:Math.max(0,Math.min(7,Math.floor(Number(item.bestStreak)||0))),
+      dungeons:Math.max(0,Math.floor(Number(item.dungeons)||0)),
+      portals:Math.max(0,Math.floor(Number(item.portals)||0)),
+      professional:Array.isArray(item.professional)?item.professional.map(entry=>({
+        id:String(entry&&entry.id||""),
+        name:String(entry&&entry.name||""),
+        unit:String(entry&&entry.unit||""),
+        value:Number(entry&&entry.value)||0,
+        target:Number(entry&&entry.target)||0,
+        done:entry&&entry.done===true,
+        bonusXp:Number(entry&&entry.bonusXp)||0
+      })).filter(entry=>entry.id):[],
+      professionalBonusXp:Number(item.professionalBonusXp)||0,
+      streakBonusXp:Number(item.streakBonusXp)||0
+    };
+  }).filter(Boolean).sort((a,b)=>String(a.weekKey).localeCompare(String(b.weekKey)));
+}
+
+function cleanWeeklySummaryTracking(value){
+  if(!value||!/^\d{4}-W\d{2}$/.test(String(value.weekKey||"")))return null;
+  return {
+    weekKey:value.weekKey,
+    lastTotalXp:Number(value.lastTotalXp)||0,
+    earnedXp:Number(value.earnedXp)||0
+  };
+}
+
 export function cleanSystemState(raw){
   const data=migrateRuntimeQuestDefinitions(migrateMergedEspritState({...((raw&&typeof raw==="object")?raw:{})}));
   const dailyIds=new Set([...DEFS.filter(o=>o.daily).map(o=>o.id),...BONUS_QUESTS.map(o=>o.id)]);
@@ -306,6 +346,8 @@ export function cleanSystemState(raw){
     prestige:Number(data.prestige)||0,
     dailyLog:cleanQuestLogByIds(data.dailyLog,dailyIds),
     weeklyLog:cleanQuestLogByIds(data.weeklyLog,weeklyIds),
+    weeklySummaries:cleanWeeklySummaries(data.weeklySummaries),
+    weeklySummaryTracking:cleanWeeklySummaryTracking(data.weeklySummaryTracking),
     stats:statPack.stats,
     statXp:statPack.statXp,
     specialQuests,

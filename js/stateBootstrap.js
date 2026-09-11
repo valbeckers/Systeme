@@ -59,6 +59,8 @@ const IMPORTED = {
     "2026-05-11":{water:4,sleep:1,abs:127,push:56,squats:35,calves:45}
   },
   weeklyLog:{"2026-W15":{run:13},"2026-W16":{run:8.52},"2026-W17":{walk:6.5,run:0},"2026-W18":{run:12.56,walk:8},"2026-W19":{run:10.42,walk:3}},
+  weeklySummaries:[],
+  weeklySummaryTracking:null,
   stats:{Sante:getLvl(10100),Force:getLvl(13488),Esprit:getLvl(12700),Endurance:getLvl(2962),Agilite:getLvl(1652),Discipline:getLvl(3150)},
   statXp:{Sante:10100,Force:13488,Esprit:12700,Endurance:2962,Agilite:1652,Discipline:3150},
   specialQuests:[],
@@ -188,6 +190,8 @@ export function buildInitialState(){
     dailyLog:migratedLog,
     sleepHoursMigrated:true,
     weeklyLog:saved.weeklyLog||IMPORTED.weeklyLog,
+    weeklySummaries:saved.weeklySummaries||[],
+    weeklySummaryTracking:saved.weeklySummaryTracking||null,
     totalXp:Math.max(saved.totalXp||0, IMPORTED.totalXp),
     prestige:saved.prestige||IMPORTED.prestige||0,
   };
