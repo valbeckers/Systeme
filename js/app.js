@@ -4085,7 +4085,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{class:"mtitle",style:"margin:0;line-height:1.2;min-width:0"},it.name),
           h("button",{onClick:()=>setInventoryItem(null),style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
         ),
-        InventoryItemHero(id,!it.permanent?(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"MARQUE EN COURS":id==="etherStopper"&&suspendedElixir?"ÉLIXIR SUSPENDU · "+fmtCD(suspendedElixir.remainingMs):id==="dimensionalAnchor"&&suspendedDungeon?"DONJON ANCRÉ · TEMPS CONSERVÉ : "+fmtCD(suspendedDungeon.remainingMs):"QUANTITÉ : "+qty):null),
+        InventoryItemHero(id,it.permanent?"QUANTITÉ : ∞":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"MARQUE EN COURS":id==="etherStopper"&&suspendedElixir?"ÉLIXIR SUSPENDU · "+fmtCD(suspendedElixir.remainingMs):id==="dimensionalAnchor"&&suspendedDungeon?"DONJON ANCRÉ · TEMPS CONSERVÉ : "+fmtCD(suspendedDungeon.remainingMs):"QUANTITÉ : "+qty)),
         h("div",{style:"font-size:12px;line-height:1.6;color:var(--tx);margin-bottom:14px"},it.desc),
         !it.permanent&&h("div",{style:"margin-bottom:16px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);padding:10px 0"},
           h("div",{
