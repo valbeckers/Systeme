@@ -11,7 +11,7 @@ const { h } = window.preact;
 // même emplacement fixe. Les nouveaux visuels pourront donc être ajoutés par
 // lots, sans modifier la mise en page des cartes.
 export const UI_ICON_IMAGES=Object.freeze({
-  "interface.settings":"./assets/ui/interface-settings.png?v=20260809-medallions-v6",
+  "interface.settings":"./assets/ui/interface-settings.png?v=20260911-nav-frame-v1",
   "interface.ascension":"./assets/ui/interface-ascension.png?v=20260809-medallions-v6",
   "interface.warning":"./assets/ui/interface-warning.png?v=20260809-medallions-v6",
   "interface.rupture":"./assets/ui/interface-rupture.png?v=20260809-medallions-v6",
@@ -20,8 +20,7 @@ export const UI_ICON_IMAGES=Object.freeze({
   "interface.notification":"./assets/ui/interface-notification.png?v=20260809-medallions-v6",
   "interface.chain":"./assets/ui/interface-chain.png?v=20260809-medallions-v6",
   "interface.countdown":"./assets/ui/interface-countdown.png?v=20260809-medallions-v6",
-  "interface.xpStreak":"./assets/ui/interface-xp-streak.png?v=20260910-xp-icons-v2",
-  "interface.xpDungeon":DUNGEON_KEY_ICON_DATA,
+  "interface.xpStreak":"./assets/ui/interface-xp-streak.png?v=20260818-xp-icons-v1",
   "interface.xpElan":"./assets/ui/interface-xp-elan.png?v=20260818-xp-icons-v1",
   "interface.xpInertia":"./assets/ui/interface-xp-inertia.png?v=20260818-xp-icons-v1",
 

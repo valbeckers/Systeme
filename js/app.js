@@ -87,8 +87,8 @@ import {
   NEW_ITEM_ICON_DATA,
   GRIMOIRE_ICON_DATA,
   DEBT_ACKNOWLEDGEMENT_ICON_DATA
-} from "./itemImages.js?v=20260911-dungeon-key-v2";
-import { UiIcon } from "./uiIcons.js?v=20260910-xp-icons-v2";
+} from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
+import { UiIcon } from "./uiIcons.js?v=20260911-settings-nav-frame-v1";
 import { saveStoredState } from "./storage.js";
 import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260910-dimensional-anchor-v1";
 import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260910-dimensional-anchor-v1";
@@ -766,13 +766,7 @@ function App(){
 
   // 6. XP du jour : journalières + XP ponctuelle gagnée aujourd'hui
   // Inclut maintenant les quêtes urgentes et les salles de donjon.
-  // Une journée Système court d'un reset à l'autre, et non de minuit à minuit.
-  // Sans cette fenêtre, les sources d'icônes (notamment la quête urgente)
-  // devenaient introuvables entre minuit et le reset du matin.
-  const xpNow=Date.now();
-  const xpDayStart=current7AMStart(xpNow);
-  const xpDayEnd=next7AM(xpDayStart);
-  const sameDayTs = ts => Boolean(ts&&ts>=xpDayStart&&ts<xpDayEnd);
+  const sameDayTs = ts => ts && new Date(ts).toDateString()===new Date().toDateString();
   const sumXpPairs = pairs => (pairs||[]).reduce((s,p)=>s+(Number(p?.xp)||0),0);
   const sqEarnedXp = q => {
     if(!q) return 0;
@@ -881,8 +875,7 @@ function App(){
   const completedDungeonToday=[...(state.dungeonLog||[])]
     .reverse()
     .find(entry=>sameDayTs(entry.completedAt))||null;
-  const recordedDungeonIdToday=state.dailyDungeonSources?.[today]||null;
-  const dungeonSourceToday=completedDungeonToday||state.activeDungeon||(recordedDungeonIdToday?{id:recordedDungeonIdToday}:null);
+  const dungeonSourceToday=completedDungeonToday||state.activeDungeon||null;
   const dungeonDefToday=dungeonSourceToday
     ?DUNGEONS.find(d=>d.id===dungeonSourceToday.id)
     :null;
@@ -893,21 +886,17 @@ function App(){
       row.iconId=urgentQuestToday.id;
       row.icon=urgentQuestToday.icon;
     }
-    if(key==="dungeon"){
-      if(dungeonSourceToday){
-        row.iconKind="dungeon";
-        row.iconId=dungeonSourceToday.id;
-        row.icon=dungeonDefToday?.icon||dungeonSourceToday.icon;
-      }else{
-        row.iconKey="interface.xpDungeon";
-      }
+    if(key==="dungeon"&&dungeonSourceToday){
+      row.iconKind="dungeon";
+      row.iconId=dungeonSourceToday.id;
+      row.icon=dungeonDefToday?.icon||dungeonSourceToday.icon;
     }
     return row;
   }).filter(row=>Math.abs(row.xp)>1e-9);
   if(legacyStreakTodayXp)extraXpTodayRows.push({key:"legacy_streak",label:"Bonus de streak",xp:legacyStreakTodayXp,iconKey:"interface.xpStreak"});
   if(legacySqTodayXp)extraXpTodayRows.push({key:"legacy_sq",label:"Quête urgente",xp:legacySqTodayXp,iconId:urgentQuestToday?.id,icon:urgentQuestToday?.icon});
-  if(legacyActiveDungeonTodayXp)extraXpTodayRows.push({key:"legacy_dungeon_active",label:"Donjon",xp:legacyActiveDungeonTodayXp,...(dungeonSourceToday?{iconKind:"dungeon",iconId:dungeonSourceToday.id,icon:dungeonDefToday?.icon||dungeonSourceToday.icon}:{iconKey:"interface.xpDungeon"})});
-  if(legacyCompletedDungeonTodayXp)extraXpTodayRows.push({key:"legacy_dungeon_done",label:"Donjon terminé",xp:legacyCompletedDungeonTodayXp,...(dungeonSourceToday?{iconKind:"dungeon",iconId:dungeonSourceToday.id,icon:dungeonDefToday?.icon||dungeonSourceToday.icon}:{iconKey:"interface.xpDungeon"})});
+  if(legacyActiveDungeonTodayXp)extraXpTodayRows.push({key:"legacy_dungeon_active",label:"Donjon",xp:legacyActiveDungeonTodayXp,iconKind:"dungeon",iconId:dungeonSourceToday?.id,icon:dungeonDefToday?.icon||dungeonSourceToday?.icon});
+  if(legacyCompletedDungeonTodayXp)extraXpTodayRows.push({key:"legacy_dungeon_done",label:"Donjon terminé",xp:legacyCompletedDungeonTodayXp,iconKind:"dungeon",iconId:dungeonSourceToday?.id,icon:dungeonDefToday?.icon||dungeonSourceToday?.icon});
   const todayXpRows=[...questXpTodayRows,...extraXpTodayRows]
     .sort((a,b)=>b.xp-a.xp);
 
@@ -2064,7 +2053,7 @@ function App(){
           subtitle:"Boss de Rupture · "+dungeon.short,rupture:true
         }),200);
         return {
-          ...s,totalXp,statXp,stats,dailyExtraXp:daily,dailyDungeonSources:{...(s.dailyDungeonSources||{}),[day]:dungeon.id},activeDungeon:null,
+          ...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:null,
           dungeonLog:[...(s.dungeonLog||[]),{
             id:dungeon.id,runId:ad.runId,startedAt:ad.startedAt,title:dungeon.title,stat:dungeon.stat,
             xp:priorRoomXp+awardedXp,completedAt,expiresAt:ad.expiresAt,
@@ -2097,7 +2086,6 @@ function App(){
       const awardedXp = roomRewards.reduce((sum,r)=>sum+(r.xp||0),0);
       const day=todayStr();
       const daily={...(s.dailyExtraXp||{})};
-      const dailyDungeonSources={...(s.dailyDungeonSources||{}),[day]:dungeon.id};
       const dayLog={...(daily[day]||{})};
       if(awardedXp>0) dayLog.dungeon=(dayLog.dungeon||0)+awardedXp;
       if(awardedXp>0) daily[day]=dayLog;
@@ -2158,7 +2146,7 @@ function App(){
       }
 
       if(!isComplete){
-        return {...s,totalXp,statXp,stats,dailyExtraXp:daily,dailyDungeonSources,activeDungeon:nextAd,lastActiveDay:todayStr()};
+        return {...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:nextAd,lastActiveDay:todayStr()};
       }
 
       // CONTRAT DU MAÎTRE — DOUBLE DONJON
@@ -2181,7 +2169,7 @@ function App(){
           doubleBoss
         };
         setTimeout(()=>setContractUp({kind:"double",stage:1,bossName:baseRoom.name,bossObjective:doubleBoss.objective}),120);
-        return {...s,totalXp,statXp,stats,dailyExtraXp:daily,dailyDungeonSources,activeDungeon:nextAd,lastActiveDay:todayStr()};
+        return {...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:nextAd,lastActiveDay:todayStr()};
       }
 
       const completedAt=t;
@@ -2202,7 +2190,7 @@ function App(){
         setDungeonUp({title:dungeon.title,short:dungeon.short,icon:dungeon.icon,color:dungeon.color,reward:rewardText});
         tryDungeonItemDrops(dungeon.id);
       },200);
-      return {...s,totalXp,statXp,stats,dailyExtraXp:daily,dailyDungeonSources,activeDungeon:null,dungeonLog:[...(s.dungeonLog||[]),{id:dungeon.id,runId:ad.runId,startedAt:ad.startedAt,title:dungeon.title,stat:dungeon.stat,xp:rewards.reduce((a,r)=>a+(r.xp||0),0)+contractBonusXp,completedAt,expiresAt:ad.expiresAt||completedAt+86400000,contractConstraint:nextAd.contractConstraint||null}],lastActiveDay:todayStr()};
+      return {...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:null,dungeonLog:[...(s.dungeonLog||[]),{id:dungeon.id,runId:ad.runId,startedAt:ad.startedAt,title:dungeon.title,stat:dungeon.stat,xp:rewards.reduce((a,r)=>a+(r.xp||0),0)+contractBonusXp,completedAt,expiresAt:ad.expiresAt||completedAt+86400000,contractConstraint:nextAd.contractConstraint||null}],lastActiveDay:todayStr()};
     });
   }
 
@@ -2230,7 +2218,6 @@ function App(){
       const contractBonusXp=contractBonusPairs.reduce((sum,r)=>sum+(r.xp||0),0);
       const day=todayStr();
       const daily={...(s.dailyExtraXp||{})};
-      const dailyDungeonSources={...(s.dailyDungeonSources||{}),[day]:dungeon.id};
       const dayLog={...(daily[day]||{})};
       if(contractBonusXp>0){
         dayLog.dungeon=(dayLog.dungeon||0)+contractBonusXp;
@@ -2245,7 +2232,7 @@ function App(){
         tryDungeonItemDrops(dungeon.id);
       },200);
       return {
-        ...s,totalXp,statXp,stats,dailyExtraXp:daily,dailyDungeonSources,activeDungeon:null,
+        ...s,totalXp,statXp,stats,dailyExtraXp:daily,activeDungeon:null,
         dungeonLog:[...(s.dungeonLog||[]),{
           id:dungeon.id,runId:ad.runId,startedAt:ad.startedAt,title:dungeon.title,stat:dungeon.stat,
           xp:rewards.reduce((a,r)=>a+(r.xp||0),0)+contractBonusXp,
@@ -3233,7 +3220,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     );
   }
 
-  function SuspendedDungeonCard({compact=false}={}){
+  function SuspendedDungeonCard({compact=false,showResumeButton=false}={}){
     const suspended=suspendedDungeon;
     if(!suspended)return null;
     const d=DUNGEONS.find(item=>item.id===suspended.dungeon.id);
@@ -3264,7 +3251,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         pct,
         color:"#a78bfa"
       }),
-      h("button",{
+      showResumeButton&&h("button",{
         onClick:()=>setConfirmItemUse({id:"dimensionalAnchor",resumeDungeon:true}),
         style:"width:100%;margin-top:10px;padding:11px;border-radius:9px;border:1px solid #a78bfa88;background:rgba(167,139,250,.10);color:#c4b5fd;font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.35px;text-transform:uppercase;cursor:pointer"
       },"REPRENDRE LE DONJON")
@@ -3789,7 +3776,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
             )
       ),
       activeDungeon&&h(DungeonCard,null),
-      suspendedDungeon&&h(SuspendedDungeonCard,null),
+      suspendedDungeon&&h(SuspendedDungeonCard,{showResumeButton:true}),
       h("div",{class:"card"},
         h(SectionHeader,{title:"Quêtes journalières",done:reqDone,total:reqTotal}),
         req.map(o=>h(QI,{key:o.id,obj:o})),
@@ -3839,12 +3826,6 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     if(id==="teleportCrystal"&&NEW_ITEM_ICON_DATA[id])return EmojiStyleItemImage(NEW_ITEM_ICON_DATA[id],size);
     if(NEW_ITEM_ICON_DATA[id])return EmojiStyleItemImage(NEW_ITEM_ICON_DATA[id],size);
     return h(UiIcon,{iconKey:"item."+id,fallback:INVENTORY_ITEMS[id].emoji,slotSize:size,glyphSize:size});
-  }
-  function InventoryItemHero(id,status){
-    return h("div",{style:"display:grid;grid-template-rows:144px 18px;row-gap:8px;margin:18px 0 18px"},
-      h("div",{style:"display:flex;align-items:center;justify-content:center;min-width:0;min-height:0;overflow:visible"},InventoryItemIcon(id,128)),
-      status&&h("div",{style:"display:flex;align-items:center;justify-content:center;min-width:0;text-align:center;font-family:Orbitron,sans-serif;font-size:10px;line-height:18px;color:var(--td);white-space:nowrap"},status)
-    );
   }
   function itemQty(id){ return ["codex","regressionOrb","debtAcknowledgement"].includes(id)?1:id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
   function Inventory(){
@@ -4085,7 +4066,8 @@ const BONUS_BADGE_COLOR = "#fbbf24";
           h("div",{class:"mtitle",style:"margin:0;line-height:1.2;min-width:0"},it.name),
           h("button",{onClick:()=>setInventoryItem(null),style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
         ),
-        InventoryItemHero(id,it.permanent?"QUANTITÉ : ∞":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"MARQUE EN COURS":id==="etherStopper"&&suspendedElixir?"ÉLIXIR SUSPENDU · "+fmtCD(suspendedElixir.remainingMs):id==="dimensionalAnchor"&&suspendedDungeon?"DONJON ANCRÉ · TEMPS CONSERVÉ : "+fmtCD(suspendedDungeon.remainingMs):"QUANTITÉ : "+qty)),
+        h("div",{style:"display:flex;justify-content:center;align-items:center;margin:14px 0 8px"},InventoryItemIcon(id,128)),
+        !it.permanent&&h("div",{style:"text-align:center;font-family:Orbitron,sans-serif;font-size:10px;color:var(--td);margin-bottom:16px"},id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"MARQUE EN COURS":id==="etherStopper"&&suspendedElixir?"ÉLIXIR SUSPENDU · "+fmtCD(suspendedElixir.remainingMs):id==="dimensionalAnchor"&&suspendedDungeon?"DONJON ANCRÉ · TEMPS CONSERVÉ : "+fmtCD(suspendedDungeon.remainingMs):"QUANTITÉ : "+qty),
         h("div",{style:"font-size:12px;line-height:1.6;color:var(--tx);margin-bottom:14px"},it.desc),
         !it.permanent&&h("div",{style:"margin-bottom:16px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);padding:10px 0"},
           h("div",{
