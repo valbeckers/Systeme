@@ -377,6 +377,22 @@ function QuestIcon(id, fallback, size=14, extraStyle=""){
   });
 }
 
+function DungeonIcon(id, fallback, slotSize=24, glyphSize=16, extraStyle=""){
+  if(id!=="alchemist"&&id!=="hunter"){
+    return h(UiIcon,{iconKey:"dungeon."+id,fallback,slotSize,glyphSize,extraStyle});
+  }
+  return h("span",{
+    class:"ui-icon-slot",
+    style:"--ui-icon-slot:"+slotSize+"px;--ui-icon-glyph:"+glyphSize+"px;"+extraStyle,
+    "aria-hidden":"true"
+  },h("img",{
+    src:"./assets/ui/dungeon-"+id+".png?v=20260913-clean-cutout-v1",
+    alt:"",
+    draggable:false,
+    "aria-hidden":"true"
+  }));
+}
+
 // Fenêtre des objectifs professionnels : lundi dès le reset de 7 h,
 // puis mardi-vendredi inclus. Ils sont masqués le week-end.
 function isWorkweekWindowOpen(at=Date.now()){
@@ -994,6 +1010,10 @@ function App(){
       row.iconKind="dungeon";
       row.iconId=dungeonSourceToday.id;
       row.icon=dungeonDefToday?.icon||dungeonSourceToday.icon;
+    }
+    if(key==="debt"&&state.questDebt){
+      row.iconId=state.questDebt.id;
+      row.icon=state.questDebt.icon;
     }
     return row;
   }).filter(row=>Math.abs(row.xp)>1e-9);
@@ -3146,7 +3166,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const dungeonBoss=d&&d.rooms&&d.rooms.length?d.rooms[d.rooms.length-1]:null;
     const dungeonRoomCount=d&&d.rooms?d.rooms.length:0;
     const dungeonPct=dungeonRoomCount?completedRooms.length/dungeonRoomCount*100:0;
-    const dungeonIcon=d?h(UiIcon,{iconKey:"dungeon."+d.id,fallback:d.icon,slotSize:24,glyphSize:16}):null;
+    const dungeonIcon=d?DungeonIcon(d.id,d.icon,24,16):null;
     if(compact && !d) return null;
     if(d&&d.ruptureBoss){
       const rb=d.ruptureBoss;
@@ -3242,7 +3262,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{style:"font-size:10px;color:"+(dungeonCanStart?"#4ade80":"var(--td)")+";font-family:Orbitron,sans-serif;text-transform:uppercase;white-space:nowrap"},dungeonCanStart?"Disponible":(dungeonDailyUsed?"Déjà lancé":dungeonWeekCount>=3?"Limite hebdo":"Verrouillé"))
       ),
       dungeonCanStart
-        ? h("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:8px"},DUNGEONS.map(dg=>h("button",{key:dg.id,onClick:()=>startDungeon(dg.id),style:"padding:10px 8px;border-radius:10px;border:1px solid "+dg.color+"55;background:"+dg.color+"0f;color:"+dg.color+";font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:.7px;text-transform:uppercase;cursor:pointer;text-align:center;line-height:1.25;display:flex;flex-direction:column;align-items:center"},h(UiIcon,{iconKey:"dungeon."+dg.id,fallback:dg.icon,slotSize:24,glyphSize:16,extraStyle:"margin-bottom:4px"}),h("div",null,dg.short),h("div",{style:"font-size:8px;color:var(--td);margin-top:3px"},STAT_LBL[dg.stat]||dg.stat))))
+        ? h("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:8px"},DUNGEONS.map(dg=>h("button",{key:dg.id,onClick:()=>startDungeon(dg.id),style:"padding:10px 8px;border-radius:10px;border:1px solid "+dg.color+"55;background:"+dg.color+"0f;color:"+dg.color+";font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:.7px;text-transform:uppercase;cursor:pointer;text-align:center;line-height:1.25;display:flex;flex-direction:column;align-items:center"},DungeonIcon(dg.id,dg.icon,24,16,"margin-bottom:4px"),h("div",null,dg.short),h("div",{style:"font-size:8px;color:var(--td);margin-top:3px"},STAT_LBL[dg.stat]||dg.stat))))
         : h("div",{style:"text-align:center;padding:10px 0;color:var(--td);font-size:11px;line-height:1.45"},dungeonDailyUsed?"Tu as déjà lancé un donjon aujourd'hui. Prochain lancement disponible demain.":dungeonWeekCount>=3?"Limite hebdomadaire atteinte.":"Aucune clé disponible.")
     );
   }
@@ -3313,7 +3333,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       h(BreachFxOverlay,{variant:"home",theme:"dungeon"}),
       h(ChallengeHeader,{title:"DONJON EN COURS",color:"#f59e0b",badge:STAT_LBL[d.stat]||d.stat,badgeColor:color,remaining}),
       h(ChallengeSummary,{
-        icon:h(UiIcon,{iconKey:"dungeon."+d.id,fallback:d.icon,slotSize:24,glyphSize:16}),
+        icon:DungeonIcon(d.id,d.icon,24,16),
         name:d.title||d.short,
         subtitle:bossRoom?"Boss : "+bossRoom.name:null,
         progressText:completedRooms.length+"/"+roomCount+" salles",
@@ -3348,7 +3368,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
         h("div",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+color+";border:1px solid "+color+"55;border-radius:999px;padding:4px 7px;white-space:nowrap"},STAT_LBL[d.stat]||d.stat)
       ),
       h(ChallengeSummary,{
-        icon:h(UiIcon,{iconKey:"dungeon."+d.id,fallback:d.icon,slotSize:24,glyphSize:16}),
+        icon:DungeonIcon(d.id,d.icon,24,16),
         name:d.title||d.short,
         subtitle:"Progression et récompenses conservées",
         progressText:completedRooms.length+"/"+roomCount+" salles",
@@ -3580,7 +3600,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
                 ?h(UiIcon,{iconKey:row.iconKey,slotSize:18,glyphSize:14})
                 :row.iconId
                   ?(row.iconKind==="dungeon"
-                      ?h(UiIcon,{iconKey:"dungeon."+row.iconId,fallback:row.icon,slotSize:18,glyphSize:14})
+                      ?DungeonIcon(row.iconId,row.icon,18,14)
                       :QuestIcon(row.iconId,row.icon,14))
                   :h("span",{style:"width:18px;text-align:center;color:var(--rc)"},"•"),
               h("span",{style:"flex:1;min-width:0;font-size:12px;color:var(--tx);line-height:1.3"},row.label),
@@ -5704,7 +5724,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
       const rewards=dungeonRewardPairs(dg);
       return h("div",{key:dg.id,style:cardStyle},
         h("div",{style:"display:flex;align-items:center;gap:8px"},
-          h(UiIcon,{iconKey:"dungeon."+dg.id,fallback:dg.icon,slotSize:24,glyphSize:18}),
+          DungeonIcon(dg.id,dg.icon,24,18),
           h("div",{style:"flex:1;min-width:0"},
             h("div",{style:"font-size:13px;color:var(--tx);font-weight:700;line-height:1.15"},dg.title),
             h("div",{style:"margin-top:7px"},rewards.map((r,i)=>h(StatPill,{key:i,stat:r.stat,xp:r.xp}))),
