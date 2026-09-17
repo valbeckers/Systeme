@@ -933,9 +933,14 @@ function App(){
           :sum;
       },0);
       const after=prior+(Number(amount)||0);
-      return obj.tiers.reduce((sum,tier)=>prior<tier.at&&after>=tier.at
+      let earned=obj.tiers.reduce((sum,tier)=>prior<tier.at&&after>=tier.at
         ?sum+(tier.xp||0)+(tier.xp2||0)+(tier.xp3||0)
         :sum,0);
+      if(obj.overGoalXpPer){
+        const overTarget=obj.target||obj.tiers[obj.tiers.length-1].at||obj.base||0;
+        earned+=(Math.max(0,after-overTarget)-Math.max(0,prior-overTarget))*obj.overGoalXpPer;
+      }
+      return earned;
     }
     let earned=calcQuestTotalXp(obj,amount,target);
     if(obj.weekly&&obj.completionBonusXp){
@@ -1739,7 +1744,7 @@ function App(){
       val=Math.min(val,Math.max(0,bonusCap-cur));
       if(val<=0)return;
     }
-    if(obj.hardCap){
+    if(obj.hardCap&&!isUncappedProfessionalWeeklyQuest(obj)){
       const hardCap=Math.max(0,getEffectiveTarget(obj.id,obj.weekly));
       val=Math.min(val,Math.max(0,hardCap-cur));
       if(val<=0)return;
@@ -2382,6 +2387,15 @@ function QuestBadge({label,color,filled=false,extra=""}){
 }
 const WEEKLY_BADGE_COLOR = "#818cf8";
 const BONUS_BADGE_COLOR = "#fbbf24";
+const UNCAPPED_PRO_WEEKLY_IDS = new Set([
+  "weekly_pro_meetings",
+  "weekly_pro_actions",
+  "weekly_pro_anticipation"
+]);
+
+function isUncappedProfessionalWeeklyQuest(obj){
+  return !!obj && !!obj.weekly && UNCAPPED_PRO_WEEKLY_IDS.has(obj.id);
+}
 
   // ─── SOUS-COMPOSANTS ──────────────────────────────────────────────────
 
@@ -2460,7 +2474,7 @@ const BONUS_BADGE_COLOR = "#fbbf24";
     const rankColor = rank.color || "#9ca3af";
     const hasDoubleBonusCap=!!BONUS_QUEST_BY_ID[obj.id]&&!['run','walk','march'].includes(obj.id);
     const doubleBonusCap=hasDoubleBonusCap?displayTarget*2:null;
-    const isHardCapped=!!obj.hardCap&&d>=displayTarget;
+    const isHardCapped=!!obj.hardCap&&!isUncappedProfessionalWeeklyQuest(obj)&&d>=displayTarget;
     const isCapped=isHardCapped||(doubleBonusCap!==null&&d>=doubleBonusCap);
     let barColor = rankColor;
     // Barre alignée sur Historique :
