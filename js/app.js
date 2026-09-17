@@ -942,7 +942,23 @@ function App(){
       }
       return earned;
     }
-    let earned=calcQuestTotalXp(obj,amount,target);
+    let earned;
+    if(obj.weekly){
+      const primary=(Number(amount)||0)*(Number(obj.xpPer)||0);
+      earned=primary;
+      if(obj.stat2){
+        earned+=obj.xpPer2&&obj.xpPer
+          ?Math.round(primary*(obj.xpPer2/obj.xpPer))
+          :primary;
+      }
+      if(obj.stat3){
+        earned+=obj.xpPer3&&obj.xpPer
+          ?Math.round(primary*(obj.xpPer3/obj.xpPer))
+          :primary;
+      }
+    }else{
+      earned=calcQuestTotalXp(obj,amount,target);
+    }
     if(obj.weekly&&obj.completionBonusXp){
       const prior=Object.entries(state.dailyLog||{}).reduce((sum,[day,log])=>{
         if(day>=today)return sum;
@@ -986,7 +1002,7 @@ function App(){
     const target=getEffectiveTarget(obj.id);
     return {
       key:"quest_"+id,
-      label:(BONUS_QUEST_BY_ID[id]?"Bonus · ":"")+(obj.name||id),
+      label:(obj.weekly?"Hebdo · ":BONUS_QUEST_BY_ID[id]?"Bonus · ":"")+(obj.name||id),
       xp:questXpEarnedToday(obj,amount,target),
       iconId:obj.iconKey||obj.exerciseId||obj.id,
       icon:obj.exerciseIcon||obj.icon
