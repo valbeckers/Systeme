@@ -3,6 +3,9 @@ import { MAX_PRESTIGE, countStatsAtLevel } from "./progression.js";
 import { xpForLvl, totForLvl, getLvl } from "./xp.js";
 
 const { h, Fragment } = window.preact;
+const { useState } = window.preactHooks;
+
+const RADAR_STATS = ["Sante", "Force", "Esprit", "Endurance", "Agilite", "Discipline"];
 
 function polarPoint(cx, cy, radius, index, total){
   const angle = (-Math.PI / 2) + (index * Math.PI * 2 / total);
@@ -21,97 +24,74 @@ function buildRadarPolygonPoints(values, maxValue, cx, cy, radius){
   }).join(" ");
 }
 
-function StatsRadarCard({ state }){
-  const statLevels = STATS.map(stat => ({
+function StatsRadarBackground({ state, focused }){
+  const statLevels = RADAR_STATS.map(stat => ({
     id: stat,
-    label: STAT_LBL[stat] || stat,
     color: STAT_COLOR[stat] || "#fff",
-    value: Math.max(0, state.stats?.[stat] || 0),
+    value: Math.max(0, getLvl(state.statXp?.[stat] || 0)),
   }));
 
   const maxValue = Math.max(1, ...statLevels.map(s => s.value));
-  const minValue = Math.min(...statLevels.map(s => s.value));
-  const strongest = statLevels.reduce((best, cur) => cur.value > best.value ? cur : best, statLevels[0]);
-  const weakest = statLevels.reduce((best, cur) => cur.value < best.value ? cur : best, statLevels[0]);
-  const perfectlyBalanced = maxValue === minValue;
-
-  const size = 260;
-  const viewHeight = 234;
-  const cx = 130;
-  const cy = 122;
-  const radius = 74;
+  const size = 300;
+  const cx = 150;
+  const cy = 150;
+  const radius = 116;
   const gridLevels = 4;
 
   const polygonPoints = buildRadarPolygonPoints(statLevels.map(s => s.value), maxValue, cx, cy, radius);
 
-  return h("div", { class:"card" },
-    h("div", { class:"ctitle" }, "Équilibre des stats"),
-    h("div", { style:"display:flex;justify-content:center;align-items:center;margin:2px 0 0" },
-      h("svg", {
-        viewBox:`0 0 ${size} ${viewHeight}`,
-        style:"width:100%;max-width:260px;height:auto;overflow:visible"
+  return h("svg", {
+        viewBox:`0 0 ${size} ${size}`,
+        "aria-hidden":"true",
+        style:"position:absolute;left:50%;top:50%;width:min(82%,360px);height:auto;aspect-ratio:1;transform:translate(-50%,-50%);overflow:visible;pointer-events:none;opacity:"+(focused?"1":".38")+";transition:opacity .25s ease,filter .25s ease;filter:"+(focused?"drop-shadow(0 0 14px rgba(139,92,246,.28))":"none")
       },
         Array.from({ length:gridLevels }, (_, idx) => {
           const level = (idx + 1) / gridLevels;
-          const points = STATS.map((_, statIndex) => {
-            const point = polarPoint(cx, cy, radius * level, statIndex, STATS.length);
+          const points = RADAR_STATS.map((_, statIndex) => {
+            const point = polarPoint(cx, cy, radius * level, statIndex, RADAR_STATS.length);
             return `${point.x},${point.y}`;
           }).join(" ");
           return h("polygon", {
             key:`grid-${idx}`,
             points,
-            fill: idx === gridLevels - 1 ? "rgba(255,255,255,0.02)" : "transparent",
-            stroke:"rgba(255,255,255,0.10)",
+            fill: idx === gridLevels - 1 ? "rgba(129,140,248,0.025)" : "transparent",
+            stroke:focused?"rgba(167,139,250,.30)":"rgba(167,139,250,.18)",
             "stroke-width":"1"
           });
         }),
-        STATS.map((stat, idx) => {
-          const outer = polarPoint(cx, cy, radius, idx, STATS.length);
-          const labelPoint = polarPoint(cx, cy, radius + 24, idx, STATS.length);
-          const label = STAT_LBL[stat] || stat;
-          const color = STAT_COLOR[stat] || "#fff";
+        RADAR_STATS.map((stat, idx) => {
+          const outer = polarPoint(cx, cy, radius, idx, RADAR_STATS.length);
           return h(Fragment, { key:`axis-${stat}` },
             h("line", {
               x1: cx,
               y1: cy,
               x2: outer.x,
               y2: outer.y,
-              stroke:"rgba(255,255,255,0.16)",
+              stroke:focused?"rgba(167,139,250,.34)":"rgba(167,139,250,.20)",
               "stroke-width":"1"
-            }),
-            h("text", {
-              x: labelPoint.x,
-              y: labelPoint.y,
-              fill: color,
-              "font-size":"10",
-              "font-family":"Orbitron, sans-serif",
-              "text-anchor": labelPoint.x < cx - 10 ? "end" : (labelPoint.x > cx + 10 ? "start" : "middle"),
-              "dominant-baseline": labelPoint.y < cy - 30 ? "auto" : (labelPoint.y > cy + 30 ? "hanging" : "middle")
-            }, label)
+            })
           );
         }),
         h("polygon", {
           points: polygonPoints,
-          fill:"rgba(139, 92, 246, 0.22)",
-          stroke:"rgba(192, 132, 252, 0.95)",
-          "stroke-width":"2"
+          fill:focused?"rgba(139,92,246,.24)":"rgba(139,92,246,.14)",
+          stroke:focused?"rgba(192,132,252,.98)":"rgba(192,132,252,.72)",
+          "stroke-width":focused?"2.2":"1.7"
         }),
         statLevels.map((stat, idx) => {
-          const point = polarPoint(cx, cy, maxValue > 0 ? radius * (stat.value / maxValue) : 0, idx, STATS.length);
+          const point = polarPoint(cx, cy, maxValue > 0 ? radius * (stat.value / maxValue) : 0, idx, RADAR_STATS.length);
           return h("circle", {
             key:`value-${stat.id}`,
             cx: point.x,
             cy: point.y,
-            r:"3.5",
+            r:focused?"5":"4.2",
             fill: stat.color,
-            stroke:"#111827",
-            "stroke-width":"1.2"
+            stroke:"rgba(0,0,0,.86)",
+            "stroke-width":"1.4",
+            style:"filter:drop-shadow(0 0 4px "+stat.color+")"
           });
-        }),
-        h("circle", { cx, cy, r:"3", fill:"#fff", opacity:"0.9" })
-      )
-    ),
-  );
+        })
+      );
 }
 
 export function StatsTab({
@@ -132,6 +112,7 @@ export function StatsTab({
   showRankReqStats,
   setShowRankReqStats
 }){
+  const [radarFocused,setRadarFocused] = useState(false);
   return h("div",{class:"tab"},
     h("div",{class:"card"},
       h("div",{class:"ctitle"},"Chemin vers le rang S"),
@@ -217,17 +198,27 @@ export function StatsTab({
       ),
       h("div",{class:"xpbar",style:"height:7px"},h("div",{class:"xpfill",style:"width:"+globalLevel.pct+"%"}))
     ),
-    h("div",{class:"card"},
-      h("div",{class:"ctitle"},"Caractéristiques"),
-      STATS.map(s=>{
-        const sx=state.statXp[s]||0, lvl=getLvl(sx);
-        const xpIn=sx-totForLvl(lvl), xpNeed=xpForLvl(lvl), pct=Math.max(0,Math.min(100,(xpIn/xpNeed)*100));
-        return h("div",{key:s,class:"schr"},
-          h("div",{class:"schn"},h("span",null,STAT_LBL[s]||s),h("span",{class:"schlvl"},"Niv. "+lvl)),
-          h("div",{class:"schb"},h("div",{class:"schf",style:"width:"+pct+"%;background:linear-gradient(90deg,"+(STAT_COLOR[s]||"#fff")+"88,"+(STAT_COLOR[s]||"#fff")+")"})),
-          h("div",{style:"font-size:9px;color:var(--td);margin-top:2px;font-family:Orbitron,sans-serif"},sx.toLocaleString("fr-FR")+" / "+totForLvl(lvl+1).toLocaleString("fr-FR")+" XP")
-        );
-      })
+    h("div",{class:"card",style:"position:relative;overflow:hidden;isolation:isolate"},
+      h(StatsRadarBackground,{state,focused:radarFocused}),
+      h("div",{
+        class:"ctitle",
+        onClick:()=>setRadarFocused(v=>!v),
+        title:radarFocused?"Revenir aux caractéristiques":"Mettre le graphique en évidence",
+        style:"position:relative;z-index:3;cursor:pointer;user-select:none"
+      },"Caractéristiques"),
+      h("div",{
+        style:"position:relative;z-index:2;opacity:"+(radarFocused?".16":"1")+";transition:opacity .25s ease;text-shadow:0 1px 4px #000,0 0 8px #000"
+      },
+        STATS.map(s=>{
+          const sx=state.statXp[s]||0, lvl=getLvl(sx);
+          const xpIn=sx-totForLvl(lvl), xpNeed=xpForLvl(lvl), pct=Math.max(0,Math.min(100,(xpIn/xpNeed)*100));
+          return h("div",{key:s,class:"schr"},
+            h("div",{class:"schn"},h("span",null,STAT_LBL[s]||s),h("span",{class:"schlvl"},"Niv. "+lvl)),
+            h("div",{class:"schb"},h("div",{class:"schf",style:"width:"+pct+"%;background:linear-gradient(90deg,"+(STAT_COLOR[s]||"#fff")+"88,"+(STAT_COLOR[s]||"#fff")+")"})),
+            h("div",{style:"font-size:9px;color:var(--td);margin-top:2px;font-family:Orbitron,sans-serif"},sx.toLocaleString("fr-FR")+" / "+totForLvl(lvl+1).toLocaleString("fr-FR")+" XP")
+          );
+        })
+      )
     )
   );
 }
