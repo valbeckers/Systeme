@@ -61,6 +61,7 @@ function StatsRadarBackground({ state, focused }){
         }),
         RADAR_STATS.map((stat, idx) => {
           const outer = polarPoint(cx, cy, radius, idx, RADAR_STATS.length);
+          const labelPoint = polarPoint(cx, cy, radius + 17, idx, RADAR_STATS.length);
           return h(Fragment, { key:`axis-${stat}` },
             h("line", {
               x1: cx,
@@ -69,7 +70,19 @@ function StatsRadarBackground({ state, focused }){
               y2: outer.y,
               stroke:focused?"rgba(167,139,250,.34)":"rgba(167,139,250,.20)",
               "stroke-width":"1"
-            })
+            }),
+            focused&&h("text", {
+              x:labelPoint.x,
+              y:labelPoint.y,
+              fill:STAT_COLOR[stat]||"#fff",
+              "font-size":"9.5",
+              "font-family":"Orbitron, sans-serif",
+              "font-weight":"700",
+              "letter-spacing":".35",
+              "text-anchor":labelPoint.x<cx-10?"end":labelPoint.x>cx+10?"start":"middle",
+              "dominant-baseline":labelPoint.y<cy-30?"auto":labelPoint.y>cy+30?"hanging":"middle",
+              style:"paint-order:stroke;stroke:rgba(0,0,0,.92);stroke-width:3px;stroke-linejoin:round"
+            },STAT_LBL[stat]||stat)
           );
         }),
         h("polygon", {
