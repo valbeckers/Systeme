@@ -5,7 +5,7 @@
 
 const DEFS = [
   // ─── SANTÉ ────────────────────────────────────────────────────────────
-  {id:"water",  name:"Hydratation",     unit:"verre", xpPer:10,  daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDCA7",               base:10, baseHistory:[{until:"2026-04-29",base:8}]},
+  {id:"water",  name:"Hydratation",     unit:"verre", xpPer:15,  daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDCA7",               base:10, baseHistory:[{until:"2026-04-29",base:8}]},
   {id:"sleep",  name:"Dormir 8h",   unit:"h",     xpPer:18.75,daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDECF\uFE0F",         base:8,  fixedBase:true},
     // ─── FORCE ────────────────────────────────────────────────────────────
   {id:"push",   name:"Pecs & Triceps", unit:"rep", xpPer:3, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦾", base:30},
@@ -16,7 +16,7 @@ const DEFS = [
   // ─── OBJECTIFS PROFESSIONNELS HEBDOMADAIRES ───────────────────────────
   {id:"weekly_pro_meetings",name:"Entretiens/RDV",unit:"RDV",xpPer:25,completionBonusXp:200,daily:false,weekly:true,workweekOnly:true,optional:false,stat:"Discipline",icon:"🤝",target:12,hardCap:true},
   {id:"weekly_pro_actions",name:"Actions commerciales",unit:"action",xpPer:7.5,completionBonusXp:200,daily:false,weekly:true,workweekOnly:true,optional:false,stat:"Discipline",icon:"📞",target:40,hardCap:true},
-  {id:"weekly_pro_anticipation",name:"Entretiens/RDV S+1",unit:"RDV",daily:false,weekly:true,workweekOnly:true,optional:false,stat:"Discipline",icon:"📅",target:10,hardCap:true,tiers:[{at:10,xp:200,stat:"Discipline"}],overGoalXpPer:20,overGoalStat:"Discipline"},
+  {id:"weekly_pro_anticipation",name:"Entretiens/RDV S+1",unit:"RDV",daily:false,weekly:true,workweekOnly:true,optional:false,stat:"Discipline",icon:"📅",target:6,hardCap:true,tiers:[{at:6,xp:200,stat:"Discipline"}],overGoalXpPer:20,overGoalStat:"Discipline"},
   // ─── ESPRIT ───────────────────────────────────────────────────────────
   {id:"reading",name:"Lecture",unit:"min",xpPer:10,daily:true,weekly:false,optional:false,stat:"Esprit",icon:"📚",base:20,startDate:"2026-05-21"},
   // ─── ESPRIT ───────────────────────────────────────────────────────────
