@@ -1,5 +1,5 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
-import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260924-weekly-s1-target-6-v1";
+import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260924-weekly-reward-v1";
 import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20260903-pullups-icons-v1";
 import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20260818-urgent-dungeon-v1";
 import {
@@ -39,7 +39,7 @@ import {
   expireSuspendedDungeonState,
   canValidateDungeonRoom
 } from "./dungeonEngine.js?v=20260910-dimensional-anchor-v1";
-import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260910-dimensional-anchor-v1";
+import { INVENTORY_ITEMS } from "./itemDefs.js?v=20260924-weekly-reward-v1";
 import {
   incrementLootState,
   pickRandomBreachLoot,
@@ -90,8 +90,8 @@ import {
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
 import { UiIcon } from "./uiIcons.js?v=20260911-settings-nav-frame-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260911-weekly-summary-v1";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260911-weekly-summary-v1";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20260924-weekly-reward-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20260924-weekly-reward-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -604,6 +604,7 @@ function App(){
   const [rankUp,setRankUp] = useState(null);
   const [levelUp,setLevelUp] = useState(null);
   const [rankLootChoice,setRankLootChoice] = useState(null);
+  const [weeklyQuestRewardChoice,setWeeklyQuestRewardChoice] = useState(null);
   const [statDecadeUp,setStatDecadeUp] = useState(null);
   const [statLevelQueue,setStatLevelQueue] = useState([]);
   const [debtUp,setDebtUp] = useState(null);
@@ -811,6 +812,27 @@ function App(){
   const tLog  = state.dailyLog[today]||{};
   const wLog  = state.weeklyLog[wk]||{};
   const prestige = state.prestige||0;
+
+  const weeklyQuestRewardObjectives=DEFS.filter(obj=>obj.weekly);
+  const allWeeklyQuestRewardObjectivesDone=weeklyQuestRewardObjectives.length>0&&weeklyQuestRewardObjectives.every(obj=>{
+    const target=Number(obj.target||obj.base||0);
+    return target>0&&(Number(wLog[obj.id])||0)>=target;
+  });
+  const weeklyQuestRewardClaimed=(state.weeklyQuestRewardClaimedWeeks||[]).includes(wk);
+
+  useEffect(()=>{
+    const pending=state.weeklyQuestRewardPendingWeek;
+    if(pending&&pending!==wk){
+      setState(s=>s.weeklyQuestRewardPendingWeek&&s.weeklyQuestRewardPendingWeek!==wk
+        ? {...s,weeklyQuestRewardPendingWeek:null}
+        : s
+      );
+      setWeeklyQuestRewardChoice(null);
+      return;
+    }
+    if(!allWeeklyQuestRewardObjectivesDone||weeklyQuestRewardClaimed||pending===wk)return;
+    setState(s=>({...s,weeklyQuestRewardPendingWeek:wk}));
+  },[wk,allWeeklyQuestRewardObjectivesDone,weeklyQuestRewardClaimed,state.weeklyQuestRewardPendingWeek]);
 
   // Une Marque du dépassement est valable uniquement pendant sa semaine d’activation.
   useEffect(()=>{
@@ -4852,6 +4874,41 @@ function isUncappedProfessionalWeeklyQuest(obj){
     );
   }
 
+  function WeeklyQuestRewardModal(){
+    if(state.weeklyQuestRewardPendingWeek!==wk)return null;
+    const ids=counterpartBalanceRewardEligibleIds();
+    const selected=weeklyQuestRewardChoice&&ids.includes(weeklyQuestRewardChoice)?weeklyQuestRewardChoice:null;
+    const color="#a78bfa";
+    const selectedItem=selected?INVENTORY_ITEMS[selected]:null;
+    return h("div",{class:"modal-ov"},
+      h("div",{class:"modal",style:"position:relative;max-width:470px;width:calc(100% - 24px);max-height:88vh;overflow:auto"},
+        h("div",{class:"mtitle",style:"margin:0;line-height:1.2;text-align:center"},"MAÎTRISE HEBDOMADAIRE"),
+        h("div",{style:"font-size:11px;color:var(--tx);line-height:1.55;margin:12px 0 5px;text-align:center"},"Toutes les quêtes hebdomadaires ont été accomplies avant leur échéance."),
+        h("div",{style:"font-size:11px;color:"+color+";line-height:1.55;margin:0 0 14px;text-align:center;font-family:Orbitron,sans-serif"},"CHOISISSEZ 1 OBJET"),
+        h("div",{style:"display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px"},ids.map(id=>{
+          const it=INVENTORY_ITEMS[id];
+          const chosen=id===selected;
+          return h("button",{key:id,onClick:()=>setWeeklyQuestRewardChoice(id),style:"position:relative;min-height:112px;padding:10px 8px;border-radius:11px;border:1px solid "+(chosen?color:"rgba(255,255,255,.10)")+";background:"+(chosen?color+"16":"rgba(255,255,255,.025)")+";color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer"},
+            h("div",{style:"height:54px;display:flex;align-items:center;justify-content:center"},InventoryItemIcon(id,48)),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;line-height:1.3;letter-spacing:.5px;text-transform:uppercase;text-align:center"},it.short),
+            chosen&&h("div",{style:"position:absolute;right:7px;top:6px;color:"+color+";font-size:16px;font-weight:900"},"✓")
+          );
+        })),
+        h("button",{disabled:!selected,onClick:()=>{
+          if(!selected)return;
+          setState(s=>{
+            if(s.weeklyQuestRewardPendingWeek!==wk||(s.weeklyQuestRewardClaimedWeeks||[]).includes(wk))return s;
+            const rewarded=incrementLootState(s,selected);
+            return {...rewarded,weeklyQuestRewardPendingWeek:null,weeklyQuestRewardClaimedWeeks:[...(s.weeklyQuestRewardClaimedWeeks||[]),wk].slice(-104)};
+          });
+          if(selected==="dungeonKey")enqueueDungeonKeyLoot("guaranteed");
+          else enqueueItemLoot(selected,"guaranteed");
+          setWeeklyQuestRewardChoice(null);
+        },style:"width:100%;margin-top:14px;padding:11px;border-radius:9px;border:1px solid "+(selected?color:"rgba(255,255,255,.08)")+";background:"+(selected?color+"16":"rgba(255,255,255,.03)")+";color:"+(selected?color:"var(--td)")+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1px;cursor:"+(selected?"pointer":"default")},selectedItem?"RECEVOIR · "+selectedItem.short:"SÉLECTIONNER UN OBJET")
+      )
+    );
+  }
+
   // ─── ANIMATION COMPLÉTION DES QUÊTES ──────────────────────────────────
 
   function CompletionUp(){
@@ -6052,6 +6109,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
       h(XpTodayModal,null),
       h(RankUp,null),
       h(RankLootChoiceModal,null),
+      h(WeeklyQuestRewardModal,null),
       h(LevelUp,null),
       h(StatDecadeUp,null),
       h(CompletionUp,null),

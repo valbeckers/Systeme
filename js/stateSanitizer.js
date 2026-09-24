@@ -1,5 +1,5 @@
 import { STATS } from "./config.js";
-import { DEFS, SP } from "./questDefs.js?v=20260818-urgent-dungeon-v1";
+import { DEFS, SP } from "./questDefs.js?v=20260924-weekly-reward-v1";
 import { BONUS_QUESTS } from "./bonusQuestDefs.js";
 import { DUNGEONS } from "./dungeonDefs.js?v=20260818-urgent-dungeon-v1";
 import { todayStr, next7AM } from "./dayCycle.js";
@@ -348,6 +348,8 @@ export function cleanSystemState(raw){
     weeklyLog:cleanQuestLogByIds(data.weeklyLog,weeklyIds),
     weeklySummaries:cleanWeeklySummaries(data.weeklySummaries),
     weeklySummaryTracking:cleanWeeklySummaryTracking(data.weeklySummaryTracking),
+    weeklyQuestRewardPendingWeek:typeof data.weeklyQuestRewardPendingWeek==="string"?data.weeklyQuestRewardPendingWeek:null,
+    weeklyQuestRewardClaimedWeeks:[...new Set((Array.isArray(data.weeklyQuestRewardClaimedWeeks)?data.weeklyQuestRewardClaimedWeeks:[]).filter(value=>typeof value==="string"))].slice(-104),
     stats:statPack.stats,
     statXp:statPack.statXp,
     specialQuests,

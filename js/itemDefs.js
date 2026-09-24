@@ -7,6 +7,7 @@ import { BREACH_LOOT_TEXT } from "./breachDefs.js?v=20260823-portails-v1";
 
 const LEVEL_UP_LOOT_TEXT="Après chaque montée de niveau : 1 objet aléatoire garanti.";
 const RANK_UP_LOOT_TEXT="Après chaque montée de rang : 2 objets au choix garantis.";
+const WEEKLY_QUEST_LOOT_TEXT="Après avoir complété toutes les quêtes hebdomadaires avant leur échéance : 1 objet au choix garanti.";
 
 const BASE_INVENTORY_ITEMS={
     codex:{name:"CODEX",short:"CODEX",emoji:"📖",action:"",desc:"Permet au joueur de consulter les quêtes et systèmes de l’application.",obtain:[],permanent:true},
@@ -40,7 +41,7 @@ export const INVENTORY_ITEMS=Object.fromEntries(
     id,
     item.permanent
       ? item
-      : {...item,obtain:[...(item.obtain||[]),BREACH_LOOT_TEXT,LEVEL_UP_LOOT_TEXT,RANK_UP_LOOT_TEXT]}
+      : {...item,obtain:[...(item.obtain||[]),BREACH_LOOT_TEXT,LEVEL_UP_LOOT_TEXT,RANK_UP_LOOT_TEXT,WEEKLY_QUEST_LOOT_TEXT]}
   ])
 );
 

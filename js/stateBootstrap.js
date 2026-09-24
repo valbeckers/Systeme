@@ -3,11 +3,11 @@
 // sauvegarde courante ou, à défaut, des données historiques importées.
 // Il conserve également les migrations ponctuelles encore nécessaires.
 
-import { DEFS, SP } from "./questDefs.js?v=20260903-objectifs-pro-v1";
+import { DEFS, SP } from "./questDefs.js?v=20260924-weekly-reward-v1";
 import { next7AM, todayStr, addDaysStr } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
 import { loadStoredState } from "./storage.js";
-import { cleanSystemState } from "./stateSanitizer.js?v=20260818-selectable-bonus-v1";
+import { cleanSystemState } from "./stateSanitizer.js?v=20260924-weekly-reward-v1";
 import { normalizeActiveBreach } from "./breachEngine.js";
 
 const loadState = () => loadStoredState(cleanSystemState);
@@ -61,6 +61,8 @@ const IMPORTED = {
   weeklyLog:{"2026-W15":{run:13},"2026-W16":{run:8.52},"2026-W17":{walk:6.5,run:0},"2026-W18":{run:12.56,walk:8},"2026-W19":{run:10.42,walk:3}},
   weeklySummaries:[],
   weeklySummaryTracking:null,
+  weeklyQuestRewardPendingWeek:null,
+  weeklyQuestRewardClaimedWeeks:[],
   stats:{Sante:getLvl(10100),Force:getLvl(13488),Esprit:getLvl(12700),Endurance:getLvl(2962),Agilite:getLvl(1652),Discipline:getLvl(3150)},
   statXp:{Sante:10100,Force:13488,Esprit:12700,Endurance:2962,Agilite:1652,Discipline:3150},
   specialQuests:[],
@@ -192,6 +194,8 @@ export function buildInitialState(){
     weeklyLog:saved.weeklyLog||IMPORTED.weeklyLog,
     weeklySummaries:saved.weeklySummaries||[],
     weeklySummaryTracking:saved.weeklySummaryTracking||null,
+    weeklyQuestRewardPendingWeek:saved.weeklyQuestRewardPendingWeek||null,
+    weeklyQuestRewardClaimedWeeks:Array.isArray(saved.weeklyQuestRewardClaimedWeeks)?saved.weeklyQuestRewardClaimedWeeks:[],
     totalXp:Math.max(saved.totalXp||0, IMPORTED.totalXp),
     prestige:saved.prestige||IMPORTED.prestige||0,
   };
