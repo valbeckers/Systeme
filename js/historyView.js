@@ -20,6 +20,14 @@ const HIDDEN_FROM_HISTORY_IDS = new Set([
   "weekly_pro_actions",
   "weekly_pro_anticipation"
 ]);
+const HIDDEN_FROM_WEEKLY_ACTIVITY_IDS = new Set([
+  "negative_pullups",
+  "bonus_pullups",
+  "bonus_negative_pullups",
+  "bonus_australian_pullups",
+  "walk",
+  "march"
+]);
 
 function QuestIcon(id, fallback, size=14, extraStyle=""){
   const slotSize=size>=18?26:18;
@@ -81,7 +89,8 @@ export function HistoryTab({
   const fmt=d=>d.getDate().toString().padStart(2,"0")+"/"+(d.getMonth()+1).toString().padStart(2,"0");
   const lbl=wkOff===0?"Cette semaine":wkOff===1?"Semaine derni\u00e8re":fmt(ws)+" \u2013 "+fmt(we);
   const visibleInHistory=o=>!HIDDEN_FROM_HISTORY_IDS.has(o.id);
-  const ordered=[...sortStat(objs.filter(o=>visibleInHistory(o)&&o.daily&&!o.optional)),...sortStat(objs.filter(o=>visibleInHistory(o)&&o.weekly)),...sortStat(objs.filter(o=>visibleInHistory(o)&&o.daily&&o.optional&&!o.bonusHidden))];
+  const visibleInWeeklyActivity=o=>visibleInHistory(o)&&!HIDDEN_FROM_WEEKLY_ACTIVITY_IDS.has(o.id);
+  const ordered=[...sortStat(objs.filter(o=>visibleInWeeklyActivity(o)&&o.daily&&!o.optional)),...sortStat(objs.filter(o=>visibleInWeeklyActivity(o)&&o.weekly)),...sortStat(objs.filter(o=>visibleInWeeklyActivity(o)&&o.daily&&o.optional&&!o.bonusHidden))];
 
   const hiddenExerciseHistoryIds=new Set(["ex_negative_pullups","ex_australian_pullups"]);
   const exerciseHistoryDefs=RECORD_EXERCISE_DEFS.filter(def=>!hiddenExerciseHistoryIds.has(def.id));
