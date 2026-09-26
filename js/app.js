@@ -65,7 +65,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260811-linear-xp-v1";
 import { StatsTab } from "./statsView.js?v=20260919-kiviat-labels-v2";
-import { HistoryTab } from "./historyView.js?v=20260911-weekly-summary-v1";
+import { HistoryTab } from "./historyView.js?v=20260926-personal-records-v1";
 import {
   RANK_BASES,
   ROMAN,
@@ -4685,9 +4685,14 @@ function isUncappedProfessionalWeeklyQuest(obj){
   // ─── ONGLET HISTORIQUE ────────────────────────────────────────────────
 
   function History(){
+    const additionalPersonalRecordIds=new Set(["run","walk","march"]);
+    const historyObjs=[
+      ...objs.filter(o=>!o.optional||additionalPersonalRecordIds.has(o.id)),
+      ...BONUS_QUESTS.filter(o=>o.id==="bonus_pullups")
+    ];
     return h(HistoryTab,{
       state,
-      objs:objs.filter(o=>!o.optional),
+      objs:historyObjs,
       baseObjs,
       today,
       ri,
