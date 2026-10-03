@@ -635,7 +635,7 @@ function App(){
   const [specialItemChoice,setSpecialItemChoice] = useState(null);
   const [confirmElixirUse,setConfirmElixirUse] = useState(null);
   const [confirmTargetedItemUse,setConfirmTargetedItemUse] = useState(null);
-  const [injuryDuration,setInjuryDuration] = useState("7");
+  const injuryDurationInputRef = useRef(null);
   const [balanceSacrificeChoice,setBalanceSacrificeChoice] = useState(null);
   const [balanceRewardChoice,setBalanceRewardChoice] = useState(null);
   const [confirmBalanceExchange,setConfirmBalanceExchange] = useState(null);
@@ -3740,7 +3740,8 @@ function isUncappedProfessionalWeeklyQuest(obj){
     ];
 
     return h("div",{class:"tab"},
-      activeInjury&&h("div",{class:"warn",style:"display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:clamp(9px,2.5vw,12px);margin-bottom:10px;color:#86efac;border-color:rgba(134,239,172,.35)"},
+      activeInjury&&h("div",{style:"display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;overflow:hidden;font-family:Orbitron,sans-serif;font-size:clamp(9px,2.5vw,12px);color:#ef4444;margin-bottom:10px;padding:4px 0"},
+        h("span",{"aria-hidden":"true",style:"font-family:system-ui,sans-serif;font-size:15px;line-height:1"},"🩹"),
         "Blessure : "+(INJURY_ZONES.find(z=>z.id===activeInjury.zoneId)?.label||"")+" · "+injuryDaysRemaining(activeInjury,today)+" j "+(injuryDaysRemaining(activeInjury,today)>1?"restants":"restant")
       ),
       missedDays>=2&&h("div",{class:"warn",style:"display:flex;align-items:center;gap:7px"},
@@ -4641,8 +4642,9 @@ function isUncappedProfessionalWeeklyQuest(obj){
         });
         setItemUseUp({id:"invisibilityCape"});
       }else if(type==="recoveryOintment"){
-        const duration=Number(injuryDuration);
-        if(!Number.isInteger(duration)||duration<1||duration>365)return;
+        const input=injuryDurationInputRef.current;
+        const duration=Number(input?.value);
+        if(!input?.checkValidity()||!Number.isInteger(duration)||duration<1||duration>365){input?.reportValidity();return;}
         setState(s=>{
           if(injuryForDay(s,today))return s;
           const injury={zoneId:choice.zone.id,startDay:today,endDay:addDaysStr(today,duration-1)};
@@ -4660,11 +4662,11 @@ function isUncappedProfessionalWeeklyQuest(obj){
         h("div",{class:"ruevol",style:"color:"+color},"CONFIRMATION"),
         h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:#fff;text-align:center;line-height:1.5;max-width:360px"},text),
         type==="recoveryOintment"&&h("label",{style:"display:flex;align-items:center;justify-content:center;gap:10px;margin-top:16px;font-size:12px;color:var(--tx)"},"Durée (jours)",
-          h("input",{type:"number",min:1,max:365,step:1,value:injuryDuration,onInput:e=>setInjuryDuration(e.currentTarget.value),style:"width:70px;padding:8px;border-radius:6px;background:#17191e;border:1px solid #86efac;color:#fff;font-size:16px;text-align:center"})
+          h("input",{ref:injuryDurationInputRef,type:"number",inputMode:"numeric",min:1,max:365,step:1,required:true,defaultValue:"7",style:"width:70px;padding:8px;border-radius:6px;background:#17191e;border:1px solid #86efac;color:#fff;font-size:16px;text-align:center"})
         ),
         h("div",{style:"display:flex;gap:10px;margin-top:22px;width:100%"},
           h("button",{class:"rudis",style:"flex:1;min-width:0;display:flex;align-items:center;justify-content:center;text-align:center;box-sizing:border-box;padding-left:10px;padding-right:10px;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>setConfirmTargetedItemUse(null)},"Annuler"),
-          h("button",{class:"rudis",disabled:type==="recoveryOintment"&&(!Number.isInteger(Number(injuryDuration))||Number(injuryDuration)<1||Number(injuryDuration)>365),style:"flex:1;min-width:0;display:flex;align-items:center;justify-content:center;text-align:center;box-sizing:border-box;padding-left:10px;padding-right:10px;--rc:"+color+";--rg:"+color+"66",onClick:confirmTarget},confirmLabel)
+          h("button",{class:"rudis",style:"flex:1;min-width:0;display:flex;align-items:center;justify-content:center;text-align:center;box-sizing:border-box;padding-left:10px;padding-right:10px;--rc:"+color+";--rg:"+color+"66",onClick:confirmTarget},confirmLabel)
         )
       )
     );
@@ -6147,7 +6149,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
       h(ElixirStatModal,null),
       h(ConfirmElixirModal,null),
       h(SpecialItemChoiceModal,null),
-      h(ConfirmTargetedItemUseModal,null),
+      ConfirmTargetedItemUseModal(),
       h(ContractUp,null),
       h(DungeonUp,null),
       h(DungeonRuptureUp,null),
