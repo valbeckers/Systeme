@@ -66,7 +66,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260811-linear-xp-v1";
 import { StatsTab } from "./statsView.js?v=20260919-kiviat-labels-v2";
-import { HistoryTab } from "./historyView.js?v=20261003-injury-asset-v4";
+import { HistoryTab } from "./historyView.js?v=20261003-injury-size-v5";
 import { INJURY_ZONES, injuryForDay, isInjuredQuest, injuryDaysRemaining } from "./injuryEngine.js?v=20261003-injury-v1";
 import {
   RANK_BASES,
@@ -3741,7 +3741,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
 
     return h("div",{class:"tab"},
       activeInjury&&h("div",{style:"display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;overflow:hidden;font-family:Orbitron,sans-serif;font-size:clamp(9px,2.5vw,12px);color:#ef4444;margin-bottom:10px;padding:4px 0"},
-        h("span",{"aria-hidden":"true",style:"font-family:system-ui,sans-serif;font-size:15px;line-height:1"},"🩹"),
+        h("img",{src:"./assets/ui/injury-bandage.png?v=20261003-v1",alt:"",width:18,height:18,draggable:false,"aria-hidden":"true",style:"display:block;width:18px;height:18px;object-fit:contain;flex-shrink:0"}),
         "Blessure : "+(INJURY_ZONES.find(z=>z.id===activeInjury.zoneId)?.label||"")+" · "+injuryDaysRemaining(activeInjury,today)+" j "+(injuryDaysRemaining(activeInjury,today)>1?"restants":"restant")
       ),
       missedDays>=2&&h("div",{class:"warn",style:"display:flex;align-items:center;gap:7px"},

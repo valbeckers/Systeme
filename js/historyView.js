@@ -195,7 +195,7 @@ export function HistoryTab({
               h("span",{style:"overflow:hidden;text-overflow:ellipsis;white-space:nowrap"},displayName)
             ),
             marks.map((mark,i)=>h("div",{key:obj.id+"_d"+i,title:mark.injured?"Blessure · quête suspendue":undefined,"aria-label":mark.injured?"Blessure · quête suspendue":undefined,style:"display:flex;align-items:center;justify-content:center;min-height:22px;text-align:center;font-family:Orbitron,sans-serif;font-size:12px;font-weight:700;color:"+mark.color+";opacity:"+mark.opacity},
-              mark.injured?h("img",{src:"./assets/ui/injury-bandage.png?v=20261003-v1",alt:"",width:22,height:22,draggable:false,style:"display:block;width:22px;height:22px;object-fit:contain"}):mark.txt
+              mark.injured?h("img",{src:"./assets/ui/injury-bandage.png?v=20261003-v1",alt:"",width:20,height:20,draggable:false,style:"display:block;width:19.8px;height:19.8px;object-fit:contain"}):mark.txt
             ))
           );
         }),
