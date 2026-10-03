@@ -126,7 +126,8 @@ export function HistoryTab({
     return obj.target&&!obj.binary ? obj.target : getValidateThreshold(obj,day);
   }
   function dayMarkFor(obj,day){
-    if(obj.daily&&!obj.optional&&isInjuredQuest(state,day,obj.id))
+    if((obj.daily&&!obj.optional&&isInjuredQuest(state,day,obj.id)) ||
+       (obj.id==="run"&&isInjuredQuest(state,day,"squats")))
       return {txt:"🩹",color:"#86efac",opacity:1,injured:true};
     const log=state.dailyLog[day]||{};
     const dayObj=dailyQuestForHistoryDay(obj,day);
