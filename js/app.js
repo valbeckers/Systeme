@@ -4267,7 +4267,8 @@ function isUncappedProfessionalWeeklyQuest(obj){
           )
         ),
         reason&&h("div",{style:"font-size:10px;color:var(--td);text-align:center;margin-bottom:8px"},reason),
-        h("button",{disabled,onClick:()=>{const eraseRecord=id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk;const comboQueue=eraseRecord?[]:compatibleItemQueue(id);setInventoryItem(null);if(comboQueue.length)setItemComboPrompt({primaryId:id,eraseRecord,queue:comboQueue,index:0,selectingMap:false});else setConfirmItemUse({id,eraseRecord})},style:"width:100%;padding:12px;border-radius:9px;border:1px solid "+(disabled?"rgba(255,255,255,.08)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"#ef4444":rank.color))+";background:"+(disabled?"rgba(255,255,255,.03)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"rgba(239,68,68,.10)":rank.color+"18"))+";color:"+(disabled?"var(--td)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"#ef4444":rank.color))+";font-family:Orbitron,sans-serif;letter-spacing:1.3px;cursor:"+(disabled?"default":"pointer")},id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"EFFACER":inventoryActionLabel(id,it))
+        h("button",{disabled,onClick:()=>{const eraseRecord=id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk;const comboQueue=eraseRecord?[]:compatibleItemQueue(id);setInventoryItem(null);if(comboQueue.length)setItemComboPrompt({primaryId:id,eraseRecord,queue:comboQueue,index:0,selectingMap:false});else setConfirmItemUse({id,eraseRecord})},style:"width:100%;padding:12px;border-radius:9px;border:1px solid "+(disabled?"rgba(255,255,255,.08)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"#ef4444":rank.color))+";background:"+(disabled?"rgba(255,255,255,.03)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"rgba(239,68,68,.10)":rank.color+"18"))+";color:"+(disabled?"var(--td)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"#ef4444":rank.color))+";font-family:Orbitron,sans-serif;letter-spacing:1.3px;cursor:"+(disabled?"default":"pointer")},id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"EFFACER":inventoryActionLabel(id,it)),
+        id==="recoveryOintment"&&activeInjury&&h("button",{onClick:()=>{setInventoryItem(null);setConfirmTargetedItemUse({type:"cancelInjury"});},style:"width:100%;margin-top:10px;padding:12px;border-radius:9px;border:1px solid #ef4444;background:rgba(239,68,68,.10);color:#ef4444;font-family:Orbitron,sans-serif;letter-spacing:1px;cursor:pointer"},"ANNULER LA BLESSURE")
       )
     );
   }
@@ -4561,7 +4562,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
     const pending=confirmTargetedItemUse;
     const type=pending.type;
     const choice=pending.choice||null;
-    const color=(type==="destinyCompass"||type==="mysteryMap")?(STAT_COLOR[pending.stat]||rank.color):type==="masterContract"?"#f59e0b":rank.color;
+    const color=(type==="destinyCompass"||type==="mysteryMap")?(STAT_COLOR[pending.stat]||rank.color):type==="masterContract"?"#f59e0b":type==="cancelInjury"?"#ef4444":rank.color;
 
     let text="";
     let confirmLabel="Confirmer";
@@ -4584,6 +4585,9 @@ function isUncappedProfessionalWeeklyQuest(obj){
     }else if(type==="recoveryOintment"){
       text="Déclarer une blessure sur "+choice.zone.label+" ? La quête journalière sera retirée pendant la durée choisie, dès aujourd’hui.";
       confirmLabel="Déclarer la blessure";
+    }else if(type==="cancelInjury"){
+      text="Annuler la blessure sur "+(INJURY_ZONES.find(zone=>zone.id===activeInjury?.zoneId)?.label||"cette zone")+" ? La quête journalière réapparaîtra dès aujourd’hui.";
+      confirmLabel="Annuler la blessure";
     }else if(type==="masterContract"){
       text="Lancer ce donjon avec la contrainte « "+pending.label+" » et une récompense finale augmentée de 20 % ?";
       confirmLabel="Signer le contrat";
@@ -4651,6 +4655,15 @@ function isUncappedProfessionalWeeklyQuest(obj){
           return {...s,injuryPeriods:[...(s.injuryPeriods||[]),injury].slice(-200)};
         });
         setItemUseUp({id:"recoveryOintment",injuryZone:choice.zone.label,injuryDuration:duration});
+      }else if(type==="cancelInjury"){
+        setState(s=>{
+          const periods=[...(s.injuryPeriods||[])];
+          const index=periods.findLastIndex(entry=>entry.startDay<=today&&today<=entry.endDay);
+          if(index<0)return s;
+          if(periods[index].startDay===today)periods.splice(index,1);
+          else periods[index]={...periods[index],endDay:addDaysStr(today,-1)};
+          return {...s,injuryPeriods:periods};
+        });
       }else if(type==="masterContract"){
         startDungeon(pending.dungeonId,pending.constraint);
       }
