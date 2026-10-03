@@ -7,6 +7,7 @@ import { getLvl } from "./xp.js";
 import { normalizeActiveBreach } from "./breachEngine.js";
 import { cleanStoredActiveElixir, cleanStoredSuspendedElixir } from "./elixirEngine.js";
 import { cleanExerciseRotationByDay } from "./exerciseRotation.js";
+import { cleanInjuryPeriods } from "./injuryEngine.js?v=20261003-injury-v1";
 
 function migrateMergedEspritState(state){
   if(!state || typeof state !== "object") return state;
@@ -345,6 +346,7 @@ export function cleanSystemState(raw){
     inertiaPercent:Math.min(5,Math.max(0,Number(data.inertiaPercent)||0)),
     prestige:Number(data.prestige)||0,
     dailyLog:cleanQuestLogByIds(data.dailyLog,dailyIds),
+    injuryPeriods:cleanInjuryPeriods(data.injuryPeriods),
     weeklyLog:cleanQuestLogByIds(data.weeklyLog,weeklyIds),
     weeklySummaries:cleanWeeklySummaries(data.weeklySummaries),
     weeklySummaryTracking:cleanWeeklySummaryTracking(data.weeklySummaryTracking),

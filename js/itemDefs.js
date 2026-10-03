@@ -29,7 +29,7 @@ const BASE_INVENTORY_ITEMS={
     recordHammer:{name:"MARQUE DU DÉPASSEMENT",short:"MARQUE DU DÉPASSEMENT",emoji:"✨",action:"DESSINER",desc:"Permet au joueur de marquer un record comme objectif officiel de la semaine. Le battre avant la fin de semaine rapporte +500 XP. L’objet est perdu en cas d’échec.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété 5 quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon du Guerrier (Taux : 10 %)."]},
     teleportCrystal:{name:"CRISTAL DE TÉLÉPORTATION",short:"CRISTAL DE TÉLÉPORTATION",emoji:"💠",action:"BRISER",desc:"Permet au joueur d’aller aider un pays voisin en se téléportant jusqu’au portail le plus proche. S’il est fermé, vous obtenez l’XP et le butin habituels du portail, puis choisissez un objet supplémentaire offert par le pays allié.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété 5 quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon du Chasseur (Taux : 10 %)."]},
     invisibilityCape:{name:"POTION D’INVISIBILITÉ ÉPHÉMÈRE",short:"POTION D’INVISIBILITÉ",emoji:"🧪",action:"UTILISER",desc:"Permet au joueur de devenir invisible le temps de traverser une salle de donjon. La salle est considérée comme terminée, sans gain d’XP. Utilisable une seule fois par jour.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété 5 quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon de l’Alchimiste (Taux : 10 %)."]},
-    recoveryOintment:{name:"ONGUENT DE RÉCUPÉRATION",short:"ONGUENT DE RÉCUPÉRATION",emoji:"🧴",action:"UTILISER",desc:"Permet au joueur de passer une quête journalière ou bonus en cas de blessure ou de repos forcé. La quête est considérée comme validée, sans gain d’XP. Utilisable une seule fois par jour.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété 5 quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon du Moine (Taux : 10 %)."]},
+    recoveryOintment:{name:"ONGUENT DE RÉCUPÉRATION",short:"ONGUENT DE RÉCUPÉRATION",emoji:"🧴",action:"APPLIQUER",desc:"Définissez une blessure sur Pecs & Triceps, Abdos ou Jambes pour une durée en jours. La quête journalière de cette zone est retirée pendant la convalescence ; la journée peut être validée sans elle. Aucun XP n’est attribué pour la quête retirée. L’Onguent reste disponible après usage.",obtain:[],permanent:true},
     counterpartBalance:{name:"BALANCE DES CONTREPARTIES",short:"BALANCE DES CONTREPARTIES",emoji:"⚖️",action:"UTILISER",desc:"Permet au joueur de sacrifier 3 objets différents pour en choisir 1 nouveau.",obtain:["Après avoir complété toutes les quêtes journalières (Taux : 1 %).","Après avoir complété 5 quêtes bonus (Taux : 1 %).","Après avoir complété une quête urgente (Taux : 1 %).","Après avoir accompli un nouveau record (Taux : 1 %).","Après avoir complété un donjon (Taux : 10 %).","Après avoir complété le Donjon du Moine (Taux : 10 %)."]},
   };
 
@@ -64,7 +64,6 @@ export const STANDARD_ITEM_DROPS=[
   ["rerollToken",0.01],
   ["rewriteRune",0.01],
   ["alchemicalCatalyst",0.01],
-  ["recoveryOintment",0.01],
   ["counterpartBalance",0.01]
 ];
 
@@ -86,7 +85,6 @@ export const DUNGEON_GENERIC_DROPS=[
   ["rerollToken",0.10],
   ["rewriteRune",0.10],
   ["alchemicalCatalyst",0.10],
-  ["recoveryOintment",0.10],
   ["counterpartBalance",0.10]
 ];
 
@@ -96,7 +94,7 @@ export const DUNGEON_SPECIFIC_DROPS={
   pilgrim:[["destinyCompass",0.10],["mysteryMap",0.10]],
   warrior:[["masterContract",0.10],["recordHammer",0.10]],
   hunter:[["teleportCrystal",0.10]],
-  monk:[["recoveryOintment",0.10],["counterpartBalance",0.10]],
+  monk:[["counterpartBalance",0.10]],
   guardian:[["rewriteRune",0.10]],
   steward:[]
 };

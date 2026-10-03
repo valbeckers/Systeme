@@ -7,7 +7,7 @@ import { DEFS, SP } from "./questDefs.js?v=20260924-weekly-reward-v1";
 import { next7AM, todayStr, addDaysStr } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
 import { loadStoredState } from "./storage.js";
-import { cleanSystemState } from "./stateSanitizer.js?v=20260924-weekly-reward-v1";
+import { cleanSystemState } from "./stateSanitizer.js?v=20261003-injury-v1";
 import { normalizeActiveBreach } from "./breachEngine.js";
 
 const loadState = () => loadStoredState(cleanSystemState);
@@ -84,6 +84,7 @@ const IMPORTED = {
   sqDrawLog:[],
   sqStatCycle:[],
   regressionLog:{},
+  injuryPeriods:[],
   enduranceChoiceByDay:{},
   selectedBonusQuestIdsByDay:{},
   exerciseRotationByDay:{},
@@ -180,6 +181,7 @@ export function buildInitialState(){
     ruptureMalus:saved.ruptureMalus||null,
     dailyExtraXp:saved.dailyExtraXp||IMPORTED.dailyExtraXp||{},
     regressionLog:saved.regressionLog||{},
+    injuryPeriods:saved.injuryPeriods||[],
     enduranceChoiceByDay:saved.enduranceChoiceByDay||{},
     selectedBonusQuestIdsByDay:saved.selectedBonusQuestIdsByDay||{},
     bonusFiveCompletionDay:saved.bonusFiveCompletionDay||null,

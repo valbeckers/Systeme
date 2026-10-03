@@ -1,4 +1,5 @@
 import { REGRESSION_DEF, hasValidatedDailyCompletion } from "./dailyEngine.js";
+import { isInjuredQuest } from "./injuryEngine.js?v=20261003-injury-v1";
 import { hasResolvedQuestDebt, inferLegacyResolvedDebtQuestId } from "./debtEngine.js?v=20260817-debt-history-v3";
 import { wkStr } from "./dayCycle.js";
 import { getRankBase, sortStat } from "./progression.js";
@@ -125,6 +126,8 @@ export function HistoryTab({
     return obj.target&&!obj.binary ? obj.target : getValidateThreshold(obj,day);
   }
   function dayMarkFor(obj,day){
+    if(obj.daily&&!obj.optional&&isInjuredQuest(state,day,obj.id))
+      return {txt:"—",color:"#86efac",opacity:1};
     const log=state.dailyLog[day]||{};
     const dayObj=dailyQuestForHistoryDay(obj,day);
     const value=log[obj.id]||0;

@@ -8,7 +8,7 @@ import {
   STANDARD_ITEM_DROPS,
   DUNGEON_GENERIC_DROPS,
   DUNGEON_SPECIFIC_DROPS
-} from "./itemDefs.js?v=20260910-dimensional-anchor-v1";
+} from "./itemDefs.js?v=20261003-injury-v1";
 
 function rollIndependentDrops(dropTable,random=Math.random){
   return (dropTable||[]).reduce((won,[id,probability])=>{
