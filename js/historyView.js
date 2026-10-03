@@ -128,7 +128,7 @@ export function HistoryTab({
   function dayMarkFor(obj,day){
     if((obj.daily&&!obj.optional&&isInjuredQuest(state,day,obj.id)) ||
        (obj.id==="run"&&isInjuredQuest(state,day,"squats")))
-      return {txt:"🩹",color:"#86efac",opacity:1,injured:true};
+      return {txt:"",color:"#86efac",opacity:1,injured:true};
     const log=state.dailyLog[day]||{};
     const dayObj=dailyQuestForHistoryDay(obj,day);
     const value=log[obj.id]||0;
@@ -194,7 +194,9 @@ export function HistoryTab({
               QuestIcon(obj.id,obj.icon,14),
               h("span",{style:"overflow:hidden;text-overflow:ellipsis;white-space:nowrap"},displayName)
             ),
-            marks.map((mark,i)=>h("div",{key:obj.id+"_d"+i,title:mark.injured?"Blessure · quête suspendue":undefined,"aria-label":mark.injured?"Blessure · quête suspendue":undefined,style:"text-align:center;font-family:"+(mark.injured?"system-ui,sans-serif":"Orbitron,sans-serif")+";font-size:"+(mark.injured?"15px":"12px")+";font-weight:700;color:"+mark.color+";opacity:"+mark.opacity},mark.txt))
+            marks.map((mark,i)=>h("div",{key:obj.id+"_d"+i,title:mark.injured?"Blessure · quête suspendue":undefined,"aria-label":mark.injured?"Blessure · quête suspendue":undefined,style:"display:flex;align-items:center;justify-content:center;min-height:22px;text-align:center;font-family:Orbitron,sans-serif;font-size:12px;font-weight:700;color:"+mark.color+";opacity:"+mark.opacity},
+              mark.injured?h("img",{src:"./assets/ui/injury-bandage.png?v=20261003-v1",alt:"",width:22,height:22,draggable:false,style:"display:block;width:22px;height:22px;object-fit:contain"}):mark.txt
+            ))
           );
         }),
         h("div",{key:REGRESSION_DEF.id,style:"display:grid;grid-template-columns:minmax(0,1fr) repeat(7,22px);gap:5px;align-items:center;padding:9.5px 0;border-top:1px solid rgba(255,255,255,0.04)"},
