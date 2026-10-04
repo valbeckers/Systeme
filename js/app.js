@@ -92,8 +92,8 @@ import {
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
 import { UiIcon } from "./uiIcons.js?v=20260911-settings-nav-frame-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261003-injury-v1";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261003-injury-v1";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261004-urgent-failure-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261004-urgent-failure-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -589,7 +589,7 @@ function App(){
     const sqCdUntil=base.sqCooldownUntil||0;
     const cooldownOk=now>=sqCdUntil;
     const staleCooldownWithoutQuest=!hasActive&&!hasCompletedThisWindow&&sqCdUntil>now;
-    if(base.breachTriggeredDay!==eventDayStr(now)&&!hasActive&&!hasCompletedThisWindow&&(cooldownOk||staleCooldownWithoutQuest)){
+    if(base.sqFailureDay!==eventDayStr(now)&&base.breachTriggeredDay!==eventDayStr(now)&&!hasActive&&!hasCompletedThisWindow&&(cooldownOk||staleCooldownWithoutQuest)){
       const result=pickRandomSq(sqs.filter(q=>!q.completedAt).map(q=>q.id),base.sqStatCycle,base.sqDrawLog,base.urgentCompassStat,injuryForDay(base,todayStr(now))?.zoneId);
       if(result){
         const {tpl,pickedStat,cycleReset,forced}=result;
@@ -1207,7 +1207,7 @@ function App(){
   const completedSq = activeSq ? null : ([...(sqs||[])].filter(q=>q.completedAt&&(now-q.completedAt)<86400000).sort((a,b)=>(b.completedAt||0)-(a.completedAt||0))[0]||null);
   const sqCooldownUntil = state.sqCooldownUntil||null;
   const sqCooldownActive = sqCooldownUntil && now < sqCooldownUntil;
-  const sqReady = !activeSq && !sqCooldownActive;
+  const sqReady = !activeSq && !sqCooldownActive && state.sqFailureDay!==eventDayStr(now);
 
   // Réparation immédiate d'une carte urgente vide :
   // aucune quête active ni complétée depuis le dernier reset de 5 h.
@@ -1215,7 +1215,7 @@ function App(){
     const resetStart=current7AMStart(now);
     const resetEnd=next7AM(resetStart);
     const list=state.specialQuests||[];
-    if(breachReplacesUrgentToday)return;
+    if(breachReplacesUrgentToday||state.sqFailureDay===eventDayStr(now))return;
     const hasValidActive=list.some(q=>!q.completedAt&&now<(q.expiresAt||0));
     const hasCompletedCurrentWindow=list.some(q=>q.completedAt&&q.completedAt>=resetStart&&q.completedAt<resetEnd);
     if(hasValidActive||hasCompletedCurrentWindow) return;
@@ -1226,7 +1226,7 @@ function App(){
       const current=s.specialQuests||[];
       const stillActive=current.some(q=>!q.completedAt&&t<(q.expiresAt||0));
       const alreadyCompleted=current.some(q=>q.completedAt&&q.completedAt>=start&&q.completedAt<end);
-      if(stillActive||alreadyCompleted) return s;
+      if(stillActive||alreadyCompleted||s.sqFailureDay===eventDayStr(t)) return s;
       const result=pickRandomSq(
         current.filter(q=>!q.completedAt).map(q=>q.id).filter(Boolean),
         s.sqStatCycle,
@@ -1249,7 +1249,7 @@ function App(){
         lastActiveDay:todayStr()
       };
     });
-  },[now,state.specialQuests,state.sqCooldownUntil,breachReplacesUrgentToday]);
+  },[now,state.specialQuests,state.sqCooldownUntil,state.sqFailureDay,breachReplacesUrgentToday]);
 
   const activeDungeon = activeDungeonView(state.activeDungeon,DUNGEONS,now);
   const suspendedDungeon = currentSuspendedDungeon(state.suspendedDungeon,now);
@@ -1660,7 +1660,7 @@ function App(){
       const sqsNow = s.specialQuests||[];
       const hasActive = sqsNow.find(q=>!q.completedAt&&Date.now()<q.expiresAt);
       const cd = s.sqCooldownUntil||0;
-      if(hasActive || Date.now()<cd) return s;
+      if(hasActive || Date.now()<cd || s.sqFailureDay===eventDayStr()) return s;
       const result=pickRandomSq(sqsNow.filter(q=>!q.completedAt).map(q=>q.id),s.sqStatCycle,s.sqDrawLog,s.urgentCompassStat,injuryForDay(s,todayStr())?.zoneId);
       if(!result)return s;
       const {tpl,pickedStat,cycleReset,forced}=result;
@@ -2032,7 +2032,7 @@ function App(){
       const t=Date.now();
       const day=todayStr();
       const inv={...(s.inventory||{})};
-      if((Number(inv.rerollToken)||0)<1 || s.urgentTokenUseDay===day) return s;
+      if((Number(inv.rerollToken)||0)<1 || s.urgentTokenUseDay===day || s.sqFailureDay===eventDayStr(t)) return s;
       const list=s.specialQuests||[];
       const hasActive=list.some(q=>!q.completedAt&&t<(q.expiresAt||0));
       const completedToday=list.filter(q=>q.completedAt&&eventDayStr(q.completedAt)===day).sort((a,b)=>(b.completedAt||0)-(a.completedAt||0));
@@ -2112,6 +2112,7 @@ function App(){
 
   function launchNewSq(){
     setState(s=>{
+      if(s.sqFailureDay===eventDayStr())return s;
       const result=pickRandomSq((s.specialQuests||[]).filter(q=>!q.completedAt).map(q=>q.id),s.sqStatCycle,s.sqDrawLog,s.urgentCompassStat,injuryForDay(s,todayStr())?.zoneId);
       if(!result)return s;
       const {tpl,pickedStat,cycleReset,forced}=result;
@@ -2969,6 +2970,15 @@ function isUncappedProfessionalWeeklyQuest(obj){
               },"+"+step+" "+urgentUnitLabel(sq.unit,step)))
             )
       ),
+      showInput&&!done&&Number(sq.progress||0)===0&&h("button",{
+        onClick:()=>setState(s=>{
+          const t=Date.now();
+          const current=(s.specialQuests||[]).find(q=>q.sqid===sq.sqid&&!q.completedAt&&t<q.expiresAt);
+          if(!current||Number(current.progress||0)>0)return s;
+          return {...s,specialQuests:s.specialQuests.filter(q=>q.sqid!==sq.sqid),sqFailureDay:eventDayStr(t),sqCooldownUntil:next7AM(t),lastActiveDay:todayStr(t)};
+        }),
+        style:"display:block;width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1px solid #ef444466;background:rgba(239,68,68,0.08);color:#ef4444;font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer"
+      },"ÉCHEC"),
       done&&showInput&&h("div",{style:"text-align:center;padding:8px 0;font-size:12px;color:#4ade80;font-family:Orbitron,sans-serif"},"\u2705 Compl\u00e9t\u00e9e !")
     );
   }
@@ -3799,7 +3809,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
         prestigeAvailable&&h("button",{
           onClick:()=>{
             const newPrestige=(state.prestige||0)+1;
-            setState(s=>({...s,streak:0,streakBonusDay:null,weeklyBonusWk:null,streakMilestones:[],dailyLog:{},weeklyLog:{},regressionLog:{},specialQuests:[],sqStatCycle:[],sqCooldownUntil:null,sqRerollDay:null,activeDungeon:null,suspendedDungeon:null,dungeonRunDay:null,dungeonRunsByWeek:{},dungeonKeyRollDay:null,dungeonKeys:0,dungeonKeyDay:null,dungeonKeyRollWon:false,dungeonLog:[],enduranceChoiceByDay:{},prestige:newPrestige}));
+            setState(s=>({...s,streak:0,streakBonusDay:null,weeklyBonusWk:null,streakMilestones:[],dailyLog:{},weeklyLog:{},regressionLog:{},specialQuests:[],sqStatCycle:[],sqCooldownUntil:null,sqFailureDay:null,sqRerollDay:null,activeDungeon:null,suspendedDungeon:null,dungeonRunDay:null,dungeonRunsByWeek:{},dungeonKeyRollDay:null,dungeonKeys:0,dungeonKeyDay:null,dungeonKeyRollWon:false,dungeonLog:[],enduranceChoiceByDay:{},prestige:newPrestige}));
             setPrestigeUp(newPrestige);
           },
           style:"width:100%;margin-top:12px;padding:12px;background:rgba(168,85,247,0.1);border:1px solid #a855f7;border-radius:10px;color:#a855f7;font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:3px;cursor:pointer;text-transform:uppercase;text-shadow:0 0 12px #a855f7;display:flex;align-items:center;justify-content:center;gap:8px"
@@ -3955,6 +3965,8 @@ function isUncappedProfessionalWeeklyQuest(obj){
         ),
         activeSq
           ? h(SqCard,{sq:activeSq,showInput:true})
+          : state.sqFailureDay===eventDayStr(now)
+            ? h("div",{style:"font-size:12px;color:#ef4444;text-align:center;padding:8px 0"},"Échec déclaré · prochaine quête après le reset de 5 h.")
           : (!completedSq&&!sqCooldownActive
               ? h("div",{style:"font-size:12px;color:var(--td);text-align:center;padding:8px 0"},"Chargement du défi...")
               : null

@@ -7,7 +7,7 @@ import { DEFS, SP } from "./questDefs.js?v=20260924-weekly-reward-v1";
 import { next7AM, todayStr, addDaysStr } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
 import { loadStoredState } from "./storage.js";
-import { cleanSystemState } from "./stateSanitizer.js?v=20261003-injury-v1";
+import { cleanSystemState } from "./stateSanitizer.js?v=20261004-urgent-failure-v1";
 import { normalizeActiveBreach } from "./breachEngine.js";
 
 const loadState = () => loadStoredState(cleanSystemState);
@@ -67,6 +67,7 @@ const IMPORTED = {
   statXp:{Sante:10100,Force:13488,Esprit:12700,Endurance:2962,Agilite:1652,Discipline:3150},
   specialQuests:[],
   sqCooldownUntil:null,
+  sqFailureDay:null,
   activeBreach:null,
   alliedGiftPending:null,
   breachRollDay:null,
@@ -157,6 +158,7 @@ export function buildInitialState(){
     objectives:DEFS,
     specialQuests:saved.specialQuests||[],
     sqCooldownUntil:saved.sqCooldownUntil||null,
+    sqFailureDay:saved.sqFailureDay||null,
     activeBreach:normalizeActiveBreach(saved.activeBreach),
     alliedGiftPending:saved.alliedGiftPending||null,
     breachRollDay:saved.breachRollDay||null,

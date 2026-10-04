@@ -356,6 +356,7 @@ export function cleanSystemState(raw){
     statXp:statPack.statXp,
     specialQuests,
     sqCooldownUntil:data.sqCooldownUntil||null,
+    sqFailureDay:typeof data.sqFailureDay==="string"?data.sqFailureDay:null,
     activeBreach:normalizeActiveBreach(data.activeBreach),
     alliedGiftPending:(data.alliedGiftPending&&data.alliedGiftPending.breachId)?{
       breachId:String(data.alliedGiftPending.breachId),
