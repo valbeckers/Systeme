@@ -611,6 +611,7 @@ function App(){
   const [statLevelQueue,setStatLevelQueue] = useState([]);
   const [debtUp,setDebtUp] = useState(null);
   const [confirmDebt,setConfirmDebt] = useState(null);
+  const [confirmUrgentFailure,setConfirmUrgentFailure] = useState(null);
   const [streakUp,setStreakUp] = useState(null);
   const [completionUp,setCompletionUp] = useState(null);
   const [completionQueue,setCompletionQueue] = useState([]);
@@ -2971,12 +2972,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
             )
       ),
       showInput&&!done&&Number(sq.progress||0)===0&&h("button",{
-        onClick:()=>setState(s=>{
-          const t=Date.now();
-          const current=(s.specialQuests||[]).find(q=>q.sqid===sq.sqid&&!q.completedAt&&t<q.expiresAt);
-          if(!current||Number(current.progress||0)>0)return s;
-          return {...s,specialQuests:s.specialQuests.filter(q=>q.sqid!==sq.sqid),sqFailureDay:eventDayStr(t),sqCooldownUntil:next7AM(t),lastActiveDay:todayStr(t)};
-        }),
+        onClick:()=>setConfirmUrgentFailure({sqid:sq.sqid,name:sq.name}),
         style:"display:block;width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1px solid #ef444466;background:rgba(239,68,68,0.08);color:#ef4444;font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer"
       },"ÉCHEC"),
       done&&showInput&&h("div",{style:"text-align:center;padding:8px 0;font-size:12px;color:#4ade80;font-family:Orbitron,sans-serif"},"\u2705 Compl\u00e9t\u00e9e !")
@@ -3957,7 +3953,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
     return h("div",{class:"tab"},
       h(DebtCard,null),
       activeBreach&&h(BreachCard,null),
-      !breachReplacesUrgentToday&&(!completedSq||activeSq)&&h("div",{class:"card"+(activeSq&&activeSq.expiresAt-now<86400000&&!activeSq.completedAt?" sq-urgent":""),style:"border-color:#ef444444;background:linear-gradient(145deg,#140303,#260606)"},
+      !breachReplacesUrgentToday&&state.sqFailureDay!==eventDayStr(now)&&(!completedSq||activeSq)&&h("div",{class:"card"+(activeSq&&activeSq.expiresAt-now<86400000&&!activeSq.completedAt?" sq-urgent":""),style:"border-color:#ef444444;background:linear-gradient(145deg,#140303,#260606)"},
         h("div",{class:"shdr"},
           h("div",null,
             h("div",{class:"ctitle",style:"margin:0;color:#ef4444"},"Quête urgente"+(activeSq&&activeSq.tier?" · "+(SQ_TIER_LABEL[activeSq.tier]||""):""))
@@ -3965,8 +3961,6 @@ function isUncappedProfessionalWeeklyQuest(obj){
         ),
         activeSq
           ? h(SqCard,{sq:activeSq,showInput:true})
-          : state.sqFailureDay===eventDayStr(now)
-            ? h("div",{style:"font-size:12px;color:#ef4444;text-align:center;padding:8px 0"},"Échec déclaré · prochaine quête après le reset de 5 h.")
           : (!completedSq&&!sqCooldownActive
               ? h("div",{style:"font-size:12px;color:var(--td);text-align:center;padding:8px 0"},"Chargement du défi...")
               : null
@@ -5250,6 +5244,30 @@ function isUncappedProfessionalWeeklyQuest(obj){
     );
   }
 
+  function ConfirmUrgentFailureModal(){
+    if(!confirmUrgentFailure)return null;
+    const quest=confirmUrgentFailure;
+    return h("div",{class:"ruov",style:"--rc:#ef4444;--rg:rgba(239,68,68,.55);background:rgba(0,0,0,.92)",onClick:e=>{if(e.target===e.currentTarget)setConfirmUrgentFailure(null);}},
+      h("div",{class:"rucont",style:"width:min(500px,calc(100vw - 34px));background:rgba(15,15,18,.97);border:1px solid #ef444488;border-radius:18px;padding:22px"},
+        h("div",{class:"ruevol",style:"color:#ef4444"},"CONFIRMATION"),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:17px;font-weight:900;color:#fff;text-align:center;line-height:1.4;margin-top:10px"},"Déclarer l’échec de « "+quest.name+" » ?"),
+        h("div",{style:"font-size:12px;color:var(--td);text-align:center;line-height:1.5;margin-top:12px"},"La quête disparaîtra et la prochaine sera tirée demain après le reset de 5 h."),
+        h("div",{style:"display:flex;gap:10px;width:100%;margin-top:20px"},
+          h("button",{onClick:()=>setConfirmUrgentFailure(null),style:"flex:1;padding:12px;border-radius:9px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--td);font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},"ANNULER"),
+          h("button",{onClick:()=>{
+            setConfirmUrgentFailure(null);
+            setState(s=>{
+              const t=Date.now();
+              const current=(s.specialQuests||[]).find(q=>q.sqid===quest.sqid&&!q.completedAt&&t<q.expiresAt);
+              if(!current||Number(current.progress||0)>0)return s;
+              return {...s,specialQuests:s.specialQuests.filter(q=>q.sqid!==quest.sqid),sqFailureDay:eventDayStr(t),sqCooldownUntil:next7AM(t),lastActiveDay:todayStr(t)};
+            });
+          },style:"flex:1;padding:12px;border-radius:9px;border:1px solid #ef4444;background:rgba(239,68,68,.15);color:#ef4444;font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},"CONFIRMER L’ÉCHEC")
+        )
+      )
+    );
+  }
+
   function ConfirmRegressionModal(){
     if(!confirmRegression)return null;
     const color="#ef4444";
@@ -6185,6 +6203,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
       h(ConfirmRegressionModal,null),
       h(RegressionUp,null),
       h(ConfirmDebtModal,null),
+      h(ConfirmUrgentFailureModal,null),
       h(ConfirmDungeonChoice,null),
       h(ImportModal,null),
       h(ExportCopiedModal,null),
