@@ -39,7 +39,7 @@ import {
   expireSuspendedDungeonState,
   canValidateDungeonRoom
 } from "./dungeonEngine.js?v=20260910-dimensional-anchor-v1";
-import { INVENTORY_ITEMS } from "./itemDefs.js?v=20261003-injury-v1";
+import { INVENTORY_ITEMS } from "./itemDefs.js?v=20261004-key-rarity-v1";
 import {
   incrementLootState,
   pickRandomBreachLoot,
@@ -50,7 +50,7 @@ import {
   counterpartBalanceSacrificeEligibleIds,
   counterpartBalanceRewardEligibleIds,
   exchangeCounterpartBalanceState
-} from "./lootEngine.js?v=20261003-injury-v1";
+} from "./lootEngine.js?v=20261004-key-rarity-v1";
 import {
   eventDayStr,
   addDaysStr,

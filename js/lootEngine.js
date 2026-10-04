@@ -8,7 +8,7 @@ import {
   STANDARD_ITEM_DROPS,
   DUNGEON_GENERIC_DROPS,
   DUNGEON_SPECIFIC_DROPS
-} from "./itemDefs.js?v=20261003-injury-v1";
+} from "./itemDefs.js?v=20261004-key-rarity-v1";
 
 function rollIndependentDrops(dropTable,random=Math.random){
   return (dropTable||[]).reduce((won,[id,probability])=>{
@@ -33,7 +33,7 @@ export function rollDungeonItemDrops(dungeonId,random=Math.random){
 
 export function pickRandomBreachLoot(random=Math.random){
   const eligible=Object.entries(INVENTORY_ITEMS)
-    .filter(([,item])=>!item.permanent)
+    .filter(([id,item])=>!item.permanent&&id!=="dungeonKey")
     .map(([id])=>id);
   if(!eligible.length)return null;
   const index=Math.min(eligible.length-1,Math.floor(random()*eligible.length));
