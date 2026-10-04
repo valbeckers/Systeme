@@ -1,7 +1,7 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
 import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260924-weekly-reward-v1";
 import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20260903-pullups-icons-v1";
-import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20260818-urgent-dungeon-v1";
+import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20261004-injury-v1";
 import {
   isDebtEligibleQuest,
   createQuestDebtState,
@@ -590,7 +590,7 @@ function App(){
     const cooldownOk=now>=sqCdUntil;
     const staleCooldownWithoutQuest=!hasActive&&!hasCompletedThisWindow&&sqCdUntil>now;
     if(base.breachTriggeredDay!==eventDayStr(now)&&!hasActive&&!hasCompletedThisWindow&&(cooldownOk||staleCooldownWithoutQuest)){
-      const result=pickRandomSq(sqs.filter(q=>!q.completedAt).map(q=>q.id),base.sqStatCycle,base.sqDrawLog,base.urgentCompassStat);
+      const result=pickRandomSq(sqs.filter(q=>!q.completedAt).map(q=>q.id),base.sqStatCycle,base.sqDrawLog,base.urgentCompassStat,injuryForDay(base,todayStr(now))?.zoneId);
       if(result){
         const {tpl,pickedStat,cycleReset,forced}=result;
         const sq={...tpl,sqid:"sq_"+now,progress:0,startedAt:now,expiresAt:next7AM(now),completedAt:null};
@@ -1231,7 +1231,8 @@ function App(){
         current.filter(q=>!q.completedAt).map(q=>q.id).filter(Boolean),
         s.sqStatCycle,
         s.sqDrawLog,
-        s.urgentCompassStat
+        s.urgentCompassStat,
+        injuryForDay(s,todayStr(t))?.zoneId
       );
       if(!result) return s;
       const {tpl,pickedStat,cycleReset,forced}=result;
@@ -1660,7 +1661,7 @@ function App(){
       const hasActive = sqsNow.find(q=>!q.completedAt&&Date.now()<q.expiresAt);
       const cd = s.sqCooldownUntil||0;
       if(hasActive || Date.now()<cd) return s;
-      const result=pickRandomSq(sqsNow.filter(q=>!q.completedAt).map(q=>q.id),s.sqStatCycle,s.sqDrawLog,s.urgentCompassStat);
+      const result=pickRandomSq(sqsNow.filter(q=>!q.completedAt).map(q=>q.id),s.sqStatCycle,s.sqDrawLog,s.urgentCompassStat,injuryForDay(s,todayStr())?.zoneId);
       if(!result)return s;
       const {tpl,pickedStat,cycleReset,forced}=result;
       const t = Date.now();
@@ -2037,7 +2038,7 @@ function App(){
       const completedToday=list.filter(q=>q.completedAt&&eventDayStr(q.completedAt)===day).sort((a,b)=>(b.completedAt||0)-(a.completedAt||0));
       if(hasActive || !completedToday.length) return s;
       const lastCompleted=completedToday[0];
-      const result=pickRandomSq([lastCompleted.id],s.sqStatCycle,s.sqDrawLog,null);
+      const result=pickRandomSq([lastCompleted.id],s.sqStatCycle,s.sqDrawLog,null,injuryForDay(s,day)?.zoneId);
       if(!result) return s;
       const {tpl,pickedStat,cycleReset}=result;
       const sq={...tpl,sqid:"sq_token_"+t,progress:0,startedAt:t,expiresAt:next7AM(t),completedAt:null,summonedByToken:true};
@@ -2070,7 +2071,7 @@ function App(){
       );
 
       const usedIds=[active.id].filter(Boolean);
-      const result=pickRandomSq(usedIds,cycleBase,drawLogBeforeRewrite,null);
+      const result=pickRandomSq(usedIds,cycleBase,drawLogBeforeRewrite,null,injuryForDay(s,todayStr(t))?.zoneId);
       if(!result) return s;
 
       const {tpl,pickedStat,cycleReset}=result;
@@ -2111,7 +2112,7 @@ function App(){
 
   function launchNewSq(){
     setState(s=>{
-      const result=pickRandomSq((s.specialQuests||[]).filter(q=>!q.completedAt).map(q=>q.id),s.sqStatCycle,s.sqDrawLog,s.urgentCompassStat);
+      const result=pickRandomSq((s.specialQuests||[]).filter(q=>!q.completedAt).map(q=>q.id),s.sqStatCycle,s.sqDrawLog,s.urgentCompassStat,injuryForDay(s,todayStr())?.zoneId);
       if(!result)return s;
       const {tpl,pickedStat,cycleReset,forced}=result;
       const t=Date.now();

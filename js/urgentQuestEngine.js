@@ -14,6 +14,22 @@ export const URGENT_QUEST_STATS = Object.freeze([
   "Discipline"
 ]);
 
+// Zones principalement sollicitées par les quêtes urgentes physiques.
+// Les autres quêtes (santé, esprit, discipline) restent disponibles.
+export const URGENT_QUEST_INJURY_ZONES = Object.freeze({
+  sp_stairs:["squats"],
+  sp_walk30:["squats"],
+  sp_shadow_boxing:["push","abs","squats"],
+  sp_flow20:["push","abs","squats"],
+  sp_fluide:["push","abs","squats"],
+  sp_silent:["squats"],
+  sp_footwork:["squats"]
+});
+
+export function urgentQuestBlockedByInjury(questId,injuryZoneId){
+  return !!injuryZoneId && (URGENT_QUEST_INJURY_ZONES[questId]||[]).includes(injuryZoneId);
+}
+
 export function appendUrgentQuestDrawLog(log,quest,drawnAt=Date.now()){
   if(!quest || !quest.id) return Array.isArray(log)?log:[];
   const current=Array.isArray(log)?log:[];
@@ -29,7 +45,7 @@ export function appendUrgentQuestDrawLog(log,quest,drawnAt=Date.now()){
   return [...current,entry].slice(-120);
 }
 
-export function pickRandomSq(usedIds,statCycle,selectionLog,forcedStat=null){
+export function pickRandomSq(usedIds,statCycle,selectionLog,forcedStat=null,injuryZoneId=null){
   const stats=URGENT_QUEST_STATS;
   const cycle = [...new Set((statCycle||[]).filter(s=>stats.includes(s)))];
   const remaining = stats.filter(s=>!cycle.includes(s));
@@ -46,6 +62,7 @@ export function pickRandomSq(usedIds,statCycle,selectionLog,forcedStat=null){
 
   const availableForStat = (s, respectCooldown=true) => (SP[s]||[]).filter(t =>
     !(usedIds||[]).includes(t.id) &&
+    !urgentQuestBlockedByInjury(t.id,injuryZoneId) &&
     (!respectCooldown || !recentIds.includes(t.id))
   );
 
@@ -54,9 +71,12 @@ export function pickRandomSq(usedIds,statCycle,selectionLog,forcedStat=null){
     let avail=availableForStat(forcedStat,true).filter(t=>t.id!==lastDrawnId);
     if(!avail.length) avail=availableForStat(forcedStat,false).filter(t=>t.id!==lastDrawnId);
     if(!avail.length) avail=availableForStat(forcedStat,false);
-    if(!avail.length) return null;
-    const chosen=avail[Math.floor(Math.random()*avail.length)];
-    return {tpl:{...chosen,stat:chosen.stat||forcedStat},pickedStat:forcedStat,cycleReset:false,forced:true};
+    if(avail.length){
+      const chosen=avail[Math.floor(Math.random()*avail.length)];
+      return {tpl:{...chosen,stat:chosen.stat||forcedStat},pickedStat:forcedStat,cycleReset:false,forced:true};
+    }
+    // Si la blessure bloque la statistique orientée, tirer ailleurs et
+    // conserver la Boussole pour le prochain tirage où elle sera applicable.
   }
 
   let usable = pool.filter(s=>availableForStat(s,true).length>0);
