@@ -2974,7 +2974,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
       showInput&&!done&&Number(sq.progress||0)===0&&h("button",{
         onClick:()=>setConfirmUrgentFailure({sqid:sq.sqid,name:sq.name}),
         style:"display:block;width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1px solid #ef444466;background:rgba(239,68,68,0.08);color:#ef4444;font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer"
-      },"ÉCHEC"),
+      },"ÉCHEC ",h("span",{style:"font-size:13px;font-weight:900;color:#ef4444"},"✕")),
       done&&showInput&&h("div",{style:"text-align:center;padding:8px 0;font-size:12px;color:#4ade80;font-family:Orbitron,sans-serif"},"\u2705 Compl\u00e9t\u00e9e !")
     );
   }
