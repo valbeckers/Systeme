@@ -6,6 +6,7 @@ export const EXERCISE_ROTATIONS = {
     {id:"dips",label:"Dips",icon:"💪🏼"},
   ],
   back:[
+    {id:"pullups",label:"Tractions",icon:"💪🏼"},
     {id:"negative_pullups",label:"Tractions négatives",icon:"💪🏼"},
     {id:"australian_pullups",label:"Tractions australiennes",icon:"💪🏼"},
   ],
@@ -89,6 +90,7 @@ export function rotatedQuestObjects(baseObjs,rotation,stats,totalXp){
   return (baseObjs||[]).map(obj=>{
     if(obj.id==="push") return {...obj,name:"Pecs & Triceps - "+chest.label,icon:chest.icon,exerciseId:chest.id,exerciseIcon:chest.icon,rotationExercise:chest.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3,stat2:null,xpPer2:null};
     if(obj.id==="negative_pullups"){
+      if(back.id==="pullups") return {...obj,name:"Dos & Biceps - Tractions",icon:back.icon,exerciseId:back.id,exerciseIcon:back.icon,rotationExercise:back.label,target:10,unit:"rep",xpPer:30,stat2:null,xpPer2:null};
       if(back.id==="australian_pullups") return {...obj,name:"Dos & Biceps - Tractions australiennes",icon:back.icon,exerciseId:back.id,exerciseIcon:back.icon,rotationExercise:back.label,target:getStatLevelTarget("squats",stats),unit:"rep",xpPer:6,stat2:null,xpPer2:null};
       return {...obj,name:"Dos & Biceps - Tractions négatives",icon:back.icon,exerciseId:back.id,exerciseIcon:back.icon,rotationExercise:back.label,target:getStatLevelTarget("negative_pullups",stats),unit:"rep",xpPer:12,stat2:null,xpPer2:null};
     }

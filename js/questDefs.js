@@ -9,6 +9,7 @@ const DEFS = [
   {id:"sleep",  name:"Dormir 8h",   unit:"h",     xpPer:18.75,daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDECF\uFE0F",         base:8,  fixedBase:true},
     // ─── FORCE ────────────────────────────────────────────────────────────
   {id:"push",   name:"Pecs & Triceps", unit:"rep", xpPer:3, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦾", base:30},
+  {id:"negative_pullups",name:"Dos & Biceps",unit:"rep",xpPer:12,daily:true,weekly:false,optional:false,stat:"Force",icon:"💪🏼",base:8,startDate:"2026-10-12"},
   {id:"abs",    name:"Abdos", unit:"rep", xpPer:1.5, daily:true, weekly:false,optional:false,stat:"Force", icon:"🧱", base:60},
   {id:"squats", name:"Jambes", unit:"rep", xpPer:3, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦿", base:15, stat2:"Agilite", xpPer2:3},
   {id:"calves", name:"Mollets",unit:"rep", xpPer:2, daily:false, weekly:false,optional:false,legacyRotation:true,stat:"Force", icon:"🦵🏻", base:30, stat2:"Agilite", xpPer2:1},

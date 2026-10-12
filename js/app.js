@@ -1,6 +1,6 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
-import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20260924-weekly-reward-v1";
-import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20260903-pullups-icons-v1";
+import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20261012-back-daily-v1";
+import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261012-back-daily-v1";
 import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20261004-injury-v1";
 import {
   isDebtEligibleQuest,
@@ -66,7 +66,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260811-linear-xp-v1";
 import { StatsTab } from "./statsView.js?v=20260919-kiviat-labels-v2";
-import { HistoryTab } from "./historyView.js?v=20261003-injury-size-v5";
+import { HistoryTab } from "./historyView.js?v=20261012-monthly-v1";
 import { INJURY_ZONES, injuryForDay, isInjuredQuest, injuryDaysRemaining } from "./injuryEngine.js?v=20261003-injury-v1";
 import {
   RANK_BASES,
@@ -92,8 +92,8 @@ import {
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
 import { UiIcon } from "./uiIcons.js?v=20260911-settings-nav-frame-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261004-urgent-failure-v1";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261004-urgent-failure-v1";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261012-back-daily-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261012-back-daily-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -101,7 +101,7 @@ import {
   exerciseFamilyLabel,
   ensureExerciseRotationForDay,
   rotatedQuestObjects
-} from "./exerciseRotation.js?v=20260808-drawn-exercise-icons-v1";
+} from "./exerciseRotation.js?v=20261012-back-daily-v1";
 import {
   questRecordUnit,
   recordRotationIdForDay,
@@ -656,7 +656,9 @@ function App(){
   const [exportValue,setExportValue] = useState("");
   const [dungeonHelpOpen,setDungeonHelpOpen] = useState({});
   const [selectedDungeonRoom,setSelectedDungeonRoom] = useState(null);
-  const [historyOpen,setHistoryOpen] = useState({week:false,records:false});
+  const [historyOpen,setHistoryOpen] = useState({week:false,monthly:true,records:false});
+  const [monthOff,setMonthOff] = useState(0);
+  const [selectedHistoryDay,setSelectedHistoryDay] = useState(null);
   const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,reg:false,sq:false,breach:false,debt:false,dj:false,djAlt:false,cs:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
   const [showStatReqDetail,setShowStatReqDetail] = useState(false);
@@ -4718,8 +4720,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
   function History(){
     const additionalPersonalRecordIds=new Set(["run","walk","march"]);
     const historyObjs=[
-      ...objs.filter(o=>!o.optional||additionalPersonalRecordIds.has(o.id)),
-      ...BONUS_QUESTS.filter(o=>o.id==="bonus_pullups")
+      ...objs.filter(o=>!o.optional||additionalPersonalRecordIds.has(o.id))
     ];
     return h(HistoryTab,{
       state,
@@ -4730,6 +4731,10 @@ function isUncappedProfessionalWeeklyQuest(obj){
       prestige,
       wkOff,
       setWkOff,
+      monthOff,
+      setMonthOff,
+      selectedHistoryDay,
+      setSelectedHistoryDay,
       historyOpen,
       setHistoryOpen,
       getValidateThreshold,

@@ -1,6 +1,6 @@
 import { STATS } from "./config.js";
-import { DEFS, SP } from "./questDefs.js?v=20260924-weekly-reward-v1";
-import { BONUS_QUESTS } from "./bonusQuestDefs.js";
+import { DEFS, SP } from "./questDefs.js?v=20261012-back-daily-v1";
+import { BONUS_QUESTS } from "./bonusQuestDefs.js?v=20261012-back-daily-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20260818-urgent-dungeon-v1";
 import { todayStr, next7AM } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
@@ -310,7 +310,7 @@ function cleanWeeklySummaryTracking(value){
 
 export function cleanSystemState(raw){
   const data=migrateRuntimeQuestDefinitions(migrateMergedEspritState({...((raw&&typeof raw==="object")?raw:{})}));
-  const dailyIds=new Set([...DEFS.filter(o=>o.daily).map(o=>o.id),...BONUS_QUESTS.map(o=>o.id)]);
+  const dailyIds=new Set([...DEFS.filter(o=>o.daily).map(o=>o.id),...BONUS_QUESTS.map(o=>o.id),"bonus_pullups","bonus_negative_pullups","bonus_australian_pullups"]);
   const weeklyIds=new Set(DEFS.filter(o=>o.weekly).map(o=>o.id));
   const spMap=activeSpecialQuestMap();
   const statPack=cleanStatLevelsFromXp(data.statXp,data.stats);

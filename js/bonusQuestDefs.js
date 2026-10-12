@@ -7,9 +7,6 @@ export const BONUS_QUESTS = [
 
   {id:"grips",name:"Grip",icon:"✊🏻",unit:"min",base:10,fixedBase:true,xpPer:15,stat:"Force"},
   {id:"bonus_wall_sit",name:"Wall-sit",icon:"🧱",unit:"min",base:5,fixedBase:true,xpPer:50,stat:"Force"},
-  {id:"bonus_pullups",name:"Tractions",icon:"💪🏼",unit:"rep",base:10,fixedBase:true,xpPer:30,stat:"Force"},
-  {id:"bonus_negative_pullups",name:"Tractions négatives",icon:"💪🏼",exerciseId:"negative_pullups",unit:"rep",base:8,dynamicTargetKey:"negative_pullups",xpPer:12,stat:"Force"},
-  {id:"bonus_australian_pullups",name:"Tractions australiennes",icon:"💪🏼",exerciseId:"australian_pullups",unit:"rep",base:15,dynamicTargetKey:"squats",xpPer:6,stat:"Force"},
   {id:"bonus_dead_hang",name:"Dead hang",icon:"🫳🏼",unit:"min",base:5,fixedBase:true,xpPer:30,stat:"Force"},
 
   {id:"med",name:"Méditation",icon:"🧘🏻‍♂️",unit:"min",base:10,fixedBase:true,xpPer:15,stat:"Esprit"},

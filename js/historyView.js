@@ -8,7 +8,7 @@ import {
   isExerciseFamilyQuestId,
   exerciseFamilyLabel,
   rotatedQuestObjects
-} from "./exerciseRotation.js";
+} from "./exerciseRotation.js?v=20261012-back-daily-v1";
 import { RECORD_EXERCISE_DEFS, recordExerciseValueForDay } from "./records.js";
 import { UiIcon } from "./uiIcons.js?v=20260809-medallions-v6";
 
@@ -22,7 +22,6 @@ const HIDDEN_FROM_HISTORY_IDS = new Set([
   "weekly_pro_anticipation"
 ]);
 const HIDDEN_FROM_WEEKLY_ACTIVITY_IDS = new Set([
-  "negative_pullups",
   "bonus_pullups",
   "bonus_negative_pullups",
   "bonus_australian_pullups",
@@ -65,6 +64,10 @@ export function HistoryTab({
   prestige,
   wkOff,
   setWkOff,
+  monthOff,
+  setMonthOff,
+  selectedHistoryDay,
+  setSelectedHistoryDay,
   historyOpen,
   setHistoryOpen,
   getValidateThreshold,
@@ -115,6 +118,17 @@ export function HistoryTab({
   const recordDisplayObjs=[...exerciseHistoryDefs,...standardDailyRecordObjs];
 
   const weekLbls=["L","M","M","J","V","S","D"];
+  const monthStart=new Date(Number(today.slice(0,4)),Number(today.slice(5,7))-1-monthOff,1);
+  const monthYear=monthStart.getFullYear();
+  const monthIndex=monthStart.getMonth();
+  const monthKey=monthYear+"-"+String(monthIndex+1).padStart(2,"0");
+  const monthLabel=monthStart.toLocaleDateString("fr-FR",{month:"long",year:"numeric"});
+  const daysInMonth=new Date(monthYear,monthIndex+1,0).getDate();
+  const monthPadding=(monthStart.getDay()+6)%7;
+  const chosenDay=selectedHistoryDay?.startsWith(monthKey+"-")
+    ? selectedHistoryDay
+    : monthKey+"-"+String(monthOff===0?Number(today.slice(8)):1).padStart(2,"0");
+  const monthlyQuests=[...sortStat(objs.filter(o=>o.daily&&!o.optional)),...objs.filter(o=>o.id==="run")];
 
   function weeklyTargetFor(obj){
     if(obj.binary) return 7;
@@ -126,6 +140,7 @@ export function HistoryTab({
     return obj.target&&!obj.binary ? obj.target : getValidateThreshold(obj,day);
   }
   function dayMarkFor(obj,day){
+    if(obj.startDate&&day<obj.startDate) return {txt:"·",color:"var(--td)",opacity:.45};
     if((obj.daily&&!obj.optional&&isInjuredQuest(state,day,obj.id)) ||
        (obj.id==="run"&&isInjuredQuest(state,day,"squats")))
       return {txt:"",color:"#86efac",opacity:1,injured:true};
@@ -218,7 +233,52 @@ export function HistoryTab({
       )
     ),
     h("div",{class:"card"},
-      h("div",{class:"ctitle"},"Bilans hebdomadaires"),
+      h("div",{style:"display:flex;align-items:center;justify-content:space-between;cursor:pointer",onClick:()=>toggle("monthly")},
+        h("div",{class:"ctitle",style:"margin:0"},"Activité du mois"),
+        h(ChevronBtn,{k:"monthly"})
+      ),
+      open.monthly&&h(Fragment,null,
+        h("div",{style:"display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px"},
+          h("button",{onClick:()=>{setMonthOff(v=>Math.min(v+1,36));setSelectedHistoryDay(null);},disabled:monthOff>=36,style:"background:var(--sf2);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-size:18px;width:38px;height:38px;opacity:"+(monthOff>=36?.3:1)},"‹"),
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:var(--rc);text-align:center;text-transform:capitalize"},monthLabel),
+          h("button",{onClick:()=>{setMonthOff(v=>Math.max(v-1,0));setSelectedHistoryDay(null);},disabled:monthOff===0,style:"background:var(--sf2);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-size:18px;width:38px;height:38px;opacity:"+(monthOff===0?.3:1)},"›")
+        ),
+        h("div",{style:"display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;margin-top:14px"},
+          weekLbls.map((label,i)=>h("div",{key:"month_head_"+i,style:"text-align:center;font-family:Orbitron,sans-serif;font-size:9px;color:var(--td);padding:3px"},label)),
+          Array.from({length:monthPadding},(_,i)=>h("div",{key:"month_blank_"+i})),
+          Array.from({length:daysInMonth},(_,i)=>{
+            const day=monthKey+"-"+String(i+1).padStart(2,"0");
+            const future=day>today;
+            const selected=day===chosenDay;
+            const progressed=monthlyQuests.some(obj=>Number((state.dailyLog[day]||{})[obj.id])>0);
+            return h("button",{key:day,onClick:()=>setSelectedHistoryDay(day),disabled:future,
+              style:"height:43px;min-width:0;border-radius:8px;border:1px solid "+(selected?"var(--rc)":"rgba(255,255,255,.08)")+";background:"+(selected?"rgba(168,85,247,.17)":"rgba(255,255,255,.025)")+";color:"+(future?"var(--td)":"var(--tx)")+";opacity:"+(future?.35:1)+";font-family:Orbitron,sans-serif;font-size:11px;cursor:"+(future?"default":"pointer")},
+              i+1,
+              h("span",{style:"display:block;width:4px;height:4px;border-radius:50%;margin:3px auto 0;background:"+(progressed?"#a78bfa":"transparent")})
+            );
+          })
+        ),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--rc);margin-top:17px;margin-bottom:5px"},"LE "+chosenDay.slice(8)+"/"+chosenDay.slice(5,7)),
+        monthlyQuests.filter(obj=>!obj.startDate||obj.startDate<=chosenDay).map(obj=>{
+          const dayObj=dailyQuestForHistoryDay(obj,chosenDay);
+          const value=Number((state.dailyLog[chosenDay]||{})[obj.id])||0;
+          const injured=isInjuredQuest(state,chosenDay,obj.id)||(obj.id==="run"&&isInjuredQuest(state,chosenDay,"squats"));
+          const unit=dayObj.unit==="rep"?(value>1?"reps":"rep"):dayObj.unit==="verre"?(value>1?"verres":"verre"):dayObj.unit||"";
+          return h("div",{key:"month_"+obj.id,style:"display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid rgba(255,255,255,.05)"},
+            h("div",{style:"display:flex;align-items:center;gap:7px;min-width:0;font-size:11px;color:var(--tx)"},QuestIcon(obj.id,obj.icon,14),h("span",{style:"overflow:hidden;text-overflow:ellipsis;white-space:nowrap"},dayObj.name)),
+            h("span",{style:"display:inline-flex;align-items:center;gap:3px;font-family:Orbitron,sans-serif;font-size:10px;color:"+(injured?"#ef4444":value>0?"var(--rc)":"var(--td)")+";white-space:nowrap"},fmtNum(value)+" "+unit,
+              injured&&h("img",{src:"./assets/ui/injury-bandage.png?v=20261003-v1",alt:"Blessure",width:17,height:17,style:"width:17px;height:17px;object-fit:contain"})
+            )
+          );
+        })
+      )
+    ),
+    h("div",{class:"card"},
+      h("div",{style:"display:flex;align-items:center;justify-content:space-between;cursor:pointer",onClick:()=>toggle("week")},
+        h("div",{class:"ctitle",style:"margin:0"},"Bilans hebdomadaires"),
+        h(ChevronBtn,{k:"week"})
+      ),
+      open.week&&h(Fragment,null,
       !(state.weeklySummaries||[]).length&&h("div",{style:"font-size:12px;color:var(--td);margin-top:10px;text-align:center"},"Le premier bilan sera créé au prochain reset hebdomadaire."),
       [...(state.weeklySummaries||[])].sort((a,b)=>String(b.weekKey).localeCompare(String(a.weekKey))).map(summary=>{
         const key="summary_"+summary.weekKey;
@@ -247,6 +307,7 @@ export function HistoryTab({
           )
         );
       })
+      )
     ),
     h("div",{class:"card"},
       h("div",{style:"display:flex;align-items:center;justify-content:space-between;cursor:pointer",onClick:()=>toggle("records")},
