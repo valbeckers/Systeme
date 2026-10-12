@@ -66,7 +66,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260811-linear-xp-v1";
 import { StatsTab } from "./statsView.js?v=20260919-kiviat-labels-v2";
-import { HistoryTab } from "./historyView.js?v=20261012-monthly-v1";
+import { HistoryTab } from "./historyView.js?v=20261012-pullup-records-v1";
 import { INJURY_ZONES, injuryForDay, isInjuredQuest, injuryDaysRemaining } from "./injuryEngine.js?v=20261003-injury-v1";
 import {
   RANK_BASES,
@@ -90,7 +90,7 @@ import {
   GRIMOIRE_ICON_DATA,
   DEBT_ACKNOWLEDGEMENT_ICON_DATA
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
-import { UiIcon } from "./uiIcons.js?v=20260911-settings-nav-frame-v1";
+import { UiIcon } from "./uiIcons.js?v=20261012-pullup-records-v1";
 import { saveStoredState } from "./storage.js";
 import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261012-back-daily-v1";
 import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261012-back-daily-v1";
@@ -106,7 +106,7 @@ import {
   questRecordUnit,
   recordRotationIdForDay,
   buildRecordOptions
-} from "./records.js?v=20260818-selectable-bonus-v1";
+} from "./records.js?v=20261012-pullup-records-v1";
 import {
   buildBreachRuptureBoss,
   normalizeActiveBreach,

@@ -9,8 +9,8 @@ import {
   exerciseFamilyLabel,
   rotatedQuestObjects
 } from "./exerciseRotation.js?v=20261012-back-daily-v1";
-import { RECORD_EXERCISE_DEFS, recordExerciseValueForDay } from "./records.js";
-import { UiIcon } from "./uiIcons.js?v=20260809-medallions-v6";
+import { RECORD_EXERCISE_DEFS, recordExerciseValueForDay } from "./records.js?v=20261012-pullup-records-v1";
+import { UiIcon } from "./uiIcons.js?v=20261012-pullup-records-v1";
 
 const { h, Fragment } = window.preact;
 
@@ -96,8 +96,7 @@ export function HistoryTab({
   const visibleInWeeklyActivity=o=>visibleInHistory(o)&&!HIDDEN_FROM_WEEKLY_ACTIVITY_IDS.has(o.id);
   const ordered=[...sortStat(objs.filter(o=>visibleInWeeklyActivity(o)&&o.daily&&!o.optional)),...sortStat(objs.filter(o=>visibleInWeeklyActivity(o)&&o.weekly)),...sortStat(objs.filter(o=>visibleInWeeklyActivity(o)&&o.daily&&o.optional&&!o.bonusHidden))];
 
-  const hiddenExerciseHistoryIds=new Set(["ex_negative_pullups","ex_australian_pullups"]);
-  const exerciseHistoryDefs=RECORD_EXERCISE_DEFS.filter(def=>!hiddenExerciseHistoryIds.has(def.id));
+  const exerciseHistoryDefs=RECORD_EXERCISE_DEFS;
   const rotatingSourceIds=new Set(["push","negative_pullups","abs","squats","calves"]);
   const hiddenFromRecordsAndTotals=new Set(["water","sleep"]);
   function dailyQuestForHistoryDay(obj,day){

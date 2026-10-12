@@ -1,10 +1,11 @@
-import { LEGACY_EXERCISE_DEFAULTS } from "./exerciseRotation.js";
+import { LEGACY_EXERCISE_DEFAULTS } from "./exerciseRotation.js?v=20261012-back-daily-v1";
 
 export const RECORD_EXERCISE_DEFS = [
   {id:"ex_pushups",name:"Pompes",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"push",family:"push",rotationId:"pushups"},
   {id:"ex_dips",name:"Dips",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"push",family:"push",rotationId:"dips"},
-  {id:"ex_negative_pullups",name:"Tractions négatives",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"negative_pullups",family:"back",rotationId:"negative_pullups"},
-  {id:"ex_australian_pullups",name:"Tractions australiennes",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"negative_pullups",family:"back",rotationId:"australian_pullups"},
+  {id:"ex_pullups",name:"Tractions",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"negative_pullups",family:"back",rotationId:"pullups",legacySourceId:"bonus_pullups"},
+  {id:"ex_negative_pullups",name:"Tractions négatives",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"negative_pullups",family:"back",rotationId:"negative_pullups",legacySourceId:"bonus_negative_pullups"},
+  {id:"ex_australian_pullups",name:"Tractions australiennes",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"negative_pullups",family:"back",rotationId:"australian_pullups",legacySourceId:"bonus_australian_pullups"},
   {id:"ex_crunches",name:"Crunches",icon:"🧎🏻",unit:"rep",stat:"Force",sourceId:"abs",family:"abs",rotationId:"crunches"},
   {id:"ex_leg_raises",name:"Levées de jambes",icon:"🦵🏻",unit:"rep",stat:"Force",sourceId:"abs",family:"abs",rotationId:"leg_raises"},
   {id:"ex_plank",name:"Gainage",icon:"🫳🏼",unit:"min",stat:"Force",sourceId:"abs",family:"abs",rotationId:"plank"},
