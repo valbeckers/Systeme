@@ -8,7 +8,8 @@ import {
   planQuestDebtRepayment,
   applyQuestDebtPaymentState,
   expireQuestDebtState,
-  reconcileSameDayQuestDebtState
+  reconcileSameDayQuestDebtState,
+  hasResolvedQuestDebt
 } from "./debtEngine.js?v=20260802-debt-sameday-01";
 import {
   REGRESSION_DEFS,
@@ -21,7 +22,7 @@ import {
   reconcileXpMomentumState,
   urgentQuestCompletedOnDay,
   applyDailyStreakRewardState
-} from "./dailyEngine.js?v=20260820-regression-xp-log-v1";
+} from "./dailyEngine.js?v=20261014-debt-card-v1";
 import { elanBonusPercent, xpMomentumAdjustment } from "./xpMomentum.js?v=20260817-xp-momentum-v1";
 import { BREACH_POOL, BREACH_RUPTURE_BOSSES } from "./breachDefs.js?v=20260831-portail-boss-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20260818-urgent-dungeon-v1";
@@ -1142,7 +1143,8 @@ function App(){
     state,
     reqDailyObjs,
     tLog,
-    obj=>getEffectiveTarget(obj.id)
+    obj=>getEffectiveTarget(obj.id),
+    today
   );
 
   const bonusQuestObjsForCompletion = dailyBonusQuestObjects();
@@ -3507,6 +3509,15 @@ function isUncappedProfessionalWeeklyQuest(obj){
       return d.getTime();
     })();
     const debtRemaining=Math.max(0,debtDeadline-now);
+    const debtInputId="debt_payment";
+    const payDebt=(e,quick)=>{
+      if(e){e.preventDefault();e.stopPropagation();}
+      const el=document.getElementById(debtInputId);
+      const val=quick ?? parseFloat((el?.value||"").replace(",","."));
+      if(!Number.isFinite(val)||val<=0)return;
+      repayDebtPortion({id:debt.id},val);
+      if(!quick&&el){el.value="";el.focus();}
+    };
 
     if(compact){
       const unit=((paid>1||amount>1)&&{rep:"reps",page:"pages",min:"min",verre:"verres",repas:"repas",contact:"contacts",action:"actions"}[debt.unit])||debt.unit;
@@ -3553,6 +3564,10 @@ function isUncappedProfessionalWeeklyQuest(obj){
         h("div",{style:"font-size:10px;color:"+colorLight+";font-family:Orbitron,sans-serif;margin-top:4px;text-align:left;display:flex;align-items:center;gap:4px"},
           h(UiIcon,{iconKey:"interface.countdown",fallback:"⏱",slotSize:14,glyphSize:10}),
           fmtCD(debtRemaining)+" restants"
+        ),
+        h("form",{onSubmit:e=>payDebt(e),style:"display:flex;gap:8px;margin-top:12px"},
+          h("input",{id:debtInputId,type:"number",inputMode:"decimal",step:"any",min:"0",placeholder:"Quantité ("+debt.unit+")",style:"min-width:0;flex:1"}),
+          h("button",{type:"submit",style:"color:"+colorLight+";border:1px solid "+color+";border-radius:8px;background:"+colorBg+";padding:9px 12px"},"Rembourser")
         )
       )
     );
@@ -3686,6 +3701,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
 
   function Home(){
     const dailyObjs = sortStat(reqDailyObjs);
+    const hiddenDebtId=state.questDebt?.sourceDay===today&&["active","paid"].includes(state.questDebt.status)?state.questDebt.id:null;
     const weeklyObjs = sortStat(objs.filter(o=>o.weekly&&isQuestActiveNow(o,now)));
     const bonusObjs = dailyBonusQuestObjects();
 
@@ -3695,10 +3711,11 @@ function isUncappedProfessionalWeeklyQuest(obj){
       const finalTarget = obj.target && !obj.binary ? obj.target : getEffectiveTarget(obj.id,isW);
       const target = getCompletionTarget(obj,finalTarget);
       const doneVal = isW ? (wLog[obj.id]||0) : (tLog[obj.id]||0);
-      return obj.binary ? doneVal>=1 : doneVal>=target;
+      return hasResolvedQuestDebt(state,today,obj.id) || (obj.binary ? doneVal>=1 : doneVal>=target);
     };
 
     const remainingDaily = dailyObjs.filter(o=>!isDone(o,false));
+    const visibleRemainingDaily=remainingDaily.filter(o=>o.id!==hiddenDebtId);
     const remainingWeekly = weeklyObjs.filter(o=>!isDone(o,true));
     const remainingBonus = bonusObjs.filter(o=>!isDone(o,false));
     const reqRemaining = remainingDaily.length;
@@ -3716,7 +3733,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
     const completedDungeonParts = completedDungeonToday ? dungeonParts(completedDungeonToday.title) : null;
 
     const completedHomeCards = [
-      dailyObjs.length>0 && remainingDaily.length===0
+      dailyObjs.length>0 && allDailyDone
         ? {key:"daily",text:"Toutes les quêtes journalières ont été complétées.",color:"#4ade80"}
         : null,
       allBonusDone
@@ -3746,7 +3763,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
     ].filter(Boolean);
 
     const secs=[
-      {lb:"Quêtes journalières restantes",ob:remainingDaily,iw:false,empty:null},
+      {lb:"Quêtes journalières restantes",ob:visibleRemainingDaily,iw:false,empty:null},
       {lb:"Quêtes hebdomadaires restantes",ob:remainingWeekly,iw:true,empty:null},
       {lb:"Quêtes bonus restantes",ob:remainingBonus,iw:false,empty:null},
     ];
@@ -3919,6 +3936,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
 
   function Quests(){
     const reqBase=sortStat(reqDailyObjs);
+    const hiddenDebtId=state.questDebt?.sourceDay===today&&["active","paid"].includes(state.questDebt.status)?state.questDebt.id:null;
     const bonBase=dailyBonusQuestObjects();
     const wkBase=sortStat(objs.filter(o=>o.weekly&&isQuestActiveNow(o,now)));
 
@@ -3929,14 +3947,14 @@ function isUncappedProfessionalWeeklyQuest(obj){
       const finalTarget = (obj.target && !obj.binary) ? obj.target : t;
       const target = getCompletionTarget(obj,finalTarget);
       const d = isWeekly ? (wLog[obj.id]||0) : (tLog[obj.id]||0);
-      return obj.binary ? d>=1 : d>=target;
+      return hasResolvedQuestDebt(state,today,obj.id) || (obj.binary ? d>=1 : d>=target);
     };
     const moveCompletedLast=(list)=>[
       ...list.filter(o=>!isQuestDone(o)),
       ...list.filter(o=>isQuestDone(o))
     ];
 
-    const req=moveCompletedLast(reqBase);
+    const req=moveCompletedLast(reqBase).filter(o=>o.id!==hiddenDebtId);
     const bon=moveCompletedLast(bonBase);
     const wkq=moveCompletedLast(wkBase);
 

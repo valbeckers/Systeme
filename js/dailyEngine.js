@@ -1,4 +1,5 @@
 import { xpMomentumAdjustment } from "./xpMomentum.js?v=20260817-xp-momentum-v1";
+import { hasResolvedQuestDebt } from "./debtEngine.js?v=20260802-debt-sameday-01";
 
 export const REGRESSION_DEFS = [{
   id:"reg_red",
@@ -49,9 +50,11 @@ export function hasValidatedDailyCompletion(state,day){
   );
 }
 
-export function areRequiredDailyQuestsComplete(state,requiredObjectives,dailyLog,targetFor){
+export function areRequiredDailyQuestsComplete(state,requiredObjectives,dailyLog,targetFor,day){
   if(state?.questDebt&&state.questDebt.status==="active") return false;
-  return (requiredObjectives||[]).every(obj=>(Number((dailyLog||{})[obj.id])||0)>=targetFor(obj));
+  return (requiredObjectives||[]).every(obj=>
+    (Number((dailyLog||{})[obj.id])||0)>=targetFor(obj) || hasResolvedQuestDebt(state,day,obj.id)
+  );
 }
 
 export function areBonusQuestsComplete(bonusObjectives,dailyLog,targetFor){
