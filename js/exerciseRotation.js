@@ -1,4 +1,4 @@
-import { statLevelTier, legRaiseTargetForForceLevel, getStatLevelTarget } from "./progression.js";
+import { statLevelTier, legRaiseTargetForForceLevel, getStatLevelTarget } from "./progression.js?v=20261014-calves-target-v1";
 
 export const EXERCISE_ROTATIONS = {
   push:[

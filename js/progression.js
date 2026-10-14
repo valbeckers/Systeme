@@ -20,7 +20,7 @@ export const RANK_BASES = {
   push:    [30, 44, 58,  72,  86,  100],
   abs:     [60, 88, 116, 144, 172, 200],
   squats:  [15, 22, 29,  36,  43,  50],
-  calves:  [30, 44, 58,  72,  86,  100],
+  calves:  [60, 88, 116, 144, 172, 200],
   reading: [5, 10, 15, 20, 25, 30],
   run:     [4,  5,  6,   7,   8,   10],
   med:     [15, 18, 21,  24,  27,  30],
@@ -38,7 +38,7 @@ export const STAT_LEVEL_BASES = {
   push:   {stat:"Force",     base:30, step:6,  cap:100},
   abs:    {stat:"Force",     base:60, step:12, cap:200},
   squats: {stat:"Force",     base:15, step:3,  cap:50},
-  calves: {stat:"Force",     base:30, step:6,  cap:100},
+  calves: {stat:"Force",     base:60, step:12, cap:200},
   reading:{stat:"Esprit",    base:10, step:2,  cap:30},
 };
 export const STAT_LEVEL_TABLES = {

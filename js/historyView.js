@@ -2,13 +2,13 @@ import { REGRESSION_DEF, hasValidatedDailyCompletion } from "./dailyEngine.js";
 import { isInjuredQuest } from "./injuryEngine.js?v=20261003-injury-v1";
 import { hasResolvedQuestDebt, inferLegacyResolvedDebtQuestId } from "./debtEngine.js?v=20260817-debt-history-v3";
 import { wkStr } from "./dayCycle.js";
-import { getRankBase, sortStat } from "./progression.js";
+import { getRankBase, sortStat } from "./progression.js?v=20261014-calves-target-v1";
 import {
   LEGACY_EXERCISE_DEFAULTS,
   isExerciseFamilyQuestId,
   exerciseFamilyLabel,
   rotatedQuestObjects
-} from "./exerciseRotation.js?v=20261012-back-daily-v1";
+} from "./exerciseRotation.js?v=20261014-calves-target-v1";
 import { RECORD_EXERCISE_DEFS, recordExerciseValueForDay } from "./records.js?v=20261012-pullup-records-v1";
 import { UiIcon } from "./uiIcons.js?v=20261012-pullup-records-v1";
 

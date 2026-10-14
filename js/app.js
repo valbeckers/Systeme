@@ -66,7 +66,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260811-linear-xp-v1";
 import { StatsTab } from "./statsView.js?v=20260919-kiviat-labels-v2";
-import { HistoryTab } from "./historyView.js?v=20261012-pullup-records-v1";
+import { HistoryTab } from "./historyView.js?v=20261014-calves-target-v1";
 import { INJURY_ZONES, injuryForDay, isInjuredQuest, injuryDaysRemaining } from "./injuryEngine.js?v=20261003-injury-v1";
 import {
   RANK_BASES,
@@ -79,7 +79,7 @@ import {
   getAscensionXpRequired,
   getRankBase,
   sortStat
-} from "./progression.js?v=20260807-marche-complete";
+} from "./progression.js?v=20261014-calves-target-v1";
 import {
   REGRESSION_ORB_ICON_DATA,
   DUNGEON_KEY_ICON_DATA,
@@ -102,7 +102,7 @@ import {
   cleanExerciseRotationEnabled,
   ensureExerciseRotationForDay,
   rotatedQuestObjects
-} from "./exerciseRotation.js?v=20261014-rotation-settings-v1";
+} from "./exerciseRotation.js?v=20261014-calves-target-v1";
 import {
   questRecordUnit,
   recordRotationIdForDay,
