@@ -663,6 +663,7 @@ function App(){
   const [rotationSettingsOpen,setRotationSettingsOpen] = useState(false);
   const [goalSettingsOpen,setGoalSettingsOpen] = useState(false);
   const [goalSettingsError,setGoalSettingsError] = useState("");
+  const [selectedGoalId,setSelectedGoalId] = useState(null);
   const [monthOff,setMonthOff] = useState(0);
   const [selectedHistoryDay,setSelectedHistoryDay] = useState(null);
   const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,reg:false,sq:false,breach:false,debt:false,dj:false,djAlt:false,cs:false});
@@ -4797,11 +4798,12 @@ function isUncappedProfessionalWeeklyQuest(obj){
         setGoalSettingsError("Saisis un objectif positif et 1 à 3 boutons positifs séparés par des espaces.");
         return;
       }
-      settingsScrollTopRef.current=targetEl.closest(".modal")?.scrollTop||0;
       setGoalSettingsError("");
       setState(s=>({...s,questTuning:saveQuestTuning(s.questTuning,id,nextDay,target,buttons)}));
+      setSelectedGoalId(null);
     }
     const rotationEnabled=cleanExerciseRotationEnabled(state.exerciseRotationEnabled);
+    const selectedGoal=goalRows.flatMap(group=>group.items).find(row=>row.id===selectedGoalId);
     const rotationLabels={push:"Pecs & Triceps",back:"Dos & Biceps",abs:"Abdos",legs:"Jambes"};
     const rotationIcons={push:"push",back:"negative_pullups",abs:"abs",legs:"squats"};
     function toggleRotationChoice(family,id){
@@ -4864,32 +4866,15 @@ function isUncappedProfessionalWeeklyQuest(obj){
             h("span",{style:"color:var(--td);font-size:12px"},goalSettingsOpen?"▲":"▼")
           ),
           goalSettingsOpen&&h("div",null,
-            h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin:9px 0 14px"},"Choisis un objectif fixe et jusqu’à 3 boutons de saisie pour chaque variante. Une case vide conserve le calcul automatique ou les boutons d’origine. Effet dès demain ; l’historique reste inchangé."),
-            goalSettingsError&&h("div",{style:"color:#ef4444;font-size:12px;margin-bottom:10px"},goalSettingsError),
-            goalRows.map(group=>h("div",{key:group.label,style:"margin-bottom:15px"},
+            h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin:9px 0 14px"},"Choisis une quête pour régler son objectif et ses boutons de saisie."),
+            goalRows.map(group=>h("div",{key:group.label,style:"margin-bottom:14px"},
               h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--rc);margin-bottom:7px"},group.label),
               group.items.map(({id,label,obj})=>{
                 if(!obj)return null;
-                const current=applyQuestTuning(obj,state.questTuning,today);
-                const automatic=Number(obj.target)||getRankBase(obj.id,ri,prestige,state.stats);
-                const currentTarget=Number(current.target)||automatic;
                 const pending=nextQuestTuning(state.questTuning,id,nextDay);
-                const active=questTuningForDay(state.questTuning,id,today);
-                const selected=pending||active;
-                return h("div",{key:id,style:"padding:10px;margin-bottom:8px;border-radius:8px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.025)"},
-                  h("div",{style:"display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:12px;margin-bottom:8px"},
-                    h("span",null,label),
-                    h("span",{style:"color:var(--td);white-space:nowrap"},"Actuel : "+fmtNum(currentTarget)+" "+current.unit)
-                  ),
-                  h("div",{style:"display:flex;gap:7px;align-items:center"},
-                    h("input",{key:id+"_target_"+JSON.stringify(selected),id:"goal_target_"+id,class:"min",type:"text",inputMode:"decimal",placeholder:"Auto ("+fmtNum(automatic)+")",defaultValue:selected?.target??"",style:"min-width:0;width:44%;margin:0;padding:8px;text-align:center"}),
-                    h("input",{key:id+"_buttons_"+JSON.stringify(selected),id:"goal_buttons_"+id,class:"min",type:"text",inputMode:"decimal",placeholder:defaultButtons(obj).join(" / "),defaultValue:selected?.buttons?.join(" ")||"",style:"min-width:0;width:34%;margin:0;padding:8px;text-align:center"}),
-                    h("button",{type:"button",class:"mbtn mprim",onClick:()=>saveGoalRow(id),style:"padding:8px 9px;font-size:10px;flex:1"},"OK")
-                  ),
-                  h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:5px;font-size:10px;color:var(--td)"},
-                    h("span",null,pending?"Prévu demain : "+(pending.target??"Auto")+" "+obj.unit:"Objectif · Boutons (ex. 1 5 10)"),
-                    h("button",{type:"button",onClick:()=>saveGoalRow(id,true),style:"border:0;background:transparent;color:var(--rc);font-size:10px;cursor:pointer;padding:3px"},"Rétablir auto")
-                  )
+                return h("button",{key:id,type:"button",onClick:()=>{setGoalSettingsError("");setSelectedGoalId(id);},style:"display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:10px 11px;margin-bottom:5px;border-radius:8px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.025);color:var(--tx);font-size:12px;text-align:left;cursor:pointer"},
+                  h("span",null,label),
+                  h("span",{style:"color:var(--td);font-size:11px;white-space:nowrap"},pending?"Prévu demain ›":"›")
                 );
               })
             ))
@@ -4941,7 +4926,41 @@ function isUncappedProfessionalWeeklyQuest(obj){
           h("button",{class:"mbtn",style:"width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.2);color:var(--tx)",onClick:()=>window.location.reload(true)},"Actualiser l'app")
         ),
 
-      )
+      ),
+      selectedGoal&&(()=>{
+        const {id,label,obj}=selectedGoal;
+        const current=applyQuestTuning(obj,state.questTuning,today);
+        const automatic=Number(obj.target)||getRankBase(obj.id,ri,prestige,state.stats);
+        const currentTarget=Number(current.target)||automatic;
+        const pending=nextQuestTuning(state.questTuning,id,nextDay);
+        const active=questTuningForDay(state.questTuning,id,today);
+        const selected=pending||active;
+        return h("div",{class:"modal-ov",style:"z-index:501",onClick:e=>{e.stopPropagation();if(e.target===e.currentTarget)setSelectedGoalId(null);}},
+          h("div",{class:"modal",style:"max-width:390px"},
+            h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px"},
+              h("div",{class:"mtitle",style:"margin:0;font-size:18px"},label),
+              h("button",{type:"button",onClick:()=>setSelectedGoalId(null),style:"border:0;background:transparent;color:#fff;font-size:22px;cursor:pointer"},"×")
+            ),
+            h("div",{style:"font-size:12px;color:var(--td);margin-bottom:12px"},"Actuel : "+fmtNum(currentTarget)+" "+current.unit),
+            h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin-bottom:15px"},"Auto ("+fmtNum(automatic)+") correspond au calcul d’origine. Laisse une case vide pour conserver son réglage automatique. Les changements prennent effet demain."),
+            goalSettingsError&&h("div",{style:"color:#ef4444;font-size:12px;margin-bottom:10px"},goalSettingsError),
+            h("div",{style:"display:flex;gap:10px;align-items:flex-start;margin-bottom:12px"},
+              h("div",{style:"min-width:0;flex:1"},
+                h("input",{key:id+"_target_"+JSON.stringify(selected),id:"goal_target_"+id,class:"min",type:"text",inputMode:"decimal",placeholder:"Auto ("+fmtNum(automatic)+")",defaultValue:selected?.target??"",style:"width:100%;box-sizing:border-box;margin:0;padding:8px;text-align:center"}),
+                h("label",{htmlFor:"goal_target_"+id,style:"display:block;font-size:11px;color:var(--td);margin-top:6px;text-align:center"},"Objectif")
+              ),
+              h("div",{style:"min-width:0;flex:1"},
+                h("input",{key:id+"_buttons_"+JSON.stringify(selected),id:"goal_buttons_"+id,class:"min",type:"text",inputMode:"decimal",placeholder:defaultButtons(obj).join(" / "),defaultValue:selected?.buttons?.join(" ")||"",style:"width:100%;box-sizing:border-box;margin:0;padding:8px;text-align:center"}),
+                h("label",{htmlFor:"goal_buttons_"+id,style:"display:block;font-size:11px;color:var(--td);margin-top:6px;text-align:center"},"Boutons de saisie")
+              )
+            ),
+            h("div",{style:"font-size:10px;color:var(--td);margin-bottom:13px"},"Boutons : indique 1 à 3 nombres séparés par des espaces (ex. 1 5 10)."),
+            pending&&h("div",{style:"font-size:11px;color:var(--rc);margin-bottom:13px"},"Prévu demain : "+(pending.target??"Auto")+" "+obj.unit),
+            h("button",{type:"button",class:"mbtn mprim",onClick:()=>saveGoalRow(id),style:"width:100%;margin-bottom:9px"},"Enregistrer"),
+            h("button",{type:"button",class:"mbtn",onClick:()=>saveGoalRow(id,true),style:"width:100%;background:rgba(255,255,255,.03);color:var(--rc);border:1px solid var(--rc)"},"Rétablir auto")
+          )
+        );
+      })()
     );
   }
 
