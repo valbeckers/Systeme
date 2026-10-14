@@ -1,4 +1,5 @@
 import { SP } from "./questDefs.js?v=20260818-urgent-dungeon-v1";
+import { applyQuestTuning } from "./questTuning.js?v=20261014-all-quest-settings-v1";
 
 // ─── MOTEUR DE TIRAGE DES QUÊTES URGENTES ───────────────────────────────────
 // Sélection pure de la prochaine quête urgente : cycle des six statistiques,
@@ -45,7 +46,8 @@ export function appendUrgentQuestDrawLog(log,quest,drawnAt=Date.now()){
   return [...current,entry].slice(-120);
 }
 
-export function pickRandomSq(usedIds,statCycle,selectionLog,forcedStat=null,injuryZoneId=null){
+export function pickRandomSq(usedIds,statCycle,selectionLog,forcedStat=null,injuryZoneId=null,tuning=null,day=null){
+  const configured=chosen=>({...chosen,tpl:day?applyQuestTuning(chosen.tpl,tuning,day):chosen.tpl});
   const stats=URGENT_QUEST_STATS;
   const cycle = [...new Set((statCycle||[]).filter(s=>stats.includes(s)))];
   const remaining = stats.filter(s=>!cycle.includes(s));
@@ -73,7 +75,7 @@ export function pickRandomSq(usedIds,statCycle,selectionLog,forcedStat=null,inju
     if(!avail.length) avail=availableForStat(forcedStat,false);
     if(avail.length){
       const chosen=avail[Math.floor(Math.random()*avail.length)];
-      return {tpl:{...chosen,stat:chosen.stat||forcedStat},pickedStat:forcedStat,cycleReset:false,forced:true};
+      return configured({tpl:{...chosen,stat:chosen.stat||forcedStat},pickedStat:forcedStat,cycleReset:false,forced:true});
     }
     // Si la blessure bloque la statistique orientée, tirer ailleurs et
     // conserver la Boussole pour le prochain tirage où elle sera applicable.
@@ -96,7 +98,7 @@ export function pickRandomSq(usedIds,statCycle,selectionLog,forcedStat=null,inju
         const a=availableForStat(s,respect);
         if(a.length>0){
           const chosen=a[Math.floor(Math.random()*a.length)];
-          return {tpl:{stat:s,...chosen}, pickedStat:s, cycleReset, forced:false};
+          return configured({tpl:{stat:s,...chosen}, pickedStat:s, cycleReset, forced:false});
         }
       }
     }
@@ -106,5 +108,5 @@ export function pickRandomSq(usedIds,statCycle,selectionLog,forcedStat=null,inju
   const stat = usable[Math.floor(Math.random()*usable.length)];
   const avail = availableForStat(stat,respectCooldown);
   const chosen = avail[Math.floor(Math.random()*avail.length)];
-  return {tpl:{...chosen,stat:chosen.stat||stat}, pickedStat:stat, cycleReset, forced:false};
+  return configured({tpl:{...chosen,stat:chosen.stat||stat}, pickedStat:stat, cycleReset, forced:false});
 }

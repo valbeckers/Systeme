@@ -1,11 +1,18 @@
 import { EXERCISE_ROTATIONS } from "./exerciseRotation.js?v=20261014-calves-target-v1";
+import { DEFS, SP } from "./questDefs.js?v=20261012-back-daily-v1";
+import { BONUS_QUESTS } from "./bonusQuestDefs.js?v=20261012-back-daily-v1";
 
-const DAILY_IDS=new Set(["water","sleep","reading",...Object.values(EXERCISE_ROTATIONS).flat().map(x=>x.id)]);
+const TUNABLE_IDS=new Set([
+  ...DEFS.filter(q=>q.daily&&!q.optional||q.weekly).map(q=>q.id),
+  ...BONUS_QUESTS.map(q=>q.id),
+  ...Object.values(EXERCISE_ROTATIONS).flat().map(x=>x.id),
+  ...Object.values(SP).flat().map(q=>q.id)
+]);
 
 export function cleanQuestTuning(raw){
   const result={};
   for(const [id,revisions] of Object.entries(raw||{})){
-    if(!DAILY_IDS.has(id)||!Array.isArray(revisions))continue;
+    if(!TUNABLE_IDS.has(id)||!Array.isArray(revisions))continue;
     const valid=revisions.filter(r=>/^\d{4}-\d{2}-\d{2}$/.test(r?.from||""))
       .map(r=>({
         from:r.from,
@@ -28,7 +35,7 @@ export function nextQuestTuning(tuning,id,day){
 }
 
 export function saveQuestTuning(tuning,id,from,target,buttons){
-  if(!DAILY_IDS.has(id))return tuning;
+  if(!TUNABLE_IDS.has(id))return tuning;
   const clean=cleanQuestTuning(tuning);
   return {...clean,[id]:[...(clean[id]||[]).filter(r=>r.from!==from),{from,target,buttons}].sort((a,b)=>a.from.localeCompare(b.from))};
 }
@@ -38,7 +45,7 @@ export function applyQuestTuning(obj,tuning,day){
   if(!revision)return obj;
   return {
     ...obj,
-    ...(revision.target!=null?{target:revision.target,validateAt:revision.target}:{ }),
+    ...(revision.target!=null?{target:revision.target,validateAt:revision.target,customTarget:true,finalTargetCap:undefined}:{ }),
     ...(revision.buttons?{quickAmounts:revision.buttons}:{ })
   };
 }

@@ -1,7 +1,7 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
 import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20261012-back-daily-v1";
 import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261012-back-daily-v1";
-import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20261004-injury-v1";
+import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20261014-all-quest-settings-v1";
 import {
   isDebtEligibleQuest,
   createQuestDebtState,
@@ -67,7 +67,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260811-linear-xp-v1";
 import { StatsTab } from "./statsView.js?v=20260919-kiviat-labels-v2";
-import { HistoryTab } from "./historyView.js?v=20261014-goal-settings-v1";
+import { HistoryTab } from "./historyView.js?v=20261014-all-quest-settings-v2";
 import { INJURY_ZONES, injuryForDay, isInjuredQuest, injuryDaysRemaining } from "./injuryEngine.js?v=20261003-injury-v1";
 import {
   RANK_BASES,
@@ -93,8 +93,8 @@ import {
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
 import { UiIcon } from "./uiIcons.js?v=20261012-pullup-records-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261014-goal-settings-v1";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261014-goal-settings-v1";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261014-all-quest-settings-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261014-all-quest-settings-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -104,7 +104,7 @@ import {
   ensureExerciseRotationForDay,
   rotatedQuestObjects
 } from "./exerciseRotation.js?v=20261014-calves-target-v1";
-import { applyQuestTuning, nextQuestTuning, questTuningForDay, saveQuestTuning } from "./questTuning.js?v=20261014-goal-settings-v1";
+import { applyQuestTuning, nextQuestTuning, questTuningForDay, saveQuestTuning } from "./questTuning.js?v=20261014-all-quest-settings-v1";
 import {
   questRecordUnit,
   recordRotationIdForDay,
@@ -522,7 +522,8 @@ function buildWeeklySummary(state,tracking){
       bestStreak=Math.max(bestStreak,currentStreak);
     }else currentStreak=0;
   });
-  const professional=DEFS.filter(obj=>obj.weekly&&obj.workweekOnly).map(obj=>{
+  const professional=DEFS.filter(obj=>obj.weekly&&obj.workweekOnly).map(baseObj=>{
+    const obj=applyQuestTuning(baseObj,state.questTuning,days[6]);
     const value=Number(state.weeklyLog&&state.weeklyLog[weekKey]&&state.weeklyLog[weekKey][obj.id])||0;
     const target=Number(obj.target||obj.base)||0;
     const done=target>0&&value>=target;
@@ -593,7 +594,7 @@ function App(){
     const cooldownOk=now>=sqCdUntil;
     const staleCooldownWithoutQuest=!hasActive&&!hasCompletedThisWindow&&sqCdUntil>now;
     if(base.sqFailureDay!==eventDayStr(now)&&base.breachTriggeredDay!==eventDayStr(now)&&!hasActive&&!hasCompletedThisWindow&&(cooldownOk||staleCooldownWithoutQuest)){
-      const result=pickRandomSq(sqs.filter(q=>!q.completedAt).map(q=>q.id),base.sqStatCycle,base.sqDrawLog,base.urgentCompassStat,injuryForDay(base,todayStr(now))?.zoneId);
+      const result=pickRandomSq(sqs.filter(q=>!q.completedAt).map(q=>q.id),base.sqStatCycle,base.sqDrawLog,base.urgentCompassStat,injuryForDay(base,todayStr(now))?.zoneId,base.questTuning,todayStr(now));
       if(result){
         const {tpl,pickedStat,cycleReset,forced}=result;
         const sq={...tpl,sqid:"sq_"+now,progress:0,startedAt:now,expiresAt:next7AM(now),completedAt:null};
@@ -661,7 +662,7 @@ function App(){
   const [selectedDungeonRoom,setSelectedDungeonRoom] = useState(null);
   const [historyOpen,setHistoryOpen] = useState({week:false,monthly:true,records:false});
   const [rotationSettingsOpen,setRotationSettingsOpen] = useState(false);
-  const [goalSettingsOpen,setGoalSettingsOpen] = useState(false);
+  const [goalSettingsOpen,setGoalSettingsOpen] = useState({daily:false,bonus:false,weekly:false,urgent:false});
   const [goalSettingsError,setGoalSettingsError] = useState("");
   const [selectedGoalId,setSelectedGoalId] = useState(null);
   const [monthOff,setMonthOff] = useState(0);
@@ -829,7 +830,7 @@ function App(){
   const wLog  = state.weeklyLog[wk]||{};
   const prestige = state.prestige||0;
 
-  const weeklyQuestRewardObjectives=DEFS.filter(obj=>obj.weekly);
+  const weeklyQuestRewardObjectives=objs.filter(obj=>obj.weekly);
   const allWeeklyQuestRewardObjectivesDone=weeklyQuestRewardObjectives.length>0&&weeklyQuestRewardObjectives.every(obj=>{
     const target=Number(obj.target||obj.base||0);
     return target>0&&(Number(wLog[obj.id])||0)>=target;
@@ -862,7 +863,7 @@ function App(){
 
   function dailyBonusQuestObjects(){
     const ids=(state.selectedBonusQuestIdsByDay&&state.selectedBonusQuestIdsByDay[today])||[];
-    return sortStat(ids.map(id=>BONUS_QUEST_BY_ID[id]).filter(Boolean));
+    return sortStat(ids.map(id=>BONUS_QUEST_BY_ID[id]&&applyQuestTuning(BONUS_QUEST_BY_ID[id],state.questTuning,today)).filter(Boolean));
   }
 
   function toggleBonusQuest(id){
@@ -1123,9 +1124,12 @@ function App(){
   };
 
   function getEffectiveTarget(objId, isWeekly=false){
-    const obj = BONUS_QUEST_BY_ID[objId]||objs.find(o=>o.id===objId);
+    const obj = BONUS_QUEST_BY_ID[objId]
+      ?applyQuestTuning(BONUS_QUEST_BY_ID[objId],state.questTuning,today)
+      :objs.find(o=>o.id===objId);
     let target;
-    if(obj && obj.dynamicTargetKey) target=getStatLevelTarget(obj.dynamicTargetKey,state.stats);
+    if(obj?.customTarget) target=Number(obj.target);
+    else if(obj && obj.dynamicTargetKey) target=getStatLevelTarget(obj.dynamicTargetKey,state.stats);
     else if(obj && obj.validateAt != null) target=Number(obj.validateAt);
     else if(obj && Number.isFinite(Number(obj.target))) target=Number(obj.target);
     else target=getRankBase(objId, ri, prestige, state.stats);
@@ -1248,7 +1252,8 @@ function App(){
         s.sqStatCycle,
         s.sqDrawLog,
         s.urgentCompassStat,
-        injuryForDay(s,todayStr(t))?.zoneId
+        injuryForDay(s,todayStr(t))?.zoneId,
+        s.questTuning,todayStr(t)
       );
       if(!result) return s;
       const {tpl,pickedStat,cycleReset,forced}=result;
@@ -1677,7 +1682,7 @@ function App(){
       const hasActive = sqsNow.find(q=>!q.completedAt&&Date.now()<q.expiresAt);
       const cd = s.sqCooldownUntil||0;
       if(hasActive || Date.now()<cd || s.sqFailureDay===eventDayStr()) return s;
-      const result=pickRandomSq(sqsNow.filter(q=>!q.completedAt).map(q=>q.id),s.sqStatCycle,s.sqDrawLog,s.urgentCompassStat,injuryForDay(s,todayStr())?.zoneId);
+      const result=pickRandomSq(sqsNow.filter(q=>!q.completedAt).map(q=>q.id),s.sqStatCycle,s.sqDrawLog,s.urgentCompassStat,injuryForDay(s,todayStr())?.zoneId,s.questTuning,todayStr());
       if(!result)return s;
       const {tpl,pickedStat,cycleReset,forced}=result;
       const t = Date.now();
@@ -2052,7 +2057,7 @@ function App(){
       const completedToday=list.filter(q=>q.completedAt&&eventDayStr(q.completedAt)===day).sort((a,b)=>(b.completedAt||0)-(a.completedAt||0));
       if(hasActive || !completedToday.length) return s;
       const lastCompleted=completedToday[0];
-      const result=pickRandomSq([lastCompleted.id],s.sqStatCycle,s.sqDrawLog,null,injuryForDay(s,day)?.zoneId);
+      const result=pickRandomSq([lastCompleted.id],s.sqStatCycle,s.sqDrawLog,null,injuryForDay(s,day)?.zoneId,s.questTuning,day);
       if(!result) return s;
       const {tpl,pickedStat,cycleReset}=result;
       const sq={...tpl,sqid:"sq_token_"+t,progress:0,startedAt:t,expiresAt:next7AM(t),completedAt:null,summonedByToken:true};
@@ -2085,7 +2090,7 @@ function App(){
       );
 
       const usedIds=[active.id].filter(Boolean);
-      const result=pickRandomSq(usedIds,cycleBase,drawLogBeforeRewrite,null,injuryForDay(s,todayStr(t))?.zoneId);
+      const result=pickRandomSq(usedIds,cycleBase,drawLogBeforeRewrite,null,injuryForDay(s,todayStr(t))?.zoneId,s.questTuning,todayStr(t));
       if(!result) return s;
 
       const {tpl,pickedStat,cycleReset}=result;
@@ -2127,7 +2132,7 @@ function App(){
   function launchNewSq(){
     setState(s=>{
       if(s.sqFailureDay===eventDayStr())return s;
-      const result=pickRandomSq((s.specialQuests||[]).filter(q=>!q.completedAt).map(q=>q.id),s.sqStatCycle,s.sqDrawLog,s.urgentCompassStat,injuryForDay(s,todayStr())?.zoneId);
+      const result=pickRandomSq((s.specialQuests||[]).filter(q=>!q.completedAt).map(q=>q.id),s.sqStatCycle,s.sqDrawLog,s.urgentCompassStat,injuryForDay(s,todayStr())?.zoneId,s.questTuning,todayStr());
       if(!result)return s;
       const {tpl,pickedStat,cycleReset,forced}=result;
       const t=Date.now();
@@ -2652,14 +2657,10 @@ function isUncappedProfessionalWeeklyQuest(obj){
           const unitSing = obj.unit;
           const unitPlur = ({contact:"contacts",action:"actions"}[obj.unit]||obj.unit);
           return h("div",{style:"display:flex;gap:8px;margin-top:8px"},
-            h("button",{
-              onClick:e=>{inputs.current[obj.id]="1";validate(obj,e);},
-              style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px;transition:all .2s"
-            },"+1 "+unitSing),
-            isLhh&&h("button",{
-              onClick:e=>{inputs.current[obj.id]="10";validate(obj,e);},
-              style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px;transition:all .2s"
-            },"+10 "+unitPlur)
+            (obj.quickAmounts||(isLhh?[1,10]:[1])).map(n=>h("button",{
+              key:n,onClick:e=>{inputs.current[obj.id]=String(n);validate(obj,e);},
+              style:"flex:1;padding:10px 4px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:.7px;white-space:nowrap"
+            },"+"+n+" "+(n===1?unitSing:unitPlur)))
           );
         }
         const BONUS_QUICK_AMOUNTS={
@@ -2680,7 +2681,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
           bonus_dead_hang:[1,5],
           bonus_wall_sit:[1,5]
         };
-        const bonusQuickAmounts=BONUS_QUICK_AMOUNTS[obj.id];
+        const bonusQuickAmounts=obj.quickAmounts||BONUS_QUICK_AMOUNTS[obj.id];
         if(bonusQuickAmounts){
           const quickUnit=amount=>({rep:"reps",action:"actions"}[obj.unit]&&amount>1?{rep:"reps",action:"actions"}[obj.unit]:obj.unit);
           return h("div",{style:"display:flex;gap:8px;margin-top:8px"},
@@ -2886,7 +2887,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
     const done=sq.progress>=sq.target;
     const numericTarget=Math.max(1,Number(sq.target)||1);
     const incrementalUrgent = !sq.binary || numericTarget>1;
-    const urgentSteps=[1,5,10].filter(v=>v<=numericTarget);
+    const urgentSteps=(sq.quickAmounts||[1,5,10]).filter(v=>v<=numericTarget);
     const urgentUnitLabel=(unit,amount)=>{
       const u=String(unit||"");
       if(amount===1)return u;
@@ -4773,7 +4774,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
     if(!showSet)return null;
     const ordered=[...sortStat(reqDailyObjs),...sortStat(objs.filter(o=>o.weekly))];
     const nextDay=addDaysStr(today,1);
-    const goalRows=[
+    const dailyGoalRows=[
       {label:"Santé & Esprit",items:["water","sleep","reading"].map(id=>({id,label:DEFS.find(q=>q.id===id)?.name||id,obj:DEFS.find(q=>q.id===id)}))},
       ...Object.entries(EXERCISE_ROTATIONS).map(([family,options])=>({
         label:{push:"Pecs & Triceps",back:"Dos & Biceps",abs:"Abdos",legs:"Jambes"}[family],
@@ -4783,15 +4784,29 @@ function isUncappedProfessionalWeeklyQuest(obj){
         }))
       }))
     ];
-    const defaultButtons=obj=>obj.id==="water"?[1]:obj.id==="sleep"?[1,8]:obj.exerciseId==="plank"?[1]:[1,10];
+    const goalSections=[
+      {id:"daily",title:"Quêtes journalières",groups:dailyGoalRows},
+      {id:"bonus",title:"Quêtes bonus",groups:STATS.map(stat=>({label:STAT_LBL[stat]||stat,items:BONUS_QUESTS.filter(q=>q.category===stat).map(q=>({id:q.id,label:q.name,obj:q}))})).filter(g=>g.items.length)},
+      {id:"weekly",title:"Quêtes hebdomadaires",groups:[{label:"Professionnel",items:DEFS.filter(q=>q.weekly).map(q=>({id:q.id,label:q.name,obj:q}))}]},
+      {id:"urgent",title:"Quêtes urgentes",groups:STATS.map(stat=>({label:STAT_LBL[stat]||stat,items:(SP[stat]||[]).map(q=>({id:q.id,label:q.name,obj:q}))})).filter(g=>g.items.length)}
+    ];
+    const defaultButtons=obj=>obj.binary&&Number(obj.target||obj.base)===1?[]
+      :obj.id==="water"?[1]:obj.id==="sleep"?[1,8]:obj.exerciseId==="plank"?[1]
+      :obj.id==="weekly_pro_meetings"||obj.id==="weekly_pro_anticipation"?[1]
+      :obj.id==="weekly_pro_actions"?[1,10]
+      :obj.id.startsWith("sp_")?[1,5,10]
+      :[1,10];
     function saveGoalRow(id,reset=false){
       const targetEl=document.getElementById("goal_target_"+id);
       const buttonsEl=document.getElementById("goal_buttons_"+id);
       if(!targetEl||!buttonsEl)return;
       const rawTarget=targetEl.value.trim().replace(",",".");
-      const target=reset||!rawTarget?null:Number(rawTarget);
+      const selected=goalSections.flatMap(section=>section.groups.flatMap(group=>group.items)).find(row=>row.id===id);
+      const lockedTarget=selected?.obj?.tiers?.length>0||selected?.obj?.binary&&Number(selected.obj.target||selected.obj.base)===1;
+      const target=reset||lockedTarget||!rawTarget?null:Number(rawTarget);
       const rawButtons=reset?"":buttonsEl.value.trim();
-      const buttons=rawButtons?rawButtons.split(/[,;\s]+/).filter(Boolean).map(n=>Number(n.replace(",","."))):null;
+      const buttons=selected?.obj?.binary&&Number(selected.obj.target||selected.obj.base)===1?null
+        :rawButtons?rawButtons.split(/[,;\s]+/).filter(Boolean).map(n=>Number(n.replace(",","."))):null;
       if(target!==null&&(!Number.isFinite(target)||target<=0)||buttons&&(
         buttons.length<1||buttons.length>3||buttons.some(n=>!Number.isFinite(n)||n<=0)
       )){
@@ -4803,7 +4818,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
       setSelectedGoalId(null);
     }
     const rotationEnabled=cleanExerciseRotationEnabled(state.exerciseRotationEnabled);
-    const selectedGoal=goalRows.flatMap(group=>group.items).find(row=>row.id===selectedGoalId);
+    const selectedGoal=goalSections.flatMap(section=>section.groups.flatMap(group=>group.items)).find(row=>row.id===selectedGoalId);
     const rotationLabels={push:"Pecs & Triceps",back:"Dos & Biceps",abs:"Abdos",legs:"Jambes"};
     const rotationIcons={push:"push",back:"negative_pullups",abs:"abs",legs:"squats"};
     function toggleRotationChoice(family,id){
@@ -4860,27 +4875,29 @@ function isUncappedProfessionalWeeklyQuest(obj){
           h("button",{class:"mbtn mprim",style:"width:100%;margin-top:8px",onClick:applyEdit},"Appliquer")
         ),
         h("div",{class:"divider"}),
-        h("div",{class:"msec"},
-          h("button",{type:"button",onClick:()=>setGoalSettingsOpen(v=>!v),style:"display:flex;justify-content:space-between;align-items:center;width:100%;padding:4px 0;background:transparent;border:0;color:var(--tx);cursor:pointer;text-align:left"},
-            h("span",{class:"mlbl",style:"margin:0"},"Objectifs des quêtes journalières"),
-            h("span",{style:"color:var(--td);font-size:12px"},goalSettingsOpen?"▲":"▼")
+        goalSections.map(section=>h(Fragment,{key:section.id},
+          h("div",{class:"msec"},
+            h("button",{type:"button",onClick:()=>setGoalSettingsOpen(v=>({...v,[section.id]:!v[section.id]})),style:"display:flex;justify-content:space-between;align-items:center;width:100%;padding:4px 0;background:transparent;border:0;color:var(--tx);cursor:pointer;text-align:left"},
+              h("span",{class:"mlbl",style:"margin:0"},section.title),
+              h("span",{style:"color:var(--td);font-size:12px"},goalSettingsOpen[section.id]?"▲":"▼")
+            ),
+            goalSettingsOpen[section.id]&&h("div",null,
+              h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin:9px 0 14px"},"Choisis une quête pour régler son objectif et ses boutons de saisie."),
+              section.groups.map(group=>h("div",{key:group.label,style:"margin-bottom:14px"},
+                h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--rc);margin-bottom:7px"},group.label),
+                group.items.map(({id,label,obj})=>{
+                  if(!obj)return null;
+                  const pending=nextQuestTuning(state.questTuning,id,nextDay);
+                  return h("button",{key:id,type:"button",onClick:()=>{setGoalSettingsError("");setSelectedGoalId(id);},style:"display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:10px 11px;margin-bottom:5px;border-radius:8px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.025);color:var(--tx);font-size:12px;text-align:left;cursor:pointer"},
+                    h("span",null,label),
+                    h("span",{style:"color:var(--td);font-size:11px;white-space:nowrap"},pending?"Prévu demain ›":"›")
+                  );
+                })
+              ))
+            )
           ),
-          goalSettingsOpen&&h("div",null,
-            h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin:9px 0 14px"},"Choisis une quête pour régler son objectif et ses boutons de saisie."),
-            goalRows.map(group=>h("div",{key:group.label,style:"margin-bottom:14px"},
-              h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--rc);margin-bottom:7px"},group.label),
-              group.items.map(({id,label,obj})=>{
-                if(!obj)return null;
-                const pending=nextQuestTuning(state.questTuning,id,nextDay);
-                return h("button",{key:id,type:"button",onClick:()=>{setGoalSettingsError("");setSelectedGoalId(id);},style:"display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:10px 11px;margin-bottom:5px;border-radius:8px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.025);color:var(--tx);font-size:12px;text-align:left;cursor:pointer"},
-                  h("span",null,label),
-                  h("span",{style:"color:var(--td);font-size:11px;white-space:nowrap"},pending?"Prévu demain ›":"›")
-                );
-              })
-            ))
-          )
-        ),
-        h("div",{class:"divider"}),
+          h("div",{class:"divider"})
+        )),
         h("div",{class:"msec"},
           h("button",{type:"button",onClick:()=>setRotationSettingsOpen(v=>!v),style:"display:flex;justify-content:space-between;align-items:center;width:100%;padding:4px 0;background:transparent;border:0;color:var(--tx);cursor:pointer;text-align:left"},
             h("span",{class:"mlbl",style:"margin:0"},"Tirage des quêtes musculaires"),
@@ -4929,6 +4946,8 @@ function isUncappedProfessionalWeeklyQuest(obj){
       ),
       selectedGoal&&(()=>{
         const {id,label,obj}=selectedGoal;
+        const lockedTarget=!!(obj.tiers?.length||obj.binary&&Number(obj.target||obj.base)===1);
+        const lockedButtons=!!(obj.binary&&Number(obj.target||obj.base)===1);
         const current=applyQuestTuning(obj,state.questTuning,today);
         const automatic=Number(obj.target)||getRankBase(obj.id,ri,prestige,state.stats);
         const currentTarget=Number(current.target)||automatic;
@@ -4942,22 +4961,22 @@ function isUncappedProfessionalWeeklyQuest(obj){
               h("button",{type:"button",onClick:()=>setSelectedGoalId(null),style:"border:0;background:transparent;color:#fff;font-size:22px;cursor:pointer"},"×")
             ),
             h("div",{style:"font-size:12px;color:var(--td);margin-bottom:12px"},"Actuel : "+fmtNum(currentTarget)+" "+current.unit),
-            h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin-bottom:15px"},"Auto ("+fmtNum(automatic)+") correspond au calcul d’origine. Laisse une case vide pour conserver son réglage automatique. Les changements prennent effet demain."),
+            h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin-bottom:15px"},"Auto ("+fmtNum(automatic)+") correspond au calcul d’origine. Laisse une case vide pour conserver son réglage automatique. Les changements prennent effet demain.",lockedTarget?" L’objectif de cette quête est lié à ses paliers ou à sa validation unique.":""),
             goalSettingsError&&h("div",{style:"color:#ef4444;font-size:12px;margin-bottom:10px"},goalSettingsError),
             h("div",{style:"display:flex;gap:10px;align-items:flex-start;margin-bottom:12px"},
               h("div",{style:"min-width:0;flex:1"},
-                h("input",{key:id+"_target_"+JSON.stringify(selected),id:"goal_target_"+id,class:"min",type:"text",inputMode:"decimal",placeholder:"Auto ("+fmtNum(automatic)+")",defaultValue:selected?.target??"",style:"width:100%;box-sizing:border-box;margin:0;padding:8px;text-align:center"}),
+                h("input",{key:id+"_target_"+JSON.stringify(selected),id:"goal_target_"+id,class:"min",type:"text",inputMode:"decimal",disabled:lockedTarget,placeholder:"Auto ("+fmtNum(automatic)+")",defaultValue:lockedTarget?"":selected?.target??"",style:"width:100%;box-sizing:border-box;margin:0;padding:8px;text-align:center"}),
                 h("label",{htmlFor:"goal_target_"+id,style:"display:block;font-size:11px;color:var(--td);margin-top:6px;text-align:center"},"Objectif")
               ),
               h("div",{style:"min-width:0;flex:1"},
-                h("input",{key:id+"_buttons_"+JSON.stringify(selected),id:"goal_buttons_"+id,class:"min",type:"text",inputMode:"decimal",placeholder:defaultButtons(obj).join(" / "),defaultValue:selected?.buttons?.join(" ")||"",style:"width:100%;box-sizing:border-box;margin:0;padding:8px;text-align:center"}),
+                h("input",{key:id+"_buttons_"+JSON.stringify(selected),id:"goal_buttons_"+id,class:"min",type:"text",inputMode:"decimal",disabled:lockedButtons,placeholder:lockedButtons?"Succès / Échec":defaultButtons(obj).join(" / "),defaultValue:lockedButtons?"":selected?.buttons?.join(" ")||"",style:"width:100%;box-sizing:border-box;margin:0;padding:8px;text-align:center"}),
                 h("label",{htmlFor:"goal_buttons_"+id,style:"display:block;font-size:11px;color:var(--td);margin-top:6px;text-align:center"},"Boutons de saisie")
               )
             ),
             h("div",{style:"font-size:10px;color:var(--td);margin-bottom:13px"},"Boutons : indique 1 à 3 nombres séparés par des espaces (ex. 1 5 10)."),
             pending&&h("div",{style:"font-size:11px;color:var(--rc);margin-bottom:13px"},"Prévu demain : "+(pending.target??"Auto")+" "+obj.unit),
-            h("button",{type:"button",class:"mbtn mprim",onClick:()=>saveGoalRow(id),style:"width:100%;margin-bottom:9px"},"Enregistrer"),
-            h("button",{type:"button",class:"mbtn",onClick:()=>saveGoalRow(id,true),style:"width:100%;background:rgba(255,255,255,.03);color:var(--rc);border:1px solid var(--rc)"},"Rétablir auto")
+            !lockedButtons&&h("button",{type:"button",class:"mbtn mprim",onClick:()=>saveGoalRow(id),style:"width:100%;margin-bottom:9px"},"Enregistrer"),
+            !lockedButtons&&h("button",{type:"button",class:"mbtn",onClick:()=>saveGoalRow(id,true),style:"width:100%;background:rgba(255,255,255,.03);color:var(--rc);border:1px solid var(--rc)"},"Rétablir auto")
           )
         );
       })()

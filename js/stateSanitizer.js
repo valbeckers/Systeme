@@ -8,7 +8,7 @@ import { normalizeActiveBreach } from "./breachEngine.js";
 import { cleanStoredActiveElixir, cleanStoredSuspendedElixir } from "./elixirEngine.js";
 import { cleanExerciseRotationByDay, cleanExerciseRotationEnabled } from "./exerciseRotation.js?v=20261014-rotation-settings-v1";
 import { cleanInjuryPeriods } from "./injuryEngine.js?v=20261003-injury-v1";
-import { cleanQuestTuning } from "./questTuning.js?v=20261014-goal-settings-v1";
+import { cleanQuestTuning, applyQuestTuning } from "./questTuning.js?v=20261014-all-quest-settings-v1";
 
 function migrateMergedEspritState(state){
   if(!state || typeof state !== "object") return state;
@@ -111,9 +111,9 @@ function cleanStatLevelsFromXp(statXp,existingStats){
   return {statXp:sx,stats:st};
 }
 
-function cleanSpecialQuestEntry(q,map){
+function cleanSpecialQuestEntry(q,map,tuning){
   if(!q || !q.id || !map[q.id]) return null;
-  const tpl=map[q.id];
+  const tpl=applyQuestTuning(map[q.id],tuning,todayStr(q.startedAt||Date.now()));
   return {
     ...tpl,
     sqid:q.sqid || ("sq_"+(q.startedAt||Date.now())),
@@ -317,7 +317,7 @@ export function cleanSystemState(raw){
   const statPack=cleanStatLevelsFromXp(data.statXp,data.stats);
 
   const specialQuests=(data.specialQuests||[])
-    .map(q=>cleanSpecialQuestEntry(q,spMap))
+    .map(q=>cleanSpecialQuestEntry(q,spMap,data.questTuning))
     .filter(Boolean);
 
   const completedSqLog=(data.completedSqLog||[])
