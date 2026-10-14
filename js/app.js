@@ -1780,13 +1780,11 @@ function App(){
   function validate(obj,e,forceVal){
     if(e){e.preventDefault();e.stopPropagation();}
     if(!isQuestActiveNow(obj))return;
+    if(state.questDebt?.status==="active"&&state.questDebt.id===obj.id)return;
     const el=document.getElementById("qi_"+obj.id);
     const raw=(inputs.current[obj.id]||"").toString().replace(",",".");
     let val=parseFloat(raw); if(!val||val<=0)return;
-    const debtSplit=repayDebtPortion(obj,val);
-    val=debtSplit.remaining;
     inputs.current[obj.id]="";
-    if(val<=0)return;
     if(el){el.value="";setTimeout(()=>{try{el.focus();}catch(_){}},50);}
     const cur=(obj.weekly)?(wLog[obj.id]||0):(tLog[obj.id]||0);
     const hasDoubleBonusCap=!!BONUS_QUEST_BY_ID[obj.id]&&!obj.binary&&!['run','walk','march'].includes(obj.id);
@@ -3701,7 +3699,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
 
   function Home(){
     const dailyObjs = sortStat(reqDailyObjs);
-    const hiddenDebtId=state.questDebt?.sourceDay===today&&["active","paid"].includes(state.questDebt.status)?state.questDebt.id:null;
+    const hiddenDebtId=state.questDebt?.status==="active"||state.questDebt?.status==="paid"&&state.questDebt.sourceDay===today?state.questDebt.id:null;
     const weeklyObjs = sortStat(objs.filter(o=>o.weekly&&isQuestActiveNow(o,now)));
     const bonusObjs = dailyBonusQuestObjects();
 
@@ -3936,7 +3934,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
 
   function Quests(){
     const reqBase=sortStat(reqDailyObjs);
-    const hiddenDebtId=state.questDebt?.sourceDay===today&&["active","paid"].includes(state.questDebt.status)?state.questDebt.id:null;
+    const hiddenDebtId=state.questDebt?.status==="active"||state.questDebt?.status==="paid"&&state.questDebt.sourceDay===today?state.questDebt.id:null;
     const bonBase=dailyBonusQuestObjects();
     const wkBase=sortStat(objs.filter(o=>o.weekly&&isQuestActiveNow(o,now)));
 
