@@ -4798,19 +4798,19 @@ function isUncappedProfessionalWeeklyQuest(obj){
       :[1,10];
     function saveGoalRow(id,reset=false){
       const targetEl=document.getElementById("goal_target_"+id);
-      const buttonsEl=document.getElementById("goal_buttons_"+id);
-      if(!targetEl||!buttonsEl)return;
+      const buttonEls=[0,1,2].map(index=>document.getElementById("goal_button_"+id+"_"+index));
+      if(!targetEl||buttonEls.some(el=>!el))return;
       const rawTarget=targetEl.value.trim().replace(",",".");
       const selected=goalSections.flatMap(section=>section.groups.flatMap(group=>group.items)).find(row=>row.id===id);
       const lockedTarget=selected?.obj?.tiers?.length>0||selected?.obj?.binary&&Number(selected.obj.target||selected.obj.base)===1;
       const target=reset||lockedTarget||!rawTarget?null:Number(rawTarget);
-      const rawButtons=reset?"":buttonsEl.value.trim();
+      const rawButtons=reset?[]:buttonEls.map(el=>el.value.trim().replace(",",".")).filter(Boolean);
       const buttons=selected?.obj?.binary&&Number(selected.obj.target||selected.obj.base)===1?null
-        :rawButtons?rawButtons.split(/[,;\s]+/).filter(Boolean).map(n=>Number(n.replace(",","."))):null;
+        :rawButtons.length?rawButtons.map(Number):null;
       if(target!==null&&(!Number.isFinite(target)||target<=0)||buttons&&(
         buttons.length<1||buttons.length>3||buttons.some(n=>!Number.isFinite(n)||n<=0)
       )){
-        setGoalSettingsError("Saisis un objectif positif et 1 à 3 boutons positifs séparés par des espaces.");
+        setGoalSettingsError("Saisis un objectif positif et une valeur positive dans chaque case de bouton utilisée.");
         return;
       }
       setGoalSettingsError("");
@@ -4963,17 +4963,25 @@ function isUncappedProfessionalWeeklyQuest(obj){
             h("div",{style:"font-size:12px;color:var(--td);margin-bottom:12px"},"Actuel : "+fmtNum(currentTarget)+" "+current.unit),
             h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin-bottom:15px"},"Auto ("+fmtNum(automatic)+") correspond au calcul d’origine. Laisse une case vide pour conserver son réglage automatique. Les changements prennent effet demain.",lockedTarget?" L’objectif de cette quête est lié à ses paliers ou à sa validation unique.":""),
             goalSettingsError&&h("div",{style:"color:#ef4444;font-size:12px;margin-bottom:10px"},goalSettingsError),
-            h("div",{style:"display:flex;gap:10px;align-items:flex-start;margin-bottom:12px"},
-              h("div",{style:"min-width:0;flex:1"},
+            h("div",{style:"display:flex;flex-direction:column;gap:14px;margin-bottom:12px"},
+              h("div",{style:"min-width:0;width:100%"},
                 h("input",{key:id+"_target_"+JSON.stringify(selected),id:"goal_target_"+id,class:"min",type:"text",inputMode:"decimal",disabled:lockedTarget,placeholder:"Auto ("+fmtNum(automatic)+")",defaultValue:lockedTarget?"":selected?.target??"",style:"width:100%;box-sizing:border-box;margin:0;padding:8px;text-align:center"}),
                 h("label",{htmlFor:"goal_target_"+id,style:"display:block;font-size:11px;color:var(--td);margin-top:6px;text-align:center"},"Objectif")
               ),
-              h("div",{style:"min-width:0;flex:1"},
-                h("input",{key:id+"_buttons_"+JSON.stringify(selected),id:"goal_buttons_"+id,class:"min",type:"text",inputMode:"decimal",disabled:lockedButtons,placeholder:lockedButtons?"Succès / Échec":defaultButtons(obj).join(" / "),defaultValue:lockedButtons?"":selected?.buttons?.join(" ")||"",style:"width:100%;box-sizing:border-box;margin:0;padding:8px;text-align:center"}),
-                h("label",{htmlFor:"goal_buttons_"+id,style:"display:block;font-size:11px;color:var(--td);margin-top:6px;text-align:center"},"Boutons de saisie")
+              h("div",{style:"min-width:0;width:100%"},
+                h("div",{style:"display:flex;gap:8px"},
+                  [0,1,2].map(index=>h("input",{
+                    key:id+"_button_"+index+"_"+JSON.stringify(selected),
+                    id:"goal_button_"+id+"_"+index,class:"min",type:"text",inputMode:"decimal",disabled:lockedButtons,
+                    placeholder:lockedButtons?"—":String(defaultButtons(obj)[index]??"—"),
+                    defaultValue:lockedButtons?"":selected?.buttons?.[index]??"",
+                    style:"min-width:0;flex:1;width:0;box-sizing:border-box;margin:0;padding:8px 3px;text-align:center"
+                  }))
+                ),
+                h("label",{htmlFor:"goal_button_"+id+"_0",style:"display:block;font-size:11px;color:var(--td);margin-top:6px;text-align:center"},"Boutons de saisie")
               )
             ),
-            h("div",{style:"font-size:10px;color:var(--td);margin-bottom:13px"},"Boutons : indique 1 à 3 nombres séparés par des espaces (ex. 1 5 10)."),
+            h("div",{style:"font-size:10px;color:var(--td);margin-bottom:13px"},"Un nombre par case ; laisse les cases inutilisées vides. Exemple : 1, 5 et 10."),
             pending&&h("div",{style:"font-size:11px;color:var(--rc);margin-bottom:13px"},"Prévu demain : "+(pending.target??"Auto")+" "+obj.unit),
             !lockedButtons&&h("button",{type:"button",class:"mbtn mprim",onClick:()=>saveGoalRow(id),style:"width:100%;margin-bottom:9px"},"Enregistrer"),
             !lockedButtons&&h("button",{type:"button",class:"mbtn",onClick:()=>saveGoalRow(id,true),style:"width:100%;background:rgba(255,255,255,.03);color:var(--rc);border:1px solid var(--rc)"},"Rétablir auto")
