@@ -676,6 +676,7 @@ function App(){
   const inputs = useRef({});
   const completedBreachRef = useRef(null);
   const bonusPickerScrollRef = useRef(null);
+  const settingsScrollTopRef = useRef(0);
 
   function enqueueDungeonKeyLoot(kind){
     setKeyLootQueue(q=>[...q,{kind:kind==="rare"?"rare":"guaranteed",id:Date.now()+Math.random()}]);
@@ -4783,7 +4784,11 @@ function isUncappedProfessionalWeeklyQuest(obj){
       setShowSet(false);
     }
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget){setShowSet(false);setConfirmReset(false);}}},
-      h("div",{class:"modal"},
+      h("div",{class:"modal",onScroll:e=>{settingsScrollTopRef.current=e.currentTarget.scrollTop;},ref:el=>{
+        if(!el)return;
+        const previousScrollTop=settingsScrollTopRef.current;
+        requestAnimationFrame(()=>{if(el.isConnected)el.scrollTop=previousScrollTop;});
+      }},
         h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px"},
           h("div",{class:"mtitle",style:"margin:0;line-height:1.2"},"Réglages"),
           h("button",{onClick:()=>{setShowSet(false);setConfirmReset(false);},style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
@@ -4815,7 +4820,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
                 const checked=rotationEnabled[family].includes(option.id);
                 const last=checked&&rotationEnabled[family].length===1;
                 return h("label",{key:option.id,style:"display:flex;align-items:center;gap:10px;min-height:37px;padding:7px 9px;margin-bottom:5px;border-radius:8px;border:1px solid "+(checked?"var(--rc)":"rgba(255,255,255,.10)")+";background:"+(checked?"rgba(168,85,247,.10)":"rgba(255,255,255,.025)")+";color:var(--tx);font-size:12px;cursor:"+(last?"default":"pointer")},
-                  h("input",{type:"checkbox",checked,disabled:last,onChange:()=>toggleRotationChoice(family,option.id),style:"width:17px;height:17px;margin:0;accent-color:var(--rc);flex-shrink:0"}),
+                  h("input",{type:"checkbox",checked,disabled:last,onChange:e=>{settingsScrollTopRef.current=e.currentTarget.closest(".modal")?.scrollTop||0;toggleRotationChoice(family,option.id);},style:"width:17px;height:17px;margin:0;accent-color:var(--rc);flex-shrink:0"}),
                   h("span",null,option.label)
                 );
               })
