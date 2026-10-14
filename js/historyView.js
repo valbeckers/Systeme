@@ -136,7 +136,7 @@ export function HistoryTab({
   function dayTargetFor(obj,day){
     if(obj.binary) return 1;
     if(obj.weekly) return getRankBase(obj.id,ri,prestige,state.stats);
-    return obj.target&&!obj.binary ? obj.target : getValidateThreshold(obj,day);
+    return getValidateThreshold(obj,day);
   }
   function dayMarkFor(obj,day){
     if(obj.startDate&&day<obj.startDate) return {txt:"·",color:"var(--td)",opacity:.45};

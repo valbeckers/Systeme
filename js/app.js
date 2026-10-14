@@ -67,7 +67,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260811-linear-xp-v1";
 import { StatsTab } from "./statsView.js?v=20260919-kiviat-labels-v2";
-import { HistoryTab } from "./historyView.js?v=20261014-calves-target-v1";
+import { HistoryTab } from "./historyView.js?v=20261014-goal-settings-v1";
 import { INJURY_ZONES, injuryForDay, isInjuredQuest, injuryDaysRemaining } from "./injuryEngine.js?v=20261003-injury-v1";
 import {
   RANK_BASES,
@@ -93,8 +93,8 @@ import {
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
 import { UiIcon } from "./uiIcons.js?v=20261012-pullup-records-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261014-rotation-settings-v1";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261014-rotation-settings-v1";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261014-goal-settings-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261014-goal-settings-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -104,6 +104,7 @@ import {
   ensureExerciseRotationForDay,
   rotatedQuestObjects
 } from "./exerciseRotation.js?v=20261014-calves-target-v1";
+import { applyQuestTuning, nextQuestTuning, questTuningForDay, saveQuestTuning } from "./questTuning.js?v=20261014-goal-settings-v1";
 import {
   questRecordUnit,
   recordRotationIdForDay,
@@ -660,6 +661,8 @@ function App(){
   const [selectedDungeonRoom,setSelectedDungeonRoom] = useState(null);
   const [historyOpen,setHistoryOpen] = useState({week:false,monthly:true,records:false});
   const [rotationSettingsOpen,setRotationSettingsOpen] = useState(false);
+  const [goalSettingsOpen,setGoalSettingsOpen] = useState(false);
+  const [goalSettingsError,setGoalSettingsError] = useState("");
   const [monthOff,setMonthOff] = useState(0);
   const [selectedHistoryDay,setSelectedHistoryDay] = useState(null);
   const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,reg:false,sq:false,breach:false,debt:false,dj:false,djAlt:false,cs:false});
@@ -818,7 +821,8 @@ function App(){
 
   const baseObjs = state.objectives||DEFS;
   const todayExerciseRotation=(state.exerciseRotationByDay||{})[today]||{};
-  const objs = rotatedQuestObjects(baseObjs,todayExerciseRotation,state.stats,state.totalXp);
+  const objs = rotatedQuestObjects(baseObjs,todayExerciseRotation,state.stats,state.totalXp)
+    .map(obj=>applyQuestTuning(obj,state.questTuning,today));
   const tLog  = state.dailyLog[today]||{};
   const activeInjury=injuryForDay(state,today);
   const wLog  = state.weeklyLog[wk]||{};
@@ -1084,7 +1088,10 @@ function App(){
   const activeOn = (day) => objs.filter(o=>!o.optional&&o.daily&&(!o.startDate||o.startDate<=day)&&!isInjuredQuest(state,day,o.id));
   // Variante et objectif réellement applicables pour un jour donné.
   const questForDay = (obj,day) => {
-    if(!obj || !isExerciseFamilyQuestId(obj.id)) return obj;
+    if(!obj)return obj;
+    if(!isExerciseFamilyQuestId(obj.id)){
+      return applyQuestTuning(baseObjs.find(q=>q.id===obj.id)||obj,state.questTuning,day);
+    }
     const saved=(state.exerciseRotationByDay||{})[day]||{};
     const rotation={
       push:saved.push||LEGACY_EXERCISE_DEFAULTS.push,
@@ -1092,7 +1099,8 @@ function App(){
       abs:saved.abs||LEGACY_EXERCISE_DEFAULTS.abs,
       legs:saved.legs||LEGACY_EXERCISE_DEFAULTS.legs
     };
-    return rotatedQuestObjects(baseObjs,rotation,state.stats,state.totalXp).find(q=>q.id===obj.id)||obj;
+    const selected=rotatedQuestObjects(baseObjs,rotation,state.stats,state.totalXp).find(q=>q.id===obj.id)||obj;
+    return applyQuestTuning(selected,state.questTuning,day);
   };
   // Base applicable pour un jour donné (gère les rotations et baseHistory).
   const getBaseForDay = (obj,day) => {
@@ -1110,7 +1118,6 @@ function App(){
   // Seuil pour considérer une quête comme "faite" (streak/historique)
   // Si validateAt est défini, on l'utilise ; sinon getBaseForDay (= la base)
   const getValidateThreshold = (obj, day) => {
-    if(obj.validateAt != null) return obj.validateAt;
     return getBaseForDay(obj, day);
   };
 
@@ -2691,16 +2698,13 @@ function isUncappedProfessionalWeeklyQuest(obj){
           const lblPl=unitLabelPlural[obj.id]||obj.unit;
           const isWater=obj.id==="water";
           const isSleep=obj.id==="sleep";
-          const quickAmount=isSleep?8:10;
+        const quickAmount=isSleep?8:10;
+        const quickAmounts=obj.quickAmounts||[1,...(!isWater&&obj.name!=="Abdos - Gainage"?[quickAmount]:[])];
           return h("div",{style:"display:flex;gap:8px;margin-top:8px"},
-            h("button",{
-              onClick:e=>{inputs.current[obj.id]="1";validate(obj,e);},
-              style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px;transition:all .2s"
-            },"+1 "+lbl),
-            !isWater&&obj.name!=="Abdos - Gainage"&&h("button",{
-              onClick:e=>{inputs.current[obj.id]=String(quickAmount);validate(obj,e);},
-              style:"flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px;transition:all .2s"
-            },"+"+quickAmount+" "+lblPl)
+            quickAmounts.map(n=>h("button",{
+              key:n,onClick:e=>{inputs.current[obj.id]=String(n);validate(obj,e);},
+              style:"flex:1;padding:10px 4px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:.7px;white-space:nowrap"
+            },"+"+n+" "+(n===1?lbl:lblPl)))
           );
         }
         return h("div",{class:"qinrow"},
@@ -4767,6 +4771,36 @@ function isUncappedProfessionalWeeklyQuest(obj){
   function Settings(){
     if(!showSet)return null;
     const ordered=[...sortStat(reqDailyObjs),...sortStat(objs.filter(o=>o.weekly))];
+    const nextDay=addDaysStr(today,1);
+    const goalRows=[
+      {label:"Santé & Esprit",items:["water","sleep","reading"].map(id=>({id,label:DEFS.find(q=>q.id===id)?.name||id,obj:DEFS.find(q=>q.id===id)}))},
+      ...Object.entries(EXERCISE_ROTATIONS).map(([family,options])=>({
+        label:{push:"Pecs & Triceps",back:"Dos & Biceps",abs:"Abdos",legs:"Jambes"}[family],
+        items:options.map(option=>({id:option.id,label:option.label,
+          obj:rotatedQuestObjects(DEFS,{...todayExerciseRotation,[family]:option.id},state.stats,state.totalXp)
+            .find(q=>q.id===({push:"push",back:"negative_pullups",abs:"abs",legs:"squats"}[family]))
+        }))
+      }))
+    ];
+    const defaultButtons=obj=>obj.id==="water"?[1]:obj.id==="sleep"?[1,8]:obj.exerciseId==="plank"?[1]:[1,10];
+    function saveGoalRow(id,reset=false){
+      const targetEl=document.getElementById("goal_target_"+id);
+      const buttonsEl=document.getElementById("goal_buttons_"+id);
+      if(!targetEl||!buttonsEl)return;
+      const rawTarget=targetEl.value.trim().replace(",",".");
+      const target=reset||!rawTarget?null:Number(rawTarget);
+      const rawButtons=reset?"":buttonsEl.value.trim();
+      const buttons=rawButtons?rawButtons.split(/[,;\s]+/).filter(Boolean).map(n=>Number(n.replace(",","."))):null;
+      if(target!==null&&(!Number.isFinite(target)||target<=0)||buttons&&(
+        buttons.length<1||buttons.length>3||buttons.some(n=>!Number.isFinite(n)||n<=0)
+      )){
+        setGoalSettingsError("Saisis un objectif positif et 1 à 3 boutons positifs séparés par des espaces.");
+        return;
+      }
+      settingsScrollTopRef.current=targetEl.closest(".modal")?.scrollTop||0;
+      setGoalSettingsError("");
+      setState(s=>({...s,questTuning:saveQuestTuning(s.questTuning,id,nextDay,target,buttons)}));
+    }
     const rotationEnabled=cleanExerciseRotationEnabled(state.exerciseRotationEnabled);
     const rotationLabels={push:"Pecs & Triceps",back:"Dos & Biceps",abs:"Abdos",legs:"Jambes"};
     const rotationIcons={push:"push",back:"negative_pullups",abs:"abs",legs:"squats"};
@@ -4822,6 +4856,44 @@ function isUncappedProfessionalWeeklyQuest(obj){
             );
           }),
           h("button",{class:"mbtn mprim",style:"width:100%;margin-top:8px",onClick:applyEdit},"Appliquer")
+        ),
+        h("div",{class:"divider"}),
+        h("div",{class:"msec"},
+          h("button",{type:"button",onClick:()=>setGoalSettingsOpen(v=>!v),style:"display:flex;justify-content:space-between;align-items:center;width:100%;padding:4px 0;background:transparent;border:0;color:var(--tx);cursor:pointer;text-align:left"},
+            h("span",{class:"mlbl",style:"margin:0"},"Objectifs des quêtes journalières"),
+            h("span",{style:"color:var(--td);font-size:12px"},goalSettingsOpen?"▲":"▼")
+          ),
+          goalSettingsOpen&&h("div",null,
+            h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin:9px 0 14px"},"Choisis un objectif fixe et jusqu’à 3 boutons de saisie pour chaque variante. Une case vide conserve le calcul automatique ou les boutons d’origine. Effet dès demain ; l’historique reste inchangé."),
+            goalSettingsError&&h("div",{style:"color:#ef4444;font-size:12px;margin-bottom:10px"},goalSettingsError),
+            goalRows.map(group=>h("div",{key:group.label,style:"margin-bottom:15px"},
+              h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--rc);margin-bottom:7px"},group.label),
+              group.items.map(({id,label,obj})=>{
+                if(!obj)return null;
+                const current=applyQuestTuning(obj,state.questTuning,today);
+                const automatic=Number(obj.target)||getRankBase(obj.id,ri,prestige,state.stats);
+                const currentTarget=Number(current.target)||automatic;
+                const pending=nextQuestTuning(state.questTuning,id,nextDay);
+                const active=questTuningForDay(state.questTuning,id,today);
+                const selected=pending||active;
+                return h("div",{key:id,style:"padding:10px;margin-bottom:8px;border-radius:8px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.025)"},
+                  h("div",{style:"display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:12px;margin-bottom:8px"},
+                    h("span",null,label),
+                    h("span",{style:"color:var(--td);white-space:nowrap"},"Actuel : "+fmtNum(currentTarget)+" "+current.unit)
+                  ),
+                  h("div",{style:"display:flex;gap:7px;align-items:center"},
+                    h("input",{key:id+"_target_"+JSON.stringify(selected),id:"goal_target_"+id,class:"min",type:"text",inputMode:"decimal",placeholder:"Auto ("+fmtNum(automatic)+")",defaultValue:selected?.target??"",style:"min-width:0;width:44%;margin:0;padding:8px;text-align:center"}),
+                    h("input",{key:id+"_buttons_"+JSON.stringify(selected),id:"goal_buttons_"+id,class:"min",type:"text",inputMode:"decimal",placeholder:defaultButtons(obj).join(" / "),defaultValue:selected?.buttons?.join(" ")||"",style:"min-width:0;width:34%;margin:0;padding:8px;text-align:center"}),
+                    h("button",{type:"button",class:"mbtn mprim",onClick:()=>saveGoalRow(id),style:"padding:8px 9px;font-size:10px;flex:1"},"OK")
+                  ),
+                  h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:5px;font-size:10px;color:var(--td)"},
+                    h("span",null,pending?"Prévu demain : "+(pending.target??"Auto")+" "+obj.unit:"Objectif · Boutons (ex. 1 5 10)"),
+                    h("button",{type:"button",onClick:()=>saveGoalRow(id,true),style:"border:0;background:transparent;color:var(--rc);font-size:10px;cursor:pointer;padding:3px"},"Rétablir auto")
+                  )
+                );
+              })
+            ))
+          )
         ),
         h("div",{class:"divider"}),
         h("div",{class:"msec"},

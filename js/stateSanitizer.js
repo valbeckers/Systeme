@@ -8,6 +8,7 @@ import { normalizeActiveBreach } from "./breachEngine.js";
 import { cleanStoredActiveElixir, cleanStoredSuspendedElixir } from "./elixirEngine.js";
 import { cleanExerciseRotationByDay, cleanExerciseRotationEnabled } from "./exerciseRotation.js?v=20261014-rotation-settings-v1";
 import { cleanInjuryPeriods } from "./injuryEngine.js?v=20261003-injury-v1";
+import { cleanQuestTuning } from "./questTuning.js?v=20261014-goal-settings-v1";
 
 function migrateMergedEspritState(state){
   if(!state || typeof state !== "object") return state;
@@ -417,6 +418,7 @@ export function cleanSystemState(raw){
     selectedBonusQuestIdsByDay:cleanSelectedBonusQuestIdsByDay(data.selectedBonusQuestIdsByDay,data.dailyLog),
     exerciseRotationByDay:cleanExerciseRotationByDay(data.exerciseRotationByDay),
     exerciseRotationEnabled:cleanExerciseRotationEnabled(data.exerciseRotationEnabled),
+    questTuning:cleanQuestTuning(data.questTuning),
     dailyCompletionAnimDay:data.dailyCompletionAnimDay||null,
     bonusCompletionAnimDay:data.bonusCompletionAnimDay||null,
     bonusFiveCompletionDay:data.bonusFiveCompletionDay||null,
