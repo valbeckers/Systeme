@@ -3507,14 +3507,13 @@ function isUncappedProfessionalWeeklyQuest(obj){
       return d.getTime();
     })();
     const debtRemaining=Math.max(0,debtDeadline-now);
-    const debtInputId="debt_payment";
-    const payDebt=(e,quick)=>{
+    const quickAmounts=debt.id==="sleep"?[1,8]
+      :debt.name==="Abdos - Gainage"?[1]
+      :[1,5,10];
+    const quickUnit=n=>n>1&&debt.unit==="rep"?"reps":debt.unit;
+    const payDebt=(e,amount)=>{
       if(e){e.preventDefault();e.stopPropagation();}
-      const el=document.getElementById(debtInputId);
-      const val=quick ?? parseFloat((el?.value||"").replace(",","."));
-      if(!Number.isFinite(val)||val<=0)return;
-      repayDebtPortion({id:debt.id},val);
-      if(!quick&&el){el.value="";el.focus();}
+      repayDebtPortion({id:debt.id},amount);
     };
 
     if(compact){
@@ -3563,9 +3562,11 @@ function isUncappedProfessionalWeeklyQuest(obj){
           h(UiIcon,{iconKey:"interface.countdown",fallback:"⏱",slotSize:14,glyphSize:10}),
           fmtCD(debtRemaining)+" restants"
         ),
-        h("form",{onSubmit:e=>payDebt(e),style:"display:flex;gap:8px;margin-top:12px"},
-          h("input",{id:debtInputId,type:"number",inputMode:"decimal",step:"any",min:"0",placeholder:"Quantité ("+debt.unit+")",style:"min-width:0;flex:1"}),
-          h("button",{type:"submit",style:"color:"+colorLight+";border:1px solid "+color+";border-radius:8px;background:"+colorBg+";padding:9px 12px"},"Rembourser")
+        h("div",{style:"display:flex;gap:8px;margin-top:12px"},
+          quickAmounts.map(n=>h("button",{
+            key:n,type:"button",onClick:e=>payDebt(e,n),
+            style:"flex:1;padding:10px 4px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.7);font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:.7px;white-space:nowrap"
+          },"+"+n+" "+quickUnit(n)))
         )
       )
     );
