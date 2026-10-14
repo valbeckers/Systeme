@@ -25,6 +25,17 @@ export const EXERCISE_ROTATIONS = {
 export const EXERCISE_FAMILY_LABELS={push:"Pecs & Triceps",negative_pullups:"Dos & Biceps",abs:"Abdos",squats:"Jambes"};
 export const EXERCISE_FAMILY_ICONS={push:"🦾",negative_pullups:"🦾",abs:"🧱",squats:"🦿"};
 export const LEGACY_EXERCISE_DEFAULTS={push:"pushups",back:"negative_pullups",abs:"crunches",legs:"squats"};
+export function cleanExerciseRotationEnabled(raw){
+  const enabled={};
+  for(const [family,options] of Object.entries(EXERCISE_ROTATIONS)){
+    const valid=new Set(options.map(option=>option.id));
+    const selected=Array.isArray(raw?.[family])
+      ? [...new Set(raw[family].filter(id=>valid.has(id)))]
+      : options.map(option=>option.id);
+    enabled[family]=selected.length?selected:options.map(option=>option.id);
+  }
+  return enabled;
+}
 export function isExerciseFamilyQuestId(id){ return id==="push"||id==="negative_pullups"||id==="abs"||id==="squats"; }
 export function exerciseFamilyLabel(id,fallback){ return EXERCISE_FAMILY_LABELS[id]||fallback||id; }
 export function exerciseFamilyIcon(id,fallback){ return EXERCISE_FAMILY_ICONS[id]||fallback||"•"; }
@@ -53,11 +64,12 @@ export function previousRotationChoice(history,day,family){
 export function ensureExerciseRotationForDay(state,day){
   const history={...(state.exerciseRotationByDay||{})};
   const current={...(history[day]||{})};
+  const enabled=cleanExerciseRotationEnabled(state.exerciseRotationEnabled);
   let changed=!history[day];
   for(const [family,options] of Object.entries(EXERCISE_ROTATIONS)){
     if(options.some(o=>o.id===current[family])) continue;
     const last=previousRotationChoice(history,day,family);
-    const picked=weightedExercisePick(options,last);
+    const picked=weightedExercisePick(options.filter(option=>enabled[family].includes(option.id)),last);
     current[family]=picked&&picked.id;
     changed=true;
   }

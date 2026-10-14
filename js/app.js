@@ -92,16 +92,17 @@ import {
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
 import { UiIcon } from "./uiIcons.js?v=20261012-pullup-records-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261012-back-daily-v1";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261012-back-daily-v1";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261014-rotation-settings-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261014-rotation-settings-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
   isExerciseFamilyQuestId,
   exerciseFamilyLabel,
+  cleanExerciseRotationEnabled,
   ensureExerciseRotationForDay,
   rotatedQuestObjects
-} from "./exerciseRotation.js?v=20261012-back-daily-v1";
+} from "./exerciseRotation.js?v=20261014-rotation-settings-v1";
 import {
   questRecordUnit,
   recordRotationIdForDay,
@@ -657,6 +658,7 @@ function App(){
   const [dungeonHelpOpen,setDungeonHelpOpen] = useState({});
   const [selectedDungeonRoom,setSelectedDungeonRoom] = useState(null);
   const [historyOpen,setHistoryOpen] = useState({week:false,monthly:true,records:false});
+  const [rotationSettingsOpen,setRotationSettingsOpen] = useState(false);
   const [monthOff,setMonthOff] = useState(0);
   const [selectedHistoryDay,setSelectedHistoryDay] = useState(null);
   const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,reg:false,sq:false,breach:false,debt:false,dj:false,djAlt:false,cs:false});
@@ -4747,6 +4749,19 @@ function isUncappedProfessionalWeeklyQuest(obj){
   function Settings(){
     if(!showSet)return null;
     const ordered=[...sortStat(reqDailyObjs),...sortStat(objs.filter(o=>o.weekly))];
+    const rotationEnabled=cleanExerciseRotationEnabled(state.exerciseRotationEnabled);
+    const rotationLabels={push:"Pecs & Triceps",back:"Dos & Biceps",abs:"Abdos",legs:"Jambes"};
+    const rotationIcons={push:"push",back:"negative_pullups",abs:"abs",legs:"squats"};
+    function toggleRotationChoice(family,id){
+      setState(s=>{
+        const enabled=cleanExerciseRotationEnabled(s.exerciseRotationEnabled);
+        const selected=enabled[family];
+        if(!selected)return s;
+        const next=selected.includes(id)?selected.filter(choice=>choice!==id):[...selected,id];
+        if(!next.length)return s;
+        return {...s,exerciseRotationEnabled:{...enabled,[family]:next}};
+      });
+    }
     function applyEdit(){
       setState(s=>{
         let xpD=0;
@@ -4785,6 +4800,27 @@ function isUncappedProfessionalWeeklyQuest(obj){
             );
           }),
           h("button",{class:"mbtn mprim",style:"width:100%;margin-top:8px",onClick:applyEdit},"Appliquer")
+        ),
+        h("div",{class:"divider"}),
+        h("div",{class:"msec"},
+          h("button",{type:"button",onClick:()=>setRotationSettingsOpen(v=>!v),style:"display:flex;justify-content:space-between;align-items:center;width:100%;padding:4px 0;background:transparent;border:0;color:var(--tx);cursor:pointer;text-align:left"},
+            h("span",{class:"mlbl",style:"margin:0"},"Tirage des quêtes musculaires"),
+            h("span",{style:"color:var(--td);font-size:12px"},rotationSettingsOpen?"▲":"▼")
+          ),
+          rotationSettingsOpen&&h("div",null,
+            h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin:9px 0 14px"},"Coche les variantes possibles pour chaque quête journalière. Les changements s’appliquent au prochain tirage ; la quête du jour reste la même."),
+            Object.entries(EXERCISE_ROTATIONS).map(([family,options])=>h("div",{key:family,style:"margin-bottom:15px"},
+              h("div",{style:"display:flex;align-items:center;gap:7px;font-family:Orbitron,sans-serif;font-size:10px;color:var(--rc);letter-spacing:.5px;margin-bottom:7px"},QuestIcon(rotationIcons[family],"💪🏼",14),rotationLabels[family]),
+              options.map(option=>{
+                const checked=rotationEnabled[family].includes(option.id);
+                const last=checked&&rotationEnabled[family].length===1;
+                return h("label",{key:option.id,style:"display:flex;align-items:center;gap:10px;min-height:37px;padding:7px 9px;margin-bottom:5px;border-radius:8px;border:1px solid "+(checked?"var(--rc)":"rgba(255,255,255,.10)")+";background:"+(checked?"rgba(168,85,247,.10)":"rgba(255,255,255,.025)")+";color:var(--tx);font-size:12px;cursor:"+(last?"default":"pointer")},
+                  h("input",{type:"checkbox",checked,disabled:last,onChange:()=>toggleRotationChoice(family,option.id),style:"width:17px;height:17px;margin:0;accent-color:var(--rc);flex-shrink:0"}),
+                  h("span",null,option.label)
+                );
+              })
+            ))
+          )
         ),
         h("div",{class:"divider"}),
         h("div",{class:"msec"},

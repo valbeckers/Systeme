@@ -6,7 +6,7 @@ import { todayStr, next7AM } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
 import { normalizeActiveBreach } from "./breachEngine.js";
 import { cleanStoredActiveElixir, cleanStoredSuspendedElixir } from "./elixirEngine.js";
-import { cleanExerciseRotationByDay } from "./exerciseRotation.js";
+import { cleanExerciseRotationByDay, cleanExerciseRotationEnabled } from "./exerciseRotation.js?v=20261014-rotation-settings-v1";
 import { cleanInjuryPeriods } from "./injuryEngine.js?v=20261003-injury-v1";
 
 function migrateMergedEspritState(state){
@@ -416,6 +416,7 @@ export function cleanSystemState(raw){
     enduranceChoiceByDay:cleanEnduranceChoiceByDay(data.enduranceChoiceByDay),
     selectedBonusQuestIdsByDay:cleanSelectedBonusQuestIdsByDay(data.selectedBonusQuestIdsByDay,data.dailyLog),
     exerciseRotationByDay:cleanExerciseRotationByDay(data.exerciseRotationByDay),
+    exerciseRotationEnabled:cleanExerciseRotationEnabled(data.exerciseRotationEnabled),
     dailyCompletionAnimDay:data.dailyCompletionAnimDay||null,
     bonusCompletionAnimDay:data.bonusCompletionAnimDay||null,
     bonusFiveCompletionDay:data.bonusFiveCompletionDay||null,

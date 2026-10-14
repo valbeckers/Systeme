@@ -7,7 +7,7 @@ import { DEFS, SP } from "./questDefs.js?v=20261012-back-daily-v1";
 import { next7AM, todayStr, addDaysStr } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
 import { loadStoredState } from "./storage.js";
-import { cleanSystemState } from "./stateSanitizer.js?v=20261012-back-daily-v1";
+import { cleanSystemState } from "./stateSanitizer.js?v=20261014-rotation-settings-v1";
 import { normalizeActiveBreach } from "./breachEngine.js";
 
 const loadState = () => loadStoredState(cleanSystemState);
@@ -89,6 +89,7 @@ const IMPORTED = {
   enduranceChoiceByDay:{},
   selectedBonusQuestIdsByDay:{},
   exerciseRotationByDay:{},
+  exerciseRotationEnabled:null,
   dailyCompletionAnimDay:null,
   bonusCompletionAnimDay:null,
   bonusFiveCompletionDay:null,
@@ -188,6 +189,7 @@ export function buildInitialState(){
     selectedBonusQuestIdsByDay:saved.selectedBonusQuestIdsByDay||{},
     bonusFiveCompletionDay:saved.bonusFiveCompletionDay||null,
     exerciseRotationByDay:saved.exerciseRotationByDay||{},
+    exerciseRotationEnabled:saved.exerciseRotationEnabled||null,
     completedSqLog:saved.completedSqLog||[],
     sqDrawLog:saved.sqDrawLog||[],
     sqStatCycle:saved.sqStatCycle||[],
