@@ -662,6 +662,7 @@ function App(){
   const [selectedDungeonRoom,setSelectedDungeonRoom] = useState(null);
   const [historyOpen,setHistoryOpen] = useState({week:false,monthly:true,records:false});
   const [rotationSettingsOpen,setRotationSettingsOpen] = useState(false);
+  const [dailyCorrectionOpen,setDailyCorrectionOpen] = useState(false);
   const [goalSettingsOpen,setGoalSettingsOpen] = useState({daily:false,bonus:false,weekly:false,urgent:false});
   const [goalSettingsError,setGoalSettingsError] = useState("");
   const [selectedGoalId,setSelectedGoalId] = useState(null);
@@ -4862,7 +4863,11 @@ function isUncappedProfessionalWeeklyQuest(obj){
           h("button",{onClick:()=>{setShowSet(false);setConfirmReset(false);},style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
         ),
         h("div",{class:"msec"},
-          h("div",{class:"mlbl"},"Corriger les données du jour"),
+          h("button",{type:"button",onClick:()=>setDailyCorrectionOpen(v=>!v),style:"display:flex;justify-content:space-between;align-items:center;width:100%;padding:4px 0;background:transparent;border:0;color:var(--tx);cursor:pointer;text-align:left"},
+            h("span",{class:"mlbl",style:"margin:0"},"Corriger les données du jour"),
+            h("span",{style:"color:var(--td);font-size:12px"},dailyCorrectionOpen?"▲":"▼")
+          ),
+          dailyCorrectionOpen&&h("div",{style:"margin-top:12px"},
           ordered.map(obj=>{
             const cur=(obj.weekly)?(wLog[obj.id]||0):(tLog[obj.id]||0);
             return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
@@ -4873,6 +4878,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
             );
           }),
           h("button",{class:"mbtn mprim",style:"width:100%;margin-top:8px",onClick:applyEdit},"Appliquer")
+          )
         ),
         h("div",{class:"divider"}),
         goalSections.map(section=>h(Fragment,{key:section.id},
