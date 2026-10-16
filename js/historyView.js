@@ -12,6 +12,7 @@ import {
 import { RECORD_EXERCISE_DEFS, recordExerciseValueForDay } from "./records.js?v=20261012-pullup-records-v1";
 import { UiIcon } from "./uiIcons.js?v=20261012-pullup-records-v1";
 import { weeklyXpWithoutRegression } from "./weeklyRegressionXp.js?v=20261016-v1";
+import { dailyEligibleForDay } from "./drawPreferences.js?v=20261016-draw-pools-v1";
 
 const { h, Fragment } = window.preact;
 const { useRef, useState } = window.preactHooks;
@@ -189,6 +190,8 @@ export function HistoryTab({
   }
   function dayMarkFor(obj,day){
     if(obj.startDate&&day<obj.startDate) return {txt:"·",color:"var(--td)",opacity:.45};
+    if(obj.daily&&!obj.optional&&!dailyEligibleForDay(state,day,obj.id))
+      return {txt:"·",color:"var(--td)",opacity:.45};
     if((obj.daily&&!obj.optional&&isInjuredQuest(state,day,obj.id)) ||
        (obj.id==="run"&&isInjuredQuest(state,day,"squats")))
       return {txt:"",color:"#86efac",opacity:1,injured:true};
@@ -199,7 +202,7 @@ export function HistoryTab({
     const validationTarget=obj.optional?Math.ceil(target*0.5):target;
     const previouslyValidated=day<today&&!!obj.daily&&!obj.optional&&hasValidatedDailyCompletion(state,day);
     const requiredForDay=objs
-      .filter(item=>item.daily&&!item.optional&&(!item.startDate||item.startDate<=day))
+      .filter(item=>item.daily&&!item.optional&&(!item.startDate||item.startDate<=day)&&dailyEligibleForDay(state,day,item.id))
       .map(item=>dailyQuestForHistoryDay(item,day));
     const legacyDebtQuestId=inferLegacyResolvedDebtQuestId(
       state,

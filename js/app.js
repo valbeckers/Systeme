@@ -26,6 +26,7 @@ import {
 import { elanBonusPercent, xpMomentumAdjustment } from "./xpMomentum.js?v=20260817-xp-momentum-v1";
 import { BREACH_POOL, BREACH_RUPTURE_BOSSES } from "./breachDefs.js?v=20260831-portail-boss-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20260818-urgent-dungeon-v1";
+import { DRAW_POOLS, cleanDrawPreferences, eligiblePool, snapshotDrawPools, dailyEligibleForDay } from "./drawPreferences.js?v=20261016-draw-pools-v1";
 import {
   dungeonRoomRewardPairs,
   dungeonRewardPairs,
@@ -40,7 +41,7 @@ import {
   expireSuspendedDungeonState,
   canValidateDungeonRoom
 } from "./dungeonEngine.js?v=20260910-dimensional-anchor-v1";
-import { INVENTORY_ITEMS } from "./itemDefs.js?v=20261004-key-rarity-v1";
+import { INVENTORY_ITEMS } from "./itemDefs.js?v=20261016-portal-seal-v1";
 import {
   incrementLootState,
   pickRandomBreachLoot,
@@ -67,7 +68,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260811-linear-xp-v1";
 import { StatsTab } from "./statsView.js?v=20260919-kiviat-labels-v2";
-import { HistoryTab } from "./historyView.js?v=20261016-integrated-weekly-v9";
+import { HistoryTab } from "./historyView.js?v=20261016-draw-pools-v1";
 import { regressionPenaltyForWeek, weeklyXpWithoutRegression } from "./weeklyRegressionXp.js?v=20261016-v1";
 import { INJURY_ZONES, injuryForDay, isInjuredQuest, injuryDaysRemaining } from "./injuryEngine.js?v=20261003-injury-v1";
 import {
@@ -95,8 +96,8 @@ import {
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
 import { UiIcon } from "./uiIcons.js?v=20261012-pullup-records-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261016-regression-summary-v4";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261016-regression-summary-v4";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261016-draw-pools-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261016-draw-pools-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -117,7 +118,7 @@ import {
   normalizeActiveBreach,
   processDailyBreachRoll,
   pickBreachRuptureBoss
-} from "./breachEngine.js?v=20260821-alduin-rupture-v1";
+} from "./breachEngine.js?v=20261016-draw-pools-v1";
 import {
   ELIXIR_STATS,
   ELIXIR_DURATION_MS,
@@ -591,6 +592,7 @@ function App(){
   const [state,setState]   = useState(()=>{
     const now=Date.now();
     let base={...buildInitialState(),objectives:DEFS};
+    base=snapshotDrawPools(base,todayStr(now));
     base=ensureExerciseRotationForDay(base,todayStr());
     base=processDailyBreachRoll(base,now);
     // Auto-init quête urgente si aucun portail ne la remplace aujourd’hui
@@ -1093,9 +1095,9 @@ function App(){
     .sort((a,b)=>b.xp-a.xp);
 
   // 7. Quetes journalieres obligatoires toutes faites ?
-  const reqDailyObjs  = objs.filter(o=>!o.optional&&o.daily&&!isInjuredQuest(state,today,o.id));
+  const reqDailyObjs  = objs.filter(o=>!o.optional&&o.daily&&dailyEligibleForDay(state,today,o.id)&&!isInjuredQuest(state,today,o.id));
   // Quêtes actives pour un jour donné (exclut les quêtes ajoutées après ce jour)
-  const activeOn = (day) => objs.filter(o=>!o.optional&&o.daily&&(!o.startDate||o.startDate<=day)&&!isInjuredQuest(state,day,o.id));
+  const activeOn = (day) => objs.filter(o=>!o.optional&&o.daily&&(!o.startDate||o.startDate<=day)&&dailyEligibleForDay(state,day,o.id)&&!isInjuredQuest(state,day,o.id));
   // Variante et objectif réellement applicables pour un jour donné.
   const questForDay = (obj,day) => {
     if(!obj)return obj;
@@ -1228,6 +1230,9 @@ function App(){
   useEffect(()=>{
     setState(s=>processDailyBreachRoll(s,now));
   },[now]);
+  useEffect(()=>{
+    setState(s=>snapshotDrawPools(s,today));
+  },[today]);
   const sqs         = state.specialQuests||[];
   const activeSq    = sqs.find(q=>!q.completedAt&&now<q.expiresAt)||null;
   const activeBreach=state.activeBreach&&!state.activeBreach.completedAt?normalizeActiveBreach(state.activeBreach):null;
@@ -2155,10 +2160,10 @@ function App(){
     const forcedStat=STATS.includes(state.dungeonMapStat)?state.dungeonMapStat:null;
     let id=null;
     if(forcedStat){
-      const candidates=DUNGEONS.filter(d=>d.stat===forcedStat);
+      const candidates=DUNGEONS.filter(d=>d.stat===forcedStat&&eligiblePool(state,"dungeon").has(d.id));
       if(candidates.length)id=candidates[Math.floor(Math.random()*candidates.length)].id;
     }
-    if(!id)id=drawRandomDungeonId(DUNGEONS);
+    if(!id)id=drawRandomDungeonId(DUNGEONS.filter(d=>eligiblePool(state,"dungeon").has(d.id)));
     if(id)startDungeon(id);
   }
 
@@ -2167,6 +2172,7 @@ function App(){
     setState(s=>{
       const t=Date.now();
       const dungeon=DUNGEONS.find(d=>d.id===id);
+      if(!dungeon||!eligiblePool(s,"dungeon").has(id))return s;
       const contractMeta=s.masterContractArmed&&dungeon ? buildMasterContractMeta(dungeon) : null;
       const constraint=contractMeta?.contractConstraint||null;
       const launched=launchDungeonState(s,{
@@ -3202,7 +3208,6 @@ function isUncappedProfessionalWeeklyQuest(obj){
             style:"width:100%;margin-top:10px;padding:11px;border-radius:8px;border:1px solid #4ade8088;background:rgba(74,222,128,.12);color:#4ade80;font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer;letter-spacing:1px;text-transform:uppercase"
           },"MAÎTRISER LA RUPTURE ✓")
         ),
-
         )
       )
     );
@@ -3344,7 +3349,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
         h("div",{style:"font-size:10px;color:"+(dungeonCanStart?"#4ade80":"var(--td)")+";font-family:Orbitron,sans-serif;text-transform:uppercase;white-space:nowrap"},dungeonCanStart?"Disponible":(dungeonDailyUsed?"Déjà lancé":dungeonWeekCount>=3?"Limite hebdo":"Verrouillé"))
       ),
       dungeonCanStart
-        ? h("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:8px"},DUNGEONS.map(dg=>h("button",{key:dg.id,onClick:()=>startDungeon(dg.id),style:"padding:10px 8px;border-radius:10px;border:1px solid "+dg.color+"55;background:"+dg.color+"0f;color:"+dg.color+";font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:.7px;text-transform:uppercase;cursor:pointer;text-align:center;line-height:1.25;display:flex;flex-direction:column;align-items:center"},DungeonIcon(dg.id,dg.icon,24,16,"margin-bottom:4px"),h("div",null,dg.short),h("div",{style:"font-size:8px;color:var(--td);margin-top:3px"},STAT_LBL[dg.stat]||dg.stat))))
+        ? h("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:8px"},DUNGEONS.filter(dg=>eligiblePool(state,"dungeon").has(dg.id)).map(dg=>h("button",{key:dg.id,onClick:()=>startDungeon(dg.id),style:"padding:10px 8px;border-radius:10px;border:1px solid "+dg.color+"55;background:"+dg.color+"0f;color:"+dg.color+";font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:.7px;text-transform:uppercase;cursor:pointer;text-align:center;line-height:1.25;display:flex;flex-direction:column;align-items:center"},DungeonIcon(dg.id,dg.icon,24,16,"margin-bottom:4px"),h("div",null,dg.short),h("div",{style:"font-size:8px;color:var(--td);margin-top:3px"},STAT_LBL[dg.stat]||dg.stat))))
         : h("div",{style:"text-align:center;padding:10px 0;color:var(--td);font-size:11px;line-height:1.45"},dungeonDailyUsed?"Tu as déjà lancé un donjon aujourd'hui. Prochain lancement disponible demain.":dungeonWeekCount>=3?"Limite hebdomadaire atteinte.":"Aucune clé disponible.")
     );
   }
@@ -4054,10 +4059,10 @@ function isUncappedProfessionalWeeklyQuest(obj){
     if(NEW_ITEM_ICON_DATA[id])return EmojiStyleItemImage(NEW_ITEM_ICON_DATA[id],size);
     return h(UiIcon,{iconKey:"item."+id,fallback:INVENTORY_ITEMS[id].emoji,slotSize:size,glyphSize:size});
   }
-  function itemQty(id){ return ["codex","regressionOrb","debtAcknowledgement","recoveryOintment"].includes(id)?1:id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
+  function itemQty(id){ return ["codex","regressionOrb","debtAcknowledgement","recoveryOintment","portalReroll"].includes(id)?1:id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
   function Inventory(){
-    const permanentOrder=["codex","recoveryOintment","regressionOrb","debtAcknowledgement"];
-    const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","mysteryMap","etherStopper","dimensionalAnchor","rerollToken","rewriteRune","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape","recoveryOintment","counterpartBalance"]
+    const permanentOrder=["codex","recoveryOintment","regressionOrb","debtAcknowledgement","portalReroll"];
+    const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","mysteryMap","etherStopper","dimensionalAnchor","rerollToken","rewriteRune","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape","recoveryOintment","portalReroll","counterpartBalance"]
       .sort((a,b)=>{
         const permanentIndexA=permanentOrder.indexOf(a);
         const permanentIndexB=permanentOrder.indexOf(b);
@@ -4274,6 +4279,11 @@ function isUncappedProfessionalWeeklyQuest(obj){
       if(state.recordChallenge&&state.recordChallenge.week===wk){disabled=false;reason="Une Marque du dépassement est actuellement dessinée sur « "+(state.recordChallenge.name||"ce record")+" ».";}
     }else if(id==="recoveryOintment"){
       if(activeInjury){disabled=true;reason="Une blessure est déjà active jusqu’au "+activeInjury.endDay.split("-").reverse().join("/")+".";}
+    }else if(id==="portalReroll"){
+      if(!activeBreach){disabled=true;reason="Aucun portail actif à remplacer.";}
+      else if(activeBreach.ruptureBoss){disabled=true;reason="Le portail est déjà en rupture.";}
+      else if(activeBreach.replacementUsed){disabled=true;reason="Ce portail a déjà été remplacé.";}
+      else if(!BREACH_POOL.some(b=>b.id!==activeBreach.id&&eligiblePool(state,"breach").has(b.id))){disabled=true;reason="Coche au moins un autre portail dans les réglages.";}
     }else if(id==="counterpartBalance"){
       const eligible=counterpartBalanceSacrificeEligibleIds(state);
       if(eligible.length<3){disabled=true;reason="Trois objets différents sont nécessaires pour utiliser la Balance ("+eligible.length+"/3 disponibles).";}
@@ -4335,6 +4345,8 @@ function isUncappedProfessionalWeeklyQuest(obj){
             ?"Briser le Cristal de téléportation pour rejoindre un pays voisin et ouvrir un portail aléatoire ?"
             :id==="recoveryOintment"
               ?"Définir une blessure et sa durée avec l’Onguent de récupération ?"
+            :id==="portalReroll"
+              ?"Utiliser le Sceau de redirection pour remplacer « "+(activeBreach?.name||"ce portail")+" » ? Un autre portail coché sera tiré. Le temps restant sera conservé et la progression remise à zéro, sans gain ni pénalité. Une seule utilisation pour ce portail."
             :id==="mysteryMap"
               ?"Déplier la Carte des profondeurs pour choisir la statistique du prochain donjon ?"
               :id==="counterpartBalance"
@@ -4405,13 +4417,23 @@ function isUncappedProfessionalWeeklyQuest(obj){
             setSpecialItemChoice({type:"debtAcknowledgement"});
           }else if(id==="recoveryOintment"){
             setSpecialItemChoice({type:"recoveryOintment"});
+          }else if(id==="portalReroll"){
+            setState(s=>{
+              const current=normalizeActiveBreach(s.activeBreach);
+              if(!current||current.ruptureBoss||current.replacementUsed||Date.now()>=current.expiresAt)return s;
+              const candidates=BREACH_POOL.filter(b=>b.id!==current.id&&eligiblePool(s,"breach").has(b.id));
+              if(!candidates.length)return s;
+              const tpl=candidates[Math.floor(Math.random()*candidates.length)];
+              return {...s,activeBreach:{...tpl,breachId:current.breachId,progress:0,startedAt:current.startedAt,expiresAt:current.expiresAt,completedAt:null,ruptureBoss:null,isBreach:true,alliedTeleport:current.alliedTeleport,replacementUsed:true}};
+            });
           }else if(id==="recordHammer"||id==="invisibilityCape"){
             setSpecialItemChoice({type:id});
           }else if(id==="counterpartBalance"){
             setBalanceSacrificeChoice([]);
           }else if(id==="teleportCrystal"){
             const t=Date.now();
-            const tpl=BREACH_POOL.length?BREACH_POOL[Math.floor(Math.random()*BREACH_POOL.length)]:null;
+            const eligibleBreaches=BREACH_POOL.filter(b=>eligiblePool(state,"breach").has(b.id));
+            const tpl=eligibleBreaches.length?eligibleBreaches[Math.floor(Math.random()*eligibleBreaches.length)]:null;
             if(tpl){
               setState(s=>{
                 if(s.activeBreach||s.alliedGiftPending||(Number(s.inventory&&s.inventory.teleportCrystal)||0)<1)return s;
@@ -4530,7 +4552,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
 
   function DungeonMapStatModal(){
     if(!dungeonMapStatChoice)return null;
-    const choices=[...new Set(DUNGEONS.map(d=>d.stat))].filter(stat=>STATS.includes(stat));
+    const choices=[...new Set(DUNGEONS.filter(d=>eligiblePool(state,"dungeon").has(d.id)).map(d=>d.stat))].filter(stat=>STATS.includes(stat));
     const comboPrompt=itemComboPrompt&&itemComboPrompt.selectingMap?itemComboPrompt:null;
     return h("div",{class:"modal-ov"},h("div",{class:"modal",style:"max-width:410px;width:calc(100% - 28px)"},
       h("div",{class:"mtitle"},"DÉPLIER LA CARTE"),
@@ -4876,7 +4898,17 @@ function isUncappedProfessionalWeeklyQuest(obj){
       setState(s=>({...s,questTuning:saveQuestTuning(s.questTuning,id,nextDay,target,buttons,rewards)}));
       setSelectedGoalId(null);
     }
+    const drawPreferences=cleanDrawPreferences(state.drawPreferences);
     const rotationEnabled=cleanExerciseRotationEnabled(state.exerciseRotationEnabled);
+    function toggleDrawChoice(pool,id){
+      setState(s=>{
+        const prefs=cleanDrawPreferences(s.drawPreferences);
+        const selected=prefs[pool];
+        const next=selected.includes(id)?selected.filter(choice=>choice!==id):[...selected,id];
+        if(!next.length)return s;
+        return {...s,drawPreferences:{...prefs,[pool]:next}};
+      });
+    }
     const selectedGoal=goalSections.flatMap(section=>section.groups.flatMap(group=>group.items)).find(row=>row.id===selectedGoalId);
     const rotationLabels={push:"Pecs & Triceps",back:"Dos & Biceps",abs:"Abdos",legs:"Jambes"};
     const rotationIcons={push:"push",back:"negative_pullups",abs:"abs",legs:"squats"};
@@ -4962,27 +4994,38 @@ function isUncappedProfessionalWeeklyQuest(obj){
           ),
           h("div",{class:"divider"})
         )),
-        h("div",{class:"msec"},
-          h("button",{type:"button",onClick:()=>setSettingsSectionOpen(v=>v==="rotation"?null:"rotation"),style:"display:flex;justify-content:space-between;align-items:center;width:100%;padding:4px 0;background:transparent;border:0;color:var(--tx);cursor:pointer;text-align:left"},
-            h("span",{class:"mlbl",style:"margin:0"},"Tirage des quêtes musculaires"),
-            h("span",{style:"color:var(--td);font-size:12px"},settingsSectionOpen==="rotation"?"▲":"▼")
-          ),
-          settingsSectionOpen==="rotation"&&h("div",null,
-            h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin:9px 0 14px"},"Coche les variantes possibles pour chaque quête journalière. Les changements s’appliquent au prochain tirage ; la quête du jour reste la même."),
-            Object.entries(EXERCISE_ROTATIONS).map(([family,options])=>h("div",{key:family,style:"margin-bottom:15px"},
-              h("div",{style:"display:flex;align-items:center;gap:7px;font-family:Orbitron,sans-serif;font-size:10px;color:var(--rc);letter-spacing:.5px;margin-bottom:7px"},QuestIcon(rotationIcons[family],"💪🏼",14),rotationLabels[family]),
-              options.map(option=>{
-                const checked=rotationEnabled[family].includes(option.id);
-                const last=checked&&rotationEnabled[family].length===1;
-                return h("label",{key:option.id,style:"display:flex;align-items:center;gap:10px;min-height:37px;padding:7px 9px;margin-bottom:5px;border-radius:8px;border:1px solid "+(checked?"var(--rc)":"rgba(255,255,255,.10)")+";background:"+(checked?"rgba(168,85,247,.10)":"rgba(255,255,255,.025)")+";color:var(--tx);font-size:12px;cursor:"+(last?"default":"pointer")},
-                  h("input",{type:"checkbox",checked,disabled:last,onChange:e=>{settingsScrollTopRef.current=e.currentTarget.closest(".modal")?.scrollTop||0;toggleRotationChoice(family,option.id);},style:"width:17px;height:17px;margin:0;accent-color:var(--rc);flex-shrink:0"}),
-                  h("span",null,option.label)
+        Object.entries(DRAW_POOLS).map(([pool,items])=>h(Fragment,{key:"draw_"+pool},
+          h("div",{class:"msec"},
+            h("button",{type:"button",onClick:()=>setSettingsSectionOpen(v=>v==="draw_"+pool?null:"draw_"+pool),style:"display:flex;justify-content:space-between;align-items:center;width:100%;padding:4px 0;background:transparent;border:0;color:var(--tx);cursor:pointer;text-align:left"},
+              h("span",{class:"mlbl",style:"margin:0"},"Tirage des "+({daily:"quêtes journalières",dungeon:"donjons",breach:"portails"}[pool])),
+              h("span",{style:"color:var(--td);font-size:12px"},settingsSectionOpen==="draw_"+pool?"▲":"▼")
+            ),
+            settingsSectionOpen==="draw_"+pool&&h("div",null,
+              h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin:9px 0 14px"},
+                pool==="daily"?"Les quêtes décochées quittent le programme dès demain. Les variantes musculaires ci-dessous suivent le même tirage qu’avant.":pool==="dungeon"?"Seuls les donjons cochés pourront être tirés ou lancés. Un donjon en cours reste inchangé.":"Les portails décochés ne seront plus tirés. Pour remplacer le portail en cours, utilise le Sceau de redirection dans les objets."),
+              items.map(item=>{
+                const checked=drawPreferences[pool].includes(item.id);
+                const last=checked&&drawPreferences[pool].length===1;
+                return h("label",{key:item.id,style:"display:flex;align-items:center;gap:10px;min-height:37px;padding:7px 9px;margin-bottom:5px;border-radius:8px;border:1px solid "+(checked?"var(--rc)":"rgba(255,255,255,.10)")+";background:"+(checked?"rgba(168,85,247,.10)":"rgba(255,255,255,.025)")+";color:var(--tx);font-size:12px;cursor:"+(last?"default":"pointer")},
+                  h("input",{type:"checkbox",checked,disabled:last,onChange:e=>{settingsScrollTopRef.current=e.currentTarget.closest(".modal")?.scrollTop||0;toggleDrawChoice(pool,item.id);},style:"width:17px;height:17px;margin:0;accent-color:var(--rc);flex-shrink:0"}),
+                  h("span",null,item.label)
                 );
-              })
-            ))
-          )
-        ),
-        h("div",{class:"divider"}),
+              }),
+              pool==="daily"&&Object.entries(EXERCISE_ROTATIONS).map(([family,options])=>h("div",{key:family,style:"margin:16px 0"},
+                h("div",{style:"display:flex;align-items:center;gap:7px;font-family:Orbitron,sans-serif;font-size:10px;color:var(--rc);letter-spacing:.5px;margin-bottom:7px"},QuestIcon(rotationIcons[family],"💪🏼",14),"Variantes · "+rotationLabels[family]),
+                options.map(option=>{
+                  const checked=rotationEnabled[family].includes(option.id);
+                  const last=checked&&rotationEnabled[family].length===1;
+                  return h("label",{key:option.id,style:"display:flex;align-items:center;gap:10px;min-height:37px;padding:7px 9px;margin-bottom:5px;border-radius:8px;border:1px solid "+(checked?"var(--rc)":"rgba(255,255,255,.10)")+";background:"+(checked?"rgba(168,85,247,.10)":"rgba(255,255,255,.025)")+";color:var(--tx);font-size:12px;cursor:"+(last?"default":"pointer")},
+                    h("input",{type:"checkbox",checked,disabled:last,onChange:e=>{settingsScrollTopRef.current=e.currentTarget.closest(".modal")?.scrollTop||0;toggleRotationChoice(family,option.id);},style:"width:17px;height:17px;margin:0;accent-color:var(--rc);flex-shrink:0"}),
+                    h("span",null,option.label)
+                  );
+                })
+              ))
+            )
+          ),
+          h("div",{class:"divider"})
+        )),
         h("div",{class:"msec"},
           h("div",{class:"mlbl"},"Sauvegarde / Restauration"),
           h("div",{class:"mrow",style:"margin-bottom:8px"},

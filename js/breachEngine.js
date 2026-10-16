@@ -5,6 +5,7 @@
 
 import { BREACH_POOL, BREACH_RUPTURE_BOSSES } from "./breachDefs.js?v=20260821-alduin-rupture-v1";
 import { eventDayStr, next7AM } from "./dayCycle.js";
+import { eligiblePool } from "./drawPreferences.js?v=20261016-draw-pools-v1";
 
 function breachTemplateById(id){return BREACH_POOL.find(b=>b.id===id)||null;}
 function breachRuptureTemplateById(id){return BREACH_RUPTURE_BOSSES[id]||null;}
@@ -29,7 +30,7 @@ function normalizeActiveBreach(entry){
   const ruptureBoss=entry.ruptureBoss
     ? buildBreachRuptureBoss(tpl.id,entry.ruptureBoss)
     : null;
-  return {...tpl,breachId:entry.breachId||("breach_"+(entry.startedAt||Date.now())),progress:Math.max(0,Math.min(tpl.target,Number(entry.progress)||0)),startedAt:Number(entry.startedAt)||Date.now(),expiresAt:ruptureBoss?ruptureBoss.expiresAt:(Number(entry.expiresAt)||((Number(entry.startedAt)||Date.now())+72*60*60*1000)),completedAt:entry.completedAt||null,ruptureBoss,rupturedAt:entry.rupturedAt||null,isBreach:true,alliedTeleport:entry.alliedTeleport===true};
+  return {...tpl,breachId:entry.breachId||("breach_"+(entry.startedAt||Date.now())),progress:Math.max(0,Math.min(tpl.target,Number(entry.progress)||0)),startedAt:Number(entry.startedAt)||Date.now(),expiresAt:ruptureBoss?ruptureBoss.expiresAt:(Number(entry.expiresAt)||((Number(entry.startedAt)||Date.now())+72*60*60*1000)),completedAt:entry.completedAt||null,ruptureBoss,rupturedAt:entry.rupturedAt||null,isBreach:true,alliedTeleport:entry.alliedTeleport===true,replacementUsed:entry.replacementUsed===true};
 }
 
 function processDailyBreachRoll(state,now=Date.now()){
@@ -41,8 +42,9 @@ function processDailyBreachRoll(state,now=Date.now()){
     return {...state,activeBreach:current};
   }
   if(state.breachRollDay===day)return state;
-  if(Math.random()>=0.01)return {...state,activeBreach:null,breachRollDay:day};
-  const tpl=BREACH_POOL[Math.floor(Math.random()*BREACH_POOL.length)];
+  const candidates=BREACH_POOL.filter(b=>eligiblePool(state,"breach").has(b.id));
+  if(!candidates.length||Math.random()>=0.01)return {...state,activeBreach:null,breachRollDay:day};
+  const tpl=candidates[Math.floor(Math.random()*candidates.length)];
   return {...state,activeBreach:{...tpl,breachId:"breach_"+now,progress:0,startedAt:now,expiresAt:now+72*60*60*1000,completedAt:null,ruptureBoss:null,isBreach:true},breachRollDay:day,breachTriggeredDay:day,specialQuests:(state.specialQuests||[]).filter(q=>q.completedAt||now>=(q.expiresAt||0)),sqCooldownUntil:next7AM(now),sqRerollDay:null};
 }
 
