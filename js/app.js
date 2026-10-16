@@ -90,7 +90,7 @@ import {
   NEW_ITEM_ICON_DATA,
   DEBT_ACKNOWLEDGEMENT_ICON_DATA
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
-import { UiIcon } from "./uiIcons.js?v=20261016-portal-crystal-v1";
+import { UiIcon } from "./uiIcons.js?v=20261016-xp-dungeon-portal-v1";
 import { saveStoredState } from "./storage.js";
 import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261016-breach-completed-card-v1";
 import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261016-breach-completed-card-v1";
@@ -1024,6 +1024,8 @@ function App(){
     regressionMalus:"Régression"
   };
   const extraXpIconKeys={
+    dungeon:"interface.xpDungeon",
+    breach:"interface.xpPortal",
     streak:"interface.xpStreak",
     elanBonus:"interface.xpElan",
     inertiaMalus:"interface.xpInertia",
@@ -1046,28 +1048,12 @@ function App(){
   const urgentQuestToday=[...(state.specialQuests||[]),...(state.completedSqLog||[])]
     .filter(q=>sameDayTs(q.completedAt))
     .sort((a,b)=>(b.completedAt||0)-(a.completedAt||0))[0]||null;
-  const completedDungeonToday=[...(state.dungeonLog||[])]
-    .reverse()
-    .find(entry=>sameDayTs(entry.completedAt))||null;
-  const dungeonSourceToday=completedDungeonToday||state.activeDungeon||null;
-  const dungeonDefToday=dungeonSourceToday
-    ?DUNGEONS.find(d=>d.id===dungeonSourceToday.id)
-    :null;
   const extraXpTodayRows=Object.entries(extraToday).map(([key,value])=>{
     const row={key:"extra_"+key,label:extraXpLabels[key]||key,xp:Number(value)||0};
     if(extraXpIconKeys[key]) row.iconKey=extraXpIconKeys[key];
     if(key==="sq"&&urgentQuestToday){
       row.iconId=urgentQuestToday.id;
       row.icon=urgentQuestToday.icon;
-    }
-    if(key==="dungeon"&&dungeonSourceToday){
-      row.iconKind="dungeon";
-      row.iconId=dungeonSourceToday.id;
-      row.icon=dungeonDefToday?.icon||dungeonSourceToday.icon;
-    }
-    if(key==="breach"){
-      row.iconId="portalCrystal";
-      row.icon="💎";
     }
     if(key==="debt"&&state.questDebt){
       row.iconId=state.questDebt.id;
@@ -1077,8 +1063,8 @@ function App(){
   }).filter(row=>Math.abs(row.xp)>1e-9);
   if(legacyStreakTodayXp)extraXpTodayRows.push({key:"legacy_streak",label:"Bonus de streak",xp:legacyStreakTodayXp,iconKey:"interface.xpStreak"});
   if(legacySqTodayXp)extraXpTodayRows.push({key:"legacy_sq",label:"Quête urgente",xp:legacySqTodayXp,iconId:urgentQuestToday?.id,icon:urgentQuestToday?.icon});
-  if(legacyActiveDungeonTodayXp)extraXpTodayRows.push({key:"legacy_dungeon_active",label:"Donjon",xp:legacyActiveDungeonTodayXp,iconKind:"dungeon",iconId:dungeonSourceToday?.id,icon:dungeonDefToday?.icon||dungeonSourceToday?.icon});
-  if(legacyCompletedDungeonTodayXp)extraXpTodayRows.push({key:"legacy_dungeon_done",label:"Donjon terminé",xp:legacyCompletedDungeonTodayXp,iconKind:"dungeon",iconId:dungeonSourceToday?.id,icon:dungeonDefToday?.icon||dungeonSourceToday?.icon});
+  if(legacyActiveDungeonTodayXp)extraXpTodayRows.push({key:"legacy_dungeon_active",label:"Donjon",xp:legacyActiveDungeonTodayXp,iconKey:"interface.xpDungeon"});
+  if(legacyCompletedDungeonTodayXp)extraXpTodayRows.push({key:"legacy_dungeon_done",label:"Donjon terminé",xp:legacyCompletedDungeonTodayXp,iconKey:"interface.xpDungeon"});
   const todayXpRows=[...questXpTodayRows,...extraXpTodayRows]
     .sort((a,b)=>b.xp-a.xp);
 
