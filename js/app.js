@@ -67,7 +67,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260811-linear-xp-v1";
 import { StatsTab } from "./statsView.js?v=20260919-kiviat-labels-v2";
-import { HistoryTab } from "./historyView.js?v=20261016-pullup-ranks-v2";
+import { HistoryTab } from "./historyView.js?v=20261016-weight-history-v3";
 import { INJURY_ZONES, injuryForDay, isInjuredQuest, injuryDaysRemaining } from "./injuryEngine.js?v=20261003-injury-v1";
 import {
   RANK_BASES,
@@ -94,8 +94,8 @@ import {
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
 import { UiIcon } from "./uiIcons.js?v=20261012-pullup-records-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261016-xp-settings-v2";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261016-xp-settings-v2";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261016-weight-history-v3";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261016-weight-history-v3";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -661,7 +661,7 @@ function App(){
   const [exportValue,setExportValue] = useState("");
   const [dungeonHelpOpen,setDungeonHelpOpen] = useState({});
   const [selectedDungeonRoom,setSelectedDungeonRoom] = useState(null);
-  const [historyOpen,setHistoryOpen] = useState({week:false,monthly:true,records:false});
+  const [historyOpen,setHistoryOpen] = useState({week:false,monthly:false,weight:false,records:false});
   const [settingsSectionOpen,setSettingsSectionOpen] = useState(null);
   const [goalSettingsError,setGoalSettingsError] = useState("");
   const [selectedGoalId,setSelectedGoalId] = useState(null);
@@ -4750,6 +4750,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
     ];
     return h(HistoryTab,{
       state,
+      setState,
       objs:historyObjs,
       baseObjs,
       today,

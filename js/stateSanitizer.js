@@ -309,6 +309,15 @@ function cleanWeeklySummaryTracking(value){
   };
 }
 
+function cleanWeightLog(value){
+  if(!Array.isArray(value))return [];
+  return value.filter(entry=>entry&&/^\d{4}-\d{2}-\d{2}$/.test(entry.date||"")&&
+    Number.isFinite(Number(entry.weight))&&Number(entry.weight)>0&&Number(entry.weight)<=500&&
+    Number.isFinite(Number(entry.recordedAt))&&Number(entry.recordedAt)>0)
+    .map(entry=>({date:entry.date,weight:Number(entry.weight),recordedAt:Number(entry.recordedAt)}))
+    .sort((a,b)=>a.recordedAt-b.recordedAt).slice(-5000);
+}
+
 export function cleanSystemState(raw){
   const data=migrateRuntimeQuestDefinitions(migrateMergedEspritState({...((raw&&typeof raw==="object")?raw:{})}));
   const dailyIds=new Set([...DEFS.filter(o=>o.daily).map(o=>o.id),...BONUS_QUESTS.map(o=>o.id),"bonus_pullups","bonus_negative_pullups","bonus_australian_pullups"]);
@@ -347,6 +356,7 @@ export function cleanSystemState(raw){
     inertiaPercent:Math.min(5,Math.max(0,Number(data.inertiaPercent)||0)),
     prestige:Number(data.prestige)||0,
     dailyLog:cleanQuestLogByIds(data.dailyLog,dailyIds),
+    weightLog:cleanWeightLog(data.weightLog),
     injuryPeriods:cleanInjuryPeriods(data.injuryPeriods),
     weeklyLog:cleanQuestLogByIds(data.weeklyLog,weeklyIds),
     weeklySummaries:cleanWeeklySummaries(data.weeklySummaries),

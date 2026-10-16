@@ -13,6 +13,7 @@ import { RECORD_EXERCISE_DEFS, recordExerciseValueForDay } from "./records.js?v=
 import { UiIcon } from "./uiIcons.js?v=20261012-pullup-records-v1";
 
 const { h, Fragment } = window.preact;
+const { useRef, useState } = window.preactHooks;
 
 const WEEKLY_BADGE_COLOR = "#818cf8";
 const BONUS_BADGE_COLOR = "#fbbf24";
@@ -57,6 +58,7 @@ const fmtNum = (v, max=2) => {
 
 export function HistoryTab({
   state,
+  setState,
   objs,
   baseObjs,
   today,
@@ -73,6 +75,8 @@ export function HistoryTab({
   getValidateThreshold,
   runRecordResetDay
 }){
+  const weightInputRef=useRef(null);
+  const [weightError,setWeightError]=useState("");
   const open = historyOpen;
   const setOpen = setHistoryOpen;
   const toggle = k => setOpen(o=>({...o,[k]:!o[k]}));
@@ -128,6 +132,38 @@ export function HistoryTab({
     ? selectedHistoryDay
     : monthKey+"-"+String(monthOff===0?Number(today.slice(8)):1).padStart(2,"0");
   const monthlyQuests=[...sortStat(objs.filter(o=>o.daily&&!o.optional)),...objs.filter(o=>o.id==="run")];
+  const weighIns=[...(state.weightLog||[])].sort((a,b)=>a.recordedAt-b.recordedAt);
+  const graphEntries=weighIns.slice(-90);
+  const minWeight=graphEntries.length?Math.min(...graphEntries.map(x=>x.weight)):0;
+  const maxWeight=graphEntries.length?Math.max(...graphEntries.map(x=>x.weight)):0;
+  const graphLow=minWeight-Math.max(.5,(maxWeight-minWeight)*.15);
+  const graphHigh=maxWeight+Math.max(.5,(maxWeight-minWeight)*.15);
+  const firstTime=graphEntries[0]?.recordedAt||0;
+  const lastTime=graphEntries.at(-1)?.recordedAt||0;
+  const graphPoints=graphEntries.map((entry,index)=>({
+    x:30+300*(lastTime>firstTime?(entry.recordedAt-firstTime)/(lastTime-firstTime):graphEntries.length===1?.5:index/(graphEntries.length-1)),
+    y:140-112*(entry.weight-graphLow)/(graphHigh-graphLow)
+  }));
+  const weightLabel=value=>fmtNum(value,2).replace(".",",");
+  const shortDate=date=>date.slice(8)+"/"+date.slice(5,7)+"/"+date.slice(0,4);
+  function saveWeight(event){
+    event.preventDefault();
+    const input=weightInputRef.current;
+    const value=Number(String(input?.value||"").trim().replace(",","."));
+    if(!Number.isFinite(value)||value<=0||value>500||!/^\d+(?:[.,]\d{1,2})?$/.test(input.value.trim())){
+      setWeightError("Saisis un poids valide en kg, avec deux décimales au maximum.");
+      return;
+    }
+    const now=new Date();
+    const date=localDate(now);
+    setState(previous=>{
+      const log=previous.weightLog||[];
+      const recordedAt=Math.max(now.getTime(),(log.at(-1)?.recordedAt||0)+1);
+      return {...previous,weightLog:[...log,{date,weight:value,recordedAt}]};
+    });
+    input.value="";
+    setWeightError("");
+  }
 
   function weeklyTargetFor(obj){
     if(obj.binary) return 7;
@@ -229,6 +265,44 @@ export function HistoryTab({
           })
         ),
         ordered.every(o=>!(tots[o.id]>0))&&h("div",{style:"text-align:center;font-size:13px;color:var(--td);padding:16px 0"},"Aucune activité cette semaine")
+      )
+    ),
+    h("div",{class:"card"},
+      h("div",{style:"display:flex;align-items:center;justify-content:space-between;cursor:pointer",onClick:()=>toggle("weight")},
+        h("div",{class:"ctitle",style:"margin:0"},"Suivi du poids"),
+        h(ChevronBtn,{k:"weight"})
+      ),
+      open.weight&&h(Fragment,null,
+        h("form",{onSubmit:saveWeight,style:"display:flex;gap:8px;align-items:center;margin-top:15px"},
+          h("input",{ref:weightInputRef,type:"text",inputMode:"decimal",placeholder:"Poids (kg)","aria-label":"Poids en kilogrammes",class:"min",style:"flex:1;min-width:0;margin:0;text-align:center"}),
+          h("button",{type:"submit",class:"mbtn mprim",style:"width:auto;min-width:105px;margin:0"},"Enregistrer")
+        ),
+        weightError&&h("div",{style:"font-size:11px;color:#ef4444;margin-top:7px"},weightError),
+        h("div",{style:"font-size:10px;color:var(--td);margin-top:7px"},"La date et l’heure de chaque pesée sont enregistrées automatiquement."),
+        weighIns.length>0?h(Fragment,null,
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:var(--rc);margin:18px 0 9px"},"Dernière pesée : "+weightLabel(weighIns.at(-1).weight)+" kg"),
+          h("div",{style:"border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);border-radius:10px;padding:7px"},
+            h("svg",{viewBox:"0 0 360 170",role:"img","aria-label":"Évolution du poids sur les 90 dernières pesées",style:"display:block;width:100%;height:auto"},
+              [28,84,140].map(y=>h("line",{key:"grid"+y,x1:30,x2:330,y1:y,y2:y,stroke:"rgba(255,255,255,.12)","stroke-width":1})),
+              h("text",{x:2,y:31,fill:"#94a3b8","font-size":10},weightLabel(graphHigh)),
+              h("text",{x:2,y:143,fill:"#94a3b8","font-size":10},weightLabel(graphLow)),
+              graphPoints.length>1&&h("polyline",{points:graphPoints.map(point=>point.x.toFixed(1)+","+point.y.toFixed(1)).join(" "),fill:"none",stroke:"#a78bfa","stroke-width":2.5,"stroke-linecap":"round","stroke-linejoin":"round"}),
+              graphPoints.map((point,index)=>h("circle",{key:index,cx:point.x,cy:point.y,r:index===graphPoints.length-1?4:2.5,fill:index===graphPoints.length-1?"#c4b5fd":"#a78bfa"})),
+              h("text",{x:30,y:160,fill:"#94a3b8","font-size":10},shortDate(graphEntries[0].date).slice(0,5)),
+              h("text",{x:330,y:160,fill:"#94a3b8","font-size":10,"text-anchor":"end"},shortDate(graphEntries.at(-1).date).slice(0,5))
+            )
+          ),
+          h("div",{style:"font-size:10px;color:var(--td);margin-top:6px"},graphEntries.length<weighIns.length?"Courbe : 90 dernières pesées":"Courbe : toutes les pesées"),
+          h("div",{style:"max-height:180px;overflow:auto;margin-top:13px"},
+            weighIns.slice().reverse().map(entry=>h("div",{key:entry.recordedAt,style:"display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 2px;border-top:1px solid rgba(255,255,255,.06)"},
+              h("span",{style:"font-size:11px;color:var(--td)"},shortDate(entry.date)+" · "+new Date(entry.recordedAt).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})),
+              h("span",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:var(--tx);margin-left:auto"},weightLabel(entry.weight)+" kg"),
+              h("button",{type:"button",title:"Supprimer cette pesée","aria-label":"Supprimer la pesée du "+shortDate(entry.date),onClick:()=>{
+                if(window.confirm("Supprimer cette pesée du "+shortDate(entry.date)+" ?"))setState(previous=>({...previous,weightLog:(previous.weightLog||[]).filter(item=>item.recordedAt!==entry.recordedAt)}));
+              },style:"border:0;background:transparent;color:var(--td);font-size:18px;padding:0 4px;cursor:pointer"},"×")
+            ))
+          )
+        ):h("div",{style:"font-size:12px;color:var(--td);text-align:center;padding:24px 0 8px"},"Aucune pesée enregistrée.")
       )
     ),
     h("div",{class:"card"},

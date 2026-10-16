@@ -7,7 +7,7 @@ import { DEFS, SP } from "./questDefs.js?v=20261012-back-daily-v1";
 import { next7AM, todayStr, addDaysStr } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
 import { loadStoredState } from "./storage.js";
-import { cleanSystemState } from "./stateSanitizer.js?v=20261016-xp-settings-v2";
+import { cleanSystemState } from "./stateSanitizer.js?v=20261016-weight-history-v3";
 import { normalizeActiveBreach } from "./breachEngine.js";
 
 const loadState = () => loadStoredState(cleanSystemState);
@@ -60,6 +60,7 @@ const IMPORTED = {
   },
   weeklyLog:{"2026-W15":{run:13},"2026-W16":{run:8.52},"2026-W17":{walk:6.5,run:0},"2026-W18":{run:12.56,walk:8},"2026-W19":{run:10.42,walk:3}},
   weeklySummaries:[],
+  weightLog:[],
   weeklySummaryTracking:null,
   weeklyQuestRewardPendingWeek:null,
   weeklyQuestRewardClaimedWeeks:[],
@@ -199,6 +200,7 @@ export function buildInitialState(){
     sleepHoursMigrated:true,
     weeklyLog:saved.weeklyLog||IMPORTED.weeklyLog,
     weeklySummaries:saved.weeklySummaries||[],
+    weightLog:saved.weightLog||[],
     weeklySummaryTracking:saved.weeklySummaryTracking||null,
     weeklyQuestRewardPendingWeek:saved.weeklyQuestRewardPendingWeek||null,
     weeklyQuestRewardClaimedWeeks:Array.isArray(saved.weeklyQuestRewardClaimedWeeks)?saved.weeklyQuestRewardClaimedWeeks:[],
