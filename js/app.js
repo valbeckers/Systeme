@@ -5981,6 +5981,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
         );
       }
       const pushTarget=getStatLevelTarget("push",state.stats);
+      const negativePullupsTarget=getStatLevelTarget("negative_pullups",state.stats);
       const absTarget=getStatLevelTarget("abs",state.stats);
       const legRaiseTarget=legRaiseTargetForForceLevel(force);
       const plankTarget=Math.max(1,Math.ceil(force/10));
@@ -5995,6 +5996,12 @@ function isUncappedProfessionalWeeklyQuest(obj){
           h(FamilyTitle,{label:"PECS & TRICEPS"}),
           h(Exercise,{iconKey:"pushups",icon:"💪🏼",name:"Pompes",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
           h(Exercise,{iconKey:"dips",icon:"💪🏼",name:"Dips",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]})
+        ),
+        h("div",{style:familyStyle},
+          h(FamilyTitle,{label:"DOS & BICEPS"}),
+          h(Exercise,{iconKey:"negative_pullups",icon:"💪🏼",name:"Tractions",target:10,unit:"reps",rewards:[{stat:"Force",xp:"30/rep"}]}),
+          h(Exercise,{iconKey:"negative_pullups",icon:"💪🏼",name:"Tractions négatives",target:negativePullupsTarget,unit:"reps",rewards:[{stat:"Force",xp:"12/rep"}]}),
+          h(Exercise,{iconKey:"australian_pullups",icon:"💪🏼",name:"Tractions australiennes",target:getStatLevelTarget("squats",state.stats),unit:"reps",rewards:[{stat:"Force",xp:"6/rep"}]})
         ),
         h("div",{style:familyStyle},
           h(FamilyTitle,{label:"ABDOS"}),
@@ -6208,17 +6215,17 @@ function isUncappedProfessionalWeeklyQuest(obj){
         ),
         h("div",{style:"display:flex;justify-content:center;align-items:center;margin:14px 0 8px"},InventoryItemIcon("codex",128)),
         h("div",{style:"font-size:12px;line-height:1.6;color:var(--tx);text-align:center;margin-bottom:15px"},"Permet au joueur de consulter les quêtes et systèmes de l’application."),
+        h(Section,{id:"dj",title:"Donjons",count:DUNGEONS.length},
+          h(Fragment,null,
+            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Un Donjon inachevé se ferme à l’expiration de son délai. Les salles déjà validées et leurs XP restent acquises."),
+            groupByDominantStat(DUNGEONS,renderDungeonCodex,dg=>dg.stat)
+          )
+        ),
         h(Section,{id:"breach",title:"Portails",count:breachList.length},
           h(Fragment,null,
             h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:6px"},"Un portail a 1 % de chance d’apparaître au reset quotidien. Il remplace la quête urgente du jour et reste ouvert 72 h. S’il n’est pas fermé après 72 h, il entre en rupture pendant 24 h : son Boss reprend l’objectif initial et invoque une garde rapprochée de 3 sous-quêtes."),
             h("div",{style:"font-size:10px;color:#ef4444;font-family:Orbitron,sans-serif;line-height:1.5;font-weight:800;margin-bottom:10px"},"−25 % XP si le portail en rupture n’est pas fermé dans les 24 h."),
             groupByDominantStat(breachList,renderBreachCodex,b=>b.stat)
-          )
-        ),
-        h(Section,{id:"dj",title:"Donjons",count:DUNGEONS.length},
-          h(Fragment,null,
-            h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.5;margin-bottom:10px"},"Un Donjon inachevé se ferme à l’expiration de son délai. Les salles déjà validées et leurs XP restent acquises."),
-            groupByDominantStat(DUNGEONS,renderDungeonCodex,dg=>dg.stat)
           )
         ),
         h(Section,{id:"bonus",title:"Quêtes bonus",count:bonus.length+hiddenBonus.length},
