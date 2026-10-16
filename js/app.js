@@ -41,7 +41,7 @@ import {
   expireSuspendedDungeonState,
   canValidateDungeonRoom
 } from "./dungeonEngine.js?v=20260910-dimensional-anchor-v1";
-import { INVENTORY_ITEMS } from "./itemDefs.js?v=20261016-portal-seal-v1";
+import { INVENTORY_ITEMS } from "./itemDefs.js?v=20261016-portal-seal-removed-v2";
 import {
   incrementLootState,
   pickRandomBreachLoot,
@@ -4059,10 +4059,10 @@ function isUncappedProfessionalWeeklyQuest(obj){
     if(NEW_ITEM_ICON_DATA[id])return EmojiStyleItemImage(NEW_ITEM_ICON_DATA[id],size);
     return h(UiIcon,{iconKey:"item."+id,fallback:INVENTORY_ITEMS[id].emoji,slotSize:size,glyphSize:size});
   }
-  function itemQty(id){ return ["codex","regressionOrb","debtAcknowledgement","recoveryOintment","portalReroll"].includes(id)?1:id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
+  function itemQty(id){ return ["codex","regressionOrb","debtAcknowledgement","recoveryOintment"].includes(id)?1:id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
   function Inventory(){
-    const permanentOrder=["codex","recoveryOintment","regressionOrb","debtAcknowledgement","portalReroll"];
-    const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","mysteryMap","etherStopper","dimensionalAnchor","rerollToken","rewriteRune","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape","recoveryOintment","portalReroll","counterpartBalance"]
+    const permanentOrder=["codex","recoveryOintment","regressionOrb","debtAcknowledgement"];
+    const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","mysteryMap","etherStopper","dimensionalAnchor","rerollToken","rewriteRune","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape","recoveryOintment","counterpartBalance"]
       .sort((a,b)=>{
         const permanentIndexA=permanentOrder.indexOf(a);
         const permanentIndexB=permanentOrder.indexOf(b);
@@ -4279,11 +4279,6 @@ function isUncappedProfessionalWeeklyQuest(obj){
       if(state.recordChallenge&&state.recordChallenge.week===wk){disabled=false;reason="Une Marque du dépassement est actuellement dessinée sur « "+(state.recordChallenge.name||"ce record")+" ».";}
     }else if(id==="recoveryOintment"){
       if(activeInjury){disabled=true;reason="Une blessure est déjà active jusqu’au "+activeInjury.endDay.split("-").reverse().join("/")+".";}
-    }else if(id==="portalReroll"){
-      if(!activeBreach){disabled=true;reason="Aucun portail actif à remplacer.";}
-      else if(activeBreach.ruptureBoss){disabled=true;reason="Le portail est déjà en rupture.";}
-      else if(activeBreach.replacementUsed){disabled=true;reason="Ce portail a déjà été remplacé.";}
-      else if(!BREACH_POOL.some(b=>b.id!==activeBreach.id&&eligiblePool(state,"breach").has(b.id))){disabled=true;reason="Coche au moins un autre portail dans les réglages.";}
     }else if(id==="counterpartBalance"){
       const eligible=counterpartBalanceSacrificeEligibleIds(state);
       if(eligible.length<3){disabled=true;reason="Trois objets différents sont nécessaires pour utiliser la Balance ("+eligible.length+"/3 disponibles).";}
@@ -4345,8 +4340,6 @@ function isUncappedProfessionalWeeklyQuest(obj){
             ?"Briser le Cristal de téléportation pour rejoindre un pays voisin et ouvrir un portail aléatoire ?"
             :id==="recoveryOintment"
               ?"Définir une blessure et sa durée avec l’Onguent de récupération ?"
-            :id==="portalReroll"
-              ?"Utiliser le Sceau de redirection pour remplacer « "+(activeBreach?.name||"ce portail")+" » ? Un autre portail coché sera tiré. Le temps restant sera conservé et la progression remise à zéro, sans gain ni pénalité. Une seule utilisation pour ce portail."
             :id==="mysteryMap"
               ?"Déplier la Carte des profondeurs pour choisir la statistique du prochain donjon ?"
               :id==="counterpartBalance"
@@ -4417,15 +4410,6 @@ function isUncappedProfessionalWeeklyQuest(obj){
             setSpecialItemChoice({type:"debtAcknowledgement"});
           }else if(id==="recoveryOintment"){
             setSpecialItemChoice({type:"recoveryOintment"});
-          }else if(id==="portalReroll"){
-            setState(s=>{
-              const current=normalizeActiveBreach(s.activeBreach);
-              if(!current||current.ruptureBoss||current.replacementUsed||Date.now()>=current.expiresAt)return s;
-              const candidates=BREACH_POOL.filter(b=>b.id!==current.id&&eligiblePool(s,"breach").has(b.id));
-              if(!candidates.length)return s;
-              const tpl=candidates[Math.floor(Math.random()*candidates.length)];
-              return {...s,activeBreach:{...tpl,breachId:current.breachId,progress:0,startedAt:current.startedAt,expiresAt:current.expiresAt,completedAt:null,ruptureBoss:null,isBreach:true,alliedTeleport:current.alliedTeleport,replacementUsed:true}};
-            });
           }else if(id==="recordHammer"||id==="invisibilityCape"){
             setSpecialItemChoice({type:id});
           }else if(id==="counterpartBalance"){
@@ -5002,7 +4986,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
             ),
             settingsSectionOpen==="draw_"+pool&&h("div",null,
               h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin:9px 0 14px"},
-                pool==="daily"?"Les quêtes décochées quittent le programme dès demain. Les variantes musculaires ci-dessous suivent le même tirage qu’avant.":pool==="dungeon"?"Seuls les donjons cochés pourront être tirés ou lancés. Un donjon en cours reste inchangé.":"Les portails décochés ne seront plus tirés. Pour remplacer le portail en cours, utilise le Sceau de redirection dans les objets."),
+                pool==="daily"?"Les quêtes décochées quittent le programme dès demain. Les variantes musculaires ci-dessous suivent le même tirage qu’avant.":pool==="dungeon"?"Seuls les donjons cochés pourront être tirés ou lancés. Un donjon en cours reste inchangé.":"Les portails décochés ne seront plus tirés. Le portail déjà actif reste inchangé."),
               items.map(item=>{
                 const checked=drawPreferences[pool].includes(item.id);
                 const last=checked&&drawPreferences[pool].length===1;
