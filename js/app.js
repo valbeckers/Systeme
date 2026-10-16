@@ -67,7 +67,8 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260811-linear-xp-v1";
 import { StatsTab } from "./statsView.js?v=20260919-kiviat-labels-v2";
-import { HistoryTab } from "./historyView.js?v=20261016-weight-copy-v7";
+import { HistoryTab } from "./historyView.js?v=20261016-regression-summary-v8";
+import { regressionPenaltyForWeek, weeklyXpWithoutRegression } from "./weeklyRegressionXp.js?v=20261016-v1";
 import { INJURY_ZONES, injuryForDay, isInjuredQuest, injuryDaysRemaining } from "./injuryEngine.js?v=20261003-injury-v1";
 import {
   RANK_BASES,
@@ -94,8 +95,8 @@ import {
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
 import { UiIcon } from "./uiIcons.js?v=20261012-pullup-records-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261016-weight-history-v3";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261016-weight-history-v3";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261016-regression-summary-v4";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261016-regression-summary-v4";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -543,7 +544,8 @@ function buildWeeklySummary(state,tracking){
     startDay:days[0]||null,
     endDay:days[6]||null,
     createdAt:Date.now(),
-    xp:Math.round((Number(tracking.earnedXp)||0)*100)/100,
+    xp:Math.round(((Number(tracking.earnedXp)||0)+regressionPenaltyForWeek(state,weekKey))*100)/100,
+    regressionsExcluded:true,
     successfulDays:successfulDays.length,
     bestStreak,
     dungeons,
@@ -573,6 +575,12 @@ function estimateRecordedWeekXp(state,weekKey){
     const target=Number(obj.target||obj.base)||0;
     total+=calcQuestTotalXp(obj,value,target);
     if(obj.completionBonusXp&&target>0&&value>=target)total+=Number(obj.completionBonusXp)||0;
+  });
+  // Les anciennes sauvegardes ont pu perdre regressionMalus tout en conservant regressionLog.
+  // Reconstituer le malus dans le suivi initial ; buildWeeklySummary l'exclura ensuite.
+  Object.keys(state.regressionLog||{}).forEach(day=>{
+    if(!days.has(day)||Number(state.dailyExtraXp?.[day]?.regressionMalus)<0)return;
+    total-=REGRESSION_DEF.globalPenalty;
   });
   return Math.round(total*100)/100;
 }
@@ -6308,7 +6316,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
     const previous=[...(state.weeklySummaries||[])]
       .filter(item=>item.weekKey!==summary.weekKey&&item.createdAt<summary.createdAt)
       .sort((a,b)=>b.createdAt-a.createdAt)[0]||null;
-    const xpDiff=previous?Math.round((summary.xp-previous.xp)*100)/100:null;
+    const xpDiff=previous?Math.round((weeklyXpWithoutRegression(state,summary)-weeklyXpWithoutRegression(state,previous))*100)/100:null;
     const bonusTotal=(Number(summary.professionalBonusXp)||0)+(Number(summary.streakBonusXp)||0);
     const metric=(label,value)=>h("div",{style:"padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(255,255,255,.025);text-align:center"},
       h("div",{style:"font-family:Orbitron,sans-serif;font-size:15px;font-weight:900;color:var(--rc)"},value),
@@ -6321,7 +6329,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
           h("button",{onClick:()=>setWeeklySummaryUp(null),style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
         ),
         h("div",{style:"margin-top:7px;font-family:Orbitron,sans-serif;font-size:9px;color:var(--td);letter-spacing:.8px"},"DU "+fmtDay(summary.startDay)+" AU "+fmtDay(summary.endDay)),
-        h("div",{style:"margin:20px 0 4px;text-align:center;font-family:Orbitron,sans-serif;font-size:34px;font-weight:900;color:var(--rc);text-shadow:0 0 18px var(--rg)"},Math.round(summary.xp).toLocaleString("fr-FR")+" XP"),
+        h("div",{style:"margin:20px 0 4px;text-align:center;font-family:Orbitron,sans-serif;font-size:34px;font-weight:900;color:var(--rc);text-shadow:0 0 18px var(--rg)"},Math.round(weeklyXpWithoutRegression(state,summary)).toLocaleString("fr-FR")+" XP"),
         xpDiff!=null&&h("div",{style:"text-align:center;font-size:10px;color:"+(xpDiff>=0?"#4ade80":"#ef4444")+";font-family:Orbitron,sans-serif;margin-bottom:16px"},(xpDiff>=0?"+":"")+Math.round(xpDiff).toLocaleString("fr-FR")+" XP par rapport à la semaine précédente"),
         h("div",{style:"display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:"+(xpDiff==null?"16px":"0")},
           metric("Journées validées",summary.successfulDays+"/7"),

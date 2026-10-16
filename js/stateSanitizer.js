@@ -154,7 +154,7 @@ function cleanSqDrawLogEntry(q,map){
 }
 
 function cleanDailyExtraXp(extra){
-  const allowed=new Set(["eventBonus","sq","breach","dungeon","streak","debt","elanBonus","inertiaMalus"]);
+  const allowed=new Set(["eventBonus","sq","breach","dungeon","streak","debt","elanBonus","inertiaMalus","regressionMalus"]);
   const out={};
   Object.entries(extra||{}).forEach(([day,row])=>{
     if(!row || typeof row!=="object") return;
@@ -281,6 +281,7 @@ function cleanWeeklySummaries(items){
       endDay:item.endDay||null,
       createdAt:Number(item.createdAt)||Date.now(),
       xp:Number(item.xp)||0,
+      regressionsExcluded:item.regressionsExcluded===true,
       successfulDays:Math.max(0,Math.min(7,Math.floor(Number(item.successfulDays)||0))),
       bestStreak:Math.max(0,Math.min(7,Math.floor(Number(item.bestStreak)||0))),
       dungeons:Math.max(0,Math.floor(Number(item.dungeons)||0)),

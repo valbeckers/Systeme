@@ -7,7 +7,7 @@ import { DEFS, SP } from "./questDefs.js?v=20261012-back-daily-v1";
 import { next7AM, todayStr, addDaysStr } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
 import { loadStoredState } from "./storage.js";
-import { cleanSystemState } from "./stateSanitizer.js?v=20261016-weight-history-v3";
+import { cleanSystemState } from "./stateSanitizer.js?v=20261016-regression-summary-v4";
 import { normalizeActiveBreach } from "./breachEngine.js";
 
 const loadState = () => loadStoredState(cleanSystemState);

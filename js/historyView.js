@@ -11,6 +11,7 @@ import {
 } from "./exerciseRotation.js?v=20261016-pullup-ranks-v2";
 import { RECORD_EXERCISE_DEFS, recordExerciseValueForDay } from "./records.js?v=20261012-pullup-records-v1";
 import { UiIcon } from "./uiIcons.js?v=20261012-pullup-records-v1";
+import { weeklyXpWithoutRegression } from "./weeklyRegressionXp.js?v=20261016-v1";
 
 const { h, Fragment } = window.preact;
 const { useRef, useState } = window.preactHooks;
@@ -371,7 +372,7 @@ export function HistoryTab({
               h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--tx);letter-spacing:.7px"},"DU "+fmtDay(summary.startDay)+" AU "+fmtDay(summary.endDay)),
               h("div",{style:"font-size:10px;color:var(--td);margin-top:3px"},summary.successfulDays+"/7 journées validées")
             ),
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:var(--rc);white-space:nowrap"},Math.round(Number(summary.xp)||0).toLocaleString("fr-FR")+" XP"),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:var(--rc);white-space:nowrap"},Math.round(weeklyXpWithoutRegression(state,summary)).toLocaleString("fr-FR")+" XP"),
             h(ChevronBtn,{k:key})
           ),
           open[key]&&h("div",{style:"margin-top:12px"},
