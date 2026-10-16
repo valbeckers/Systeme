@@ -8,7 +8,7 @@ import { normalizeActiveBreach } from "./breachEngine.js";
 import { cleanStoredActiveElixir, cleanStoredSuspendedElixir } from "./elixirEngine.js";
 import { cleanExerciseRotationByDay, cleanExerciseRotationEnabled } from "./exerciseRotation.js?v=20261014-rotation-settings-v1";
 import { cleanInjuryPeriods } from "./injuryEngine.js?v=20261003-injury-v1";
-import { cleanQuestTuning, applyQuestTuning } from "./questTuning.js?v=20261014-all-quest-settings-v1";
+import { cleanQuestTuning, applyQuestTuning } from "./questTuning.js?v=20261016-xp-settings-v2";
 
 function migrateMergedEspritState(state){
   if(!state || typeof state !== "object") return state;

@@ -1,5 +1,5 @@
 import { SP } from "./questDefs.js?v=20260818-urgent-dungeon-v1";
-import { applyQuestTuning } from "./questTuning.js?v=20261014-all-quest-settings-v1";
+import { applyQuestTuning } from "./questTuning.js?v=20261016-xp-settings-v2";
 
 // ─── MOTEUR DE TIRAGE DES QUÊTES URGENTES ───────────────────────────────────
 // Sélection pure de la prochaine quête urgente : cycle des six statistiques,

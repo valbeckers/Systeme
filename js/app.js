@@ -1,7 +1,7 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
 import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20261012-back-daily-v1";
 import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261012-back-daily-v1";
-import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20261014-all-quest-settings-v1";
+import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20261016-xp-settings-v2";
 import {
   isDebtEligibleQuest,
   createQuestDebtState,
@@ -93,8 +93,8 @@ import {
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
 import { UiIcon } from "./uiIcons.js?v=20261012-pullup-records-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261014-all-quest-settings-v1";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261014-all-quest-settings-v1";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261016-xp-settings-v2";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261016-xp-settings-v2";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -104,7 +104,7 @@ import {
   ensureExerciseRotationForDay,
   rotatedQuestObjects
 } from "./exerciseRotation.js?v=20261014-calves-target-v1";
-import { applyQuestTuning, nextQuestTuning, questTuningForDay, saveQuestTuning } from "./questTuning.js?v=20261014-all-quest-settings-v1";
+import { applyQuestTuning, nextQuestTuning, questTuningForDay, saveQuestTuning } from "./questTuning.js?v=20261016-xp-settings-v2";
 import {
   questRecordUnit,
   recordRotationIdForDay,
@@ -4797,6 +4797,30 @@ function isUncappedProfessionalWeeklyQuest(obj){
       :obj.id==="weekly_pro_actions"?[1,10]
       :obj.id.startsWith("sp_")?[1,5,10]
       :[1,10];
+    function rewardFields(obj){
+      const fields=[];
+      const add=(key,label,value,tierIndex=null)=>fields.push({key,label,value,tierIndex});
+      if(obj.tiers?.length){
+        obj.tiers.forEach((tier,index)=>{
+          add("xp","Palier "+(index+1)+" · XP "+(STAT_LBL[tier.stat]||tier.stat),tier.xp,index);
+          if(tier.xp2&&tier.stat2)add("xp2","Palier "+(index+1)+" · XP "+(STAT_LBL[tier.stat2]||tier.stat2),tier.xp2,index);
+          if(tier.xp3&&tier.stat3)add("xp3","Palier "+(index+1)+" · XP "+(STAT_LBL[tier.stat3]||tier.stat3),tier.xp3,index);
+        });
+      }else if(obj.id.startsWith("sp_")){
+        const denominator=obj.binary?1:Math.max(1,Number(obj.target)||1);
+        const suffix=obj.binary?" à la validation":" / "+obj.unit;
+        add(obj.binary?"xp":"xpPer","XP "+(STAT_LBL[obj.stat]||obj.stat)+suffix,(Number(obj.xp)||0)/denominator);
+        if(obj.xp2&&obj.stat2)add(obj.binary?"xp2":"xpPer2","XP "+(STAT_LBL[obj.stat2]||obj.stat2)+suffix,obj.xp2/denominator);
+        if(obj.xp3&&obj.stat3)add(obj.binary?"xp3":"xpPer3","XP "+(STAT_LBL[obj.stat3]||obj.stat3)+suffix,obj.xp3/denominator);
+      }else if(obj.binary){
+        add("binaryXp","XP à la validation · "+(STAT_LBL[obj.stat]||obj.stat),obj.binaryXp);
+      }else{
+        add("xpPer","XP / "+obj.unit+" · "+(STAT_LBL[obj.stat]||obj.stat),obj.xpPer);
+        if(obj.stat2)add("xpPer2","XP / "+obj.unit+" · "+(STAT_LBL[obj.stat2]||obj.stat2),obj.xpPer2||obj.xpPer);
+        if(obj.stat3)add("xpPer3","XP / "+obj.unit+" · "+(STAT_LBL[obj.stat3]||obj.stat3),obj.xpPer3||obj.xpPer);
+      }
+      return fields;
+    }
     function saveGoalRow(id,reset=false){
       const targetEl=document.getElementById("goal_target_"+id);
       const buttonEls=[0,1,2].map(index=>document.getElementById("goal_button_"+id+"_"+index));
@@ -4808,14 +4832,30 @@ function isUncappedProfessionalWeeklyQuest(obj){
       const rawButtons=reset?[]:buttonEls.map(el=>el.value.trim().replace(",",".")).filter(Boolean);
       const buttons=selected?.obj?.binary&&Number(selected.obj.target||selected.obj.base)===1?null
         :rawButtons.length?rawButtons.map(Number):null;
+      const rewards={};
+      let invalidReward=false;
+      if(!reset&&selected?.obj){
+        rewardFields(selected.obj).forEach(field=>{
+          const el=document.getElementById("goal_reward_"+id+"_"+(field.tierIndex??"base")+"_"+field.key);
+          if(!el)return;
+          const value=el.value.trim().replace(",",".");
+          if(!value)return;
+          const number=Number(value);
+          if(!Number.isFinite(number)||number<=0){invalidReward=true;return;}
+          if(field.tierIndex!=null){
+            (rewards.tiers??=[])[field.tierIndex]??={};
+            rewards.tiers[field.tierIndex][field.key]=number;
+          }else rewards[field.key]=number;
+        });
+      }
       if(target!==null&&(!Number.isFinite(target)||target<=0)||buttons&&(
         buttons.length<1||buttons.length>3||buttons.some(n=>!Number.isFinite(n)||n<=0)
-      )){
-        setGoalSettingsError("Saisis un objectif positif et une valeur positive dans chaque case de bouton utilisée.");
+      )||invalidReward){
+        setGoalSettingsError("Saisis des nombres positifs pour l’objectif, les boutons et les XP.");
         return;
       }
       setGoalSettingsError("");
-      setState(s=>({...s,questTuning:saveQuestTuning(s.questTuning,id,nextDay,target,buttons)}));
+      setState(s=>({...s,questTuning:saveQuestTuning(s.questTuning,id,nextDay,target,buttons,rewards)}));
       setSelectedGoalId(null);
     }
     const rotationEnabled=cleanExerciseRotationEnabled(state.exerciseRotationEnabled);
@@ -4985,12 +5025,24 @@ function isUncappedProfessionalWeeklyQuest(obj){
                   }))
                 ),
                 h("label",{htmlFor:"goal_button_"+id+"_0",style:"display:block;font-size:11px;color:var(--td);margin-top:6px;text-align:center"},"Boutons de saisie")
+              ),
+              h("div",{style:"border-top:1px solid rgba(255,255,255,.12);padding-top:12px"},
+                h("div",{style:"font-size:12px;color:var(--rc);margin-bottom:9px"},"Récompenses XP"),
+                rewardFields(obj).map(field=>{
+                  const saved=field.tierIndex!=null?selected?.rewards?.tiers?.[field.tierIndex]?.[field.key]:selected?.rewards?.[field.key];
+                  const fieldId="goal_reward_"+id+"_"+(field.tierIndex??"base")+"_"+field.key;
+                  return h("div",{key:fieldId,style:"display:flex;align-items:center;gap:10px;margin-bottom:8px"},
+                    h("label",{htmlFor:fieldId,style:"flex:1;min-width:0;font-size:11px;color:var(--td)"},field.label),
+                    h("input",{id:fieldId,class:"min",type:"text",inputMode:"decimal",placeholder:"Auto ("+fmtFrNum(field.value)+")",defaultValue:saved??"",style:"width:112px;box-sizing:border-box;margin:0;padding:8px;text-align:center"})
+                  );
+                }),
+                h("div",{style:"font-size:10px;color:var(--td);line-height:1.4"},"Une case vide conserve les XP d’origine. Les XP des autres statistiques se règlent séparément.")
               )
             ),
             h("div",{style:"font-size:10px;color:var(--td);margin-bottom:13px"},"Un nombre par case ; laisse les cases inutilisées vides. Exemple : 1, 5 et 10."),
             pending&&h("div",{style:"font-size:11px;color:var(--rc);margin-bottom:13px"},"Prévu demain : "+(pending.target??"Auto")+" "+obj.unit),
-            !lockedButtons&&h("button",{type:"button",class:"mbtn mprim",onClick:()=>saveGoalRow(id),style:"width:100%;margin-bottom:9px"},"Enregistrer"),
-            !lockedButtons&&h("button",{type:"button",class:"mbtn",onClick:()=>saveGoalRow(id,true),style:"width:100%;background:rgba(255,255,255,.03);color:var(--rc);border:1px solid var(--rc)"},"Rétablir auto")
+            h("button",{type:"button",class:"mbtn mprim",onClick:()=>saveGoalRow(id),style:"width:100%;margin-bottom:9px"},"Enregistrer"),
+            h("button",{type:"button",class:"mbtn",onClick:()=>saveGoalRow(id,true),style:"width:100%;background:rgba(255,255,255,.03);color:var(--rc);border:1px solid var(--rc)"},"Rétablir auto")
           )
         );
       })()
