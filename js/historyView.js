@@ -430,11 +430,10 @@ export function HistoryTab({
       )
     ),
     selectedWeighIn&&h("div",{class:"modal-ov",onClick:event=>{if(event.target===event.currentTarget){setSelectedWeighIn(null);setConfirmWeightDeletion(false);}}},
-      h("div",{class:"modal",style:"max-width:350px;text-align:center"},
-        h("div",{class:"mtitle",style:"font-size:17px;margin-bottom:15px"},"Pesée du "+shortDate(selectedWeighIn.date)),
-        h("div",{style:"font-family:Orbitron,sans-serif;font-size:25px;color:var(--rc);margin-bottom:9px"},weightLabel(selectedWeighIn.weight)+" kg"),
-        h("div",{style:"font-size:12px;color:var(--td);margin-bottom:22px"},"Enregistrée à "+new Date(selectedWeighIn.recordedAt).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})),
-        h("button",{type:"button",class:"mbtn mprim",onClick:()=>{setSelectedWeighIn(null);setConfirmWeightDeletion(false);},style:"width:100%;margin-bottom:8px"},"Fermer"),
+      h("div",{class:"modal",style:"max-width:350px;text-align:center;position:relative;padding-top:37px"},
+        h("button",{type:"button","aria-label":"Fermer",onClick:()=>{setSelectedWeighIn(null);setConfirmWeightDeletion(false);},style:"position:absolute;top:12px;right:15px;border:0;background:transparent;color:#fff;font-size:23px;line-height:1;cursor:pointer;padding:2px 6px"},"×"),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:25px;color:var(--rc);margin-bottom:11px"},weightLabel(selectedWeighIn.weight)+" kg"),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:14px;color:var(--tx);margin-bottom:25px"},shortDate(selectedWeighIn.date)),
         h("button",{type:"button",class:"mbtn",style:"width:100%;border:1px solid #ef4444;color:#ef4444;background:transparent",onClick:()=>setConfirmWeightDeletion(true)},"Supprimer cette pesée")
       )
     ),
