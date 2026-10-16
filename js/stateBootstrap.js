@@ -7,7 +7,7 @@ import { DEFS, SP } from "./questDefs.js?v=20261012-back-daily-v1";
 import { next7AM, todayStr, addDaysStr } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
 import { loadStoredState } from "./storage.js";
-import { cleanSystemState } from "./stateSanitizer.js?v=20261016-draw-pools-v1";
+import { cleanSystemState } from "./stateSanitizer.js?v=20261016-remove-alchemy-v1";
 import { normalizeActiveBreach } from "./breachEngine.js?v=20261016-draw-pools-v1";
 
 const loadState = () => loadStoredState(cleanSystemState);
@@ -98,9 +98,7 @@ const IMPORTED = {
   recordChallenge:null,
   urgentCompassStat:null,
   dungeonMapStat:null,
-  suspendedElixir:null,
   urgentTokenUseDay:null,
-  alchemicalCatalystArmed:false,
   objectives:DEFS,
 };
 
@@ -172,16 +170,13 @@ export function buildInitialState(){
     dungeonSkipDay:saved.dungeonSkipDay||null,
     dungeonRunsByWeek:saved.dungeonRunsByWeek||{},
     dungeonLog:saved.dungeonLog||[],
-    inventory:{dimensionalAnchor:0,...(saved.inventory||{majorElixir:0,minorElixir:0,supremeElixir:0,transmutationGrimoire:0,masterContract:0,recordHammer:0,teleportCrystal:0,invisibilityCape:0,debtAcknowledgement:0,destinyCompass:0,mysteryMap:0,etherStopper:0,rerollToken:0,rewriteRune:0,alchemicalCatalyst:0,recoveryOintment:0,counterpartBalance:0})},
+    inventory:{dimensionalAnchor:0,...(saved.inventory||{})},
     masterContractArmed:saved.masterContractArmed===true,
     recordChallenge:saved.recordChallenge||null,
     urgentCompassStat:saved.urgentCompassStat||null,
     dungeonMapStat:saved.dungeonMapStat||null,
-    suspendedElixir:saved.suspendedElixir||null,
     urgentTokenUseDay:saved.urgentTokenUseDay||null,
-    alchemicalCatalystArmed:saved.alchemicalCatalystArmed===true,
     dungeonAccessOpen:saved.dungeonAccessOpen===true,
-    activeElixir:saved.activeElixir||null,
     ruptureMalus:saved.ruptureMalus||null,
     dailyExtraXp:saved.dailyExtraXp||IMPORTED.dailyExtraXp||{},
     regressionLog:saved.regressionLog||{},

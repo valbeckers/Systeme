@@ -41,7 +41,7 @@ import {
   expireSuspendedDungeonState,
   canValidateDungeonRoom
 } from "./dungeonEngine.js?v=20260910-dimensional-anchor-v1";
-import { INVENTORY_ITEMS } from "./itemDefs.js?v=20261016-portal-seal-removed-v2";
+import { INVENTORY_ITEMS } from "./itemDefs.js?v=20261016-remove-alchemy-v1";
 import {
   incrementLootState,
   pickRandomBreachLoot,
@@ -52,7 +52,7 @@ import {
   counterpartBalanceSacrificeEligibleIds,
   counterpartBalanceRewardEligibleIds,
   exchangeCounterpartBalanceState
-} from "./lootEngine.js?v=20261004-key-rarity-v1";
+} from "./lootEngine.js?v=20261016-remove-alchemy-v1";
 import {
   eventDayStr,
   addDaysStr,
@@ -87,17 +87,13 @@ import {
 import {
   REGRESSION_ORB_ICON_DATA,
   DUNGEON_KEY_ICON_DATA,
-  MINOR_ELIXIR_ICON_DATA,
-  MAJOR_ELIXIR_ICON_DATA,
-  SUPREME_ELIXIR_ICON_DATA,
   NEW_ITEM_ICON_DATA,
-  GRIMOIRE_ICON_DATA,
   DEBT_ACKNOWLEDGEMENT_ICON_DATA
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
 import { UiIcon } from "./uiIcons.js?v=20261012-pullup-records-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261016-draw-pools-v1";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261016-draw-pools-v1";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261016-remove-alchemy-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261016-remove-alchemy-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -119,16 +115,6 @@ import {
   processDailyBreachRoll,
   pickBreachRuptureBoss
 } from "./breachEngine.js?v=20261016-draw-pools-v1";
-import {
-  ELIXIR_STATS,
-  ELIXIR_DURATION_MS,
-  isElixirKind,
-  currentActiveElixir,
-  currentSuspendedElixir,
-  elixirBonusForStat,
-  buildResumedElixir,
-  buildSuspendedElixir
-} from "./elixirEngine.js";
 
 const { h, render, Fragment } = window.preact;
 const { useState, useEffect, useRef } = window.preactHooks;
@@ -645,11 +631,9 @@ function App(){
   const [inventoryObtainOpen,setInventoryObtainOpen] = useState(false);
   const [confirmItemUse,setConfirmItemUse] = useState(null);
   const [itemComboPrompt,setItemComboPrompt] = useState(null);
-  const [elixirStatChoice,setElixirStatChoice] = useState(null);
   const [compassStatChoice,setCompassStatChoice] = useState(false);
   const [dungeonMapStatChoice,setDungeonMapStatChoice] = useState(false);
   const [specialItemChoice,setSpecialItemChoice] = useState(null);
-  const [confirmElixirUse,setConfirmElixirUse] = useState(null);
   const [confirmTargetedItemUse,setConfirmTargetedItemUse] = useState(null);
   const injuryDurationInputRef = useRef(null);
   const [balanceSacrificeChoice,setBalanceSacrificeChoice] = useState(null);
@@ -1028,7 +1012,7 @@ function App(){
   },0) + extraTodayXp + legacyStreakTodayXp + legacySqTodayXp + legacyActiveDungeonTodayXp + legacyCompletedDungeonTodayXp;
 
   const extraXpLabels={
-    eventBonus:"Bonus d’XP (élixir/événement)",
+    eventBonus:"Bonus d’XP historiques",
     sq:"Quête urgente",
     breach:"Portail",
     dungeon:"Donjon",
@@ -1296,21 +1280,6 @@ function App(){
   const dungeonKeys = Math.max(0,Math.floor(Number(state.dungeonKeys)||0));
   const dungeonKeyAvailable = dungeonKeys>0;
   const dungeonAccessOpen = state.dungeonAccessOpen===true;
-  const activeElixir = currentActiveElixir(state.activeElixir,now);
-  const suspendedElixir = currentSuspendedElixir(state.suspendedElixir);
-
-  // Après 24 h de suspension, l'élixir reprend automatiquement avec son temps restant.
-  useEffect(()=>{
-    const suspended=state.suspendedElixir;
-    if(!suspended || now<(Number(suspended.resumeDeadline)||0)) return;
-    setState(s=>{
-      const cur=s.suspendedElixir;
-      if(!cur || Date.now()<(Number(cur.resumeDeadline)||0) || s.activeElixir) return s;
-      const t=Date.now();
-      return {...s,suspendedElixir:null,activeElixir:buildResumedElixir(cur,t)};
-    });
-  },[now,state.suspendedElixir?.resumeDeadline,state.activeElixir?.kind]);
-
   const urgentDoneToday = urgentQuestCompletedOnDay(state.specialQuests,today,todayStr);
   const dungeonLootConditionsMet = allDailyDone && allBonusDone && urgentDoneToday;
 
@@ -1727,28 +1696,19 @@ function App(){
   const STAT_LBL2={"Force":"Force","Sante":"Sant\u00e9","Esprit":"Esprit","Endurance":"Endurance","Agilite":"Agilit\u00e9","Discipline":"Discipline"};
   function xpAdjustment(s,amount,stat,skipEventBonus=false){
     const base=Number(amount)||0;
-    const el=s.activeElixir;
-    const bonus=skipEventBonus?0:elixirBonusForStat(el,stat,base,Date.now());
     const malus=s.ruptureMalus&&Date.now()<(s.ruptureMalus.expiresAt||0)?-Math.round(base*0.25):0;
     const momentum=xpMomentumAdjustment(base,s);
-    return {bonus,malus,momentum,gain:Math.max(0,base+bonus+malus+momentum.delta)};
+    return {malus,momentum,gain:Math.max(0,base+malus+momentum.delta)};
   }
   function addXp(amount,stat,e,silent,showStat,skipEventBonus=false){
     setState(s=>{
       const adjusted=xpAdjustment(s,amount,stat,skipEventBonus);
-      const eventBonus=adjusted.bonus;
       const momentumDelta=adjusted.momentum.delta;
       const gain=adjusted.gain;
       const nt=s.totalXp+gain;
       const sx={...s.statXp,[stat]:(s.statXp[stat]||0)+gain};
       const newStats={...s.stats,[stat]:getLvl(sx[stat])};
       const daily={...(s.dailyExtraXp||{})};
-      if(eventBonus>0){
-        const day=todayStr();
-        const dayLog={...(daily[day]||{})};
-        dayLog.eventBonus=(dayLog.eventBonus||0)+eventBonus;
-        daily[day]=dayLog;
-      }
       if(Math.abs(momentumDelta)>1e-9){
         const day=todayStr();
         const dayLog={...(daily[day]||{})};
@@ -1763,7 +1723,7 @@ function App(){
         daily[day]=dayLog;
       }
       triggerProgressOverlay(s.totalXp,s.stats,nt,newStats,100);
-      return {...s,totalXp:nt,statXp:sx,stats:newStats,dailyExtraXp:(eventBonus>0||Math.abs(momentumDelta)>1e-9||adjusted.malus<0)?daily:(s.dailyExtraXp||{}),lastActiveDay:todayStr()};
+      return {...s,totalXp:nt,statXp:sx,stats:newStats,dailyExtraXp:(Math.abs(momentumDelta)>1e-9||adjusted.malus<0)?daily:(s.dailyExtraXp||{}),lastActiveDay:todayStr()};
     });
     if(e&&!silent){
       const lbl=showStat?("+"+Math.round(amount)+" XP "+( STAT_LBL2[showStat]||showStat)):("+"+Math.round(amount)+" XP");
@@ -2282,9 +2242,7 @@ function App(){
       const stats={...s.stats};
       const roomRewards=dungeonRoomRewardPairs(dungeon,nextIdx);
       roomRewards.forEach(r=>{
-        const el=s.activeElixir;
-        const bonus=elixirBonusForStat(el,r.stat,r.xp||0,Date.now());
-        const gain=(r.xp||0)+bonus;
+        const gain=r.xp||0;
         totalXp+=gain;
         statXp[r.stat]=(statXp[r.stat]||0)+gain;
         stats[r.stat]=getLvl(statXp[r.stat]);
@@ -3881,10 +3839,6 @@ function isUncappedProfessionalWeeklyQuest(obj){
       ),
 
       h(RecordChallengeHomeCard,null),
-      activeElixir&&h("div",{style:"margin:-2px 0 12px;padding:9px 11px;border-left:2px solid "+(activeElixir.kind==="supremeElixir"?"#9333ea":(STAT_COLOR[activeElixir.stat]||rank.color))+";background:rgba(255,255,255,.025);font-family:Orbitron,sans-serif"},
-        h("div",{style:"font-size:9px;color:var(--td);letter-spacing:1.2px;text-transform:uppercase"},activeElixir.kind==="majorElixir"?"Élixir d’expérience majeur":activeElixir.kind==="supremeElixir"?"Élixir d’expérience magistral":"Élixir d’expérience mineur"),
-        h("div",{style:"margin-top:4px;font-size:11px;color:"+(activeElixir.kind==="supremeElixir"?"#9333ea":(STAT_COLOR[activeElixir.stat]||rank.color))+";font-weight:800"},"+"+Math.round((activeElixir.pct||0)*100)+" % XP"+(activeElixir.kind==="supremeElixir"?" — TOUTES LES STATISTIQUES":" — "+(STAT_LBL[activeElixir.stat]||activeElixir.stat))+" · "+fmtCD((activeElixir.expiresAt||0)-now))
-      ),
       state.ruptureMalus&&now<(state.ruptureMalus.expiresAt||0)&&h("div",{style:"margin:-2px 0 12px;padding:9px 11px;border-left:2px solid #ef4444;background:rgba(239,68,68,.045);font-family:Orbitron,sans-serif"},
         h("div",{style:"font-size:9px;color:var(--td);letter-spacing:1.2px;text-transform:uppercase"},"Malus de Rupture"),
         h("div",{style:"margin-top:4px;font-size:11px;color:#ef4444;font-weight:800"},"−25 % XP · "+fmtCD((state.ruptureMalus.expiresAt||0)-now))
@@ -4039,21 +3993,10 @@ function isUncappedProfessionalWeeklyQuest(obj){
     const s=size||40;
     return h("img",{src,width:s,height:s,alt:"",draggable:false,"aria-hidden":"true",style:"display:block;width:"+s+"px;height:"+s+"px;object-fit:contain;filter:drop-shadow(0 0 5px "+(glow||"rgba(255,255,255,.18)")+");user-select:none;-webkit-user-drag:none"});
   }
-  function ElixirIcon(kind,size=34){
-    if(kind==="majorElixir")return EmojiStyleItemImage(MAJOR_ELIXIR_ICON_DATA,size);
-    if(kind==="supremeElixir")return EmojiStyleItemImage(SUPREME_ELIXIR_ICON_DATA,size);
-    return EmojiStyleItemImage(MINOR_ELIXIR_ICON_DATA,size);
-  }
-  function GrimoireIcon(size){
-    const s=size||40;
-    return h("img",{src:GRIMOIRE_ICON_DATA,width:s,height:s,alt:"",draggable:false,"aria-hidden":"true",style:"display:block;width:"+s+"px;height:"+s+"px;object-fit:contain;transform:scale("+NORMALIZED_ITEM_ICON_SCALE+");transform-origin:center;user-select:none;-webkit-user-drag:none"});
-  }
   function InventoryItemIcon(id,size){
     if(id==="dungeonKey")return EmojiStyleItemImage(DUNGEON_KEY_ICON_DATA,size);
     if(id==="debtAcknowledgement")return EmojiStyleItemImage(DEBT_ACKNOWLEDGEMENT_ICON_DATA,size);
     if(id==="regressionOrb")return EmojiStyleItemImage(REGRESSION_ORB_ICON_DATA,size);
-    if(isElixirKind(id))return ElixirIcon(id,size);
-    if(id==="transmutationGrimoire")return GrimoireIcon(size);
     if(id==="invisibilityCape"&&NEW_ITEM_ICON_DATA[id])return EmojiStyleItemImage(NEW_ITEM_ICON_DATA[id],size);
     if(id==="teleportCrystal"&&NEW_ITEM_ICON_DATA[id])return EmojiStyleItemImage(NEW_ITEM_ICON_DATA[id],size);
     if(NEW_ITEM_ICON_DATA[id])return EmojiStyleItemImage(NEW_ITEM_ICON_DATA[id],size);
@@ -4062,7 +4005,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
   function itemQty(id){ return ["codex","regressionOrb","debtAcknowledgement","recoveryOintment"].includes(id)?1:id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
   function Inventory(){
     const permanentOrder=["codex","recoveryOintment","regressionOrb","debtAcknowledgement"];
-    const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","majorElixir","minorElixir","supremeElixir","transmutationGrimoire","masterContract","destinyCompass","mysteryMap","etherStopper","dimensionalAnchor","rerollToken","rewriteRune","alchemicalCatalyst","recordHammer","teleportCrystal","invisibilityCape","recoveryOintment","counterpartBalance"]
+    const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","masterContract","destinyCompass","mysteryMap","dimensionalAnchor","rerollToken","rewriteRune","recordHammer","teleportCrystal","invisibilityCape","recoveryOintment","counterpartBalance"]
       .sort((a,b)=>{
         const permanentIndexA=permanentOrder.indexOf(a);
         const permanentIndexB=permanentOrder.indexOf(b);
@@ -4114,29 +4057,23 @@ function isUncappedProfessionalWeeklyQuest(obj){
         )
       ),
       h("div",{style:"display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px"},ids.map(id=>{
-        const it=INVENTORY_ITEMS[id], qty=itemQty(id), grey=!it.permanent&&!(id==="etherStopper"&&suspendedElixir)&&!(id==="dimensionalAnchor"&&suspendedDungeon)&&!(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk)&&(qty<1||(id==="dimensionalAnchor"&&activeDungeon&&activeDungeon.anchorUsed)||(isElixirKind(id)&&(!!activeElixir||!!suspendedElixir)));
+        const it=INVENTORY_ITEMS[id], qty=itemQty(id), grey=!it.permanent&&!(id==="dimensionalAnchor"&&suspendedDungeon)&&!(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk)&&(qty<1||(id==="dimensionalAnchor"&&activeDungeon&&activeDungeon.anchorUsed));
         return h("button",{key:id,onClick:()=>{setInventoryObtainOpen(false);setInventoryItem(id);},style:"position:relative;aspect-ratio:1/1;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.025);padding:8px;color:var(--tx);cursor:pointer;opacity:"+(grey?".48":"1")+";display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px"},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:8px;line-height:1.25;letter-spacing:.5px;text-transform:uppercase;text-align:center;min-height:20px"},it.short),
           h("div",{style:"line-height:1"},InventoryItemIcon(id,38)),
-          h("div",{style:"position:absolute;right:6px;bottom:5px;border-radius:999px;min-width:20px;padding:2px 5px;background:rgba(0,0,0,.55);font-family:Orbitron,sans-serif;font-size:9px;color:#fff"},it.permanent?"∞":id==="etherStopper"&&suspendedElixir?"PAUSE":id==="dimensionalAnchor"&&suspendedDungeon?"ANCRÉ":"×"+qty)
+          h("div",{style:"position:absolute;right:6px;bottom:5px;border-radius:999px;min-width:20px;padding:2px 5px;background:rgba(0,0,0,.55);font-family:Orbitron,sans-serif;font-size:9px;color:#fff"},it.permanent?"∞":id==="dimensionalAnchor"&&suspendedDungeon?"ANCRÉ":"×"+qty)
         );
       }))
     );
   }
   function ObtainLine(text){
-    const marker="[[GRIMOIRE]]";
-    const parts=String(text||"").split(marker);
-    if(parts.length===1)return "• "+text;
-    return h(Fragment,null,"• "+parts[0],h("span",{style:"display:inline-flex;vertical-align:middle;margin:0 3px;transform:translateY(2px)"},GrimoireIcon(14)),parts.slice(1).join(marker));
+    return "• "+text;
   }
   function inventoryActionLabel(id,it){
-    if(id==="minorElixir"||id==="majorElixir"||id==="supremeElixir")return "BOIRE";
-    if(id==="etherStopper")return suspendedElixir?"RETIRER":"INSERER";
     if(id==="dimensionalAnchor")return suspendedDungeon?"REPRENDRE":"ANCRER";
     if(id==="masterContract")return "SIGNER";
     if(id==="invisibilityCape")return "BOIRE";
     if(id==="debtAcknowledgement")return "SIGNER";
-    if(id==="transmutationGrimoire")return "LIRE";
     if(id==="rerollToken")return "LANCER";
     if(id==="recoveryOintment")return "APPLIQUER";
     return it.action;
@@ -4144,9 +4081,6 @@ function isUncappedProfessionalWeeklyQuest(obj){
 
 
   function compatibleItemQueue(primaryId){
-    if(primaryId==="transmutationGrimoire"){
-      return itemQty("alchemicalCatalyst")>0&&!state.alchemicalCatalystArmed?["alchemicalCatalyst"]:[];
-    }
     if(primaryId==="dungeonKey"){
       const queue=[];
       if(itemQty("masterContract")>0&&!state.masterContractArmed)queue.push("masterContract");
@@ -4173,22 +4107,15 @@ function isUncappedProfessionalWeeklyQuest(obj){
     const primaryId=prompt.primaryId;
     const primary=INVENTORY_ITEMS[primaryId];
     const complement=INVENTORY_ITEMS[complementId];
-    const minors=Math.max(0,Math.floor(Number(state.inventory&&state.inventory.minorElixir)||0));
-    const catalystRequired=primaryId==="transmutationGrimoire"&&complementId==="alchemicalCatalyst"&&minors<5;
-    const color=complementId==="alchemicalCatalyst"?"#10b981":complementId==="masterContract"?"#d4a84f":"#b7791f";
+    const color=complementId==="masterContract"?"#d4a84f":"#b7791f";
     const glow=color+"88";
-    const title=complementId==="alchemicalCatalyst"?"CATALYSEUR ALCHIMIQUE DISPONIBLE":complementId==="masterContract"?"CONTRAT DU MAÎTRE DISPONIBLE":"CARTE DES PROFONDEURS DISPONIBLE";
-    const detail=complementId==="alchemicalCatalyst"
-      ?"Le Catalyseur peut compléter cette transmutation : 3 Élixirs d’expérience mineurs seront nécessaires au lieu de 5."
-      :complementId==="masterContract"
-        ?"Vous pouvez signer le Contrat avant d’ouvrir le Donjon. Une contrainte aléatoire restera cachée jusqu’à son activation et accordera +20 % XP si le Donjon est terminé."
-        :"Vous pouvez déplier la Carte avant d’ouvrir le Donjon afin de choisir la statistique du prochain Donjon.";
-    const useLabel=complementId==="alchemicalCatalyst"?"UTILISER LE CATALYSEUR":complementId==="masterContract"?"SIGNER LE CONTRAT":"DÉPLIER LA CARTE";
+    const title=complementId==="masterContract"?"CONTRAT DU MAÎTRE DISPONIBLE":"CARTE DES PROFONDEURS DISPONIBLE";
+    const detail=complementId==="masterContract"
+      ?"Vous pouvez signer le Contrat avant d’ouvrir le Donjon. Une contrainte aléatoire restera cachée jusqu’à son activation et accordera +20 % XP si le Donjon est terminé."
+      :"Vous pouvez déplier la Carte avant d’ouvrir le Donjon afin de choisir la statistique du prochain Donjon.";
+    const useLabel=complementId==="masterContract"?"SIGNER LE CONTRAT":"DÉPLIER LA CARTE";
     function useComplement(){
-      if(complementId==="alchemicalCatalyst"){
-        setState(s=>({...s,alchemicalCatalystArmed:true}));
-        advanceItemCombo(prompt);
-      }else if(complementId==="masterContract"){
+      if(complementId==="masterContract"){
         setState(s=>{
           const inv={...(s.inventory||{})};
           if((Number(inv.masterContract)||0)<1||s.masterContractArmed)return s;
@@ -4212,10 +4139,9 @@ function isUncappedProfessionalWeeklyQuest(obj){
         ),
         h("div",{style:"font-family:Orbitron,sans-serif;font-size:15px;font-weight:900;color:"+color+";text-align:center;line-height:1.4;max-width:380px"},title),
         h("div",{class:"rulabel",style:"margin-top:11px;max-width:380px;line-height:1.55;color:var(--tx)"},detail),
-        catalystRequired&&h("div",{class:"rulabel",style:"margin-top:9px;max-width:360px;line-height:1.45;color:#fbbf24"},"Catalyseur requis : vous ne possédez que "+minors+" Élixirs mineurs."),
         h("div",{style:"display:flex;flex-direction:column;gap:9px;margin-top:20px;width:min(360px,100%)"},
           h("button",{class:"rudis",style:"width:100%;--rc:"+color+";--rg:"+glow,onClick:useComplement},useLabel),
-          h("button",{class:"rudis",disabled:catalystRequired,style:"width:100%;--rc:#64748b;--rg:rgba(100,116,139,.5);opacity:"+(catalystRequired?".35":"1")+";cursor:"+(catalystRequired?"default":"pointer"),onClick:()=>!catalystRequired&&advanceItemCombo(prompt)},catalystRequired?"CATALYSEUR REQUIS":"CONTINUER SANS CET OBJET")
+          h("button",{class:"rudis",style:"width:100%;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>advanceItemCombo(prompt)},"CONTINUER SANS CET OBJET")
         )
       )
     );
@@ -4225,9 +4151,8 @@ function isUncappedProfessionalWeeklyQuest(obj){
     if(!inventoryItem)return null;
     if(inventoryItem==="codex")return h(Codex,null);
     const id=inventoryItem,it=INVENTORY_ITEMS[id],qty=itemQty(id);
-    const isElixir=isElixirKind(id);
-    let disabled=(["regressionOrb","debtAcknowledgement"].includes(id)||(id==="etherStopper"&&suspendedElixir)||(id==="dimensionalAnchor"&&suspendedDungeon))?false:qty<1;
-    let reason=(!["regressionOrb","debtAcknowledgement"].includes(id)&&!(id==="etherStopper"&&suspendedElixir)&&!(id==="dimensionalAnchor"&&suspendedDungeon)&&qty<1)?"Aucun exemplaire disponible.":"";
+    let disabled=(["regressionOrb","debtAcknowledgement"].includes(id)||(id==="dimensionalAnchor"&&suspendedDungeon))?false:qty<1;
+    let reason=(!["regressionOrb","debtAcknowledgement"].includes(id)&&!(id==="dimensionalAnchor"&&suspendedDungeon)&&qty<1)?"Aucun exemplaire disponible.":"";
     if(id==="regressionOrb"){
       if((state.regressionLog||{})[today]){disabled=true;reason="Une régression a déjà été déclarée aujourd’hui.";}
     }else if(id==="dungeonKey"){
@@ -4236,21 +4161,11 @@ function isUncappedProfessionalWeeklyQuest(obj){
       else if(suspendedDungeon){disabled=true;reason="Un donjon est actuellement suspendu. Reprenez-le ou laissez expirer son ancrage avant d’en lancer un autre.";}
       else if(dungeonDailyUsed){disabled=true;reason="Un donjon a déjà été lancé aujourd’hui.";}
       else if(dungeonWeekCount>=3){disabled=true;reason="La limite de trois donjons cette semaine est atteinte.";}
-    }else if(id==="transmutationGrimoire"){
-      const minors=Math.max(0,Math.floor(Number(state.inventory&&state.inventory.minorElixir)||0));
-      const catalystReady=state.alchemicalCatalystArmed&&itemQty("alchemicalCatalyst")>0;
-      const catalystAvailable=!state.alchemicalCatalystArmed&&itemQty("alchemicalCatalyst")>0;
-      const needed=(catalystReady||catalystAvailable)?3:5;
-      if(minors<needed){disabled=true;reason=(catalystReady?"Catalyseur préparé · ":catalystAvailable?"Catalyseur disponible · ":"")+needed+" Élixirs d’expérience mineurs sont nécessaires ("+minors+"/"+needed+").";}
-      else if(catalystAvailable&&minors<5){reason="Catalyseur alchimique disponible · utilisez-le pour réaliser la transmutation avec 3 Élixirs mineurs.";}
     }else if(id==="destinyCompass"){
       if(state.urgentCompassStat){disabled=true;reason="La prochaine quête urgente est déjà orientée vers "+(STAT_LBL[state.urgentCompassStat]||state.urgentCompassStat)+".";}
     }else if(id==="mysteryMap"){
       if(state.dungeonMapStat){disabled=true;reason="Le prochain donjon est déjà orienté vers "+(STAT_LBL[state.dungeonMapStat]||state.dungeonMapStat)+".";}
       else if(activeDungeon){disabled=true;reason="Un donjon est déjà actif. La Carte des profondeurs doit être utilisée avant le prochain lancement.";}
-    }else if(id==="etherStopper"){
-      if(suspendedElixir){disabled=false;reason="Élixir suspendu · "+fmtCD(suspendedElixir.remainingMs)+" seront restituées à la réactivation.";}
-      else if(!activeElixir){disabled=true;reason="Aucun élixir n’est actuellement actif.";}
     }else if(id==="dimensionalAnchor"){
       if(suspendedDungeon){
         disabled=false;
@@ -4266,8 +4181,6 @@ function isUncappedProfessionalWeeklyQuest(obj){
       else if(!urgentDoneToday){disabled=true;reason="La quête urgente du jour doit être terminée avant d’utiliser le Jeton.";}
     }else if(id==="rewriteRune"){
       if(!activeSq){disabled=true;reason="Aucune quête urgente active à remplacer.";}
-    }else if(id==="alchemicalCatalyst"){
-      if(state.alchemicalCatalystArmed){disabled=true;reason="Un Catalyseur alchimique est déjà préparé pour la prochaine transmutation.";}
     }else if(id==="masterContract"){
       if(state.masterContractArmed){disabled=true;reason="Un Contrat du Maître est déjà préparé pour le prochain donjon.";}
       else if(activeDungeon){disabled=true;reason="Le contrat doit être utilisé avant le lancement d’un donjon.";}
@@ -4287,10 +4200,8 @@ function isUncappedProfessionalWeeklyQuest(obj){
       else if(state.alliedGiftPending){disabled=true;reason="Choisissez d’abord l’objet offert par le pays allié.";}
     }else if(id==="invisibilityCape"){
       if(!activeDungeon){disabled=true;reason="Aucun donjon n’est actuellement actif.";}
-    }else if(activeElixir||suspendedElixir){
-      disabled=true;
-      reason=suspendedElixir?"Un élixir est actuellement suspendu. Réactivez-le avant d’en consommer un autre.":"Un élixir est déjà actif pendant encore "+fmtCD((activeElixir.expiresAt||0)-now)+".";
     }
+    return h("div",{class:"modal-ov"    }
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setInventoryItem(null)}},
       h("div",{class:"modal",style:"position:relative;max-width:390px;width:calc(100% - 28px)"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:12px"},
@@ -4298,7 +4209,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
           h("button",{onClick:()=>setInventoryItem(null),style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
         ),
         h("div",{style:"display:flex;justify-content:center;align-items:center;margin:14px 0 8px"},InventoryItemIcon(id,128)),
-        !it.permanent&&h("div",{style:"text-align:center;font-family:Orbitron,sans-serif;font-size:10px;color:var(--td);margin-bottom:16px"},id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"MARQUE EN COURS":id==="etherStopper"&&suspendedElixir?"ÉLIXIR SUSPENDU · "+fmtCD(suspendedElixir.remainingMs):id==="dimensionalAnchor"&&suspendedDungeon?"DONJON ANCRÉ · TEMPS CONSERVÉ : "+fmtCD(suspendedDungeon.remainingMs):"QUANTITÉ : "+qty),
+        !it.permanent&&h("div",{style:"text-align:center;font-family:Orbitron,sans-serif;font-size:10px;color:var(--td);margin-bottom:16px"},id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"MARQUE EN COURS":id==="dimensionalAnchor"&&suspendedDungeon?"DONJON ANCRÉ · TEMPS CONSERVÉ : "+fmtCD(suspendedDungeon.remainingMs):"QUANTITÉ : "+qty),
         h("div",{style:"font-size:12px;line-height:1.6;color:var(--tx);margin-bottom:14px"},it.desc),
         !it.permanent&&h("div",{style:"margin-bottom:16px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);padding:10px 0"},
           h("div",{
@@ -4330,9 +4241,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
       h("div",{class:"ruevol",style:"color:"+confirmColor},eraseRecord?"EFFACER LA MARQUE":"CONFIRMATION"),
       h("div",{style:"font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:"+(eraseRecord?"#ef4444":"#fff")+";text-align:center;line-height:1.4;max-width:340px"},eraseRecord
         ?"Effacer la Marque du dépassement actuellement dessinée sur « "+((state.recordChallenge&&state.recordChallenge.name)||"ce record")+" » ? L’objet restera consommé et cet objectif officiel sera abandonné."
-        :id==="etherStopper"&&suspendedElixir
-          ?"Réactiver l’élixir suspendu avec exactement "+fmtCD(suspendedElixir.remainingMs)+" restants ?"
-          :id==="dimensionalAnchor"&&suspendedDungeon
+        :id==="dimensionalAnchor"&&suspendedDungeon
             ?"Reprendre le donjon suspendu avec exactement "+fmtCD(suspendedDungeon.remainingMs)+" de temps restant ? Le minuteur recommencera immédiatement à s’écouler."
             :id==="dimensionalAnchor"
               ?"Utiliser l’Ancre dimensionnelle pour sortir du donjon et figer sa progression ainsi que son temps restant ? Vous disposerez de 72 heures pour le reprendre."
@@ -4348,7 +4257,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
                 ?"Signer le Contrat du Maître pour le prochain donjon ? La contrainte sera tirée au sort et restera cachée jusqu’au moment où elle s’activera."
               :id==="rewriteRune"
                 ?"Tracer la Rune de Réécriture ? La quête urgente active sera remplacée par une nouvelle quête urgente aléatoire. La Rune sera consommée."
-              :"Êtes-vous certain de vouloir "+(id==="regressionOrb"?"activer l’":id==="debtAcknowledgement"?"utiliser la ":id==="dungeonKey"?"utiliser une ":id==="transmutationGrimoire"?"utiliser le ":id==="destinyCompass"?"orienter la ":id==="alchemicalCatalyst"?"préparer le ":"consommer un ")+it.name+" ?"),
+              :"Êtes-vous certain de vouloir "+(id==="regressionOrb"?"activer l’":id==="debtAcknowledgement"?"utiliser la ":id==="dungeonKey"?"utiliser une ":id==="destinyCompass"?"orienter la ":"consommer un ")+it.name+" ?"),
       h("div",{style:"display:flex;gap:10px;margin-top:22px"},
         h("button",{class:"rudis",style:"min-width:110px;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>setConfirmItemUse(null)},"Non"),
         h("button",{class:"rudis",style:"min-width:110px;--rc:"+confirmColor+";--rg:"+confirmGlow,onClick:()=>{
@@ -4361,28 +4270,10 @@ function isUncappedProfessionalWeeklyQuest(obj){
           }else if(id==="dungeonKey"){
             setState(s=>({...s,dungeonKeys:Math.max(0,(Number(s.dungeonKeys)||0)-1),dungeonAccessOpen:true}));
             setItemUseUp({id});
-          }else if(id==="transmutationGrimoire"){
-            const catalystUsed=state.alchemicalCatalystArmed&&itemQty("alchemicalCatalyst")>0;
-            const minorCost=catalystUsed?3:5;
-            setState(s=>{const inv={...(s.inventory||{})};if((Number(inv.minorElixir)||0)<minorCost||(Number(inv.transmutationGrimoire)||0)<1)return s;if(catalystUsed&&(Number(inv.alchemicalCatalyst)||0)<1)return s;inv.minorElixir=Math.max(0,(Number(inv.minorElixir)||0)-minorCost);inv.transmutationGrimoire=Math.max(0,(Number(inv.transmutationGrimoire)||0)-1);if(catalystUsed)inv.alchemicalCatalyst=Math.max(0,(Number(inv.alchemicalCatalyst)||0)-1);inv.supremeElixir=Math.max(0,(Number(inv.supremeElixir)||0)+1);return {...s,inventory:inv,alchemicalCatalystArmed:catalystUsed?false:s.alchemicalCatalystArmed};});
-            enqueueItemLoot("supremeElixir","guaranteed");
-            setItemUseUp({id,transmuted:true,catalystUsed,minorCost});
-          }else if(id==="supremeElixir"){
-            const expiresAt=Date.now()+ELIXIR_DURATION_MS;
-            setState(s=>{if(s.activeElixir||s.suspendedElixir)return s;return {...s,inventory:{...(s.inventory||{}),supremeElixir:Math.max(0,(Number(s.inventory&&s.inventory.supremeElixir)||0)-1)},activeElixir:{kind:id,pct:it.pct,startedAt:Date.now(),expiresAt}};});
-            setItemUseUp({id,pct:it.pct,global:true});
           }else if(id==="destinyCompass"){
             setCompassStatChoice(true);
           }else if(id==="mysteryMap"){
             setDungeonMapStatChoice(true);
-          }else if(id==="etherStopper"){
-            if(state.suspendedElixir){
-              setState(s=>{const cur=s.suspendedElixir;if(!cur||s.activeElixir)return s;const t=Date.now();return {...s,suspendedElixir:null,activeElixir:buildResumedElixir(cur,t)};});
-              setItemUseUp({id,resumed:true});
-            }else{
-              setState(s=>{const el=s.activeElixir;if(!el||Date.now()>=(el.expiresAt||0)||(Number(s.inventory&&s.inventory.etherStopper)||0)<1)return s;const t=Date.now();return {...s,inventory:{...(s.inventory||{}),etherStopper:Math.max(0,(Number(s.inventory&&s.inventory.etherStopper)||0)-1)},activeElixir:null,suspendedElixir:buildSuspendedElixir(el,t)};});
-              setItemUseUp({id,paused:true});
-            }
           }else if(id==="dimensionalAnchor"){
             if(suspendedDungeon){
               setState(s=>resumeSuspendedDungeonState(s,Date.now()));
@@ -4401,9 +4292,6 @@ function isUncappedProfessionalWeeklyQuest(obj){
             invokeExtraUrgentQuest();
           }else if(id==="rewriteRune"){
             traceRewriteRune();
-          }else if(id==="alchemicalCatalyst"){
-            setState(s=>({...s,alchemicalCatalystArmed:true}));
-            setItemUseUp({id,armed:true});
           }else if(id==="masterContract"){
             setState(s=>({...s,inventory:{...(s.inventory||{}),masterContract:Math.max(0,(Number(s.inventory&&s.inventory.masterContract)||0)-1)},masterContractArmed:true}));setItemUseUp({id});
           }else if(id==="debtAcknowledgement"){
@@ -4429,8 +4317,8 @@ function isUncappedProfessionalWeeklyQuest(obj){
               });
               setItemUseUp({id:"teleportCrystal",alliedTeleport:true,breachName:tpl.name});
             }
-          }else setElixirStatChoice({id});
-        }},eraseRecord?"Effacer":id==="dimensionalAnchor"&&suspendedDungeon?"Reprendre":id==="dimensionalAnchor"?"Ancrer":id==="teleportCrystal"?"Briser":id==="masterContract"?"Signer":id==="rewriteRune"?"Tracer":id==="dungeonKey"||id==="transmutationGrimoire"||id==="supremeElixir"?"Oui":"Continuer")
+          }
+        }},eraseRecord?"Effacer":id==="dimensionalAnchor"&&suspendedDungeon?"Reprendre":id==="dimensionalAnchor"?"Ancrer":id==="teleportCrystal"?"Briser":id==="masterContract"?"Signer":id==="rewriteRune"?"Tracer":id==="dungeonKey"?"Oui":"Continuer")
       )
     ));
   }
@@ -4551,34 +4439,6 @@ function isUncappedProfessionalWeeklyQuest(obj){
         }
       },style:"padding:11px;border-radius:9px;border:1px solid "+STAT_COLOR[stat]+"88;background:"+STAT_COLOR[stat]+"12;color:"+STAT_COLOR[stat]+";font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},STAT_LBL[stat]||stat))),
       h("button",{onClick:()=>{setDungeonMapStatChoice(false);if(comboPrompt)advanceItemCombo(comboPrompt);},style:"width:100%;margin-top:12px;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--td);font-family:Orbitron,sans-serif;cursor:pointer"},comboPrompt?"Continuer sans la Carte":"Annuler")
-    ));
-  }
-
-  function ElixirStatModal(){
-    if(!elixirStatChoice)return null;
-    const id=elixirStatChoice.id,it=INVENTORY_ITEMS[id];
-    const choices=ELIXIR_STATS;
-    return h("div",{class:"modal-ov"},h("div",{class:"modal",style:"max-width:390px;width:calc(100% - 28px)"},
-      h("div",{class:"mtitle"},"CHOISIR UNE STATISTIQUE"),
-      h("div",{style:"font-size:11px;color:var(--td);line-height:1.5;margin-bottom:12px"},"Appliquer "+Math.round(it.pct*100)+" % d’XP supplémentaires pendant 24 h."),
-      h("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:8px"},choices.map(stat=>h("button",{key:stat,onClick:()=>{setElixirStatChoice(null);setConfirmElixirUse({id,stat})},style:"padding:11px;border-radius:9px;border:1px solid "+STAT_COLOR[stat]+"88;background:"+STAT_COLOR[stat]+"12;color:"+STAT_COLOR[stat]+";font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},STAT_LBL[stat]||stat))),
-      h("button",{onClick:()=>setElixirStatChoice(null),style:"width:100%;margin-top:12px;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--td);font-family:Orbitron,sans-serif;cursor:pointer"},"Annuler")
-    ));
-  }
-  function ConfirmElixirModal(){
-    if(!confirmElixirUse)return null;
-    const {id,stat}=confirmElixirUse,it=INVENTORY_ITEMS[id],c=STAT_COLOR[stat]||rank.color;
-    return h("div",{class:"ruov",style:"--rc:"+c+";--rg:"+c+"66"},h("div",{class:"rucont",style:"width:min(500px,calc(100vw - 34px));background:rgba(15,15,18,.97);border:1px solid "+c+"88;border-radius:18px;padding:22px;box-shadow:0 0 30px "+c+"22"},
-      h("div",{class:"ruevol",style:"color:"+c},"CONFIRMATION"),
-      h("div",{style:"font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:#fff;text-align:center;line-height:1.45;max-width:350px"},"Appliquer +"+Math.round(it.pct*100)+" % d’XP à "+(STAT_LBL[stat]||stat)+" pendant 24 h ?"),
-      h("div",{style:"display:flex;gap:10px;margin-top:22px"},
-        h("button",{class:"rudis",style:"min-width:110px;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>setConfirmElixirUse(null)},"Annuler"),
-        h("button",{class:"rudis",style:"min-width:110px;--rc:"+c+";--rg:"+c+"66",onClick:()=>{
-          const expiresAt=Date.now()+ELIXIR_DURATION_MS;
-          setState(s=>{if(s.activeElixir||s.suspendedElixir)return s;return {...s,inventory:{...(s.inventory||{}),[id]:Math.max(0,(Number(s.inventory&&s.inventory[id])||0)-1)},activeElixir:{kind:id,stat,pct:it.pct,startedAt:Date.now(),expiresAt}};});
-          setConfirmElixirUse(null);setItemUseUp({id,stat,pct:it.pct});
-        }},"Consommer")
-      )
     ));
   }
 
@@ -5837,13 +5697,9 @@ function isUncappedProfessionalWeeklyQuest(obj){
 
   function ItemLootUp(){
     if(!itemLootUp)return null;
-    const it=INVENTORY_ITEMS[itemLootUp.item]||INVENTORY_ITEMS.minorElixir;
+    const it=INVENTORY_ITEMS[itemLootUp.item]||INVENTORY_ITEMS.dimensionalAnchor;
     const rare=itemLootUp.kind==="rare";
     const fx={
-      majorElixir:{main:"#22c55e",accent:"#bbf7d0"},
-      minorElixir:{main:"#38bdf8",accent:"#bae6fd"},
-      supremeElixir:{main:"#a855f7",accent:"#e9d5ff"},
-      transmutationGrimoire:{main:"#8b5cf6",accent:"#c4b5fd"},
       masterContract:{main:"#d4a84f",accent:"#fef3c7"},
       recordHammer:{main:"#38bdf8",accent:"#facc15"},
       teleportCrystal:{main:"#06b6d4",accent:"#a5f3fc"},
@@ -5852,11 +5708,9 @@ function isUncappedProfessionalWeeklyQuest(obj){
       recoveryOintment:{main:"#22c55e",accent:"#d9f99d"},
       destinyCompass:{main:"#d4a84f",accent:"#60a5fa"},
       mysteryMap:{main:"#b7791f",accent:"#f5d08a"},
-      etherStopper:{main:"#7c3aed",accent:"#60a5fa"},
       dimensionalAnchor:{main:"#8b5cf6",accent:"#fbbf24"},
       rerollToken:{main:"#d4a84f",accent:"#38bdf8"},
       rewriteRune:{main:"#8b5cf6",accent:"#67e8f9"},
-      alchemicalCatalyst:{main:"#10b981",accent:"#5eead4"},
       counterpartBalance:{main:"#eab308",accent:"#fef08a"}
     }[itemLootUp.item]||{main:rank.color||"#f59e0b",accent:"#ffffff"};
     const main=rare?"#f59e0b":fx.main;
@@ -5966,24 +5820,18 @@ function isUncappedProfessionalWeeklyQuest(obj){
     const it=INVENTORY_ITEMS[itemUseUp.id];
     return h("div",{class:"ruov",style:"--rc:"+rank.color+";--rg:"+rank.glow},h("div",{class:"rucont"},
       h(NotificationHeader,null),
-      h("div",{class:"ruevol",style:"color:"+rank.color},itemUseUp.id==="recoveryOintment"?"BLESSURE DÉCLARÉE":itemUseUp.id==="teleportCrystal"&&itemUseUp.alliedTeleport?"ALLIANCE SCELLÉE":itemUseUp.id==="dungeonKey"?"Vous avez utilisé une":itemUseUp.id==="debtAcknowledgement"?"Dette créée avec une":itemUseUp.id==="transmutationGrimoire"?"Transmutation accomplie":itemUseUp.id==="destinyCompass"?"Boussole orientée":itemUseUp.id==="mysteryMap"?"Carte déployée":itemUseUp.id==="etherStopper"?(itemUseUp.resumed?"Élixir réactivé":"Élixir suspendu"):itemUseUp.id==="dimensionalAnchor"?(itemUseUp.dungeonResumed?"Donjon réintégré":"Donjon suspendu"):itemUseUp.id==="rerollToken"?"Quête urgente invoquée":itemUseUp.id==="rewriteRune"?"Destin retracé":itemUseUp.id==="alchemicalCatalyst"?"Catalyseur préparé":itemUseUp.id==="counterpartBalance"?"Échange accompli":itemUseUp.id==="masterContract"?"Vous avez signé un":"Vous avez consommé un"),
+      h("div",{class:"ruevol",style:"color:"+rank.color},itemUseUp.id==="recoveryOintment"?"BLESSURE DÉCLARÉE":itemUseUp.id==="teleportCrystal"&&itemUseUp.alliedTeleport?"ALLIANCE SCELLÉE":itemUseUp.id==="dungeonKey"?"Vous avez utilisé une":itemUseUp.id==="debtAcknowledgement"?"Dette créée avec une":itemUseUp.id==="destinyCompass"?"Boussole orientée":itemUseUp.id==="mysteryMap"?"Carte déployée":itemUseUp.id==="dimensionalAnchor"?(itemUseUp.dungeonResumed?"Donjon réintégré":"Donjon suspendu"):itemUseUp.id==="rerollToken"?"Quête urgente invoquée":itemUseUp.id==="rewriteRune"?"Destin retracé":itemUseUp.id==="counterpartBalance"?"Échange accompli":itemUseUp.id==="masterContract"?"Vous avez signé un":"Vous avez consommé un"),
       h("div",{class:"rurank",style:responsiveItemAnimationTitleStyle(it.name,56),"data-r":it.name},it.name),
-      itemUseUp.stat&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Vous bénéficiez de +"+Math.round(itemUseUp.pct*100)+" % d’XP dans ",h("span",{style:"color:"+(STAT_COLOR[itemUseUp.stat]||rank.color)},STAT_LBL[itemUseUp.stat]||itemUseUp.stat)," pendant 24 h."),
-      itemUseUp.global&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:#c084fc"},"Vous bénéficiez de +"+Math.round(itemUseUp.pct*100)+" % d’XP sur toutes les statistiques pendant 24 h."),
-      itemUseUp.transmuted&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:#c084fc"},itemUseUp.catalystUsed?"Le Catalyseur et le Grimoire ont fusionné 3 Élixirs d’expérience mineurs en 1 Élixir d’expérience magistral.":"5 Élixirs d’expérience mineurs ont été fusionnés en 1 Élixir d’expérience magistral."),
       itemUseUp.statChosen&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:"+(STAT_COLOR[itemUseUp.statChosen]||rank.color)},"La prochaine quête urgente appartiendra à la statistique "+(STAT_LBL[itemUseUp.statChosen]||itemUseUp.statChosen)+"."),
       itemUseUp.dungeonStatChosen&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:"+(STAT_COLOR[itemUseUp.dungeonStatChosen]||rank.color)},"Le prochain donjon appartiendra à la statistique "+(STAT_LBL[itemUseUp.dungeonStatChosen]||itemUseUp.dungeonStatChosen)+"."),
       itemUseUp.injuryZone&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:350px;line-height:1.5;color:#86efac"},itemUseUp.injuryZone+" · "+itemUseUp.injuryDuration+" jour"+(itemUseUp.injuryDuration>1?"s":"")+" de repos. L’Onguent reste dans l’inventaire."),
       itemUseUp.id==="masterContract"&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:350px;line-height:1.5;color:#fbbf24"},"Le prochain donjon sera soumis à une contrainte aléatoire, cachée jusqu’au moment où elle s’activera. Récompenses : +20 % XP si le donjon est terminé."),
-      itemUseUp.paused&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Le temps restant de l’élixir est conservé pendant 24 h maximum."),
-      itemUseUp.resumed&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"L’élixir reprend avec exactement le temps qui lui restait."),
       itemUseUp.dungeonPaused&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:350px;line-height:1.5"},"Le temps et la progression du donjon sont figés. Vous disposez de 72 heures pour le reprendre."),
       itemUseUp.dungeonResumed&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:350px;line-height:1.5"},"Le donjon reprend avec ses salles validées, son XP acquise et exactement le temps qu’il lui restait."),
       itemUseUp.summoned&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"Une seconde quête urgente a été invoquée. Elle accorde ses XP et ses objets normaux, mais ne peut pas être relancée."),
       itemUseUp.rewritten&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5"},"La quête urgente active a été remplacée par une nouvelle quête urgente aléatoire."),
       itemUseUp.alliedTeleport&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:350px;line-height:1.55;color:#dbeafe"},"Vous choisissez de vous allier à un pays voisin pour l’aider à fermer un portail."),
       itemUseUp.alliedTeleport&&itemUseUp.breachName&&h("div",{class:"rulabel",style:"margin-top:8px;max-width:350px;line-height:1.45;color:#60a5fa"},"Portail le plus proche : "+itemUseUp.breachName),
-      itemUseUp.armed&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:#5eead4"},"La prochaine transmutation ne coûtera que 3 Élixirs d’expérience mineurs."),
       itemUseUp.recordWon&&h("div",{class:"rulabel",style:"margin-top:12px"},"Record officiel battu : +500 XP."),
       itemUseUp.exchangeRewardId&&INVENTORY_ITEMS[itemUseUp.exchangeRewardId]&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:350px;line-height:1.55;color:#facc15"},"La Balance vous accorde : "+INVENTORY_ITEMS[itemUseUp.exchangeRewardId].name+"."),
       h("button",{class:"rudis",onClick:()=>setItemUseUp(null)},"Continuer")
@@ -6485,8 +6333,6 @@ function isUncappedProfessionalWeeklyQuest(obj){
       h(ConfirmCounterpartBalanceExchangeModal,null),
       h(CompassStatModal,null),
       h(DungeonMapStatModal,null),
-      h(ElixirStatModal,null),
-      h(ConfirmElixirModal,null),
       h(SpecialItemChoiceModal,null),
       ConfirmTargetedItemUseModal(),
       h(ContractUp,null),

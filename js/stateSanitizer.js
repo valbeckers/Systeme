@@ -5,7 +5,6 @@ import { DUNGEONS } from "./dungeonDefs.js?v=20260818-urgent-dungeon-v1";
 import { todayStr, next7AM } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
 import { normalizeActiveBreach } from "./breachEngine.js?v=20261016-draw-pools-v1";
-import { cleanStoredActiveElixir, cleanStoredSuspendedElixir } from "./elixirEngine.js";
 import { cleanExerciseRotationByDay, cleanExerciseRotationEnabled } from "./exerciseRotation.js?v=20261014-rotation-settings-v1";
 import { cleanInjuryPeriods } from "./injuryEngine.js?v=20261003-injury-v1";
 import { cleanQuestTuning, applyQuestTuning } from "./questTuning.js?v=20261016-xp-settings-v2";
@@ -386,10 +385,6 @@ export function cleanSystemState(raw){
     dungeonKeyRollDay:data.dungeonKeyRollDay||null,
     dungeonKeys:Math.max(0,Math.floor(Number(data.dungeonKeys) || ((data.dungeonKeyRollWon===true && data.dungeonKeyDay)?1:0))),
     inventory:{
-      majorElixir:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.majorElixir)||0)),
-      minorElixir:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.minorElixir)||0)),
-      supremeElixir:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.supremeElixir)||0)),
-      transmutationGrimoire:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.transmutationGrimoire)||0)),
       masterContract:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.masterContract)||0)),
       recordHammer:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.recordHammer)||0)),
       teleportCrystal:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.teleportCrystal)||0)),
@@ -397,10 +392,8 @@ export function cleanSystemState(raw){
       debtAcknowledgement:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.debtAcknowledgement)||0)),
       destinyCompass:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.destinyCompass)||0)),
       mysteryMap:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.mysteryMap)||0)),
-      etherStopper:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.etherStopper)||0)),
       rerollToken:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.rerollToken)||0)),
       rewriteRune:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.rewriteRune)||0)),
-      alchemicalCatalyst:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.alchemicalCatalyst)||0)),
       recoveryOintment:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.recoveryOintment)||0)),
       counterpartBalance:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.counterpartBalance)||0))
       ,dimensionalAnchor:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.dimensionalAnchor)||0))
@@ -409,11 +402,8 @@ export function cleanSystemState(raw){
     recordChallenge:data.recordChallenge||null,
     urgentCompassStat:STATS.includes(data.urgentCompassStat)?data.urgentCompassStat:null,
     dungeonMapStat:STATS.includes(data.dungeonMapStat)?data.dungeonMapStat:null,
-    suspendedElixir:cleanStoredSuspendedElixir(data.suspendedElixir),
     urgentTokenUseDay:data.urgentTokenUseDay||null,
-    alchemicalCatalystArmed:data.alchemicalCatalystArmed===true,
     dungeonAccessOpen:data.dungeonAccessOpen===true,
-    activeElixir:cleanStoredActiveElixir(data.activeElixir),
     ruptureMalus:(data.ruptureMalus&&Number(data.ruptureMalus.expiresAt)>Date.now())?{pct:-0.25,startedAt:Number(data.ruptureMalus.startedAt)||Date.now(),expiresAt:Number(data.ruptureMalus.expiresAt)}:null,
     dungeonKeyDay:data.dungeonKeyDay||null,
     dungeonKeyRollWon:data.dungeonKeyRollWon===true,

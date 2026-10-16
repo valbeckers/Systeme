@@ -8,7 +8,7 @@ import {
   STANDARD_ITEM_DROPS,
   DUNGEON_GENERIC_DROPS,
   DUNGEON_SPECIFIC_DROPS
-} from "./itemDefs.js?v=20261016-portal-seal-removed-v2";
+} from "./itemDefs.js?v=20261016-remove-alchemy-v1";
 
 function rollIndependentDrops(dropTable,random=Math.random){
   return (dropTable||[]).reduce((won,[id,probability])=>{
