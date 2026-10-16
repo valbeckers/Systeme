@@ -288,7 +288,6 @@ export function HistoryTab({
           h("button",{type:"submit",class:"mbtn mprim",style:"width:auto;min-width:105px;margin:0"},"Enregistrer")
         ),
         weightError&&h("div",{style:"font-size:11px;color:#ef4444;margin-top:7px"},weightError),
-        h("div",{style:"font-size:10px;color:var(--td);margin-top:7px"},"La date et l’heure de chaque pesée sont enregistrées automatiquement."),
         weighIns.length>0?h(Fragment,null,
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:var(--rc);margin:18px 0 9px"},"Dernière pesée : "+weightLabel(weighIns.at(-1).weight)+" kg"),
           h("div",{style:"display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0"},
@@ -310,7 +309,7 @@ export function HistoryTab({
               h("text",{x:330,y:160,fill:"#94a3b8","font-size":10,"text-anchor":"end"},String(new Date(weightMonthEnd.getTime()-86400000).getDate()).padStart(2,"0")+"/"+String(weightMonthStart.getMonth()+1).padStart(2,"0"))
             )
           ),
-          h("div",{style:"font-size:10px;color:var(--td);margin-top:7px"},graphEntries.length?"Touche un point pour voir la pesée.":"Aucune pesée ce mois-ci.")
+          !graphEntries.length&&h("div",{style:"font-size:10px;color:var(--td);margin-top:7px"},"Aucune pesée ce mois-ci.")
         ):h("div",{style:"font-size:12px;color:var(--td);text-align:center;padding:24px 0 8px"},"Aucune pesée enregistrée.")
       )
     ),
