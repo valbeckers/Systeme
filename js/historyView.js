@@ -73,6 +73,7 @@ export function HistoryTab({
   setSelectedHistoryDay,
   historyOpen,
   setHistoryOpen,
+  getWeekSummary,
   getValidateThreshold,
   runRecordResetDay
 }){
@@ -83,7 +84,7 @@ export function HistoryTab({
   const [confirmWeightDeletion,setConfirmWeightDeletion]=useState(false);
   const open = historyOpen;
   const setOpen = setHistoryOpen;
-  const toggle = k => setOpen(o=>({...o,[k]:!o[k]}));
+  const toggle = k => setOpen(o=>({week:false,monthly:false,weight:false,records:false,[k]:!o[k]}));
   const ChevronBtn = ({k}) => h("span",{
     onClick:(e)=>{e.stopPropagation();toggle(k);},
     style:"cursor:pointer;color:var(--td);font-size:10px;font-family:Orbitron,sans-serif;font-weight:700;letter-spacing:1px;flex-shrink:0;user-select:none"
@@ -93,6 +94,7 @@ export function HistoryTab({
   const ws=getWS(wkOff);
   const weekDays=Array.from({length:7},(_,i)=>{const d=new Date(ws);d.setDate(ws.getDate()+i);return localDate(d);});
   const wKey=wkStr(ws);
+  const weeklySummary=getWeekSummary(wKey);
   const dt={};
   weekDays.forEach(dk=>Object.entries(state.dailyLog[dk]||{}).forEach(([id,v])=>{dt[id]=(dt[id]||0)+v;}));
   const wkLogEntry=state.weeklyLog[wKey]||{};
@@ -229,19 +231,20 @@ export function HistoryTab({
   });
 
   return h("div",{class:"tab"},
-    h("div",{class:"card",style:"padding:12px 16px"},
-      h("div",{style:"display:flex;align-items:center;justify-content:space-between;gap:8px"},
-        h("button",{style:"background:var(--sf2);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-size:18px;width:40px;height:40px;cursor:pointer;opacity:"+(wkOff>=51?.3:.8),onClick:()=>setWkOff(o=>Math.min(o+1,51))},"\u2039"),
+    h("div",{class:"card"},
+      h("div",{style:"display:flex;align-items:center;justify-content:space-between;cursor:pointer",onClick:()=>toggle("week")},
+        h("div",{class:"ctitle",style:"margin:0"},"Activité de la semaine"),
+        h(ChevronBtn,{k:"week"})
+      ),
+      open.week&&h(Fragment,null,
+      h("div",{style:"display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:14px"},
+        h("button",{type:"button",disabled:wkOff>=51,style:"background:var(--sf2);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-size:18px;width:40px;height:40px;cursor:pointer;opacity:"+(wkOff>=51?.3:.8),onClick:()=>setWkOff(o=>Math.min(o+1,51))},"\u2039"),
         h("div",{style:"text-align:center;flex:1"},
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:var(--rc);letter-spacing:1px"},lbl),
           h("div",{style:"font-size:10px;color:var(--td);margin-top:2px"},fmt(ws)+" \u2013 "+fmt(we))
         ),
-        h("button",{style:"background:var(--sf2);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-size:18px;width:40px;height:40px;cursor:pointer;opacity:"+(wkOff===0?.3:.8),onClick:()=>setWkOff(o=>Math.max(o-1,0))},"\u203A")
+        h("button",{type:"button",disabled:wkOff===0,style:"background:var(--sf2);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-size:18px;width:40px;height:40px;cursor:pointer;opacity:"+(wkOff===0?.3:.8),onClick:()=>setWkOff(o=>Math.max(o-1,0))},"\u203A")
       ),
-      wkOff>0&&h("button",{style:"width:100%;margin-top:10px;background:rgba(255,255,255,0.03);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:2px;padding:7px;cursor:pointer;text-transform:uppercase",onClick:()=>setWkOff(0)},"Aujourd'hui")
-    ),
-    h("div",{class:"card"},
-      h("div",{class:"ctitle"},"Activité de la semaine"),
       h("div",{style:"display:grid;grid-template-columns:minmax(0,1fr) repeat(7,22px);gap:5px;align-items:center;margin-top:10px;margin-bottom:8px;font-family:Orbitron,sans-serif;font-size:9px;color:#fff;letter-spacing:1px;text-transform:uppercase"},
         h("div",null,"Quête"),
         weekLbls.map((dayLabel,i)=>h("div",{key:"h"+i,style:"text-align:center;color:#fff"},dayLabel))
@@ -276,42 +279,21 @@ export function HistoryTab({
           })
         ),
         ordered.every(o=>!(tots[o.id]>0))&&h("div",{style:"text-align:center;font-size:13px;color:var(--td);padding:16px 0"},"Aucune activité cette semaine")
-      )
-    ),
-    h("div",{class:"card"},
-      h("div",{style:"display:flex;align-items:center;justify-content:space-between;cursor:pointer",onClick:()=>toggle("weight")},
-        h("div",{class:"ctitle",style:"margin:0"},"Suivi du poids"),
-        h(ChevronBtn,{k:"weight"})
       ),
-      open.weight&&h(Fragment,null,
-        h("form",{onSubmit:saveWeight,style:"display:flex;gap:8px;align-items:center;margin-top:15px"},
-          h("input",{ref:weightInputRef,type:"text",inputMode:"decimal",placeholder:"Poids (kg)","aria-label":"Poids en kilogrammes",class:"min",style:"flex:1;min-width:0;margin:0;text-align:center"}),
-          h("button",{type:"submit",class:"mbtn mprim",style:"width:auto;min-width:105px;margin:0"},"Enregistrer")
-        ),
-        weightError&&h("div",{style:"font-size:11px;color:#ef4444;margin-top:7px"},weightError),
-        weighIns.length>0?h(Fragment,null,
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:var(--rc);margin:18px 0 9px"},"Dernière pesée : "+weightLabel(weighIns.at(-1).weight)+" kg"),
-          h("div",{style:"display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0"},
-            h("button",{type:"button",disabled:displayedWeightMonthOff>=maxWeightMonthOff,onClick:()=>setWeightMonthOff(v=>Math.min(v+1,maxWeightMonthOff)),"aria-label":"Mois précédent",style:"background:var(--sf2);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-size:18px;width:38px;height:38px;opacity:"+(displayedWeightMonthOff>=maxWeightMonthOff?.3:1)},"‹"),
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:var(--rc);text-transform:capitalize;text-align:center"},weightMonthLabel),
-            h("button",{type:"button",disabled:displayedWeightMonthOff===0,onClick:()=>setWeightMonthOff(v=>Math.max(0,v-1)),"aria-label":"Mois suivant",style:"background:var(--sf2);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-size:18px;width:38px;height:38px;opacity:"+(displayedWeightMonthOff===0?.3:1)},"›")
-          ),
-          h("div",{style:"border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);border-radius:10px;padding:7px"},
-            h("svg",{viewBox:"0 0 360 170",role:"img","aria-label":"Évolution du poids en "+weightMonthLabel,style:"display:block;width:100%;height:auto"},
-              [28,84,140].map(y=>h("line",{key:"grid"+y,x1:30,x2:330,y1:y,y2:y,stroke:"rgba(255,255,255,.12)","stroke-width":1})),
-              h("text",{x:2,y:31,fill:"#94a3b8","font-size":10},weightLabel(graphHigh)),
-              h("text",{x:2,y:143,fill:"#94a3b8","font-size":10},weightLabel(graphLow)),
-              graphPoints.length>1&&h("polyline",{points:graphPoints.map(point=>point.x.toFixed(1)+","+point.y.toFixed(1)).join(" "),fill:"none",stroke:"#a78bfa","stroke-width":2.5,"stroke-linecap":"round","stroke-linejoin":"round"}),
-              graphPoints.map((point,index)=>h("g",{key:graphEntries[index].recordedAt,role:"button",tabIndex:0,"aria-label":"Pesée du "+shortDate(graphEntries[index].date)+" : "+weightLabel(graphEntries[index].weight)+" kilogrammes",onClick:()=>setSelectedWeighIn(graphEntries[index]),onKeyDown:event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();setSelectedWeighIn(graphEntries[index]);}},style:"cursor:pointer"},
-                h("circle",{cx:point.x,cy:point.y,r:16,fill:"transparent"}),
-                h("circle",{cx:point.x,cy:point.y,r:index===graphPoints.length-1?4:3,fill:index===graphPoints.length-1?"#c4b5fd":"#a78bfa",style:"pointer-events:none"})
-              )),
-              h("text",{x:30,y:160,fill:"#94a3b8","font-size":10},"01/"+String(weightMonthStart.getMonth()+1).padStart(2,"0")),
-              h("text",{x:330,y:160,fill:"#94a3b8","font-size":10,"text-anchor":"end"},String(new Date(weightMonthEnd.getTime()-86400000).getDate()).padStart(2,"0")+"/"+String(weightMonthStart.getMonth()+1).padStart(2,"0"))
-            )
-          ),
-          !graphEntries.length&&h("div",{style:"font-size:10px;color:var(--td);margin-top:7px"},"Aucune pesée ce mois-ci.")
-        ):h("div",{style:"font-size:12px;color:var(--td);text-align:center;padding:24px 0 8px"},"Aucune pesée enregistrée.")
+      h("div",{style:"display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:18px;padding-top:13px;border-top:1px solid rgba(255,255,255,.08)"},
+        [["Meilleur streak",(weeklySummary.bestStreak||0)+" j"],
+         ["Donjons terminés",weeklySummary.dungeons||0],
+         ["Portails contenus",weeklySummary.portals||0],
+         ["XP obtenu",Math.round(weeklyXpWithoutRegression(state,weeklySummary)).toLocaleString("fr-FR")+" XP"]]
+          .map(([label,value])=>h("div",{key:label,style:"padding:8px;border-radius:8px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);text-align:center"},
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:var(--rc)"},value),
+            h("div",{style:"font-size:8.5px;color:var(--td);margin-top:3px;text-transform:uppercase"},label)
+          ))
+      ),
+      weeklySummary.professional&&weeklySummary.professional.length>0&&h("div",{style:"margin-top:14px"},weeklySummary.professional.map(item=>h("div",{key:item.id,style:"display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:8px 0;border-top:1px solid rgba(255,255,255,.05);font-size:11px"},
+        h("span",{style:"color:var(--tx);min-width:0"},item.name),
+        h("span",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+(item.done?"#4ade80":"var(--td)")+";white-space:nowrap"},fmtNum(item.value)+"/"+fmtNum(item.target)+" "+item.unit+(item.done?" ✓":""))
+      )))
       )
     ),
     h("div",{class:"card"},
@@ -356,39 +338,39 @@ export function HistoryTab({
       )
     ),
     h("div",{class:"card"},
-      h("div",{style:"display:flex;align-items:center;justify-content:space-between;cursor:pointer",onClick:()=>toggle("week")},
-        h("div",{class:"ctitle",style:"margin:0"},"Bilans hebdomadaires"),
-        h(ChevronBtn,{k:"week"})
+      h("div",{style:"display:flex;align-items:center;justify-content:space-between;cursor:pointer",onClick:()=>toggle("weight")},
+        h("div",{class:"ctitle",style:"margin:0"},"Suivi du poids"),
+        h(ChevronBtn,{k:"weight"})
       ),
-      open.week&&h(Fragment,null,
-      !(state.weeklySummaries||[]).length&&h("div",{style:"font-size:12px;color:var(--td);margin-top:10px;text-align:center"},"Le premier bilan sera créé au prochain reset hebdomadaire."),
-      [...(state.weeklySummaries||[])].sort((a,b)=>String(b.weekKey).localeCompare(String(a.weekKey))).map(summary=>{
-        const key="summary_"+summary.weekKey;
-        const fmtDay=day=>{const p=String(day||"").split("-");return p.length===3?p[2]+"/"+p[1]:day;};
-        const bonusTotal=(Number(summary.professionalBonusXp)||0)+(Number(summary.streakBonusXp)||0);
-        return h("div",{key:summary.weekKey,style:"margin-top:10px;border-top:1px solid rgba(255,255,255,.06);padding-top:10px"},
-          h("div",{onClick:()=>toggle(key),style:"display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:10px;cursor:pointer"},
-            h("div",{style:"min-width:0"},
-              h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--tx);letter-spacing:.7px"},"DU "+fmtDay(summary.startDay)+" AU "+fmtDay(summary.endDay)),
-              h("div",{style:"font-size:10px;color:var(--td);margin-top:3px"},summary.successfulDays+"/7 journées validées")
-            ),
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:var(--rc);white-space:nowrap"},Math.round(weeklyXpWithoutRegression(state,summary)).toLocaleString("fr-FR")+" XP"),
-            h(ChevronBtn,{k:key})
+      open.weight&&h(Fragment,null,
+        h("form",{onSubmit:saveWeight,style:"display:flex;gap:8px;align-items:center;margin-top:15px"},
+          h("input",{ref:weightInputRef,type:"text",inputMode:"decimal",placeholder:"Poids (kg)","aria-label":"Poids en kilogrammes",class:"min",style:"flex:1;min-width:0;margin:0;text-align:center"}),
+          h("button",{type:"submit",class:"mbtn mprim",style:"width:auto;min-width:105px;margin:0"},"Enregistrer")
+        ),
+        weightError&&h("div",{style:"font-size:11px;color:#ef4444;margin-top:7px"},weightError),
+        weighIns.length>0?h(Fragment,null,
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:var(--rc);margin:18px 0 9px"},"Dernière pesée : "+weightLabel(weighIns.at(-1).weight)+" kg"),
+          h("div",{style:"display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0"},
+            h("button",{type:"button",disabled:displayedWeightMonthOff>=maxWeightMonthOff,onClick:()=>setWeightMonthOff(v=>Math.min(v+1,maxWeightMonthOff)),"aria-label":"Mois précédent",style:"background:var(--sf2);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-size:18px;width:38px;height:38px;opacity:"+(displayedWeightMonthOff>=maxWeightMonthOff?.3:1)},"‹"),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:var(--rc);text-transform:capitalize;text-align:center"},weightMonthLabel),
+            h("button",{type:"button",disabled:displayedWeightMonthOff===0,onClick:()=>setWeightMonthOff(v=>Math.max(0,v-1)),"aria-label":"Mois suivant",style:"background:var(--sf2);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-size:18px;width:38px;height:38px;opacity:"+(displayedWeightMonthOff===0?.3:1)},"›")
           ),
-          open[key]&&h("div",{style:"margin-top:12px"},
-            h("div",{style:"display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px"},
-              [["Meilleur streak",(summary.bestStreak||0)+" j"],["Donjons terminés",summary.dungeons||0],["Portails contenus",summary.portals||0],["Bonus obtenus",bonusTotal>0?"+"+Math.round(bonusTotal)+" XP":"—"]].map(([label,value])=>h("div",{key:label,style:"padding:8px;border-radius:8px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);text-align:center"},
-                h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:var(--rc)"},value),
-                h("div",{style:"font-size:8.5px;color:var(--td);margin-top:3px;text-transform:uppercase"},label)
-              ))
-            ),
-            summary.professional&&summary.professional.length>0&&h("div",{style:"margin-top:10px"},summary.professional.map(item=>h("div",{key:item.id,style:"display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:7px 0;border-top:1px solid rgba(255,255,255,.05);font-size:11px"},
-              h("span",{style:"color:var(--tx);min-width:0"},item.name),
-              h("span",{style:"font-family:Orbitron,sans-serif;font-size:9px;color:"+(item.done?"#4ade80":"var(--td)")+";white-space:nowrap"},fmtNum(item.value)+"/"+fmtNum(item.target)+" "+item.unit+(item.done?" ✓":""))
-            )))
-          )
-        );
-      })
+          h("div",{style:"border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);border-radius:10px;padding:7px"},
+            h("svg",{viewBox:"0 0 360 170",role:"img","aria-label":"Évolution du poids en "+weightMonthLabel,style:"display:block;width:100%;height:auto"},
+              [28,84,140].map(y=>h("line",{key:"grid"+y,x1:30,x2:330,y1:y,y2:y,stroke:"rgba(255,255,255,.12)","stroke-width":1})),
+              h("text",{x:2,y:31,fill:"#94a3b8","font-size":10},weightLabel(graphHigh)),
+              h("text",{x:2,y:143,fill:"#94a3b8","font-size":10},weightLabel(graphLow)),
+              graphPoints.length>1&&h("polyline",{points:graphPoints.map(point=>point.x.toFixed(1)+","+point.y.toFixed(1)).join(" "),fill:"none",stroke:"#a78bfa","stroke-width":2.5,"stroke-linecap":"round","stroke-linejoin":"round"}),
+              graphPoints.map((point,index)=>h("g",{key:graphEntries[index].recordedAt,role:"button",tabIndex:0,"aria-label":"Pesée du "+shortDate(graphEntries[index].date)+" : "+weightLabel(graphEntries[index].weight)+" kilogrammes",onClick:()=>setSelectedWeighIn(graphEntries[index]),onKeyDown:event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();setSelectedWeighIn(graphEntries[index]);}},style:"cursor:pointer"},
+                h("circle",{cx:point.x,cy:point.y,r:16,fill:"transparent"}),
+                h("circle",{cx:point.x,cy:point.y,r:index===graphPoints.length-1?4:3,fill:index===graphPoints.length-1?"#c4b5fd":"#a78bfa",style:"pointer-events:none"})
+              )),
+              h("text",{x:30,y:160,fill:"#94a3b8","font-size":10},"01/"+String(weightMonthStart.getMonth()+1).padStart(2,"0")),
+              h("text",{x:330,y:160,fill:"#94a3b8","font-size":10,"text-anchor":"end"},String(new Date(weightMonthEnd.getTime()-86400000).getDate()).padStart(2,"0")+"/"+String(weightMonthStart.getMonth()+1).padStart(2,"0"))
+            )
+          ),
+          !graphEntries.length&&h("div",{style:"font-size:10px;color:var(--td);margin-top:7px"},"Aucune pesée ce mois-ci.")
+        ):h("div",{style:"font-size:12px;color:var(--td);text-align:center;padding:24px 0 8px"},"Aucune pesée enregistrée.")
       )
     ),
     h("div",{class:"card"},

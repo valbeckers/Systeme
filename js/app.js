@@ -67,7 +67,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260811-linear-xp-v1";
 import { StatsTab } from "./statsView.js?v=20260919-kiviat-labels-v2";
-import { HistoryTab } from "./historyView.js?v=20261016-regression-summary-v8";
+import { HistoryTab } from "./historyView.js?v=20261016-integrated-weekly-v9";
 import { regressionPenaltyForWeek, weeklyXpWithoutRegression } from "./weeklyRegressionXp.js?v=20261016-v1";
 import { INJURY_ZONES, injuryForDay, isInjuredQuest, injuryDaysRemaining } from "./injuryEngine.js?v=20261003-injury-v1";
 import {
@@ -669,7 +669,7 @@ function App(){
   const [exportValue,setExportValue] = useState("");
   const [dungeonHelpOpen,setDungeonHelpOpen] = useState({});
   const [selectedDungeonRoom,setSelectedDungeonRoom] = useState(null);
-  const [historyOpen,setHistoryOpen] = useState({week:false,monthly:false,weight:false,records:false});
+  const [historyOpen,setHistoryOpen] = useState({week:true,monthly:false,weight:false,records:false});
   const [settingsSectionOpen,setSettingsSectionOpen] = useState(null);
   const [goalSettingsError,setGoalSettingsError] = useState("");
   const [selectedGoalId,setSelectedGoalId] = useState(null);
@@ -4756,6 +4756,15 @@ function isUncappedProfessionalWeeklyQuest(obj){
     const historyObjs=[
       ...objs.filter(o=>!o.optional||additionalPersonalRecordIds.has(o.id))
     ];
+    const getWeekSummary=weekKey=>{
+      const saved=(state.weeklySummaries||[]).find(summary=>summary.weekKey===weekKey);
+      if(saved)return saved;
+      const tracking=state.weeklySummaryTracking;
+      const earnedXp=tracking?.weekKey===weekKey
+        ?(Number(tracking.earnedXp)||0)+(Number(state.totalXp)||0)-(Number(tracking.lastTotalXp)||0)
+        :estimateRecordedWeekXp(state,weekKey);
+      return buildWeeklySummary(state,{weekKey,earnedXp});
+    };
     return h(HistoryTab,{
       state,
       setState,
@@ -4772,6 +4781,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
       setSelectedHistoryDay,
       historyOpen,
       setHistoryOpen,
+      getWeekSummary,
       getValidateThreshold,
       runRecordResetDay:RUN_RECORD_RESET_DAY
     });
