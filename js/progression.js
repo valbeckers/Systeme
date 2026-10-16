@@ -30,6 +30,13 @@ export const RANK_BASES = {
   balance: [5,  10, 15,  20,  25,  30],
   grips:   [10, 12, 14,  16,  18,  20],
 };
+// 72 pompes au rang B correspondent à 9 tractions, 18 négatives ou 27 australiennes.
+export function pullupTargetForRank(variant,rankIdx,prestige=0){
+  const pushBase=RANK_BASES.push[Math.max(0,Math.min(5,Number(rankIdx)||0))];
+  const multiplier=variant==="australian_pullups"?3:variant==="negative_pullups"?2:1;
+  const ascension=prestige>0?Math.pow(1.2,prestige):1;
+  return Math.max(1,Math.ceil(pushBase*ascension/8))*multiplier;
+}
 
 
 // Progression des objectifs par niveau de stat
@@ -57,10 +64,6 @@ export function legRaiseTargetForForceLevel(level){
   return Math.min(100,target);
 }
 export function getStatLevelTarget(objId, stats){
-  if(objId==="negative_pullups"){
-    const squatTarget=getStatLevelTarget("squats",stats);
-    return Math.max(1,Math.ceil((Number(squatTarget)||0)/2));
-  }
   const linear=STAT_LEVEL_BASES[objId];
   if(linear){
     const level=Number((stats||{})[linear.stat])||1;
@@ -94,6 +97,7 @@ export function getRankBase(objId, rankIdx, prestige, stats){
   const def = DEFS.find(o=>o.id===objId);
   // Si la quête a un objectif fixe, on ne scale jamais
   if(def?.fixedBase) return def.base;
+  if(objId==="negative_pullups")return pullupTargetForRank("negative_pullups",rankIdx,prestige);
 
   const statTarget = getStatLevelTarget(objId, stats);
   if(statTarget != null) return statTarget;

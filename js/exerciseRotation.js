@@ -1,4 +1,4 @@
-import { statLevelTier, legRaiseTargetForForceLevel, getStatLevelTarget } from "./progression.js?v=20261014-calves-target-v1";
+import { statLevelTier, legRaiseTargetForForceLevel, getStatLevelTarget, pullupTargetForRank } from "./progression.js?v=20261016-pullup-ranks-v2";
 
 export const EXERCISE_ROTATIONS = {
   push:[
@@ -91,7 +91,7 @@ export function cleanExerciseRotationByDay(raw){
   });
   return out;
 }
-export function rotatedQuestObjects(baseObjs,rotation,stats,totalXp){
+export function rotatedQuestObjects(baseObjs,rotation,stats,totalXp,rankIdx=0,prestige=0){
   const force=Math.max(1,Number((stats||{}).Force)||1);
   const tier=statLevelTier(force);
   const byId=(family,id)=>EXERCISE_ROTATIONS[family].find(o=>o.id===id)||EXERCISE_ROTATIONS[family][0];
@@ -102,9 +102,9 @@ export function rotatedQuestObjects(baseObjs,rotation,stats,totalXp){
   return (baseObjs||[]).map(obj=>{
     if(obj.id==="push") return {...obj,name:"Pecs & Triceps - "+chest.label,icon:chest.icon,exerciseId:chest.id,exerciseIcon:chest.icon,rotationExercise:chest.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3,stat2:null,xpPer2:null};
     if(obj.id==="negative_pullups"){
-      if(back.id==="pullups") return {...obj,name:"Dos & Biceps - Tractions",icon:back.icon,exerciseId:back.id,exerciseIcon:back.icon,rotationExercise:back.label,target:10,unit:"rep",xpPer:30,stat2:null,xpPer2:null};
-      if(back.id==="australian_pullups") return {...obj,name:"Dos & Biceps - Tractions australiennes",icon:back.icon,exerciseId:back.id,exerciseIcon:back.icon,rotationExercise:back.label,target:getStatLevelTarget("squats",stats),unit:"rep",xpPer:6,stat2:null,xpPer2:null};
-      return {...obj,name:"Dos & Biceps - Tractions négatives",icon:back.icon,exerciseId:back.id,exerciseIcon:back.icon,rotationExercise:back.label,target:getStatLevelTarget("negative_pullups",stats),unit:"rep",xpPer:12,stat2:null,xpPer2:null};
+      if(back.id==="pullups") return {...obj,name:"Dos & Biceps - Tractions",icon:back.icon,exerciseId:back.id,exerciseIcon:back.icon,rotationExercise:back.label,target:pullupTargetForRank(back.id,rankIdx,prestige),unit:"rep",xpPer:30,stat2:null,xpPer2:null};
+      if(back.id==="australian_pullups") return {...obj,name:"Dos & Biceps - Tractions australiennes",icon:back.icon,exerciseId:back.id,exerciseIcon:back.icon,rotationExercise:back.label,target:pullupTargetForRank(back.id,rankIdx,prestige),unit:"rep",xpPer:7.5,stat2:null,xpPer2:null};
+      return {...obj,name:"Dos & Biceps - Tractions négatives",icon:back.icon,exerciseId:back.id,exerciseIcon:back.icon,rotationExercise:back.label,target:pullupTargetForRank(back.id,rankIdx,prestige),unit:"rep",xpPer:15,stat2:null,xpPer2:null};
     }
     if(obj.id==="abs"){
       if(abs.id==="crunches") return {...obj,name:"Abdos - Crunches",icon:abs.icon,exerciseId:abs.id,exerciseIcon:abs.icon,rotationExercise:abs.label,target:getStatLevelTarget("abs",stats),unit:"rep",xpPer:1.5};

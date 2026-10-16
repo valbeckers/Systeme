@@ -67,7 +67,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260811-linear-xp-v1";
 import { StatsTab } from "./statsView.js?v=20260919-kiviat-labels-v2";
-import { HistoryTab } from "./historyView.js?v=20261014-all-quest-settings-v2";
+import { HistoryTab } from "./historyView.js?v=20261016-pullup-ranks-v2";
 import { INJURY_ZONES, injuryForDay, isInjuredQuest, injuryDaysRemaining } from "./injuryEngine.js?v=20261003-injury-v1";
 import {
   RANK_BASES,
@@ -77,10 +77,11 @@ import {
   statLevelTier,
   legRaiseTargetForForceLevel,
   getStatLevelTarget,
+  pullupTargetForRank,
   getAscensionXpRequired,
   getRankBase,
   sortStat
-} from "./progression.js?v=20261014-calves-target-v1";
+} from "./progression.js?v=20261016-pullup-ranks-v2";
 import {
   REGRESSION_ORB_ICON_DATA,
   DUNGEON_KEY_ICON_DATA,
@@ -103,7 +104,7 @@ import {
   cleanExerciseRotationEnabled,
   ensureExerciseRotationForDay,
   rotatedQuestObjects
-} from "./exerciseRotation.js?v=20261014-calves-target-v1";
+} from "./exerciseRotation.js?v=20261016-pullup-ranks-v2";
 import { applyQuestTuning, nextQuestTuning, questTuningForDay, saveQuestTuning } from "./questTuning.js?v=20261016-xp-settings-v2";
 import {
   questRecordUnit,
@@ -661,9 +662,7 @@ function App(){
   const [dungeonHelpOpen,setDungeonHelpOpen] = useState({});
   const [selectedDungeonRoom,setSelectedDungeonRoom] = useState(null);
   const [historyOpen,setHistoryOpen] = useState({week:false,monthly:true,records:false});
-  const [rotationSettingsOpen,setRotationSettingsOpen] = useState(false);
-  const [dailyCorrectionOpen,setDailyCorrectionOpen] = useState(false);
-  const [goalSettingsOpen,setGoalSettingsOpen] = useState({daily:false,bonus:false,weekly:false,urgent:false});
+  const [settingsSectionOpen,setSettingsSectionOpen] = useState(null);
   const [goalSettingsError,setGoalSettingsError] = useState("");
   const [selectedGoalId,setSelectedGoalId] = useState(null);
   const [monthOff,setMonthOff] = useState(0);
@@ -822,14 +821,19 @@ function App(){
     setState(s=>ensureExerciseRotationForDay(s,today));
   },[today,state.exerciseRotationByDay]);
 
+  const effectiveXp = state.totalXp;
+  const rank     = getRankWithStats(effectiveXp, state.stats);
+  const naturalRank = getRank(effectiveXp); // rang qu'on aurait sans les conditions de stats
+  const nextRank = getNext(rank.id);
+  const ri       = RANKS.findIndex(r=>r.id===rank.id);
+  const prestige = state.prestige||0;
   const baseObjs = state.objectives||DEFS;
   const todayExerciseRotation=(state.exerciseRotationByDay||{})[today]||{};
-  const objs = rotatedQuestObjects(baseObjs,todayExerciseRotation,state.stats,state.totalXp)
+  const objs = rotatedQuestObjects(baseObjs,todayExerciseRotation,state.stats,state.totalXp,ri,prestige)
     .map(obj=>applyQuestTuning(obj,state.questTuning,today));
   const tLog  = state.dailyLog[today]||{};
   const activeInjury=injuryForDay(state,today);
   const wLog  = state.weeklyLog[wk]||{};
-  const prestige = state.prestige||0;
 
   const weeklyQuestRewardObjectives=objs.filter(obj=>obj.weekly);
   const allWeeklyQuestRewardObjectivesDone=weeklyQuestRewardObjectives.length>0&&weeklyQuestRewardObjectives.every(obj=>{
@@ -893,11 +897,6 @@ function App(){
     });
   }
 
-  const effectiveXp = state.totalXp;
-  const rank     = getRankWithStats(effectiveXp, state.stats);
-  const naturalRank = getRank(effectiveXp); // rang qu'on aurait sans les conditions de stats
-  const nextRank = getNext(rank.id);
-  const ri       = RANKS.findIndex(r=>r.id===rank.id);
 
   // Condition de stats pour le prochain rang
   const nextRankReq = nextRank ? RANK_STAT_REQUIREMENTS[nextRank.id] : null;
@@ -1102,7 +1101,7 @@ function App(){
       abs:saved.abs||LEGACY_EXERCISE_DEFAULTS.abs,
       legs:saved.legs||LEGACY_EXERCISE_DEFAULTS.legs
     };
-    const selected=rotatedQuestObjects(baseObjs,rotation,state.stats,state.totalXp).find(q=>q.id===obj.id)||obj;
+    const selected=rotatedQuestObjects(baseObjs,rotation,state.stats,state.totalXp,ri,prestige).find(q=>q.id===obj.id)||obj;
     return applyQuestTuning(selected,state.questTuning,day);
   };
   // Base applicable pour un jour donné (gère les rotations et baseHistory).
@@ -4780,7 +4779,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
       ...Object.entries(EXERCISE_ROTATIONS).map(([family,options])=>({
         label:{push:"Pecs & Triceps",back:"Dos & Biceps",abs:"Abdos",legs:"Jambes"}[family],
         items:options.map(option=>({id:option.id,label:option.label,
-          obj:rotatedQuestObjects(DEFS,{...todayExerciseRotation,[family]:option.id},state.stats,state.totalXp)
+          obj:rotatedQuestObjects(DEFS,{...todayExerciseRotation,[family]:option.id},state.stats,state.totalXp,ri,prestige)
             .find(q=>q.id===({push:"push",back:"negative_pullups",abs:"abs",legs:"squats"}[family]))
         }))
       }))
@@ -4903,11 +4902,11 @@ function isUncappedProfessionalWeeklyQuest(obj){
           h("button",{onClick:()=>{setShowSet(false);setConfirmReset(false);},style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
         ),
         h("div",{class:"msec"},
-          h("button",{type:"button",onClick:()=>setDailyCorrectionOpen(v=>!v),style:"display:flex;justify-content:space-between;align-items:center;width:100%;padding:4px 0;background:transparent;border:0;color:var(--tx);cursor:pointer;text-align:left"},
+          h("button",{type:"button",onClick:()=>setSettingsSectionOpen(v=>v==="correction"?null:"correction"),style:"display:flex;justify-content:space-between;align-items:center;width:100%;padding:4px 0;background:transparent;border:0;color:var(--tx);cursor:pointer;text-align:left"},
             h("span",{class:"mlbl",style:"margin:0"},"Corriger les données du jour"),
-            h("span",{style:"color:var(--td);font-size:12px"},dailyCorrectionOpen?"▲":"▼")
+            h("span",{style:"color:var(--td);font-size:12px"},settingsSectionOpen==="correction"?"▲":"▼")
           ),
-          dailyCorrectionOpen&&h("div",{style:"margin-top:12px"},
+          settingsSectionOpen==="correction"&&h("div",{style:"margin-top:12px"},
           ordered.map(obj=>{
             const cur=(obj.weekly)?(wLog[obj.id]||0):(tLog[obj.id]||0);
             return h("div",{key:obj.id,style:"display:flex;align-items:center;gap:8px;margin-bottom:8px"},
@@ -4923,11 +4922,11 @@ function isUncappedProfessionalWeeklyQuest(obj){
         h("div",{class:"divider"}),
         goalSections.map(section=>h(Fragment,{key:section.id},
           h("div",{class:"msec"},
-            h("button",{type:"button",onClick:()=>setGoalSettingsOpen(v=>({...v,[section.id]:!v[section.id]})),style:"display:flex;justify-content:space-between;align-items:center;width:100%;padding:4px 0;background:transparent;border:0;color:var(--tx);cursor:pointer;text-align:left"},
+            h("button",{type:"button",onClick:()=>setSettingsSectionOpen(v=>v===section.id?null:section.id),style:"display:flex;justify-content:space-between;align-items:center;width:100%;padding:4px 0;background:transparent;border:0;color:var(--tx);cursor:pointer;text-align:left"},
               h("span",{class:"mlbl",style:"margin:0"},section.title),
-              h("span",{style:"color:var(--td);font-size:12px"},goalSettingsOpen[section.id]?"▲":"▼")
+              h("span",{style:"color:var(--td);font-size:12px"},settingsSectionOpen===section.id?"▲":"▼")
             ),
-            goalSettingsOpen[section.id]&&h("div",null,
+            settingsSectionOpen===section.id&&h("div",null,
               h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin:9px 0 14px"},"Choisis une quête pour régler son objectif et ses boutons de saisie."),
               section.groups.map(group=>h("div",{key:group.label,style:"margin-bottom:14px"},
                 h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--rc);margin-bottom:7px"},group.label),
@@ -4945,11 +4944,11 @@ function isUncappedProfessionalWeeklyQuest(obj){
           h("div",{class:"divider"})
         )),
         h("div",{class:"msec"},
-          h("button",{type:"button",onClick:()=>setRotationSettingsOpen(v=>!v),style:"display:flex;justify-content:space-between;align-items:center;width:100%;padding:4px 0;background:transparent;border:0;color:var(--tx);cursor:pointer;text-align:left"},
+          h("button",{type:"button",onClick:()=>setSettingsSectionOpen(v=>v==="rotation"?null:"rotation"),style:"display:flex;justify-content:space-between;align-items:center;width:100%;padding:4px 0;background:transparent;border:0;color:var(--tx);cursor:pointer;text-align:left"},
             h("span",{class:"mlbl",style:"margin:0"},"Tirage des quêtes musculaires"),
-            h("span",{style:"color:var(--td);font-size:12px"},rotationSettingsOpen?"▲":"▼")
+            h("span",{style:"color:var(--td);font-size:12px"},settingsSectionOpen==="rotation"?"▲":"▼")
           ),
-          rotationSettingsOpen&&h("div",null,
+          settingsSectionOpen==="rotation"&&h("div",null,
             h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin:9px 0 14px"},"Coche les variantes possibles pour chaque quête journalière. Les changements s’appliquent au prochain tirage ; la quête du jour reste la même."),
             Object.entries(EXERCISE_ROTATIONS).map(([family,options])=>h("div",{key:family,style:"margin-bottom:15px"},
               h("div",{style:"display:flex;align-items:center;gap:7px;font-family:Orbitron,sans-serif;font-size:10px;color:var(--rc);letter-spacing:.5px;margin-bottom:7px"},QuestIcon(rotationIcons[family],"💪🏼",14),rotationLabels[family]),
@@ -6033,7 +6032,11 @@ function isUncappedProfessionalWeeklyQuest(obj){
         );
       }
       const pushTarget=getStatLevelTarget("push",state.stats);
-      const negativePullupsTarget=getStatLevelTarget("negative_pullups",state.stats);
+      const backVariants=Object.fromEntries(EXERCISE_ROTATIONS.back.map(option=>{
+        const rotated=rotatedQuestObjects(baseObjs,{...todayExerciseRotation,back:option.id},state.stats,state.totalXp,ri,prestige)
+          .find(q=>q.id==="negative_pullups");
+        return [option.id,applyQuestTuning(rotated,state.questTuning,today)];
+      }));
       const absTarget=getStatLevelTarget("abs",state.stats);
       const legRaiseTarget=legRaiseTargetForForceLevel(force);
       const plankTarget=Math.max(1,Math.ceil(force/10));
@@ -6051,9 +6054,9 @@ function isUncappedProfessionalWeeklyQuest(obj){
         ),
         h("div",{style:familyStyle},
           h(FamilyTitle,{label:"DOS & BICEPS"}),
-          h(Exercise,{iconKey:"negative_pullups",icon:"💪🏼",name:"Tractions",target:10,unit:"reps",rewards:[{stat:"Force",xp:"30/rep"}]}),
-          h(Exercise,{iconKey:"negative_pullups",icon:"💪🏼",name:"Tractions négatives",target:negativePullupsTarget,unit:"reps",rewards:[{stat:"Force",xp:"12/rep"}]}),
-          h(Exercise,{iconKey:"australian_pullups",icon:"💪🏼",name:"Tractions australiennes",target:getStatLevelTarget("squats",state.stats),unit:"reps",rewards:[{stat:"Force",xp:"6/rep"}]})
+          h(Exercise,{iconKey:"negative_pullups",icon:"💪🏼",name:"Tractions",target:backVariants.pullups.target,unit:"reps",rewards:[{stat:"Force",xp:fmtFrNum(backVariants.pullups.xpPer)+"/rep"}]}),
+          h(Exercise,{iconKey:"negative_pullups",icon:"💪🏼",name:"Tractions négatives",target:backVariants.negative_pullups.target,unit:"reps",rewards:[{stat:"Force",xp:fmtFrNum(backVariants.negative_pullups.xpPer)+"/rep"}]}),
+          h(Exercise,{iconKey:"australian_pullups",icon:"💪🏼",name:"Tractions australiennes",target:backVariants.australian_pullups.target,unit:"reps",rewards:[{stat:"Force",xp:fmtFrNum(backVariants.australian_pullups.xpPer)+"/rep"}]})
         ),
         h("div",{style:familyStyle},
           h(FamilyTitle,{label:"ABDOS"}),
