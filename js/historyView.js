@@ -77,6 +77,8 @@ export function HistoryTab({
 }){
   const weightInputRef=useRef(null);
   const [weightError,setWeightError]=useState("");
+  const [weightMonthOff,setWeightMonthOff]=useState(0);
+  const [selectedWeighIn,setSelectedWeighIn]=useState(null);
   const open = historyOpen;
   const setOpen = setHistoryOpen;
   const toggle = k => setOpen(o=>({...o,[k]:!o[k]}));
@@ -133,15 +135,22 @@ export function HistoryTab({
     : monthKey+"-"+String(monthOff===0?Number(today.slice(8)):1).padStart(2,"0");
   const monthlyQuests=[...sortStat(objs.filter(o=>o.daily&&!o.optional)),...objs.filter(o=>o.id==="run")];
   const weighIns=[...(state.weightLog||[])].sort((a,b)=>a.recordedAt-b.recordedAt);
-  const graphEntries=weighIns.slice(-90);
-  const minWeight=graphEntries.length?Math.min(...graphEntries.map(x=>x.weight)):0;
-  const maxWeight=graphEntries.length?Math.max(...graphEntries.map(x=>x.weight)):0;
+  const currentMonth=new Date();
+  const firstWeighIn=weighIns[0];
+  const oldestMonth=firstWeighIn?new Date(Number(firstWeighIn.date.slice(0,4)),Number(firstWeighIn.date.slice(5,7))-1,1):currentMonth;
+  const maxWeightMonthOff=Math.max(0,(currentMonth.getFullYear()-oldestMonth.getFullYear())*12+currentMonth.getMonth()-oldestMonth.getMonth());
+  const displayedWeightMonthOff=Math.min(weightMonthOff,maxWeightMonthOff);
+  const weightMonthStart=new Date(currentMonth.getFullYear(),currentMonth.getMonth()-displayedWeightMonthOff,1);
+  const weightMonthEnd=new Date(weightMonthStart.getFullYear(),weightMonthStart.getMonth()+1,1);
+  const weightMonthKey=localDate(weightMonthStart).slice(0,7);
+  const weightMonthLabel=weightMonthStart.toLocaleDateString("fr-FR",{month:"long",year:"numeric"});
+  const graphEntries=weighIns.filter(entry=>entry.date.startsWith(weightMonthKey));
+  const minWeight=weighIns.length?Math.min(...weighIns.map(x=>x.weight)):0;
+  const maxWeight=weighIns.length?Math.max(...weighIns.map(x=>x.weight)):0;
   const graphLow=minWeight-Math.max(.5,(maxWeight-minWeight)*.15);
   const graphHigh=maxWeight+Math.max(.5,(maxWeight-minWeight)*.15);
-  const firstTime=graphEntries[0]?.recordedAt||0;
-  const lastTime=graphEntries.at(-1)?.recordedAt||0;
-  const graphPoints=graphEntries.map((entry,index)=>({
-    x:30+300*(lastTime>firstTime?(entry.recordedAt-firstTime)/(lastTime-firstTime):graphEntries.length===1?.5:index/(graphEntries.length-1)),
+  const graphPoints=graphEntries.map(entry=>({
+    x:30+300*Math.max(0,Math.min(1,(entry.recordedAt-weightMonthStart.getTime())/(weightMonthEnd.getTime()-weightMonthStart.getTime()))),
     y:140-112*(entry.weight-graphLow)/(graphHigh-graphLow)
   }));
   const weightLabel=value=>fmtNum(value,2).replace(".",",");
@@ -281,27 +290,26 @@ export function HistoryTab({
         h("div",{style:"font-size:10px;color:var(--td);margin-top:7px"},"La date et l’heure de chaque pesée sont enregistrées automatiquement."),
         weighIns.length>0?h(Fragment,null,
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:var(--rc);margin:18px 0 9px"},"Dernière pesée : "+weightLabel(weighIns.at(-1).weight)+" kg"),
+          h("div",{style:"display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0"},
+            h("button",{type:"button",disabled:displayedWeightMonthOff>=maxWeightMonthOff,onClick:()=>setWeightMonthOff(v=>Math.min(v+1,maxWeightMonthOff)),"aria-label":"Mois précédent",style:"background:var(--sf2);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-size:18px;width:38px;height:38px;opacity:"+(displayedWeightMonthOff>=maxWeightMonthOff?.3:1)},"‹"),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:var(--rc);text-transform:capitalize;text-align:center"},weightMonthLabel),
+            h("button",{type:"button",disabled:displayedWeightMonthOff===0,onClick:()=>setWeightMonthOff(v=>Math.max(0,v-1)),"aria-label":"Mois suivant",style:"background:var(--sf2);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-size:18px;width:38px;height:38px;opacity:"+(displayedWeightMonthOff===0?.3:1)},"›")
+          ),
           h("div",{style:"border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);border-radius:10px;padding:7px"},
-            h("svg",{viewBox:"0 0 360 170",role:"img","aria-label":"Évolution du poids sur les 90 dernières pesées",style:"display:block;width:100%;height:auto"},
+            h("svg",{viewBox:"0 0 360 170",role:"img","aria-label":"Évolution du poids en "+weightMonthLabel,style:"display:block;width:100%;height:auto"},
               [28,84,140].map(y=>h("line",{key:"grid"+y,x1:30,x2:330,y1:y,y2:y,stroke:"rgba(255,255,255,.12)","stroke-width":1})),
               h("text",{x:2,y:31,fill:"#94a3b8","font-size":10},weightLabel(graphHigh)),
               h("text",{x:2,y:143,fill:"#94a3b8","font-size":10},weightLabel(graphLow)),
               graphPoints.length>1&&h("polyline",{points:graphPoints.map(point=>point.x.toFixed(1)+","+point.y.toFixed(1)).join(" "),fill:"none",stroke:"#a78bfa","stroke-width":2.5,"stroke-linecap":"round","stroke-linejoin":"round"}),
-              graphPoints.map((point,index)=>h("circle",{key:index,cx:point.x,cy:point.y,r:index===graphPoints.length-1?4:2.5,fill:index===graphPoints.length-1?"#c4b5fd":"#a78bfa"})),
-              h("text",{x:30,y:160,fill:"#94a3b8","font-size":10},shortDate(graphEntries[0].date).slice(0,5)),
-              h("text",{x:330,y:160,fill:"#94a3b8","font-size":10,"text-anchor":"end"},shortDate(graphEntries.at(-1).date).slice(0,5))
+              graphPoints.map((point,index)=>h("g",{key:graphEntries[index].recordedAt,role:"button",tabIndex:0,"aria-label":"Pesée du "+shortDate(graphEntries[index].date)+" : "+weightLabel(graphEntries[index].weight)+" kilogrammes",onClick:()=>setSelectedWeighIn(graphEntries[index]),onKeyDown:event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();setSelectedWeighIn(graphEntries[index]);}},style:"cursor:pointer"},
+                h("circle",{cx:point.x,cy:point.y,r:16,fill:"transparent"}),
+                h("circle",{cx:point.x,cy:point.y,r:index===graphPoints.length-1?4:3,fill:index===graphPoints.length-1?"#c4b5fd":"#a78bfa",style:"pointer-events:none"})
+              )),
+              h("text",{x:30,y:160,fill:"#94a3b8","font-size":10},"01/"+String(weightMonthStart.getMonth()+1).padStart(2,"0")),
+              h("text",{x:330,y:160,fill:"#94a3b8","font-size":10,"text-anchor":"end"},String(new Date(weightMonthEnd.getTime()-86400000).getDate()).padStart(2,"0")+"/"+String(weightMonthStart.getMonth()+1).padStart(2,"0"))
             )
           ),
-          h("div",{style:"font-size:10px;color:var(--td);margin-top:6px"},graphEntries.length<weighIns.length?"Courbe : 90 dernières pesées":"Courbe : toutes les pesées"),
-          h("div",{style:"max-height:180px;overflow:auto;margin-top:13px"},
-            weighIns.slice().reverse().map(entry=>h("div",{key:entry.recordedAt,style:"display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 2px;border-top:1px solid rgba(255,255,255,.06)"},
-              h("span",{style:"font-size:11px;color:var(--td)"},shortDate(entry.date)+" · "+new Date(entry.recordedAt).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})),
-              h("span",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:var(--tx);margin-left:auto"},weightLabel(entry.weight)+" kg"),
-              h("button",{type:"button",title:"Supprimer cette pesée","aria-label":"Supprimer la pesée du "+shortDate(entry.date),onClick:()=>{
-                if(window.confirm("Supprimer cette pesée du "+shortDate(entry.date)+" ?"))setState(previous=>({...previous,weightLog:(previous.weightLog||[]).filter(item=>item.recordedAt!==entry.recordedAt)}));
-              },style:"border:0;background:transparent;color:var(--td);font-size:18px;padding:0 4px;cursor:pointer"},"×")
-            ))
-          )
+          h("div",{style:"font-size:10px;color:var(--td);margin-top:7px"},graphEntries.length?"Touche un point pour voir la pesée.":"Aucune pesée ce mois-ci.")
         ):h("div",{style:"font-size:12px;color:var(--td);text-align:center;padding:24px 0 8px"},"Aucune pesée enregistrée.")
       )
     ),
@@ -418,6 +426,20 @@ export function HistoryTab({
             )
           );
         })
+      )
+    ),
+    selectedWeighIn&&h("div",{class:"modal-ov",onClick:event=>{if(event.target===event.currentTarget)setSelectedWeighIn(null)}},
+      h("div",{class:"modal",style:"max-width:350px;text-align:center"},
+        h("div",{class:"mtitle",style:"font-size:17px;margin-bottom:15px"},"Pesée du "+shortDate(selectedWeighIn.date)),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:25px;color:var(--rc);margin-bottom:9px"},weightLabel(selectedWeighIn.weight)+" kg"),
+        h("div",{style:"font-size:12px;color:var(--td);margin-bottom:22px"},"Enregistrée à "+new Date(selectedWeighIn.recordedAt).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})),
+        h("button",{type:"button",class:"mbtn mprim",onClick:()=>setSelectedWeighIn(null),style:"width:100%;margin-bottom:8px"},"Fermer"),
+        h("button",{type:"button",class:"mbtn",style:"width:100%;border:1px solid #ef4444;color:#ef4444;background:transparent",onClick:()=>{
+          if(window.confirm("Supprimer cette pesée du "+shortDate(selectedWeighIn.date)+" ?")){
+            setState(previous=>({...previous,weightLog:(previous.weightLog||[]).filter(entry=>entry.recordedAt!==selectedWeighIn.recordedAt)}));
+            setSelectedWeighIn(null);
+          }
+        }},"Supprimer cette pesée")
       )
     )
   );
