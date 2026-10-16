@@ -79,6 +79,7 @@ export function HistoryTab({
   const [weightError,setWeightError]=useState("");
   const [weightMonthOff,setWeightMonthOff]=useState(0);
   const [selectedWeighIn,setSelectedWeighIn]=useState(null);
+  const [confirmWeightDeletion,setConfirmWeightDeletion]=useState(false);
   const open = historyOpen;
   const setOpen = setHistoryOpen;
   const toggle = k => setOpen(o=>({...o,[k]:!o[k]}));
@@ -428,18 +429,29 @@ export function HistoryTab({
         })
       )
     ),
-    selectedWeighIn&&h("div",{class:"modal-ov",onClick:event=>{if(event.target===event.currentTarget)setSelectedWeighIn(null)}},
+    selectedWeighIn&&h("div",{class:"modal-ov",onClick:event=>{if(event.target===event.currentTarget){setSelectedWeighIn(null);setConfirmWeightDeletion(false);}}},
       h("div",{class:"modal",style:"max-width:350px;text-align:center"},
         h("div",{class:"mtitle",style:"font-size:17px;margin-bottom:15px"},"Pesée du "+shortDate(selectedWeighIn.date)),
         h("div",{style:"font-family:Orbitron,sans-serif;font-size:25px;color:var(--rc);margin-bottom:9px"},weightLabel(selectedWeighIn.weight)+" kg"),
         h("div",{style:"font-size:12px;color:var(--td);margin-bottom:22px"},"Enregistrée à "+new Date(selectedWeighIn.recordedAt).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})),
-        h("button",{type:"button",class:"mbtn mprim",onClick:()=>setSelectedWeighIn(null),style:"width:100%;margin-bottom:8px"},"Fermer"),
-        h("button",{type:"button",class:"mbtn",style:"width:100%;border:1px solid #ef4444;color:#ef4444;background:transparent",onClick:()=>{
-          if(window.confirm("Supprimer cette pesée du "+shortDate(selectedWeighIn.date)+" ?")){
-            setState(previous=>({...previous,weightLog:(previous.weightLog||[]).filter(entry=>entry.recordedAt!==selectedWeighIn.recordedAt)}));
+        h("button",{type:"button",class:"mbtn mprim",onClick:()=>{setSelectedWeighIn(null);setConfirmWeightDeletion(false);},style:"width:100%;margin-bottom:8px"},"Fermer"),
+        h("button",{type:"button",class:"mbtn",style:"width:100%;border:1px solid #ef4444;color:#ef4444;background:transparent",onClick:()=>setConfirmWeightDeletion(true)},"Supprimer cette pesée")
+      )
+    ),
+    selectedWeighIn&&confirmWeightDeletion&&h("div",{class:"ruov",style:"--rc:#ef4444;--rg:rgba(239,68,68,.55);background:rgba(0,0,0,.92)",onClick:event=>{if(event.target===event.currentTarget)setConfirmWeightDeletion(false);}},
+      h("div",{class:"rucont",style:"width:min(500px,calc(100vw - 34px));background:rgba(15,15,18,.97);border:1px solid #ef444488;border-radius:18px;padding:22px;box-shadow:0 0 30px rgba(239,68,68,.12)"},
+        h("div",{class:"ruevol",style:"color:#ef4444"},"CONFIRMATION"),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:17px;font-weight:900;color:#fff;text-align:center;line-height:1.4;margin-top:10px"},"Supprimer la pesée du "+shortDate(selectedWeighIn.date)+" ?"),
+        h("div",{style:"font-size:12px;color:var(--td);text-align:center;line-height:1.5;margin-top:12px"},weightLabel(selectedWeighIn.weight)+" kg · Cette pesée sera retirée de la courbe."),
+        h("div",{style:"display:flex;gap:10px;width:100%;margin-top:20px"},
+          h("button",{type:"button",onClick:()=>setConfirmWeightDeletion(false),style:"flex:1;padding:12px;border-radius:9px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--td);font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},"ANNULER"),
+          h("button",{type:"button",onClick:()=>{
+            const recordedAt=selectedWeighIn.recordedAt;
+            setState(previous=>({...previous,weightLog:(previous.weightLog||[]).filter(entry=>entry.recordedAt!==recordedAt)}));
+            setConfirmWeightDeletion(false);
             setSelectedWeighIn(null);
-          }
-        }},"Supprimer cette pesée")
+          },style:"flex:1;padding:12px;border-radius:9px;border:1px solid #ef4444;background:rgba(239,68,68,.15);color:#ef4444;font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},"SUPPRIMER")
+        )
       )
     )
   );
