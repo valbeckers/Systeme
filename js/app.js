@@ -4201,7 +4201,6 @@ function isUncappedProfessionalWeeklyQuest(obj){
     }else if(id==="invisibilityCape"){
       if(!activeDungeon){disabled=true;reason="Aucun donjon n’est actuellement actif.";}
     }
-    return h("div",{class:"modal-ov"    }
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setInventoryItem(null)}},
       h("div",{class:"modal",style:"position:relative;max-width:390px;width:calc(100% - 28px)"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:12px"},
