@@ -90,7 +90,7 @@ import {
   NEW_ITEM_ICON_DATA,
   DEBT_ACKNOWLEDGEMENT_ICON_DATA
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
-import { UiIcon } from "./uiIcons.js?v=20261012-pullup-records-v1";
+import { UiIcon } from "./uiIcons.js?v=20261016-portal-crystal-v1";
 import { saveStoredState } from "./storage.js";
 import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261016-breach-completed-card-v1";
 import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261016-breach-completed-card-v1";
@@ -1064,6 +1064,10 @@ function App(){
       row.iconKind="dungeon";
       row.iconId=dungeonSourceToday.id;
       row.icon=dungeonDefToday?.icon||dungeonSourceToday.icon;
+    }
+    if(key==="breach"){
+      row.iconId="portalCrystal";
+      row.icon="💎";
     }
     if(key==="debt"&&state.questDebt){
       row.iconId=state.questDebt.id;

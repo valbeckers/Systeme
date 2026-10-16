@@ -25,6 +25,7 @@ export const UI_ICON_IMAGES=Object.freeze({
   "interface.xpInertia":"./assets/ui/interface-xp-inertia.png?v=20260818-xp-icons-v1",
 
   "quest.water":"./assets/ui/quest-water.png?v=20260809-medallions-v4",
+  "quest.portalCrystal":"./assets/ui/quest-portal-crystal.png?v=20261016-v1",
   "quest.sleep":"./assets/ui/quest-sleep.png?v=20260809-medallions-v5",
   "quest.reading":"./assets/ui/quest-reading.png?v=20260809-medallions-v4",
   "quest.breach_reading1h":"./assets/ui/quest-reading.png?v=20260809-medallions-v4",
