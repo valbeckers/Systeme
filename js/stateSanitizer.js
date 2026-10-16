@@ -370,6 +370,11 @@ export function cleanSystemState(raw){
     sqCooldownUntil:data.sqCooldownUntil||null,
     sqFailureDay:typeof data.sqFailureDay==="string"?data.sqFailureDay:null,
     activeBreach:normalizeActiveBreach(data.activeBreach),
+    completedBreach:data.completedBreach&&Number.isFinite(Number(data.completedBreach.completedAt))&&Number(data.completedBreach.completedAt)>0?{
+      name:String(data.completedBreach.name||""),
+      stat:STATS.includes(data.completedBreach.stat)?data.completedBreach.stat:null,
+      completedAt:Number(data.completedBreach.completedAt)
+    }:null,
     alliedGiftPending:(data.alliedGiftPending&&data.alliedGiftPending.breachId)?{
       breachId:String(data.alliedGiftPending.breachId),
       breachName:String(data.alliedGiftPending.breachName||"Portail allié"),

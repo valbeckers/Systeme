@@ -7,7 +7,7 @@ import { DEFS, SP } from "./questDefs.js?v=20261012-back-daily-v1";
 import { next7AM, todayStr, addDaysStr } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
 import { loadStoredState } from "./storage.js";
-import { cleanSystemState } from "./stateSanitizer.js?v=20261016-remove-alchemy-v1";
+import { cleanSystemState } from "./stateSanitizer.js?v=20261016-breach-completed-card-v1";
 import { normalizeActiveBreach } from "./breachEngine.js?v=20261016-draw-pools-v1";
 
 const loadState = () => loadStoredState(cleanSystemState);
@@ -70,6 +70,7 @@ const IMPORTED = {
   sqCooldownUntil:null,
   sqFailureDay:null,
   activeBreach:null,
+  completedBreach:null,
   alliedGiftPending:null,
   breachRollDay:null,
   breachTriggeredDay:null,

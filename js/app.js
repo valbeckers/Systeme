@@ -92,8 +92,8 @@ import {
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
 import { UiIcon } from "./uiIcons.js?v=20261012-pullup-records-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261016-remove-alchemy-v1";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261016-remove-alchemy-v1";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261016-breach-completed-card-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261016-breach-completed-card-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -3030,6 +3030,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
         return {
           ...s,
           activeBreach:null,
+          completedBreach:{name:b.name,stat:b.stat,completedAt:Date.now()},
           dailyExtraXp:daily,
           alliedGiftPending:allied?{breachId:b.breachId,breachName:b.name,createdAt:Date.now()}:s.alliedGiftPending
         };
@@ -3699,6 +3700,9 @@ function isUncappedProfessionalWeeklyQuest(obj){
     const completedDungeonToday = [...(state.dungeonLog||[])]
       .reverse()
       .find(entry=>entry&&entry.completedAt&&new Date(entry.completedAt).toDateString()===new Date().toDateString()) || null;
+    const completedBreachToday=state.completedBreach&&
+      new Date(state.completedBreach.completedAt).toDateString()===new Date(now).toDateString()
+      ? state.completedBreach : null;
 
     const dungeonParts = title => {
       const raw=String(title||"Donjon");
@@ -3734,6 +3738,17 @@ function isUncappedProfessionalWeeklyQuest(obj){
             accentColor:STAT_COLOR[completedDungeonToday.stat]||"#c084fc",
             detail:"Fermeture du donjon dans "+fmtCD(Math.max(0,(completedDungeonToday.expiresAt||((completedDungeonToday.completedAt||now)+86400000))-now))
           }
+        : null,
+      completedBreachToday
+        ? {
+            key:"breach",
+            prefix:"Le portail ",
+            accent:completedBreachToday.name||"ouvert",
+            suffix:" a été fermé.",
+            accentColor:STAT_COLOR[completedBreachToday.stat]||"#38bdf8"
+          }
+        : Number(state.dailyExtraXp?.[today]?.breach)>0
+          ? {key:"breach",text:"Un portail a été fermé."}
         : null,
 
     ].filter(Boolean);
