@@ -1,5 +1,5 @@
-import { SP } from "./questDefs.js?v=20261017-editor-v1";
-import { applyQuestTuning } from "./questTuning.js?v=20261017-editor-v1";
+import { SP } from "./questDefs.js?v=20261017-vacuum-v1";
+import { applyQuestTuning } from "./questTuning.js?v=20261017-vacuum-v1";
 import { activeCatalogEntry } from "./questCatalog.js?v=20261017-editor-v1";
 
 // ─── MOTEUR DE TIRAGE DES QUÊTES URGENTES ───────────────────────────────────

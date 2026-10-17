@@ -1,5 +1,5 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
-import { MAX_PRESTIGE, countStatsAtLevel } from "./progression.js?v=20261017-editor-v1";
+import { MAX_PRESTIGE, countStatsAtLevel } from "./progression.js?v=20261017-vacuum-v1";
 import { xpForLvl, totForLvl, getLvl } from "./xp.js";
 
 const { h, Fragment } = window.preact;

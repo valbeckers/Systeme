@@ -3,11 +3,11 @@
 // sauvegarde courante ou, à défaut, des données historiques importées.
 // Il conserve également les migrations ponctuelles encore nécessaires.
 
-import { DEFS, SP } from "./questDefs.js?v=20261017-editor-v1";
+import { DEFS, SP } from "./questDefs.js?v=20261017-vacuum-v1";
 import { next7AM, todayStr, addDaysStr } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
 import { loadStoredState } from "./storage.js";
-import { cleanSystemState } from "./stateSanitizer.js?v=20261017-editor-v1";
+import { cleanSystemState } from "./stateSanitizer.js?v=20261017-vacuum-v1";
 import { normalizeActiveBreach } from "./breachEngine.js?v=20261017-editor-v1";
 
 const loadState = () => loadStoredState(cleanSystemState);
@@ -150,6 +150,16 @@ function resetInvalidRunningRecord(dailyLog){
 export function buildInitialState(){
   const saved=loadState();
   if(!saved)return {...IMPORTED,dailyLog:resetInvalidRunningRecord(migrateSleepToHours(IMPORTED.dailyLog)),sleepHoursMigrated:true};
+  // Active la nouvelle quête une seule fois pour les sauvegardes existantes.
+  // Les décochages faits ensuite dans Réglages restent respectés.
+  const vacuumMigrationNeeded=saved.vacuumDailyAdded!==true;
+  const vacuumDay=todayStr();
+  const drawPreferences=vacuumMigrationNeeded&&saved.drawPreferences
+    ?{...saved.drawPreferences,daily:[...new Set([...(saved.drawPreferences.daily||[]),"stomach_vacuum"])]}
+    :saved.drawPreferences||null;
+  const dailyDrawByDay=vacuumMigrationNeeded&&vacuumDay>="2026-10-17"&&saved.dailyDrawByDay?.[vacuumDay]
+    ?{...saved.dailyDrawByDay,[vacuumDay]:[...new Set([...saved.dailyDrawByDay[vacuumDay],"stomach_vacuum"])]}
+    :saved.dailyDrawByDay||{};
   const sourceLog=saved.sleepHoursMigrated
     ? (saved.dailyLog||IMPORTED.dailyLog)
     : migrateSleepToHours(saved.dailyLog||IMPORTED.dailyLog);
@@ -189,8 +199,9 @@ export function buildInitialState(){
     bonusFiveCompletionDay:saved.bonusFiveCompletionDay||null,
     exerciseRotationByDay:saved.exerciseRotationByDay||{},
     exerciseRotationEnabled:saved.exerciseRotationEnabled||null,
-    drawPreferences:saved.drawPreferences||null,
-    dailyDrawByDay:saved.dailyDrawByDay||{},
+    drawPreferences,
+    dailyDrawByDay,
+    vacuumDailyAdded:true,
     completedSqLog:saved.completedSqLog||[],
     sqDrawLog:saved.sqDrawLog||[],
     sqStatCycle:saved.sqStatCycle||[],

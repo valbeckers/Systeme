@@ -2,7 +2,7 @@ import { REGRESSION_DEF, hasValidatedDailyCompletion } from "./dailyEngine.js";
 import { isInjuredQuest } from "./injuryEngine.js?v=20261017-editor-v1";
 import { hasResolvedQuestDebt, inferLegacyResolvedDebtQuestId } from "./debtEngine.js?v=20260817-debt-history-v3";
 import { wkStr } from "./dayCycle.js";
-import { getRankBase, sortStat } from "./progression.js?v=20261017-editor-v1";
+import { getRankBase, sortStat } from "./progression.js?v=20261017-vacuum-v1";
 import {
   LEGACY_EXERCISE_DEFAULTS,
   isExerciseFamilyQuestId,
@@ -10,9 +10,9 @@ import {
   rotatedQuestObjects
 } from "./exerciseRotation.js?v=20261017-editor-v1";
 import { RECORD_EXERCISE_DEFS, recordExerciseValueForDay } from "./records.js?v=20261017-editor-v1";
-import { UiIcon } from "./uiIcons.js?v=20261012-pullup-records-v1";
+import { UiIcon } from "./uiIcons.js?v=20261017-vacuum-v1";
 import { weeklyXpWithoutRegression } from "./weeklyRegressionXp.js?v=20261016-v1";
-import { dailyEligibleForDay } from "./drawPreferences.js?v=20261017-editor-v1";
+import { dailyEligibleForDay } from "./drawPreferences.js?v=20261017-vacuum-v1";
 
 const { h, Fragment } = window.preact;
 const { useRef, useState } = window.preactHooks;

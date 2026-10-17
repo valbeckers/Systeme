@@ -1,4 +1,4 @@
-import { statLevelTier, legRaiseTargetForForceLevel, getStatLevelTarget, pullupTargetForRank } from "./progression.js?v=20261017-editor-v1";
+import { statLevelTier, legRaiseTargetForForceLevel, getStatLevelTarget, pullupTargetForRank } from "./progression.js?v=20261017-vacuum-v1";
 import { applyRotationCatalog, activeCatalogEntry } from "./questCatalog.js?v=20261017-editor-v1";
 
 export const EXERCISE_ROTATIONS = {

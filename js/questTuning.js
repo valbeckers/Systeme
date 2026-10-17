@@ -1,5 +1,5 @@
 import { EXERCISE_ROTATIONS } from "./exerciseRotation.js?v=20261017-editor-v1";
-import { DEFS, SP } from "./questDefs.js?v=20261017-editor-v1";
+import { DEFS, SP } from "./questDefs.js?v=20261017-vacuum-v1";
 import { BONUS_QUESTS } from "./bonusQuestDefs.js?v=20261017-editor-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20261017-editor-v1";
 import { BREACH_POOL } from "./breachDefs.js?v=20261017-editor-v1";

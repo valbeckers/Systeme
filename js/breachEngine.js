@@ -5,7 +5,7 @@
 
 import { BREACH_POOL, BREACH_RUPTURE_BOSSES } from "./breachDefs.js?v=20261017-editor-v1";
 import { eventDayStr, next7AM } from "./dayCycle.js";
-import { eligiblePool } from "./drawPreferences.js?v=20261017-editor-v1";
+import { eligiblePool } from "./drawPreferences.js?v=20261017-vacuum-v1";
 
 function breachTemplateById(id){return BREACH_POOL.find(b=>b.id===id)||null;}
 function breachRuptureTemplateById(id){return BREACH_RUPTURE_BOSSES[id]||null;}

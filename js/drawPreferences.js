@@ -1,4 +1,4 @@
-import { DEFS } from "./questDefs.js?v=20261017-editor-v1";
+import { DEFS } from "./questDefs.js?v=20261017-vacuum-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20261017-editor-v1";
 import { BREACH_POOL } from "./breachDefs.js?v=20261017-editor-v1";
 import { storedQuestCatalog } from "./questCatalog.js?v=20261017-editor-v1";

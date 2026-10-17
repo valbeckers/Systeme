@@ -1,5 +1,5 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
-import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20261017-editor-v1";
+import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20261017-vacuum-v1";
 import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261017-editor-v1";
 import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20261017-editor-v1";
 import {
@@ -26,7 +26,7 @@ import {
 import { elanBonusPercent, xpMomentumAdjustment } from "./xpMomentum.js?v=20260817-xp-momentum-v1";
 import { BREACH_POOL, BREACH_RUPTURE_BOSSES } from "./breachDefs.js?v=20261017-editor-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20261017-editor-v1";
-import { DRAW_POOLS, cleanDrawPreferences, eligiblePool, snapshotDrawPools, dailyEligibleForDay } from "./drawPreferences.js?v=20261017-editor-v1";
+import { DRAW_POOLS, cleanDrawPreferences, eligiblePool, snapshotDrawPools, dailyEligibleForDay } from "./drawPreferences.js?v=20261017-vacuum-v1";
 import {
   dungeonRoomRewardPairs,
   dungeonRewardPairs,
@@ -68,7 +68,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260811-linear-xp-v1";
 import { StatsTab } from "./statsView.js?v=20261017-editor-v1";
-import { HistoryTab } from "./historyView.js?v=20261017-editor-v1";
+import { HistoryTab } from "./historyView.js?v=20261017-vacuum-v1";
 import { regressionPenaltyForWeek, weeklyXpWithoutRegression } from "./weeklyRegressionXp.js?v=20261016-v1";
 import { INJURY_ZONES, injuryForDay, isInjuredQuest, injuryDaysRemaining } from "./injuryEngine.js?v=20261017-editor-v1";
 import {
@@ -83,17 +83,17 @@ import {
   getAscensionXpRequired,
   getRankBase,
   sortStat
-} from "./progression.js?v=20261017-editor-v1";
+} from "./progression.js?v=20261017-vacuum-v1";
 import {
   REGRESSION_ORB_ICON_DATA,
   DUNGEON_KEY_ICON_DATA,
   NEW_ITEM_ICON_DATA,
   DEBT_ACKNOWLEDGEMENT_ICON_DATA
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
-import { UiIcon } from "./uiIcons.js?v=20261017-urgent-meditation-v1";
+import { UiIcon } from "./uiIcons.js?v=20261017-vacuum-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261017-editor-v1";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261017-editor-v1";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261017-vacuum-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261017-vacuum-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -104,7 +104,7 @@ import {
   availableRotationOptions,
   rotatedQuestObjects
 } from "./exerciseRotation.js?v=20261017-editor-v1";
-import { applyQuestTuning, nextQuestTuning, questTuningForDay, saveQuestTuning } from "./questTuning.js?v=20261017-editor-v1";
+import { applyQuestTuning, nextQuestTuning, questTuningForDay, saveQuestTuning } from "./questTuning.js?v=20261017-vacuum-v1";
 import { cleanQuestCatalog, activeCatalogEntry } from "./questCatalog.js?v=20261017-editor-v1";
 import { CatalogEditor } from "./catalogEditor.js?v=20261017-editor-fields-v3";
 import {
@@ -662,6 +662,7 @@ function App(){
   const [settingsSectionOpen,setSettingsSectionOpen] = useState(null);
   const [goalSettingsError,setGoalSettingsError] = useState("");
   const [selectedGoalId,setSelectedGoalId] = useState(null);
+  const [vacuumDescriptionOpen,setVacuumDescriptionOpen] = useState(false);
   const [monthOff,setMonthOff] = useState(0);
   const [selectedHistoryDay,setSelectedHistoryDay] = useState(null);
   const [codexOpen,setCodexOpen] = useState({obl:false,weekly:false,bonus:false,reg:false,sq:false,breach:false,debt:false,dj:false,djAlt:false,cs:false});
@@ -2553,6 +2554,10 @@ function isUncappedProfessionalWeeklyQuest(obj){
                 :(fmtFrNum(obj.xpPer)+" XP/"+obj.unit+" · "+(STAT_LBL[obj.stat]||obj.stat))
         )
       ),
+      obj.id==="stomach_vacuum"&&h("div",{style:"margin-top:8px"},
+        h("button",{type:"button","aria-expanded":vacuumDescriptionOpen,onClick:()=>setVacuumDescriptionOpen(v=>!v),style:"background:transparent;border:0;padding:3px 0;color:var(--rc);font-size:11px;cursor:pointer;text-align:left"},"Description "+(vacuumDescriptionOpen?"▲":"▼")),
+        vacuumDescriptionOpen&&h("div",{style:"font-size:11px;line-height:1.5;color:var(--td);margin-top:5px"},obj.desc)
+      ),
       h("div",{class:"qrow"},
         h(Fragment,null,
             h("div",{class:"qbar"},h("div",{class:"qfill"+fillStateClass,style:barInnerStyle})),
@@ -2658,9 +2663,9 @@ function isUncappedProfessionalWeeklyQuest(obj){
             },"+"+amount+" "+quickUnit(amount)))
           );
         }
-        const QUICK_IDS=["sleep","push","abs","squats","negative_pullups","calves","reading","flex","balance","grips","med","water","mob"];
+        const QUICK_IDS=["sleep","push","abs","squats","negative_pullups","calves","reading","flex","balance","grips","med","water","mob","stomach_vacuum"];
         const unitLabel={sleep:"h",push:obj.unit,abs:obj.unit,squats:obj.unit,negative_pullups:"rep",calves:obj.unit,reading:"min",flex:"min",balance:"min",grips:"min",med:"min",water:"verre",mob:"min"};
-        const unitLabelPlural={sleep:"h",push:obj.unit==="rep"?"reps":obj.unit,abs:obj.unit==="rep"?"reps":obj.unit,squats:obj.unit==="rep"?"reps":obj.unit,negative_pullups:"reps",calves:"reps",reading:"min",flex:"min",balance:"min",grips:"min",med:"min",water:"verres",mob:"min"};
+        const unitLabelPlural={sleep:"h",push:obj.unit==="rep"?"reps":obj.unit,abs:obj.unit==="rep"?"reps":obj.unit,squats:obj.unit==="rep"?"reps":obj.unit,negative_pullups:"reps",calves:"reps",reading:"min",flex:"min",balance:"min",grips:"min",med:"min",water:"verres",mob:"min",stomach_vacuum:"reps"};
         if(QUICK_IDS.includes(obj.id)){
           const lbl=unitLabel[obj.id]||obj.unit;
           const lblPl=unitLabelPlural[obj.id]||obj.unit;
@@ -5898,7 +5903,9 @@ function isUncappedProfessionalWeeklyQuest(obj){
               obj.name,
               (obj.weekly)&&h(QuestBadge,{label:"HEBDO",color:WEEKLY_BADGE_COLOR})
             ),
-            subtitle&&h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},subtitle),
+            subtitle&&(obj.id==="stomach_vacuum"
+              ?h("details",{style:"font-size:10px;color:var(--td);margin-top:5px;line-height:1.4"},h("summary",{style:"cursor:pointer;color:var(--rc)"},"Description"),h("div",{style:"margin-top:5px"},subtitle))
+              :h("div",{style:"font-size:10px;color:var(--td);margin-top:3px;line-height:1.25"},subtitle)),
             h("div",{style:"margin-top:7px"},renderXpPills(obj,{showPlus:!useDailyXpFormat})),
             h("div",{style:"display:flex;flex-direction:column;gap:3px;margin-top:6px"},
               h("div",{style:detailStyle},"▸ Objectif : "+targetForQuest(obj))

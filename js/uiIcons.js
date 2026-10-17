@@ -29,6 +29,7 @@ export const UI_ICON_IMAGES=Object.freeze({
   "quest.water":"./assets/ui/quest-water.png?v=20260809-medallions-v4",
   "quest.portalCrystal":"./assets/ui/quest-portal-crystal-v3.png?v=20261016-v3",
   "quest.sleep":"./assets/ui/quest-sleep.png?v=20260809-medallions-v5",
+  "quest.stomach_vacuum":"./assets/ui/quest-abs.png?v=20260809-medallions-v4",
   "quest.reading":"./assets/ui/quest-reading.png?v=20260809-medallions-v4",
   "quest.breach_reading1h":"./assets/ui/quest-reading.png?v=20260809-medallions-v4",
   "quest.med":"./assets/ui/quest-meditation.png?v=20260809-medallions-v4",
