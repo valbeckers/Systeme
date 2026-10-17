@@ -26,6 +26,7 @@ export const BONUS_QUESTS = [
   {id:"bonus_silent",name:"Déplacements silencieux",icon:"🐈",unit:"min",base:10,fixedBase:true,xpPer:10,stat:"Agilite",xpPer2:5,stat2:"Endurance"},
 
   {id:"bonus_delayed_task",name:"Accomplir 1 tâche repoussée",icon:"🕗",unit:"succès",base:1,binary:true,binaryXp:150,stat:"Discipline"},
+  {id:"bonus_declutter",name:"Ranger ou jeter 3 objets",icon:"📦",iconKey:"sp_declutter",unit:"succès",base:1,binary:true,binaryXp:150,stat:"Discipline"},
   {id:"bonus_vacuum",name:"Aspirer",icon:"🧹",unit:"succès",base:1,binary:true,binaryXp:150,stat:"Discipline"}
 ].map(q=>({...q,category:q.category||q.stat,target:(q.dynamicEndurance||q.dynamicTargetKey)?undefined:q.base,daily:true,weekly:false,optional:true,selectableBonus:true}));
 
