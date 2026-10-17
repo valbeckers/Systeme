@@ -106,7 +106,7 @@ import {
 } from "./exerciseRotation.js?v=20261017-editor-v1";
 import { applyQuestTuning, nextQuestTuning, questTuningForDay, saveQuestTuning } from "./questTuning.js?v=20261017-vacuum-v1";
 import { cleanQuestCatalog, activeCatalogEntry } from "./questCatalog.js?v=20261017-editor-v1";
-import { CatalogEditor } from "./catalogEditor.js?v=20261017-editor-fields-v3";
+import { CatalogEditor } from "./catalogEditor.js?v=20261017-rank-settings-v1";
 import {
   questRecordUnit,
   recordRotationIdForDay,
@@ -4672,8 +4672,12 @@ function isUncappedProfessionalWeeklyQuest(obj){
     if(!showSet)return null;
     const ordered=[...sortStat(reqDailyObjs),...sortStat(objs.filter(o=>o.weekly))];
     const nextDay=addDaysStr(today,1);
+    const rotatingSourceIds=new Set(["push","negative_pullups","abs","squats"]);
     const dailyGoalRows=[
-      {label:"Quêtes journalières",items:DEFS.filter(q=>q.daily&&!q.optional).map(q=>({id:q.id,label:q.name,obj:q,kind:"daily"}))},
+      {label:"Quêtes journalières",items:DEFS.filter(q=>q.daily&&!q.optional&&!rotatingSourceIds.has(q.id)).map(q=>({
+        id:q.id,label:q.name,kind:"daily",
+        obj:{...(objs.find(item=>item.id===q.id)||q),target:getEffectiveTarget(q.id)}
+      }))},
       ...Object.entries(EXERCISE_ROTATIONS).map(([family,allOptions])=>({
         label:{push:"Pecs & Triceps",back:"Dos & Biceps",abs:"Abdos",legs:"Jambes"}[family],
         items:availableRotationOptions(allOptions).map(option=>({id:option.id,label:option.label,kind:"daily",
