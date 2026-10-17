@@ -38,6 +38,7 @@ export const UI_ICON_IMAGES=Object.freeze({
   "quest.sp_walk30":"./assets/ui/quest-walk.png?v=20260809-medallions-v4",
   "quest.sp_sun":"./assets/ui/quest-sp-sun.png?v=20260809-medallions-v4",
   "quest.sp_breath":"./assets/ui/quest-heart.png?v=20260809-medallions-v4",
+  "quest.sp_meditation":"./assets/ui/quest-meditation.png?v=20260809-medallions-v4",
   "quest.sp_nojunk":"./assets/ui/quest-no-junk.png?v=20260809-medallions-v4",
   "quest.sp_balanced_meals":"./assets/ui/quest-fruits.png?v=20260809-medallions-v4",
   "quest.sp_no_sugar":"./assets/ui/quest-no-sugar.png?v=20260809-medallions-v4",

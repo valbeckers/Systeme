@@ -1,5 +1,5 @@
 import { EXERCISE_ROTATIONS } from "./exerciseRotation.js?v=20261014-calves-target-v1";
-import { DEFS, SP } from "./questDefs.js?v=20261012-back-daily-v1";
+import { DEFS, SP } from "./questDefs.js?v=20261017-urgent-meditation-v1";
 import { BONUS_QUESTS } from "./bonusQuestDefs.js?v=20261017-bonus-declutter-v1";
 
 const TUNABLE_IDS=new Set([
