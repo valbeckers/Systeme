@@ -21,6 +21,9 @@ export function CatalogEditor({row,catalog,tuning,externalError,onClose,onSave})
     guards:row.boss?.guards||[]
   };
   const [kind,setKind]=useState(initial.kind);
+  const [stat,setStat]=useState(initial.stat);
+  const [stat2,setStat2]=useState(initial.stat2||"");
+  const [family,setFamily]=useState(initial.family===""?"none":initial.family||"auto");
   const [binary,setBinary]=useState(initial.binary);
   const [tiered,setTiered]=useState(!!initial.tiers?.length);
   const [preview,setPreview]=useState(null);
@@ -31,7 +34,7 @@ export function CatalogEditor({row,catalog,tuning,externalError,onClose,onSave})
   const field=(name,label,value,options={})=>h("label",{style:"display:block;margin:10px 0;font-size:12px;color:var(--td)"},label,
     h("input",{name,defaultValue:value??"",type:"text",inputMode:options.numeric?"decimal":"text",style:{...textStyle,marginTop:5}}));
   const select=(name,label,value,values,onChange)=>h("label",{style:"display:block;margin:10px 0;font-size:12px;color:var(--td)"},label,
-    h("select",{name,defaultValue:value,onChange,style:{...textStyle,marginTop:5}},Object.entries(values).map(([key,title])=>h("option",{key,value:key},title))));
+    h("select",{name,value,onChange,style:{...textStyle,marginTop:5}},Object.entries(values).map(([key,title])=>h("option",{key,value:key},title))));
   function read(form){
     const data=new FormData(form);const get=k=>String(data.get(k)||"").trim();
     const target=kind==="dungeon"?rooms.length:(binary&&["daily","bonus","weekly"].includes(kind)?1:number(get("target"))),xpPer=number(get("xpPer"));
@@ -81,15 +84,15 @@ export function CatalogEditor({row,catalog,tuning,externalError,onClose,onSave})
         h("div",{style:"font-size:11px;color:var(--td);margin:12px 0"},"Modifications applicables demain. L’historique et les parties en cours conservent leurs données."),
         select("kind","Type",kind,["push","negative_pullups","abs","squats"].includes(row.id)?{daily:KINDS.daily}:["run","walk","march","med","grips","balance"].includes(row.id)?{bonus:KINDS.bonus}:KINDS,e=>{setKind(e.currentTarget.value);setPreview(null);}),
         field("name","Nom",initial.name),
-        select("stat","Statistique principale",initial.stat,STAT_LABEL),
-        select("stat2","Deuxième statistique (facultative)",initial.stat2||"",{"":"Aucune",...STAT_LABEL}),
+        select("stat","Statistique principale",stat,STAT_LABEL,e=>setStat(e.currentTarget.value)),
+        select("stat2","Deuxième statistique (facultative)",stat2,{"":"Aucune",...STAT_LABEL},e=>setStat2(e.currentTarget.value)),
         field("xpPer2","XP de la deuxième statistique",initial.xpPer2,{numeric:true}),
         kind==="dungeon"?h("div",{style:"font-size:12px;color:var(--td);margin:10px 0"},"Objectif : terminer toutes les salles."):h("div",null,field("unit","Unité",initial.unit),binary&&["daily","bonus","weekly"].includes(kind)?h("div",{style:"font-size:12px;color:var(--td);margin:10px 0"},"Objectif : 1 validation."):field("target","Objectif",initial.target,{numeric:true})),
         field("xpPer",tiered&&!["dungeon","breach"].includes(kind)?"XP de référence (les paliers déterminent les gains)":["dungeon","breach","urgent"].includes(kind)?"XP à la validation / récompense":"XP par unité (validation simple : XP fixes)",initial.xpPer,{numeric:true}),
         !["dungeon","breach"].includes(kind)&&field("buttons","Boutons de saisie (1 5 10)",initialButtons.join(" ")),
         kind==="weekly"&&h("div",null,field("completionBonusXp","Bonus XP à l'objectif",initial.completionBonusXp||0,{numeric:true}),field("overGoalXpPer","XP par unité au-delà de l’objectif",initial.overGoalXpPer||0,{numeric:true})),
         kind!=="dungeon"&&h("div",null,
-          select("family","Famille musculaire",initial.family===""?"none":initial.family||"auto",FAMILY),
+          select("family","Famille musculaire",family,FAMILY,e=>setFamily(e.currentTarget.value)),
           select("objectiveMode","Type d’objectif",binary?"simple":"progressif",{progressif:"Progressif",simple:"Validation simple"},e=>{setBinary(e.currentTarget.value==="simple");setPreview(null);}),
           kind!=="breach"&&select("tierMode","Paliers",tiered?"yes":"no",{no:"Non",yes:"Oui"},e=>{setTiered(e.currentTarget.value==="yes");setPreview(null);}),
           tiered&&kind!=="breach"&&h("label",{style:"display:block;font-size:12px;color:var(--td)"},"Paliers : objectif ; XP ; XP secondaire (facultative), un par ligne",

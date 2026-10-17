@@ -106,7 +106,7 @@ import {
 } from "./exerciseRotation.js?v=20261017-editor-v1";
 import { applyQuestTuning, nextQuestTuning, questTuningForDay, saveQuestTuning } from "./questTuning.js?v=20261017-editor-v1";
 import { cleanQuestCatalog, activeCatalogEntry } from "./questCatalog.js?v=20261017-editor-v1";
-import { CatalogEditor } from "./catalogEditor.js?v=20261017-editor-v1";
+import { CatalogEditor } from "./catalogEditor.js?v=20261017-settings-codex-stat-v1";
 import {
   questRecordUnit,
   recordRotationIdForDay,
@@ -664,7 +664,7 @@ function App(){
   const [selectedGoalId,setSelectedGoalId] = useState(null);
   const [monthOff,setMonthOff] = useState(0);
   const [selectedHistoryDay,setSelectedHistoryDay] = useState(null);
-  const [codexOpen,setCodexOpen] = useState({obl:false,bonus:false,reg:false,sq:false,breach:false,debt:false,dj:false,djAlt:false,cs:false});
+  const [codexOpen,setCodexOpen] = useState({obl:false,weekly:false,bonus:false,reg:false,sq:false,breach:false,debt:false,dj:false,djAlt:false,cs:false});
   const [prestigeUp,setPrestigeUp] = useState(null);
   const [showStatReqDetail,setShowStatReqDetail] = useState(false);
   const [showRankReqStats,setShowRankReqStats] = useState(false);
@@ -4766,6 +4766,30 @@ function isUncappedProfessionalWeeklyQuest(obj){
           h("button",{onClick:()=>{setShowSet(false);setConfirmReset(false);},style:"border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0;flex-shrink:0"},"×")
         ),
         h("div",{class:"msec"},
+          h("div",{class:"mlbl"},"Sauvegarde / Restauration"),
+          h("div",{class:"mrow",style:"margin-bottom:8px"},
+            h("button",{class:"mbtn mprim",style:"flex:1",onClick:()=>{
+              const json=JSON.stringify(exportSystemState(state));
+              navigator.clipboard.writeText(json).then(()=>{
+                setExportValue(json);
+                setExportCopiedModal(true);
+              }).catch(()=>{
+                setExportValue(json);
+                setExportManualModal(true);
+              });
+            }},"Exporter"),
+            h("button",{class:"mbtn mprim",style:"flex:1",onClick:()=>{
+              setImportValue("");
+              setImportModal(true);
+            }},"Importer")
+          )
+        ),
+        h("div",{class:"divider"}),
+        h("div",{class:"msec"},
+          h("button",{class:"mbtn",style:"width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.2);color:var(--tx)",onClick:()=>window.location.reload(true)},"Actualiser l'app")
+        ),
+        h("div",{class:"divider"}),
+        h("div",{class:"msec"},
           h("button",{type:"button",onClick:()=>setSettingsSectionOpen(v=>v==="correction"?null:"correction"),style:"display:flex;justify-content:space-between;align-items:center;width:100%;padding:4px 0;background:transparent;border:0;color:var(--tx);cursor:pointer;text-align:left"},
             h("span",{class:"mlbl",style:"margin:0"},"Corriger les données du jour"),
             h("span",{style:"color:var(--td);font-size:12px"},settingsSectionOpen==="correction"?"▲":"▼")
@@ -4839,29 +4863,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
           ),
           h("div",{class:"divider"})
         )),
-        h("div",{class:"msec"},
-          h("div",{class:"mlbl"},"Sauvegarde / Restauration"),
-          h("div",{class:"mrow",style:"margin-bottom:8px"},
-            h("button",{class:"mbtn mprim",style:"flex:1",onClick:()=>{
-              const json=JSON.stringify(exportSystemState(state));
-              navigator.clipboard.writeText(json).then(()=>{
-                setExportValue(json);
-                setExportCopiedModal(true);
-              }).catch(()=>{
-                setExportValue(json);
-                setExportManualModal(true);
-              });
-            }},"Exporter"),
-            h("button",{class:"mbtn mprim",style:"flex:1",onClick:()=>{
-              setImportValue("");
-              setImportModal(true);
-            }},"Importer")
-          )
-        ),
-        h("div",{class:"divider"}),
-        h("div",{class:"msec"},
-          h("button",{class:"mbtn",style:"width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.2);color:var(--tx)",onClick:()=>window.location.reload(true)},"Actualiser l'app")
-        ),
+
 
       ),
       selectedGoal&&h(CatalogEditor,{key:selectedGoal.id,row:selectedGoal,catalog:state.questCatalog,tuning:state.questTuning,externalError:goalSettingsError,onSave:saveCatalogEntry,onClose:()=>setSelectedGoalId(null)})
@@ -5755,7 +5757,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
   }
 
   function Codex(){
-    const toggleC = k => setCodexOpen(o=>({obl:false,bonus:false,reg:false,sq:false,ev:false,mm:false,debt:false,ep:false,breach:false,dj:false,djAlt:false,cs:false,[k]:!o[k]}));
+    const toggleC = k => setCodexOpen(o=>({obl:false,weekly:false,bonus:false,reg:false,sq:false,ev:false,mm:false,debt:false,ep:false,breach:false,dj:false,djAlt:false,cs:false,[k]:!o[k]}));
     const statLabel = stat => STAT_LBL2[stat] || STAT_LBL[stat] || stat || "";
     const unitPlural = (unit, value) => {
       if(!unit) return "";
@@ -6101,6 +6103,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
           )
         ),
         h(Section,{id:"obl",title:"Quêtes journalières",count:required.length},renderRequiredCodex()),
+        h(Section,{id:"weekly",title:"Quêtes hebdomadaires",count:weeklyCodex.length},groupByDominantStat(weeklyCodex,renderQuest)),
         h(Section,{id:"sq",title:"Quêtes urgentes",count:specialList.length},groupByDominantStat(specialList,renderUrgentSpecial)),
 
       )
