@@ -38,6 +38,7 @@ export const UI_ICON_IMAGES=Object.freeze({
   "quest.sp_walk30":"./assets/ui/quest-walk.png?v=20260809-medallions-v4",
   "quest.sp_sun":"./assets/ui/quest-sp-sun.png?v=20260809-medallions-v4",
   "quest.sp_breath":"./assets/ui/quest-heart.png?v=20260809-medallions-v4",
+  "quest.sp_meditation":"./assets/ui/quest-meditation.png?v=20260809-medallions-v4",
   "quest.sp_nojunk":"./assets/ui/quest-no-junk.png?v=20260809-medallions-v4",
   "quest.sp_balanced_meals":"./assets/ui/quest-fruits.png?v=20260809-medallions-v4",
   "quest.sp_no_sugar":"./assets/ui/quest-no-sugar.png?v=20260809-medallions-v4",
@@ -74,6 +75,7 @@ export const UI_ICON_IMAGES=Object.freeze({
   "quest.bonus_martial_flow":"./assets/ui/quest-martial-flow.png?v=20260809-medallions-v4",
   "quest.bonus_silent":"./assets/ui/quest-silent-movement.png?v=20260809-medallions-v4",
   "quest.bonus_delayed_task":"./assets/ui/quest-task.png?v=20260809-medallions-v4",
+  "quest.bonus_declutter":"./assets/ui/quest-declutter.png?v=20260809-medallions-v4",
   "quest.bonus_vacuum":"./assets/ui/dungeon-steward.png?v=20260809-medallions-v5",
 
   // Objectifs professionnels hebdomadaires.

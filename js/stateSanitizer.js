@@ -1,13 +1,13 @@
 import { STATS } from "./config.js";
-import { DEFS, SP } from "./questDefs.js?v=20261012-back-daily-v1";
-import { BONUS_QUESTS } from "./bonusQuestDefs.js?v=20261012-back-daily-v1";
+import { DEFS, SP } from "./questDefs.js?v=20261017-urgent-meditation-v1";
+import { BONUS_QUESTS } from "./bonusQuestDefs.js?v=20261017-bonus-declutter-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20260818-urgent-dungeon-v1";
 import { todayStr, next7AM } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
 import { normalizeActiveBreach } from "./breachEngine.js?v=20261016-draw-pools-v1";
 import { cleanExerciseRotationByDay, cleanExerciseRotationEnabled } from "./exerciseRotation.js?v=20261014-rotation-settings-v1";
 import { cleanInjuryPeriods } from "./injuryEngine.js?v=20261003-injury-v1";
-import { cleanQuestTuning, applyQuestTuning } from "./questTuning.js?v=20261016-xp-settings-v2";
+import { cleanQuestTuning, applyQuestTuning } from "./questTuning.js?v=20261017-urgent-meditation-v1";
 import { cleanDrawPreferences, cleanDrawSnapshots } from "./drawPreferences.js?v=20261016-draw-pools-v1";
 
 function migrateMergedEspritState(state){
