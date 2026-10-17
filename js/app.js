@@ -106,7 +106,7 @@ import {
 } from "./exerciseRotation.js?v=20261017-editor-v1";
 import { applyQuestTuning, nextQuestTuning, questTuningForDay, saveQuestTuning } from "./questTuning.js?v=20261017-editor-v1";
 import { cleanQuestCatalog, activeCatalogEntry } from "./questCatalog.js?v=20261017-editor-v1";
-import { CatalogEditor } from "./catalogEditor.js?v=20261017-settings-codex-stat-v1";
+import { CatalogEditor } from "./catalogEditor.js?v=20261017-editor-fields-v3";
 import {
   questRecordUnit,
   recordRotationIdForDay,
