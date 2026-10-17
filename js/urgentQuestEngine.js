@@ -1,5 +1,6 @@
-import { SP } from "./questDefs.js?v=20261017-urgent-meditation-v1";
-import { applyQuestTuning } from "./questTuning.js?v=20261017-urgent-meditation-v1";
+import { SP } from "./questDefs.js?v=20261017-editor-v1";
+import { applyQuestTuning } from "./questTuning.js?v=20261017-editor-v1";
+import { activeCatalogEntry } from "./questCatalog.js?v=20261017-editor-v1";
 
 // ─── MOTEUR DE TIRAGE DES QUÊTES URGENTES ───────────────────────────────────
 // Sélection pure de la prochaine quête urgente : cycle des six statistiques,
@@ -28,7 +29,8 @@ export const URGENT_QUEST_INJURY_ZONES = Object.freeze({
 });
 
 export function urgentQuestBlockedByInjury(questId,injuryZoneId){
-  return !!injuryZoneId && (URGENT_QUEST_INJURY_ZONES[questId]||[]).includes(injuryZoneId);
+  const configured=activeCatalogEntry(questId);
+  return !!injuryZoneId && (configured?.family!==undefined?[configured.family].filter(Boolean):(URGENT_QUEST_INJURY_ZONES[questId]||[])).includes(injuryZoneId);
 }
 
 export function appendUrgentQuestDrawLog(log,quest,drawnAt=Date.now()){

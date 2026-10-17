@@ -1,4 +1,4 @@
-import { LEGACY_EXERCISE_DEFAULTS } from "./exerciseRotation.js?v=20261012-back-daily-v1";
+import { LEGACY_EXERCISE_DEFAULTS } from "./exerciseRotation.js?v=20261017-editor-v1";
 
 export const RECORD_EXERCISE_DEFS = [
   {id:"ex_pushups",name:"Pompes",icon:"💪🏼",unit:"rep",stat:"Force",sourceId:"push",family:"push",rotationId:"pushups"},

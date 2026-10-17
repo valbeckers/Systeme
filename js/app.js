@@ -1,7 +1,7 @@
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
-import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20261017-urgent-meditation-v1";
-import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261017-bonus-declutter-v1";
-import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20261017-urgent-meditation-v1";
+import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20261017-editor-v1";
+import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261017-editor-v1";
+import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20261017-editor-v1";
 import {
   isDebtEligibleQuest,
   createQuestDebtState,
@@ -24,9 +24,9 @@ import {
   applyDailyStreakRewardState
 } from "./dailyEngine.js?v=20261014-debt-card-v1";
 import { elanBonusPercent, xpMomentumAdjustment } from "./xpMomentum.js?v=20260817-xp-momentum-v1";
-import { BREACH_POOL, BREACH_RUPTURE_BOSSES } from "./breachDefs.js?v=20260831-portail-boss-v1";
-import { DUNGEONS } from "./dungeonDefs.js?v=20260818-urgent-dungeon-v1";
-import { DRAW_POOLS, cleanDrawPreferences, eligiblePool, snapshotDrawPools, dailyEligibleForDay } from "./drawPreferences.js?v=20261016-draw-pools-v1";
+import { BREACH_POOL, BREACH_RUPTURE_BOSSES } from "./breachDefs.js?v=20261017-editor-v1";
+import { DUNGEONS } from "./dungeonDefs.js?v=20261017-editor-v1";
+import { DRAW_POOLS, cleanDrawPreferences, eligiblePool, snapshotDrawPools, dailyEligibleForDay } from "./drawPreferences.js?v=20261017-editor-v1";
 import {
   dungeonRoomRewardPairs,
   dungeonRewardPairs,
@@ -41,7 +41,7 @@ import {
   expireSuspendedDungeonState,
   canValidateDungeonRoom
 } from "./dungeonEngine.js?v=20260910-dimensional-anchor-v1";
-import { INVENTORY_ITEMS } from "./itemDefs.js?v=20261016-remove-alchemy-v1";
+import { INVENTORY_ITEMS } from "./itemDefs.js?v=20261017-editor-v1";
 import {
   incrementLootState,
   pickRandomBreachLoot,
@@ -52,7 +52,7 @@ import {
   counterpartBalanceSacrificeEligibleIds,
   counterpartBalanceRewardEligibleIds,
   exchangeCounterpartBalanceState
-} from "./lootEngine.js?v=20261016-remove-alchemy-v1";
+} from "./lootEngine.js?v=20261017-editor-v1";
 import {
   eventDayStr,
   addDaysStr,
@@ -67,10 +67,10 @@ import {
   calcXp,
   calcQuestTotalXp
 } from "./xp.js?v=20260811-linear-xp-v1";
-import { StatsTab } from "./statsView.js?v=20260919-kiviat-labels-v2";
-import { HistoryTab } from "./historyView.js?v=20261016-draw-pools-v1";
+import { StatsTab } from "./statsView.js?v=20261017-editor-v1";
+import { HistoryTab } from "./historyView.js?v=20261017-editor-v1";
 import { regressionPenaltyForWeek, weeklyXpWithoutRegression } from "./weeklyRegressionXp.js?v=20261016-v1";
-import { INJURY_ZONES, injuryForDay, isInjuredQuest, injuryDaysRemaining } from "./injuryEngine.js?v=20261003-injury-v1";
+import { INJURY_ZONES, injuryForDay, isInjuredQuest, injuryDaysRemaining } from "./injuryEngine.js?v=20261017-editor-v1";
 import {
   RANK_BASES,
   ROMAN,
@@ -83,7 +83,7 @@ import {
   getAscensionXpRequired,
   getRankBase,
   sortStat
-} from "./progression.js?v=20261016-pullup-ranks-v2";
+} from "./progression.js?v=20261017-editor-v1";
 import {
   REGRESSION_ORB_ICON_DATA,
   DUNGEON_KEY_ICON_DATA,
@@ -92,8 +92,8 @@ import {
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
 import { UiIcon } from "./uiIcons.js?v=20261017-urgent-meditation-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261017-urgent-meditation-v1";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261017-urgent-meditation-v1";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261017-editor-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261017-editor-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -101,20 +101,23 @@ import {
   exerciseFamilyLabel,
   cleanExerciseRotationEnabled,
   ensureExerciseRotationForDay,
+  availableRotationOptions,
   rotatedQuestObjects
-} from "./exerciseRotation.js?v=20261016-pullup-ranks-v2";
-import { applyQuestTuning, nextQuestTuning, questTuningForDay, saveQuestTuning } from "./questTuning.js?v=20261017-urgent-meditation-v1";
+} from "./exerciseRotation.js?v=20261017-editor-v1";
+import { applyQuestTuning, nextQuestTuning, questTuningForDay, saveQuestTuning } from "./questTuning.js?v=20261017-editor-v1";
+import { cleanQuestCatalog, activeCatalogEntry } from "./questCatalog.js?v=20261017-editor-v1";
+import { CatalogEditor } from "./catalogEditor.js?v=20261017-editor-v1";
 import {
   questRecordUnit,
   recordRotationIdForDay,
   buildRecordOptions
-} from "./records.js?v=20261012-pullup-records-v1";
+} from "./records.js?v=20261017-editor-v1";
 import {
   buildBreachRuptureBoss,
   normalizeActiveBreach,
   processDailyBreachRoll,
   pickBreachRuptureBoss
-} from "./breachEngine.js?v=20261016-draw-pools-v1";
+} from "./breachEngine.js?v=20261017-editor-v1";
 
 const { h, render, Fragment } = window.preact;
 const { useState, useEffect, useRef } = window.preactHooks;
@@ -2182,10 +2185,7 @@ function App(){
         let totalXp=s.totalXp;
         const statXp={...s.statXp};
         const stats={...s.stats};
-        const ruptureRewards=[
-          {xp:1350,stat:dungeon.reward.stat||dungeon.stat},
-          dungeon.reward.stat2?{xp:270,stat:dungeon.reward.stat2}:null
-        ].filter(Boolean);
+        const ruptureRewards=dungeonRoomRewardPairs(dungeon,dungeon.rooms.length-1);
         ruptureRewards.forEach(r=>{
           const adjusted=xpAdjustment(s,r.xp,r.stat);
           const gain=adjusted.gain;
@@ -2426,7 +2426,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
 
   function QI({obj}){
     const isWeekly = obj.weekly;
-    const isTwoLinePullupTitle = obj.exerciseId==="negative_pullups" || obj.exerciseId==="australian_pullups";
+    const isTwoLinePullupTitle = !activeCatalogEntry(obj.exerciseId) && (obj.exerciseId==="negative_pullups" || obj.exerciseId==="australian_pullups");
     const questTitle = isTwoLinePullupTitle
       ? h("span",{style:"display:flex;flex-direction:column;line-height:1.25;min-width:0"},
           h("span",{style:"white-space:nowrap"},"Dos & Biceps - Tractions"),
@@ -2449,11 +2449,13 @@ function isUncappedProfessionalWeeklyQuest(obj){
         const cur=curRaw||0;
         const wasD=cur>=1;
         const xp=(!wasD&&val>=1)?obj.binaryXp:0;
+        const xp2=xp&&obj.stat2?(Number(obj.xpPer2)||Number(obj.xp2)||0):0;
         const cx=e?e.clientX:200, cy=e?e.clientY:300;
         setState(s=>{
           const d2={...s.dailyLog};
           d2[today]={...(d2[today]||{}),[obj.id]:val};
-          let next={...s,dailyLog:d2,lastActiveDay:todayStr()};
+          const w2=obj.weekly?{...s.weeklyLog,[wk]:{...(s.weeklyLog[wk]||{}),[obj.id]:val}}:s.weeklyLog;
+          let next={...s,dailyLog:d2,weeklyLog:w2,lastActiveDay:todayStr()};
 
           return next;
         });
@@ -2464,14 +2466,16 @@ function isUncappedProfessionalWeeklyQuest(obj){
           setTimeout(()=>setFloats(f=>f.filter(p=>p.id!==id)),1300);
           setState(s=>{
             const sx={...s.statXp,[obj.stat]:(s.statXp[obj.stat]||0)+xp};
+            if(xp2)sx[obj.stat2]=(sx[obj.stat2]||0)+xp2;
             const st={...s.stats,[obj.stat]:getLvl(sx[obj.stat])};
-            const nt=s.totalXp+xp;
+            if(xp2)st[obj.stat2]=getLvl(sx[obj.stat2]);
+            const nt=s.totalXp+xp+xp2;
             triggerProgressOverlay(s.totalXp,s.stats,nt,st,100);
             return {...s,totalXp:nt,statXp:sx,stats:st,lastActiveDay:todayStr()};
           });
         }
       }
-      const validated = tLog[obj.id] !== undefined;
+      const validated = (obj.weekly?wLog:tLog)[obj.id] !== undefined;
       const failFlex = validated && !done ? 3 : 1;
       const succFlex = validated && done ? 3 : 1;
       return h("div",{class:"qi "+(done?"done":"")},
@@ -2993,7 +2997,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
     const guardFraction=g=>Math.min(1,(Number(g.progress)||0)/Math.max(1,Number(g.target)||1));
     const guardDone=g=>guardFraction(g)>=1;
     const guardDoneCount=guards.filter(guardDone).length;
-    const ruptureComplete=isRupture&&mainDone&&guards.length===3&&guardDoneCount===guards.length;
+    const ruptureComplete=isRupture&&mainDone&&guards.length>0&&guardDoneCount===guards.length;
     const pct=isRupture
       ? Math.min(100,((mainProgress/target)+guards.reduce((sum,g)=>sum+guardFraction(g),0))/Math.max(1,1+guards.length)*100)
       : Math.min(100,(mainProgress/target)*100);
@@ -3225,7 +3229,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
           h("div",{style:"font-size:15px;color:var(--tx);font-weight:900;line-height:1.2"},rb.name),
           h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin-top:6px"},rb.objective),
           h("div",{style:"font-size:9px;color:"+ruptureColor+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:9px"},
-            "+1350 XP "+(STAT_LBL[d.reward.stat]||d.reward.stat)+" · +270 XP "+(STAT_LBL[d.reward.stat2]||d.reward.stat2)
+            dungeonRoomRewardPairs(d,d.rooms.length-1).map(r=>"+"+fmtFrNum(r.xp)+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ")
           )
         ),
         h("button",{onClick:validateDungeonRoom,style:"width:100%;margin-top:10px;padding:11px;border-radius:9px;border:1px solid "+ruptureColor+"77;background:"+ruptureColor+"18;color:"+ruptureColor+";font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer"},"Vaincre le Boss de Rupture")
@@ -3336,7 +3340,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
           h("div",{style:"font-size:14px;color:var(--tx);font-weight:900;line-height:1.2"},rb.name),
           h("div",{style:"font-size:10px;color:var(--td);line-height:1.4;margin-top:5px"},rb.objective),
           h("div",{style:"font-size:8.5px;color:"+ruptureColor+";font-family:Orbitron,sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:8px"},
-            "+1350 XP "+(STAT_LBL[d.reward.stat]||d.reward.stat)+" · +270 XP "+(STAT_LBL[d.reward.stat2]||d.reward.stat2)
+            dungeonRoomRewardPairs(d,d.rooms.length-1).map(r=>"+"+fmtFrNum(r.xp)+" XP "+(STAT_LBL[r.stat]||r.stat)).join(" · ")
           )
         )
       );
@@ -4664,10 +4668,10 @@ function isUncappedProfessionalWeeklyQuest(obj){
     const ordered=[...sortStat(reqDailyObjs),...sortStat(objs.filter(o=>o.weekly))];
     const nextDay=addDaysStr(today,1);
     const dailyGoalRows=[
-      {label:"Santé & Esprit",items:["water","sleep","reading"].map(id=>({id,label:DEFS.find(q=>q.id===id)?.name||id,obj:DEFS.find(q=>q.id===id)}))},
-      ...Object.entries(EXERCISE_ROTATIONS).map(([family,options])=>({
+      {label:"Quêtes journalières",items:DEFS.filter(q=>q.daily&&!q.optional).map(q=>({id:q.id,label:q.name,obj:q,kind:"daily"}))},
+      ...Object.entries(EXERCISE_ROTATIONS).map(([family,allOptions])=>({
         label:{push:"Pecs & Triceps",back:"Dos & Biceps",abs:"Abdos",legs:"Jambes"}[family],
-        items:options.map(option=>({id:option.id,label:option.label,
+        items:availableRotationOptions(allOptions).map(option=>({id:option.id,label:option.label,kind:"daily",
           obj:rotatedQuestObjects(DEFS,{...todayExerciseRotation,[family]:option.id},state.stats,state.totalXp,ri,prestige)
             .find(q=>q.id===({push:"push",back:"negative_pullups",abs:"abs",legs:"squats"}[family]))
         }))
@@ -4675,76 +4679,37 @@ function isUncappedProfessionalWeeklyQuest(obj){
     ];
     const goalSections=[
       {id:"daily",title:"Quêtes journalières",groups:dailyGoalRows},
-      {id:"bonus",title:"Quêtes bonus",groups:STATS.map(stat=>({label:STAT_LBL[stat]||stat,items:BONUS_QUESTS.filter(q=>q.category===stat).map(q=>({id:q.id,label:q.name,obj:q}))})).filter(g=>g.items.length)},
-      {id:"weekly",title:"Quêtes hebdomadaires",groups:[{label:"Professionnel",items:DEFS.filter(q=>q.weekly).map(q=>({id:q.id,label:q.name,obj:q}))}]},
-      {id:"urgent",title:"Quêtes urgentes",groups:STATS.map(stat=>({label:STAT_LBL[stat]||stat,items:(SP[stat]||[]).map(q=>({id:q.id,label:q.name,obj:q}))})).filter(g=>g.items.length)}
+      {id:"bonus",title:"Quêtes bonus",groups:STATS.map(stat=>({label:STAT_LBL[stat]||stat,items:BONUS_QUESTS.filter(q=>q.category===stat).map(q=>({id:q.id,label:q.name,obj:q,kind:"bonus"}))})).filter(g=>g.items.length)},
+      {id:"weekly",title:"Quêtes hebdomadaires",groups:[{label:"Professionnel",items:DEFS.filter(q=>q.weekly).map(q=>({id:q.id,label:q.name,obj:q,kind:"weekly"}))}]},
+      {id:"urgent",title:"Quêtes urgentes",groups:STATS.map(stat=>({label:STAT_LBL[stat]||stat,items:(SP[stat]||[]).map(q=>({id:q.id,label:q.name,obj:q,kind:"urgent"}))})).filter(g=>g.items.length)},
+      {id:"dungeon",title:"Donjons",groups:[{label:"Donjons",items:DUNGEONS.map(q=>({id:q.id,label:q.title,obj:q,kind:"dungeon"}))}]},
+      {id:"breach",title:"Portails",groups:[{label:"Portails",items:BREACH_POOL.map(q=>({id:q.id,label:q.name,obj:q,boss:BREACH_RUPTURE_BOSSES[q.id],kind:"breach"}))}]}
     ];
-    const defaultButtons=obj=>obj.binary&&Number(obj.target||obj.base)===1?[]
-      :obj.id==="water"?[1]:obj.id==="sleep"?[1,8]:obj.exerciseId==="plank"?[1]
-      :obj.id==="weekly_pro_meetings"||obj.id==="weekly_pro_anticipation"?[1]
-      :obj.id==="weekly_pro_actions"?[1,10]
-      :obj.id.startsWith("sp_")?[1,5,10]
-      :[1,10];
-    function rewardFields(obj){
-      const fields=[];
-      const add=(key,label,value,tierIndex=null)=>fields.push({key,label,value,tierIndex});
-      if(obj.tiers?.length){
-        obj.tiers.forEach((tier,index)=>{
-          add("xp","Palier "+(index+1)+" · XP "+(STAT_LBL[tier.stat]||tier.stat),tier.xp,index);
-          if(tier.xp2&&tier.stat2)add("xp2","Palier "+(index+1)+" · XP "+(STAT_LBL[tier.stat2]||tier.stat2),tier.xp2,index);
-          if(tier.xp3&&tier.stat3)add("xp3","Palier "+(index+1)+" · XP "+(STAT_LBL[tier.stat3]||tier.stat3),tier.xp3,index);
-        });
-      }else if(obj.id.startsWith("sp_")){
-        const denominator=obj.binary?1:Math.max(1,Number(obj.target)||1);
-        const suffix=obj.binary?" à la validation":" / "+obj.unit;
-        add(obj.binary?"xp":"xpPer","XP "+(STAT_LBL[obj.stat]||obj.stat)+suffix,(Number(obj.xp)||0)/denominator);
-        if(obj.xp2&&obj.stat2)add(obj.binary?"xp2":"xpPer2","XP "+(STAT_LBL[obj.stat2]||obj.stat2)+suffix,obj.xp2/denominator);
-        if(obj.xp3&&obj.stat3)add(obj.binary?"xp3":"xpPer3","XP "+(STAT_LBL[obj.stat3]||obj.stat3)+suffix,obj.xp3/denominator);
-      }else if(obj.binary){
-        add("binaryXp","XP à la validation · "+(STAT_LBL[obj.stat]||obj.stat),obj.binaryXp);
-      }else{
-        add("xpPer","XP / "+obj.unit+" · "+(STAT_LBL[obj.stat]||obj.stat),obj.xpPer);
-        if(obj.stat2)add("xpPer2","XP / "+obj.unit+" · "+(STAT_LBL[obj.stat2]||obj.stat2),obj.xpPer2||obj.xpPer);
-        if(obj.stat3)add("xpPer3","XP / "+obj.unit+" · "+(STAT_LBL[obj.stat3]||obj.stat3),obj.xpPer3||obj.xpPer);
+    function saveCatalogEntry(id,entry){
+      if(["push","negative_pullups","abs","squats"].includes(id)&&entry.kind!=="daily"){
+        setGoalSettingsError("Cette quête sert de support au tirage des variantes musculaires.");return;
       }
-      return fields;
-    }
-    function saveGoalRow(id,reset=false){
-      const targetEl=document.getElementById("goal_target_"+id);
-      const buttonEls=[0,1,2].map(index=>document.getElementById("goal_button_"+id+"_"+index));
-      if(!targetEl||buttonEls.some(el=>!el))return;
-      const rawTarget=targetEl.value.trim().replace(",",".");
-      const selected=goalSections.flatMap(section=>section.groups.flatMap(group=>group.items)).find(row=>row.id===id);
-      const lockedTarget=selected?.obj?.tiers?.length>0||selected?.obj?.binary&&Number(selected.obj.target||selected.obj.base)===1;
-      const target=reset||lockedTarget||!rawTarget?null:Number(rawTarget);
-      const rawButtons=reset?[]:buttonEls.map(el=>el.value.trim().replace(",",".")).filter(Boolean);
-      const buttons=selected?.obj?.binary&&Number(selected.obj.target||selected.obj.base)===1?null
-        :rawButtons.length?rawButtons.map(Number):null;
-      const rewards={};
-      let invalidReward=false;
-      if(!reset&&selected?.obj){
-        rewardFields(selected.obj).forEach(field=>{
-          const el=document.getElementById("goal_reward_"+id+"_"+(field.tierIndex??"base")+"_"+field.key);
-          if(!el)return;
-          const value=el.value.trim().replace(",",".");
-          if(!value)return;
-          const number=Number(value);
-          if(!Number.isFinite(number)||number<=0){invalidReward=true;return;}
-          if(field.tierIndex!=null){
-            (rewards.tiers??=[])[field.tierIndex]??={};
-            rewards.tiers[field.tierIndex][field.key]=number;
-          }else rewards[field.key]=number;
-        });
+      if(["run","walk","march","med","grips","balance"].includes(id)&&entry.kind!=="bonus"){
+        setGoalSettingsError("Cette quête partage son suivi avec une activité du Système.");return;
       }
-      if(target!==null&&(!Number.isFinite(target)||target<=0)||buttons&&(
-        buttons.length<1||buttons.length>3||buttons.some(n=>!Number.isFinite(n)||n<=0)
-      )||invalidReward){
-        setGoalSettingsError("Saisis des nombres positifs pour l’objectif, les boutons et les XP.");
-        return;
+      if(entry.kind!=="daily"){
+        const family=Object.entries(EXERCISE_ROTATIONS).find(([,options])=>options.some(o=>o.id===id));
+        if(family&&!family[1].some(option=>option.id!==id&&(state.questCatalog?.[option.id]?.kind||"daily")==="daily")){
+          setGoalSettingsError("Garde au moins une variante journalière dans cette famille.");return;
+        }
       }
-      setGoalSettingsError("");
-      setState(s=>({...s,questTuning:saveQuestTuning(s.questTuning,id,nextDay,target,buttons,rewards)}));
+      const nextCatalog=cleanQuestCatalog({...state.questCatalog,[id]:{...entry,id,from:nextDay}});
+      if(!nextCatalog[id]){setGoalSettingsError("Vérifie les champs de la quête.");return;}
+      const currentPools=cleanDrawPreferences(state.drawPreferences);
+      const destination=entry.kind==="daily"?"daily":entry.kind==="dungeon"?"dungeon":entry.kind==="breach"?"breach":null;
+      const updatedPools=Object.fromEntries(Object.entries(currentPools).map(([pool,ids])=>[pool,pool===destination?[...new Set([...ids,id])]:ids.filter(choice=>choice!==id)]));
+      const nextState={...state,questCatalog:nextCatalog,
+        drawPreferences:updatedPools,
+        questTuning:{...(state.questTuning||{}),[id]:[...((state.questTuning||{})[id]||[]).filter(r=>r.from!==nextDay),{from:nextDay,target:null,buttons:entry.buttons?.length?entry.buttons:null,rewards:null}]}};
+      saveState(nextState);
       setSelectedGoalId(null);
+      setShowSet(false);
+      window.location.reload();
     }
     const drawPreferences=cleanDrawPreferences(state.drawPreferences);
     const rotationEnabled=cleanExerciseRotationEnabled(state.exerciseRotationEnabled);
@@ -4826,7 +4791,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
               h("span",{style:"color:var(--td);font-size:12px"},settingsSectionOpen===section.id?"▲":"▼")
             ),
             settingsSectionOpen===section.id&&h("div",null,
-              h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin:9px 0 14px"},"Choisis une quête pour régler son objectif et ses boutons de saisie."),
+              h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin:9px 0 14px"},"Choisis un élément pour modifier son type, son nom, ses objectifs et ses récompenses. Aperçu avant enregistrement."),
               section.groups.map(group=>h("div",{key:group.label,style:"margin-bottom:14px"},
                 h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--rc);margin-bottom:7px"},group.label),
                 group.items.map(({id,label,obj})=>{
@@ -4859,9 +4824,9 @@ function isUncappedProfessionalWeeklyQuest(obj){
                   h("span",null,item.label)
                 );
               }),
-              pool==="daily"&&Object.entries(EXERCISE_ROTATIONS).map(([family,options])=>h("div",{key:family,style:"margin:16px 0"},
+              pool==="daily"&&Object.entries(EXERCISE_ROTATIONS).map(([family,allOptions])=>h("div",{key:family,style:"margin:16px 0"},
                 h("div",{style:"display:flex;align-items:center;gap:7px;font-family:Orbitron,sans-serif;font-size:10px;color:var(--rc);letter-spacing:.5px;margin-bottom:7px"},QuestIcon(rotationIcons[family],"💪🏼",14),"Variantes · "+rotationLabels[family]),
-                options.map(option=>{
+                availableRotationOptions(allOptions).map(option=>{
                   const checked=rotationEnabled[family].includes(option.id);
                   const last=checked&&rotationEnabled[family].length===1;
                   return h("label",{key:option.id,style:"display:flex;align-items:center;gap:10px;min-height:37px;padding:7px 9px;margin-bottom:5px;border-radius:8px;border:1px solid "+(checked?"var(--rc)":"rgba(255,255,255,.10)")+";background:"+(checked?"rgba(168,85,247,.10)":"rgba(255,255,255,.025)")+";color:var(--tx);font-size:12px;cursor:"+(last?"default":"pointer")},
@@ -4899,62 +4864,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
         ),
 
       ),
-      selectedGoal&&(()=>{
-        const {id,label,obj}=selectedGoal;
-        const lockedTarget=!!(obj.tiers?.length||obj.binary&&Number(obj.target||obj.base)===1);
-        const lockedButtons=!!(obj.binary&&Number(obj.target||obj.base)===1);
-        const current=applyQuestTuning(obj,state.questTuning,today);
-        const automatic=Number(obj.target)||getRankBase(obj.id,ri,prestige,state.stats);
-        const currentTarget=Number(current.target)||automatic;
-        const pending=nextQuestTuning(state.questTuning,id,nextDay);
-        const active=questTuningForDay(state.questTuning,id,today);
-        const selected=pending||active;
-        return h("div",{class:"modal-ov",style:"z-index:501",onClick:e=>{e.stopPropagation();if(e.target===e.currentTarget)setSelectedGoalId(null);}},
-          h("div",{class:"modal",style:"max-width:390px"},
-            h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px"},
-              h("div",{class:"mtitle",style:"margin:0;font-size:18px"},label),
-              h("button",{type:"button",onClick:()=>setSelectedGoalId(null),style:"border:0;background:transparent;color:#fff;font-size:22px;cursor:pointer"},"×")
-            ),
-            h("div",{style:"font-size:12px;color:var(--td);margin-bottom:12px"},"Actuel : "+fmtNum(currentTarget)+" "+current.unit),
-            h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin-bottom:15px"},"Auto ("+fmtNum(automatic)+") correspond au calcul d’origine. Laisse une case vide pour conserver son réglage automatique. Les changements prennent effet demain.",lockedTarget?" L’objectif de cette quête est lié à ses paliers ou à sa validation unique.":""),
-            goalSettingsError&&h("div",{style:"color:#ef4444;font-size:12px;margin-bottom:10px"},goalSettingsError),
-            h("div",{style:"display:flex;flex-direction:column;gap:14px;margin-bottom:12px"},
-              h("div",{style:"min-width:0;width:100%"},
-                h("input",{key:id+"_target_"+JSON.stringify(selected),id:"goal_target_"+id,class:"min",type:"text",inputMode:"decimal",disabled:lockedTarget,placeholder:"Auto ("+fmtNum(automatic)+")",defaultValue:lockedTarget?"":selected?.target??"",style:"width:100%;box-sizing:border-box;margin:0;padding:8px;text-align:center"}),
-                h("label",{htmlFor:"goal_target_"+id,style:"display:block;font-size:11px;color:var(--td);margin-top:6px;text-align:center"},"Objectif")
-              ),
-              h("div",{style:"min-width:0;width:100%"},
-                h("div",{style:"display:flex;gap:8px"},
-                  [0,1,2].map(index=>h("input",{
-                    key:id+"_button_"+index+"_"+JSON.stringify(selected),
-                    id:"goal_button_"+id+"_"+index,class:"min",type:"text",inputMode:"decimal",disabled:lockedButtons,
-                    placeholder:lockedButtons?"—":String(defaultButtons(obj)[index]??"—"),
-                    defaultValue:lockedButtons?"":selected?.buttons?.[index]??"",
-                    style:"min-width:0;flex:1;width:0;box-sizing:border-box;margin:0;padding:8px 3px;text-align:center"
-                  }))
-                ),
-                h("label",{htmlFor:"goal_button_"+id+"_0",style:"display:block;font-size:11px;color:var(--td);margin-top:6px;text-align:center"},"Boutons de saisie")
-              ),
-              h("div",{style:"border-top:1px solid rgba(255,255,255,.12);padding-top:12px"},
-                h("div",{style:"font-size:12px;color:var(--rc);margin-bottom:9px"},"Récompenses XP"),
-                rewardFields(obj).map(field=>{
-                  const saved=field.tierIndex!=null?selected?.rewards?.tiers?.[field.tierIndex]?.[field.key]:selected?.rewards?.[field.key];
-                  const fieldId="goal_reward_"+id+"_"+(field.tierIndex??"base")+"_"+field.key;
-                  return h("div",{key:fieldId,style:"display:flex;align-items:center;gap:10px;margin-bottom:8px"},
-                    h("label",{htmlFor:fieldId,style:"flex:1;min-width:0;font-size:11px;color:var(--td)"},field.label),
-                    h("input",{id:fieldId,class:"min",type:"text",inputMode:"decimal",placeholder:"Auto ("+fmtFrNum(field.value)+")",defaultValue:saved??"",style:"width:112px;box-sizing:border-box;margin:0;padding:8px;text-align:center"})
-                  );
-                }),
-                h("div",{style:"font-size:10px;color:var(--td);line-height:1.4"},"Une case vide conserve les XP d’origine. Les XP des autres statistiques se règlent séparément.")
-              )
-            ),
-            h("div",{style:"font-size:10px;color:var(--td);margin-bottom:13px"},"Un nombre par case ; laisse les cases inutilisées vides. Exemple : 1, 5 et 10."),
-            pending&&h("div",{style:"font-size:11px;color:var(--rc);margin-bottom:13px"},"Prévu demain : "+(pending.target??"Auto")+" "+obj.unit),
-            h("button",{type:"button",class:"mbtn mprim",onClick:()=>saveGoalRow(id),style:"width:100%;margin-bottom:9px"},"Enregistrer"),
-            h("button",{type:"button",class:"mbtn",onClick:()=>saveGoalRow(id,true),style:"width:100%;background:rgba(255,255,255,.03);color:var(--rc);border:1px solid var(--rc)"},"Rétablir auto")
-          )
-        );
-      })()
+      selectedGoal&&h(CatalogEditor,{key:selectedGoal.id,row:selectedGoal,catalog:state.questCatalog,tuning:state.questTuning,externalError:goalSettingsError,onSave:saveCatalogEntry,onClose:()=>setSelectedGoalId(null)})
     );
   }
 
@@ -5515,10 +5425,12 @@ function isUncappedProfessionalWeeklyQuest(obj){
       try{
         const imported=JSON.parse(json);
         const cleaned=cleanSystemState(imported);
-        setState(s=>({...s,...cleaned,objectives:DEFS}));
+        const restored={...state,...cleaned,objectives:DEFS};
+        saveState(restored);
+        setState(restored);
         close();
         setShowSet(false);
-        spawnFloat("✅ Restauré !");
+        window.location.reload();
       }catch(_){
         const id=Date.now()+Math.random();
         setFloats(f=>[...f,{id,y:"38%",txt:"❌ Données invalides"}]);

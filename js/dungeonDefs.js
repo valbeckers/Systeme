@@ -4,7 +4,8 @@
 
 // Donjons volontaires : 1 actif à la fois, 1/jour, 3/semaine, accès par clé. À l’expiration, fermeture simple.
 // Ordre aligné sur les stats : Santé, Force, Esprit, Endurance, Agilité, Discipline.
-const DUNGEONS = [
+import { mergeQuestCatalog } from "./questCatalog.js?v=20261017-editor-v1";
+const BASE_DUNGEONS = [
   {id:"alchemist", title:"Donjon de l’Alchimiste", short:"Alchimiste", stat:"Sante", icon:"🧪", color:"#ef4444", reward:{xp:2250,stat:"Sante",xp2:450,stat2:"Esprit"}, rooms:[
     {name:"Hydratation", desc:"2 verres d’eau", masterClause:"Aucun soda/alcool de la journée"},
     {name:"Lumière naturelle", desc:"10min", masterClause:"Pas de téléphone ou de stimulation"},
@@ -56,4 +57,5 @@ const DUNGEONS = [
   ]},
 ];
 
+const DUNGEONS=mergeQuestCatalog(BASE_DUNGEONS,"dungeon");
 export { DUNGEONS };

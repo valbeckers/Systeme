@@ -3,12 +3,12 @@
 // sauvegarde courante ou, à défaut, des données historiques importées.
 // Il conserve également les migrations ponctuelles encore nécessaires.
 
-import { DEFS, SP } from "./questDefs.js?v=20261017-urgent-meditation-v1";
+import { DEFS, SP } from "./questDefs.js?v=20261017-editor-v1";
 import { next7AM, todayStr, addDaysStr } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
 import { loadStoredState } from "./storage.js";
-import { cleanSystemState } from "./stateSanitizer.js?v=20261017-urgent-meditation-v1";
-import { normalizeActiveBreach } from "./breachEngine.js?v=20261016-draw-pools-v1";
+import { cleanSystemState } from "./stateSanitizer.js?v=20261017-editor-v1";
+import { normalizeActiveBreach } from "./breachEngine.js?v=20261017-editor-v1";
 
 const loadState = () => loadStoredState(cleanSystemState);
 
@@ -101,6 +101,7 @@ const IMPORTED = {
   dungeonMapStat:null,
   urgentTokenUseDay:null,
   objectives:DEFS,
+  questCatalog:{},
 };
 
 export function migrateGripsToMin(dailyLog){
@@ -157,6 +158,7 @@ export function buildInitialState(){
     ...IMPORTED,
     ...saved,
     objectives:DEFS,
+    questCatalog:saved.questCatalog||{},
     specialQuests:saved.specialQuests||[],
     sqCooldownUntil:saved.sqCooldownUntil||null,
     sqFailureDay:saved.sqFailureDay||null,

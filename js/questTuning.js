@@ -1,12 +1,16 @@
-import { EXERCISE_ROTATIONS } from "./exerciseRotation.js?v=20261014-calves-target-v1";
-import { DEFS, SP } from "./questDefs.js?v=20261017-urgent-meditation-v1";
-import { BONUS_QUESTS } from "./bonusQuestDefs.js?v=20261017-bonus-declutter-v1";
+import { EXERCISE_ROTATIONS } from "./exerciseRotation.js?v=20261017-editor-v1";
+import { DEFS, SP } from "./questDefs.js?v=20261017-editor-v1";
+import { BONUS_QUESTS } from "./bonusQuestDefs.js?v=20261017-editor-v1";
+import { DUNGEONS } from "./dungeonDefs.js?v=20261017-editor-v1";
+import { BREACH_POOL } from "./breachDefs.js?v=20261017-editor-v1";
+import { storedQuestCatalog } from "./questCatalog.js?v=20261017-editor-v1";
 
 const TUNABLE_IDS=new Set([
   ...DEFS.filter(q=>q.daily&&!q.optional||q.weekly).map(q=>q.id),
   ...BONUS_QUESTS.map(q=>q.id),
   ...Object.values(EXERCISE_ROTATIONS).flat().map(x=>x.id),
-  ...Object.values(SP).flat().map(q=>q.id)
+  ...Object.values(SP).flat().map(q=>q.id),
+  ...DUNGEONS.map(q=>q.id),...BREACH_POOL.map(q=>q.id),...Object.keys(storedQuestCatalog())
 ]);
 const REWARD_KEYS=new Set(["xpPer","xpPer2","xpPer3","binaryXp","xp","xp2","xp3"]);
 

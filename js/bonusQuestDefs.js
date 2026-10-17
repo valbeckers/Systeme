@@ -1,7 +1,8 @@
 // Catalogue indépendant des quêtes bonus sélectionnables chaque jour.
 // Les identifiants historiques (grips, med, run, walk, march, balance) sont
 // conservés afin que leurs anciens records restent exploitables.
-export const BONUS_QUESTS = [
+import { mergeQuestCatalog } from "./questCatalog.js?v=20261017-editor-v1";
+export const BONUS_QUESTS = mergeQuestCatalog([
   {id:"bonus_sun",name:"Lumière naturelle",icon:"☀️",unit:"min",base:10,fixedBase:true,xpPer:15,stat:"Sante"},
   {id:"bonus_cold_shower",name:"Douche froide · 3min",icon:"🚿",unit:"succès",base:1,binary:true,binaryXp:150,stat:"Sante"},
 
@@ -28,7 +29,7 @@ export const BONUS_QUESTS = [
   {id:"bonus_delayed_task",name:"Accomplir 1 tâche repoussée",icon:"🕗",unit:"succès",base:1,binary:true,binaryXp:150,stat:"Discipline"},
   {id:"bonus_declutter",name:"Ranger ou jeter 3 objets",icon:"📦",iconKey:"sp_declutter",unit:"succès",base:1,binary:true,binaryXp:150,stat:"Discipline"},
   {id:"bonus_vacuum",name:"Aspirer",icon:"🧹",unit:"succès",base:1,binary:true,binaryXp:150,stat:"Discipline"}
-].map(q=>({...q,category:q.category||q.stat,target:(q.dynamicEndurance||q.dynamicTargetKey)?undefined:q.base,daily:true,weekly:false,optional:true,selectableBonus:true}));
+].map(q=>({...q,category:q.category||q.stat,target:(q.dynamicEndurance||q.dynamicTargetKey)?undefined:q.base,daily:true,weekly:false,optional:true,selectableBonus:true})),"bonus");
 
 export const BONUS_QUEST_BY_ID = Object.fromEntries(BONUS_QUESTS.map(q=>[q.id,q]));
 export const BONUS_QUEST_GOAL = 5;

@@ -1,4 +1,5 @@
-import { statLevelTier, legRaiseTargetForForceLevel, getStatLevelTarget, pullupTargetForRank } from "./progression.js?v=20261016-pullup-ranks-v2";
+import { statLevelTier, legRaiseTargetForForceLevel, getStatLevelTarget, pullupTargetForRank } from "./progression.js?v=20261017-editor-v1";
+import { applyRotationCatalog, activeCatalogEntry } from "./questCatalog.js?v=20261017-editor-v1";
 
 export const EXERCISE_ROTATIONS = {
   push:[
@@ -25,9 +26,11 @@ export const EXERCISE_ROTATIONS = {
 export const EXERCISE_FAMILY_LABELS={push:"Pecs & Triceps",negative_pullups:"Dos & Biceps",abs:"Abdos",squats:"Jambes"};
 export const EXERCISE_FAMILY_ICONS={push:"🦾",negative_pullups:"🦾",abs:"🧱",squats:"🦿"};
 export const LEGACY_EXERCISE_DEFAULTS={push:"pushups",back:"negative_pullups",abs:"crunches",legs:"squats"};
+export const availableRotationOptions=options=>options.filter(option=>{const q=activeCatalogEntry(option.id);return !q||q.kind==="daily";});
 export function cleanExerciseRotationEnabled(raw){
   const enabled={};
-  for(const [family,options] of Object.entries(EXERCISE_ROTATIONS)){
+  for(const [family,allOptions] of Object.entries(EXERCISE_ROTATIONS)){
+    const options=availableRotationOptions(allOptions);
     const valid=new Set(options.map(option=>option.id));
     const selected=Array.isArray(raw?.[family])
       ? [...new Set(raw[family].filter(id=>valid.has(id)))]
@@ -66,7 +69,9 @@ export function ensureExerciseRotationForDay(state,day){
   const current={...(history[day]||{})};
   const enabled=cleanExerciseRotationEnabled(state.exerciseRotationEnabled);
   let changed=!history[day];
-  for(const [family,options] of Object.entries(EXERCISE_ROTATIONS)){
+  for(const [family,allOptions] of Object.entries(EXERCISE_ROTATIONS)){
+    const options=availableRotationOptions(allOptions);
+    if(!options.length)continue;
     if(options.some(o=>o.id===current[family])) continue;
     const last=previousRotationChoice(history,day,family);
     const picked=weightedExercisePick(options.filter(option=>enabled[family].includes(option.id)),last);
@@ -94,7 +99,7 @@ export function cleanExerciseRotationByDay(raw){
 export function rotatedQuestObjects(baseObjs,rotation,stats,totalXp,rankIdx=0,prestige=0){
   const force=Math.max(1,Number((stats||{}).Force)||1);
   const tier=statLevelTier(force);
-  const byId=(family,id)=>EXERCISE_ROTATIONS[family].find(o=>o.id===id)||EXERCISE_ROTATIONS[family][0];
+  const byId=(family,id)=>{const options=availableRotationOptions(EXERCISE_ROTATIONS[family]);return options.find(o=>o.id===id)||options[0]||EXERCISE_ROTATIONS[family][0];};
   const chest=byId("push",rotation&&rotation.push);
   const back=byId("back",rotation&&rotation.back);
   const abs=byId("abs",rotation&&rotation.abs);
@@ -118,5 +123,5 @@ export function rotatedQuestObjects(baseObjs,rotation,stats,totalXp,rankIdx=0,pr
       return {...obj,name:"Jambes - Squats",icon:legs.icon,exerciseId:legs.id,exerciseIcon:legs.icon,rotationExercise:legs.label,target:getStatLevelTarget("squats",stats),unit:"rep",xpPer:3,stat2:"Agilite",xpPer2:3};
     }
     return obj;
-  });
+  }).map(applyRotationCatalog);
 }

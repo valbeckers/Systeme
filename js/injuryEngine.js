@@ -1,4 +1,5 @@
 import { addDaysStr } from "./dayCycle.js";
+import { activeCatalogEntry } from "./questCatalog.js?v=20261017-editor-v1";
 
 export const INJURY_ZONES = [
   {id:"push",label:"PECS & TRICEPS"},
@@ -22,7 +23,10 @@ export function injuryForDay(state,day){
 }
 
 export function isInjuredQuest(state,day,questId){
-  return injuryForDay(state,day)?.zoneId===questId;
+  const rotationKey={push:"push",negative_pullups:"back",abs:"abs",squats:"legs"}[questId];
+  const variant=rotationKey&&state?.exerciseRotationByDay?.[day]?.[rotationKey];
+  const configured=(variant&&activeCatalogEntry(variant))||activeCatalogEntry(questId);
+  return injuryForDay(state,day)?.zoneId===(configured?.family!==undefined?configured.family:questId);
 }
 
 export function injuryDaysRemaining(injury,day){

@@ -67,13 +67,20 @@ export function expireSuspendedDungeonState(state,now=Date.now()){
 
 export function dungeonRoomRewardPairs(dungeon, roomIdx){
   if(!dungeon || !dungeon.reward) return [];
-  const isBoss = roomIdx >= (dungeon.rooms||[]).length-1;
-  const mainXp = isBoss ? 1350 : 225;
-  const secondXp = isBoss ? 270 : 45;
+  const normalCount=Math.max(1,(dungeon.rooms||[]).length-1);
+  const isBoss = roomIdx >= normalCount;
+  const portion=total=>{
+    const boss=Math.round((Number(total)||0)*60)/100;
+    const ordinary=Math.round(((Number(total)||0)-boss)/normalCount*100)/100;
+    if(isBoss)return boss;
+    return roomIdx===normalCount-1?Math.round(((Number(total)||0)-boss-ordinary*(normalCount-1))*100)/100:ordinary;
+  };
+  const mainXp=portion(dungeon.reward.xp);
+  const secondXp=portion(dungeon.reward.xp2);
   return [
     {xp:mainXp,stat:dungeon.reward.stat},
     dungeon.reward.stat2 ? {xp:secondXp,stat:dungeon.reward.stat2} : null,
-    dungeon.reward.stat3 ? {xp:secondXp,stat:dungeon.reward.stat3} : null,
+    dungeon.reward.stat3 ? {xp:portion(dungeon.reward.xp3),stat:dungeon.reward.stat3} : null,
   ].filter(Boolean);
 }
 

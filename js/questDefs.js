@@ -3,7 +3,8 @@
 // bonus et urgentes, ainsi que les libellés de leurs niveaux de rareté.
 // Il ne dépend ni de Preact, ni de l’état de l’application, ni du stockage local.
 
-const DEFS = [
+import { mergeQuestCatalog, mergeUrgentCatalog } from "./questCatalog.js?v=20261017-editor-v1";
+const BASE_DEFS = [
   // ─── SANTÉ ────────────────────────────────────────────────────────────
   {id:"water",  name:"Hydratation",     unit:"verre", xpPer:15,  daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDCA7",               base:10, baseHistory:[{until:"2026-04-29",base:8}]},
   {id:"sleep",  name:"Dormir 8h",   unit:"h",     xpPer:18.75,daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDECF\uFE0F",         base:8,  fixedBase:true},
@@ -33,7 +34,7 @@ const DEFS = [
 ];
 
 // Quetes speciales — par stat (23 au total)
-const SP = {
+const BASE_SP = {
   Sante:[
     {id:"sp_sun",     name:"Lumière naturelle · 30min", icon:"\u2600\uFE0F",                              unit:"min",  target:30,  xp:500, xp2:250, stat2:"Esprit", days:1, binary:true},
     {id:"sp_fruits",  name:"Manger 5 fruits et légumes",  icon:"\uD83C\uDF4F",                              unit:"portion", target:5, xp:500, days:1, binary:true},
@@ -67,6 +68,9 @@ const SP = {
     {id:"sp_declutter", name:"Ranger ou jeter 10 objets",            icon:"\uD83D\uDCE6",                          unit:"objet",target:10,xp:500, days:1},
   ],
 };
+
+const DEFS=[...mergeQuestCatalog(BASE_DEFS.filter(q=>!q.weekly),"daily"),...mergeQuestCatalog(BASE_DEFS.filter(q=>q.weekly),"weekly")];
+const SP=mergeUrgentCatalog(BASE_SP);
 
 // Couleurs et libellés des tiers des quêtes urgentes
 const SQ_TIER_COLOR = {mineure:"#fbbf24", majeure:"#f59e0b", legendaire:"#f97316"};

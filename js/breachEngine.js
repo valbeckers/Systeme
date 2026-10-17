@@ -3,9 +3,9 @@
 // des Boss de Rupture. Les définitions statiques restent dans breachDefs.js
 // et dungeonDefs.js.
 
-import { BREACH_POOL, BREACH_RUPTURE_BOSSES } from "./breachDefs.js?v=20260821-alduin-rupture-v1";
+import { BREACH_POOL, BREACH_RUPTURE_BOSSES } from "./breachDefs.js?v=20261017-editor-v1";
 import { eventDayStr, next7AM } from "./dayCycle.js";
-import { eligiblePool } from "./drawPreferences.js?v=20261016-draw-pools-v1";
+import { eligiblePool } from "./drawPreferences.js?v=20261017-editor-v1";
 
 function breachTemplateById(id){return BREACH_POOL.find(b=>b.id===id)||null;}
 function breachRuptureTemplateById(id){return BREACH_RUPTURE_BOSSES[id]||null;}

@@ -1,5 +1,5 @@
 import { RANK_STAT_REQUIREMENTS, STATS } from "./config.js";
-import { DEFS } from "./questDefs.js";
+import { DEFS } from "./questDefs.js?v=20261017-editor-v1";
 
 // Compte combien de statistiques atteignent un niveau seuil.
 export function countStatsAtLevel(stats, threshold){

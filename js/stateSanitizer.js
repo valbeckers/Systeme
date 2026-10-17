@@ -1,14 +1,15 @@
 import { STATS } from "./config.js";
-import { DEFS, SP } from "./questDefs.js?v=20261017-urgent-meditation-v1";
-import { BONUS_QUESTS } from "./bonusQuestDefs.js?v=20261017-bonus-declutter-v1";
-import { DUNGEONS } from "./dungeonDefs.js?v=20260818-urgent-dungeon-v1";
+import { DEFS, SP } from "./questDefs.js?v=20261017-editor-v1";
+import { BONUS_QUESTS } from "./bonusQuestDefs.js?v=20261017-editor-v1";
+import { DUNGEONS } from "./dungeonDefs.js?v=20261017-editor-v1";
 import { todayStr, next7AM } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
-import { normalizeActiveBreach } from "./breachEngine.js?v=20261016-draw-pools-v1";
-import { cleanExerciseRotationByDay, cleanExerciseRotationEnabled } from "./exerciseRotation.js?v=20261014-rotation-settings-v1";
-import { cleanInjuryPeriods } from "./injuryEngine.js?v=20261003-injury-v1";
-import { cleanQuestTuning, applyQuestTuning } from "./questTuning.js?v=20261017-urgent-meditation-v1";
-import { cleanDrawPreferences, cleanDrawSnapshots } from "./drawPreferences.js?v=20261016-draw-pools-v1";
+import { normalizeActiveBreach } from "./breachEngine.js?v=20261017-editor-v1";
+import { cleanExerciseRotationByDay, cleanExerciseRotationEnabled } from "./exerciseRotation.js?v=20261017-editor-v1";
+import { cleanInjuryPeriods } from "./injuryEngine.js?v=20261017-editor-v1";
+import { cleanQuestTuning, applyQuestTuning } from "./questTuning.js?v=20261017-editor-v1";
+import { cleanDrawPreferences, cleanDrawSnapshots } from "./drawPreferences.js?v=20261017-editor-v1";
+import { cleanQuestCatalog } from "./questCatalog.js?v=20261017-editor-v1";
 
 function migrateMergedEspritState(state){
   if(!state || typeof state !== "object") return state;
@@ -126,8 +127,8 @@ function cleanSpecialQuestEntry(q,map,tuning){
 }
 
 function cleanCompletedSqLogEntry(q,map){
-  if(!q || !q.id || !map[q.id] || !q.completedAt) return null;
-  const tpl=map[q.id];
+  if(!q || !q.id || !q.completedAt) return null;
+  const tpl=map[q.id]||{id:q.id,name:q.name||"Quête urgente",icon:q.icon||"✦",xp:q.xp||0,stat:q.stat};
   return {
     sqid:q.sqid || ("sq_"+q.completedAt),
     id:tpl.id,
@@ -142,8 +143,8 @@ function cleanCompletedSqLogEntry(q,map){
 function cleanSqDrawLogEntry(q,map){
   if(!q) return null;
   const id=typeof q==="string"?q:q.id;
-  if(!id || !map[id]) return null;
-  const tpl=map[id];
+  if(!id||!/^[a-z][a-z0-9_]{2,63}$/.test(id)) return null;
+  const tpl=map[id]||{id,stat:typeof q==="object"?q.stat:null};
   const drawnAt=Number((typeof q==="object"&&(q.drawnAt||q.startedAt||q.completedAt))||0)||Date.now();
   return {
     sqid:(typeof q==="object"&&q.sqid)||("draw_"+drawnAt+"_"+id),
@@ -169,11 +170,12 @@ function cleanDailyExtraXp(extra){
   return out;
 }
 
-function cleanDungeonLog(log){
+function cleanDungeonLog(log,catalog={}){
   const map={};
   (DUNGEONS||[]).forEach(d=>{ map[d.id]=d; });
-  return (log||[]).filter(e=>e&&e.id&&map[e.id]).map(e=>{
-    const d=map[e.id];
+  Object.values(cleanQuestCatalog(catalog)).filter(q=>q.kind==="dungeon").forEach(q=>{if(!map[q.id])map[q.id]={id:q.id,title:q.name,stat:q.stat};});
+  return (log||[]).filter(e=>e&&typeof e.id==="string"&&/^[a-z][a-z0-9_]{2,63}$/.test(e.id)&&Number(e.completedAt)>0).map(e=>{
+    const d=map[e.id]||{id:e.id,title:String(e.title||"Donjon"),stat:STATS.includes(e.stat)?e.stat:"Discipline"};
     const rb=e.ruptureBoss&&typeof e.ruptureBoss==="object" ? {
       id:e.ruptureBoss.id||null,
       name:e.ruptureBoss.name||"Boss de Rupture",
@@ -226,8 +228,8 @@ function cleanEnduranceChoiceByDay(obj){
   return out;
 }
 
-function cleanSelectedBonusQuestIdsByDay(obj,dailyLog){
-  const allowed=new Set(BONUS_QUESTS.map(q=>q.id));
+function cleanSelectedBonusQuestIdsByDay(obj,dailyLog,catalog){
+  const allowed=new Set([...BONUS_QUESTS.map(q=>q.id),...Object.keys(cleanQuestCatalog(catalog))]);
   const out={};
   Object.entries(obj||{}).forEach(([day,ids])=>{
     if(!/^\d{4}-\d{2}-\d{2}$/.test(day)||!Array.isArray(ids))return;
@@ -321,8 +323,9 @@ function cleanWeightLog(value){
 
 export function cleanSystemState(raw){
   const data=migrateRuntimeQuestDefinitions(migrateMergedEspritState({...((raw&&typeof raw==="object")?raw:{})}));
-  const dailyIds=new Set([...DEFS.filter(o=>o.daily).map(o=>o.id),...BONUS_QUESTS.map(o=>o.id),"bonus_pullups","bonus_negative_pullups","bonus_australian_pullups"]);
-  const weeklyIds=new Set(DEFS.filter(o=>o.weekly).map(o=>o.id));
+  const catalogIds=Object.keys(cleanQuestCatalog(data.questCatalog));
+  const dailyIds=new Set([...DEFS.filter(o=>o.daily).map(o=>o.id),...BONUS_QUESTS.map(o=>o.id),...catalogIds,"bonus_pullups","bonus_negative_pullups","bonus_australian_pullups"]);
+  const weeklyIds=new Set([...DEFS.filter(o=>o.weekly).map(o=>o.id),...catalogIds]);
   const spMap=activeSpecialQuestMap();
   const statPack=cleanStatLevelsFromXp(data.statXp,data.stats);
 
@@ -412,7 +415,7 @@ export function cleanSystemState(raw){
     ruptureMalus:(data.ruptureMalus&&Number(data.ruptureMalus.expiresAt)>Date.now())?{pct:-0.25,startedAt:Number(data.ruptureMalus.startedAt)||Date.now(),expiresAt:Number(data.ruptureMalus.expiresAt)}:null,
     dungeonKeyDay:data.dungeonKeyDay||null,
     dungeonKeyRollWon:data.dungeonKeyRollWon===true,
-    dungeonLog:cleanDungeonLog(data.dungeonLog),
+    dungeonLog:cleanDungeonLog(data.dungeonLog,data.questCatalog),
     dailyExtraXp:cleanDailyExtraXp(data.dailyExtraXp),
     sqRerollDay:data.sqRerollDay||null,
     questDebt:data.questDebt||null,
@@ -422,12 +425,13 @@ export function cleanSystemState(raw){
     debtResolvedDays:data.debtResolvedDays||{},
     regressionLog:cleanRegressionLog(data.regressionLog),
     enduranceChoiceByDay:cleanEnduranceChoiceByDay(data.enduranceChoiceByDay),
-    selectedBonusQuestIdsByDay:cleanSelectedBonusQuestIdsByDay(data.selectedBonusQuestIdsByDay,data.dailyLog),
+    selectedBonusQuestIdsByDay:cleanSelectedBonusQuestIdsByDay(data.selectedBonusQuestIdsByDay,data.dailyLog,data.questCatalog),
     exerciseRotationByDay:cleanExerciseRotationByDay(data.exerciseRotationByDay),
     exerciseRotationEnabled:cleanExerciseRotationEnabled(data.exerciseRotationEnabled),
-    drawPreferences:cleanDrawPreferences(data.drawPreferences),
+    drawPreferences:cleanDrawPreferences(data.drawPreferences,data.questCatalog),
     dailyDrawByDay:cleanDrawSnapshots(data.dailyDrawByDay,"daily"),
     questTuning:cleanQuestTuning(data.questTuning),
+    questCatalog:cleanQuestCatalog(data.questCatalog),
     dailyCompletionAnimDay:data.dailyCompletionAnimDay||null,
     bonusCompletionAnimDay:data.bonusCompletionAnimDay||null,
     bonusFiveCompletionDay:data.bonusFiveCompletionDay||null,

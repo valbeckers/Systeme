@@ -1,6 +1,7 @@
-import { DEFS } from "./questDefs.js";
-import { DUNGEONS } from "./dungeonDefs.js";
-import { BREACH_POOL } from "./breachDefs.js";
+import { DEFS } from "./questDefs.js?v=20261017-editor-v1";
+import { DUNGEONS } from "./dungeonDefs.js?v=20261017-editor-v1";
+import { BREACH_POOL } from "./breachDefs.js?v=20261017-editor-v1";
+import { storedQuestCatalog } from "./questCatalog.js?v=20261017-editor-v1";
 
 export const DRAW_POOLS={
   daily:DEFS.filter(q=>q.daily&&!q.optional).map(q=>({id:q.id,label:q.name})),
@@ -8,10 +9,10 @@ export const DRAW_POOLS={
   breach:BREACH_POOL.map(q=>({id:q.id,label:q.name}))
 };
 
-export function cleanDrawPreferences(raw){
+export function cleanDrawPreferences(raw,catalog=storedQuestCatalog()){
   const out={};
   for(const [pool,items] of Object.entries(DRAW_POOLS)){
-    const valid=new Set(items.map(item=>item.id));
+    const valid=new Set([...items.map(item=>item.id),...Object.values(catalog||{}).filter(q=>q.kind===pool).map(q=>q.id)]);
     const selected=Array.isArray(raw?.[pool])?[...new Set(raw[pool].filter(id=>valid.has(id)))]:[...valid];
     out[pool]=selected.length?selected:[...valid];
   }

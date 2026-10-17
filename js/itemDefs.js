@@ -3,7 +3,7 @@
 // tables de probabilités. Il ne dépend ni de Preact, ni de l’état de
 // l’application, ni du stockage local.
 
-import { BREACH_LOOT_TEXT } from "./breachDefs.js?v=20260823-portails-v1";
+import { BREACH_LOOT_TEXT } from "./breachDefs.js?v=20261017-editor-v1";
 
 const LEVEL_UP_LOOT_TEXT="Après chaque montée de niveau : 1 objet aléatoire garanti.";
 const RANK_UP_LOOT_TEXT="Après chaque montée de rang : 2 objets au choix garantis.";

@@ -6,7 +6,8 @@
 // Portails : événement rare tiré une seule fois au reset quotidien.
 const BREACH_COLOR="#163a70";
 const BREACH_LOOT_TEXT="Après avoir fermé un portail : 1 objet aléatoire garanti.";
-const BREACH_POOL=[
+import { mergeQuestCatalog, mergeBreachBosses } from "./questCatalog.js?v=20261017-editor-v1";
+const BASE_BREACH_POOL=[
   {id:"breach_cold5",name:"Douche froide · 10min",bossObjective:"Prendre une douche froide pendant 10 minutes",icon:"🚿",unit:"min",target:10,step:10,binary:true,xp:1500,stat:"Sante",xp2:500,stat2:"Discipline",desc:""},
   {id:"breach_wallsit15",name:"Wall sit · 20min",bossObjective:"Faire 20 minutes de wall sit",icon:"🪑",unit:"min",target:20,step:5,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
   {id:"breach_push300",name:"Pompes · 500reps",bossObjective:"Faire 500 pompes",icon:"🦾",unit:"rep",target:500,step:25,xp:1500,stat:"Force",xp2:500,stat2:"Endurance",desc:""},
@@ -24,7 +25,7 @@ const BREACH_POOL=[
 
 // Chaque portail possède un Boss de rupture attitré. En rupture, le Boss reprend
 // l’objectif initial et invoque une garde rapprochée de trois sous-quêtes.
-const BREACH_RUPTURE_BOSSES = {
+const BASE_BREACH_RUPTURE_BOSSES = {
   breach_cold5:{
     id:"breach_boss_cryomancien",name:"Sauron",guards:[
       {id:"hydromancien",name:"Le Roi-Sorcier d’Angmar",objective:"Boire 2 litres d’eau pendant la période de Rupture",unit:"L",target:2,step:0.5},
@@ -118,6 +119,8 @@ const BREACH_RUPTURE_BOSSES = {
   },
 };
 
+const BREACH_POOL=mergeQuestCatalog(BASE_BREACH_POOL,"breach");
+const BREACH_RUPTURE_BOSSES=mergeBreachBosses(BASE_BREACH_RUPTURE_BOSSES);
 export {
   BREACH_COLOR,
   BREACH_LOOT_TEXT,
