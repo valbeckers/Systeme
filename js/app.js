@@ -92,8 +92,8 @@ import {
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
 import { UiIcon } from "./uiIcons.js?v=20261017-vacuum-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261017-vacuum-v1";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261017-vacuum-v1";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261017-bonus-picker-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261017-bonus-picker-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -873,7 +873,7 @@ function App(){
     if(!BONUS_QUEST_BY_ID[id]) return;
     setState(s=>{
       const byDay={...(s.selectedBonusQuestIdsByDay||{})};
-      const ids=[...(byDay[today]||[])];
+      const ids=[...(byDay[today]||[])].filter(questId=>!!BONUS_QUEST_BY_ID[questId]);
       const index=ids.indexOf(id);
       if(index>=0){
         if(Number((((s.dailyLog||{})[today]||{})[id])||0)>0) return s;
@@ -3887,7 +3887,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
 
   function BonusQuestPicker(){
     if(!bonusPickerOpen)return null;
-    const selected=(state.selectedBonusQuestIdsByDay&&state.selectedBonusQuestIdsByDay[today])||[];
+    const selected=((state.selectedBonusQuestIdsByDay&&state.selectedBonusQuestIdsByDay[today])||[]).filter(id=>!!BONUS_QUEST_BY_ID[id]);
     const groups=STATS.map(stat=>({stat,items:BONUS_QUESTS.filter(q=>q.category===stat)})).filter(g=>g.items.length);
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setBonusPickerOpen(false)}},
       h("div",{ref:bonusPickerScrollRef,class:"modal",style:"max-width:440px;width:calc(100% - 24px);max-height:88vh;overflow:auto"},
@@ -3951,8 +3951,6 @@ function isUncappedProfessionalWeeklyQuest(obj){
     const wkDone=wkBase.filter(isQuestDone).length;
     const wkTotal=wkBase.length;
     const regressionDoneToday=!!((state.regressionLog||{})[today]);
-    const selectedBonusIds=(state.selectedBonusQuestIdsByDay&&state.selectedBonusQuestIdsByDay[today])||[];
-    const fiveBonusStarted=selectedBonusIds.length>=BONUS_QUEST_GOAL&&selectedBonusIds.every(id=>(Number(tLog[id])||0)>0);
 
     const SectionHeader = ({title,done,total}) => h("div",{class:"shdr",style:"margin-bottom:10px"},
       h("div",{class:"ctitle",style:"margin:0"+(title==="Régressions"?";color:#ef4444":"")},title),
@@ -3987,7 +3985,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
       ),
       h("div",{class:"card"},
         h(SectionHeader,{title:"Quêtes bonus",done:bonDone,total:bonTotal}),
-        !fiveBonusStarted&&h("button",{class:"mbtn mprim",style:"width:100%;margin-bottom:"+(bon.length?"12px":"0"),onClick:()=>setBonusPickerOpen(true)},"Choisir les quêtes bonus"),
+        h("button",{class:"mbtn mprim",style:"width:100%;margin-bottom:"+(bon.length?"12px":"0"),onClick:()=>setBonusPickerOpen(true)},"Choisir les quêtes bonus"),
         bon.length?bon.map(o=>h(QI,{key:o.id,obj:o})):h("div",{style:"text-align:center;color:var(--td);font-size:11px;padding:10px 0 2px"},"Aucune quête bonus sélectionnée.")
       ),
       !activeDungeon&&h(DungeonChoiceCard,null),
