@@ -106,6 +106,8 @@ export const UI_ICON_IMAGES=Object.freeze({
   "exercise.side_plank":"./assets/ui/quest-abs.png?v=20260809-medallions-v4",
   "quest.ex_side_plank":"./assets/ui/quest-abs.png?v=20260809-medallions-v4",
 
+  "quest.pullups":"./assets/ui/quest-pullups.png?v=20260809-medallions-v4",
+  "exercise.pullups":"./assets/ui/quest-pullups.png?v=20260809-medallions-v4",
   "quest.negative_pullups":"./assets/ui/quest-pullups.png?v=20260809-medallions-v4",
   "quest.ex_pullups":"./assets/ui/quest-pullups.png?v=20260809-medallions-v4",
   "exercise.negative_pullups":"./assets/ui/quest-pullups.png?v=20260809-medallions-v4",
