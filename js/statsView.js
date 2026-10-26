@@ -43,7 +43,7 @@ function StatsRadarBackground({ state, focused }){
   return h("svg", {
         viewBox:`0 0 ${size} ${size}`,
         "aria-hidden":"true",
-        style:"position:absolute;left:50%;top:50%;width:min(82%,360px);height:auto;aspect-ratio:1;transform:translate(-50%,-50%);overflow:visible;pointer-events:none;opacity:"+(focused?"1":".38")+";transition:opacity .25s ease,filter .25s ease;filter:"+(focused?"drop-shadow(0 0 14px rgba(139,92,246,.28))":"none")
+        style:"position:absolute;left:50%;top:50%;z-index:"+(focused?"3":"0")+";width:min(82%,360px);height:auto;aspect-ratio:1;transform:translate(-50%,-50%);overflow:visible;pointer-events:none;opacity:"+(focused?"1":".38")+";transition:opacity .25s ease,filter .25s ease;filter:"+(focused?"drop-shadow(0 0 14px rgba(139,92,246,.28))":"none")
       },
         Array.from({ length:gridLevels }, (_, idx) => {
           const level = (idx + 1) / gridLevels;
