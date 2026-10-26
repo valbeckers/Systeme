@@ -67,7 +67,7 @@ import {
   calcXp,
   calcQuestTotalXp
 } from "./xp.js?v=20260811-linear-xp-v1";
-import { StatsTab } from "./statsView.js?v=20261026-radar-layer-v1";
+import { StatsTab } from "./statsView.js?v=20261026-radar-instant-v2";
 import { HistoryTab } from "./historyView.js?v=20261017-vacuum-v1";
 import { regressionPenaltyForWeek, weeklyXpWithoutRegression } from "./weeklyRegressionXp.js?v=20261016-v1";
 import { INJURY_ZONES, injuryForDay, isInjuredQuest, injuryDaysRemaining } from "./injuryEngine.js?v=20261017-editor-v1";

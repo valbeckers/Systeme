@@ -43,7 +43,7 @@ function StatsRadarBackground({ state, focused }){
   return h("svg", {
         viewBox:`0 0 ${size} ${size}`,
         "aria-hidden":"true",
-        style:"position:absolute;left:50%;top:50%;z-index:"+(focused?"3":"0")+";width:min(82%,360px);height:auto;aspect-ratio:1;transform:translate(-50%,-50%);overflow:visible;pointer-events:none;opacity:"+(focused?"1":".38")+";transition:opacity .25s ease,filter .25s ease;filter:"+(focused?"drop-shadow(0 0 14px rgba(139,92,246,.28))":"none")
+        style:"position:absolute;left:50%;top:50%;z-index:"+(focused?"3":"0")+";width:min(82%,360px);height:auto;aspect-ratio:1;transform:translate(-50%,-50%);overflow:visible;pointer-events:none;opacity:"+(focused?"1":".38")+";filter:none"
       },
         Array.from({ length:gridLevels }, (_, idx) => {
           const level = (idx + 1) / gridLevels;
@@ -220,7 +220,7 @@ export function StatsTab({
         style:"position:relative;z-index:3;cursor:pointer;user-select:none"
       },"Caractéristiques"),
       h("div",{
-        style:"position:relative;z-index:2;opacity:"+(radarFocused?".16":"1")+";transition:opacity .25s ease;text-shadow:0 1px 4px #000,0 0 8px #000"
+        style:"position:relative;z-index:2;opacity:"+(radarFocused?".16":"1")+";text-shadow:0 1px 4px #000,0 0 8px #000"
       },
         STATS.map(s=>{
           const sx=state.statXp[s]||0, lvl=getLvl(sx);
