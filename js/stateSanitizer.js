@@ -1,6 +1,6 @@
 import { STATS } from "./config.js";
 import { DEFS, SP } from "./questDefs.js?v=20261017-vacuum-v1";
-import { BONUS_QUESTS } from "./bonusQuestDefs.js?v=20261017-editor-v1";
+import { BONUS_QUESTS } from "./bonusQuestDefs.js?v=20261030-bonus-draw-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20261017-editor-v1";
 import { todayStr, next7AM } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
@@ -229,7 +229,7 @@ function cleanEnduranceChoiceByDay(obj){
 }
 
 function cleanSelectedBonusQuestIdsByDay(obj,dailyLog,catalog){
-  const allowed=new Set([...BONUS_QUESTS.map(q=>q.id),...Object.keys(cleanQuestCatalog(catalog))]);
+  const allowed=new Set(BONUS_QUESTS.map(q=>q.id));
   const out={};
   Object.entries(obj||{}).forEach(([day,ids])=>{
     if(!/^\d{4}-\d{2}-\d{2}$/.test(day)||!Array.isArray(ids))return;
@@ -425,6 +425,7 @@ export function cleanSystemState(raw){
     debtResolvedDays:data.debtResolvedDays||{},
     regressionLog:cleanRegressionLog(data.regressionLog),
     enduranceChoiceByDay:cleanEnduranceChoiceByDay(data.enduranceChoiceByDay),
+    bonusDrawDays:[...new Set((Array.isArray(data.bonusDrawDays)?data.bonusDrawDays:[]).filter(day=>/^\d{4}-\d{2}-\d{2}$/.test(day)))],
     selectedBonusQuestIdsByDay:cleanSelectedBonusQuestIdsByDay(data.selectedBonusQuestIdsByDay,data.dailyLog,data.questCatalog),
     exerciseRotationByDay:cleanExerciseRotationByDay(data.exerciseRotationByDay),
     exerciseRotationEnabled:cleanExerciseRotationEnabled(data.exerciseRotationEnabled),

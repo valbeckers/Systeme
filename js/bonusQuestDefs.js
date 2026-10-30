@@ -29,7 +29,9 @@ export const BONUS_QUESTS = mergeQuestCatalog([
   {id:"bonus_delayed_task",name:"Accomplir 1 tâche repoussée",icon:"🕗",unit:"succès",base:1,binary:true,binaryXp:150,stat:"Discipline"},
   {id:"bonus_declutter",name:"Ranger ou jeter 3 objets",icon:"📦",iconKey:"sp_declutter",unit:"succès",base:1,binary:true,binaryXp:150,stat:"Discipline"},
   {id:"bonus_vacuum",name:"Aspirer",icon:"🧹",unit:"succès",base:1,binary:true,binaryXp:150,stat:"Discipline"}
-].map(q=>({...q,category:q.category||q.stat,target:(q.dynamicEndurance||q.dynamicTargetKey)?undefined:q.base,daily:true,weekly:false,optional:true,selectableBonus:true})),"bonus");
+].map(q=>({...q,category:q.category||q.stat,target:(q.dynamicEndurance||q.dynamicTargetKey)?undefined:q.base,daily:true,weekly:false,optional:true,selectableBonus:true})),"bonus").map(q=>q.id==="bonus_declutter"
+  ?{...q,binary:true,binaryXp:150,xpPer:0,unit:"succès",base:1,target:1,tiers:undefined,stat:"Discipline",stat2:null,xpPer2:null}
+  :q);
 
 export const BONUS_QUEST_BY_ID = Object.fromEntries(BONUS_QUESTS.map(q=>[q.id,q]));
 export const BONUS_QUEST_GOAL = 5;
