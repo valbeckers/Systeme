@@ -46,6 +46,7 @@ const BASE_SP = {
   Force:[
   ],
   Esprit:[
+    {id:"sp_german",name:"Cours d’allemand · 30min",icon:"🇩🇪",unit:"succès",target:1,xp:500,days:1,binary:true},
     {id:"sp_breath",  name:"Cohérence cardiaque · 30min",icon:"\uD83D\uDC93",                             unit:"min", target:30, xp:500, xp2:250, stat2:"Sante", days:1, binary:true},
     {id:"sp_meditation",name:"Méditation · 30min",icon:"🧘🏻‍♂️",unit:"min",target:30,xp:500,xp2:250,stat2:"Sante",days:1,binary:true},
     {id:"sp_memo30",   name:"Mémorisation · 30min",icon:"\uD83E\uDDE0",                                  unit:"jour", target:1, xp:1000, days:1, binary:true},

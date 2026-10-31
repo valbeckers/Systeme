@@ -1,6 +1,7 @@
+import { ensureDailyBonusDraw } from "./bonusDraw.js?v=20261031-unique-stat-v1";
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
-import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20261017-vacuum-v1";
-import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261017-editor-v1";
+import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20261031-german-v1";
+import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261031-german-v1";
 import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20261017-editor-v1";
 import {
   isDebtEligibleQuest,
@@ -92,8 +93,8 @@ import {
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
 import { UiIcon } from "./uiIcons.js?v=20261019-pullups-icon-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261017-bonus-picker-v1";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261017-bonus-picker-v1";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261031-german-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261031-german-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -582,6 +583,7 @@ function App(){
     const now=Date.now();
     let base={...buildInitialState(),objectives:DEFS};
     base=snapshotDrawPools(base,todayStr(now));
+    base=ensureDailyBonusDraw(base,todayStr(now),BONUS_QUESTS,BONUS_QUEST_GOAL);
     base=ensureExerciseRotationForDay(base,todayStr());
     base=processDailyBreachRoll(base,now);
     // Auto-init quête urgente si aucun portail ne la remplace aujourd’hui
@@ -1209,7 +1211,7 @@ function App(){
     setState(s=>processDailyBreachRoll(s,now));
   },[now]);
   useEffect(()=>{
-    setState(s=>snapshotDrawPools(s,today));
+    setState(s=>ensureDailyBonusDraw(snapshotDrawPools(s,today),today,BONUS_QUESTS,BONUS_QUEST_GOAL));
   },[today]);
   const sqs         = state.specialQuests||[];
   const activeSq    = sqs.find(q=>!q.completedAt&&now<q.expiresAt)||null;
