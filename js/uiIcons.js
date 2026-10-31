@@ -11,6 +11,8 @@ const { h } = window.preact;
 // même emplacement fixe. Les nouveaux visuels pourront donc être ajoutés par
 // lots, sans modifier la mise en page des cartes.
 export const UI_ICON_IMAGES=Object.freeze({
+  "quest.sp_german":"./assets/ui/quest-german.png?v=20261031-v1",
+  "quest.bonus_german":"./assets/ui/quest-german.png?v=20261031-v1",
   "interface.settings":"./assets/ui/interface-settings.png?v=20260911-nav-frame-v1",
   "interface.ascension":"./assets/ui/interface-ascension.png?v=20260809-medallions-v6",
   "interface.warning":"./assets/ui/interface-warning.png?v=20260809-medallions-v6",
