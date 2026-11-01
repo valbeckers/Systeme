@@ -80,7 +80,7 @@ export function HistoryTab({
 }){
   const weightInputRef=useRef(null);
   const [weightError,setWeightError]=useState("");
-  const [weightMonthOff,setWeightMonthOff]=useState(0);
+  const [weightWeekOff,setWeightWeekOff]=useState(0);
   const [selectedWeighIn,setSelectedWeighIn]=useState(null);
   const [confirmWeightDeletion,setConfirmWeightDeletion]=useState(false);
   const open = historyOpen;
@@ -140,22 +140,34 @@ export function HistoryTab({
     : monthKey+"-"+String(monthOff===0?Number(today.slice(8)):1).padStart(2,"0");
   const monthlyQuests=[...sortStat(objs.filter(o=>o.daily&&!o.optional)),...objs.filter(o=>o.id==="run")];
   const weighIns=[...(state.weightLog||[])].sort((a,b)=>a.recordedAt-b.recordedAt);
-  const currentMonth=new Date();
+  // Huit semaines calendaires, du lundi au dimanche, décalées par pas de 7 jours.
+  const currentWeightWeek=new Date();
+  currentWeightWeek.setHours(0,0,0,0);
+  currentWeightWeek.setDate(currentWeightWeek.getDate()-((currentWeightWeek.getDay()+6)%7));
   const firstWeighIn=weighIns[0];
-  const oldestMonth=firstWeighIn?new Date(Number(firstWeighIn.date.slice(0,4)),Number(firstWeighIn.date.slice(5,7))-1,1):currentMonth;
-  const maxWeightMonthOff=Math.max(0,(currentMonth.getFullYear()-oldestMonth.getFullYear())*12+currentMonth.getMonth()-oldestMonth.getMonth());
-  const displayedWeightMonthOff=Math.min(weightMonthOff,maxWeightMonthOff);
-  const weightMonthStart=new Date(currentMonth.getFullYear(),currentMonth.getMonth()-displayedWeightMonthOff,1);
-  const weightMonthEnd=new Date(weightMonthStart.getFullYear(),weightMonthStart.getMonth()+1,1);
-  const weightMonthKey=localDate(weightMonthStart).slice(0,7);
-  const weightMonthLabel=weightMonthStart.toLocaleDateString("fr-FR",{month:"long",year:"numeric"});
-  const graphEntries=weighIns.filter(entry=>entry.date.startsWith(weightMonthKey));
+  const oldestWeightWeek=firstWeighIn?new Date(firstWeighIn.date+"T00:00:00"):new Date(currentWeightWeek);
+  oldestWeightWeek.setDate(oldestWeightWeek.getDate()-((oldestWeightWeek.getDay()+6)%7));
+  const dayNumber=date=>Date.UTC(date.getFullYear(),date.getMonth(),date.getDate())/86400000;
+  const maxWeightWeekOff=Math.max(0,Math.round((dayNumber(currentWeightWeek)-dayNumber(oldestWeightWeek))/7));
+  const displayedWeightWeekOff=Math.min(weightWeekOff,maxWeightWeekOff);
+  const weightWindowStart=new Date(currentWeightWeek);
+  weightWindowStart.setDate(weightWindowStart.getDate()-7*(displayedWeightWeekOff+7));
+  const weightWindowEnd=new Date(weightWindowStart);
+  weightWindowEnd.setDate(weightWindowEnd.getDate()+56);
+  const weightWindowLastDay=new Date(weightWindowEnd);
+  weightWindowLastDay.setDate(weightWindowLastDay.getDate()-1);
+  const weightWindowLabel=fmt(weightWindowStart)+" – "+fmt(weightWindowLastDay);
+  const weightWindowTicks=Array.from({length:8},(_,i)=>{
+    const date=new Date(weightWindowStart);date.setDate(date.getDate()+i*7);
+    return {label:fmt(date),x:30+300*(date-weightWindowStart)/(weightWindowEnd-weightWindowStart)};
+  });
+  const graphEntries=weighIns.filter(entry=>entry.date>=localDate(weightWindowStart)&&entry.date<localDate(weightWindowEnd));
   const minWeight=weighIns.length?Math.min(...weighIns.map(x=>x.weight)):0;
   const maxWeight=weighIns.length?Math.max(...weighIns.map(x=>x.weight)):0;
   const graphLow=minWeight-Math.max(.5,(maxWeight-minWeight)*.15);
   const graphHigh=maxWeight+Math.max(.5,(maxWeight-minWeight)*.15);
   const graphPoints=graphEntries.map(entry=>({
-    x:30+300*Math.max(0,Math.min(1,(entry.recordedAt-weightMonthStart.getTime())/(weightMonthEnd.getTime()-weightMonthStart.getTime()))),
+    x:30+300*Math.max(0,Math.min(1,(entry.recordedAt-weightWindowStart.getTime())/(weightWindowEnd.getTime()-weightWindowStart.getTime()))),
     y:140-112*(entry.weight-graphLow)/(graphHigh-graphLow)
   }));
   const weightLabel=value=>fmtNum(value,2).replace(".",",");
@@ -354,12 +366,12 @@ export function HistoryTab({
         weighIns.length>0?h(Fragment,null,
           h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:var(--rc);margin:18px 0 9px"},"Dernière pesée : "+weightLabel(weighIns.at(-1).weight)+" kg"),
           h("div",{style:"display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0"},
-            h("button",{type:"button",disabled:displayedWeightMonthOff>=maxWeightMonthOff,onClick:()=>setWeightMonthOff(v=>Math.min(v+1,maxWeightMonthOff)),"aria-label":"Mois précédent",style:"background:var(--sf2);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-size:18px;width:38px;height:38px;opacity:"+(displayedWeightMonthOff>=maxWeightMonthOff?.3:1)},"‹"),
-            h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:var(--rc);text-transform:capitalize;text-align:center"},weightMonthLabel),
-            h("button",{type:"button",disabled:displayedWeightMonthOff===0,onClick:()=>setWeightMonthOff(v=>Math.max(0,v-1)),"aria-label":"Mois suivant",style:"background:var(--sf2);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-size:18px;width:38px;height:38px;opacity:"+(displayedWeightMonthOff===0?.3:1)},"›")
+            h("button",{type:"button",disabled:displayedWeightWeekOff>=maxWeightWeekOff,onClick:()=>setWeightWeekOff(v=>Math.min(v+1,maxWeightWeekOff)),"aria-label":"Reculer d’une semaine",style:"background:var(--sf2);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-size:18px;width:38px;height:38px;opacity:"+(displayedWeightWeekOff>=maxWeightWeekOff?.3:1)},"‹"),
+            h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:var(--rc);text-transform:capitalize;text-align:center"},h("div",null,"8 semaines"),h("div",{style:"font-size:10px;color:var(--td);margin-top:4px"},weightWindowLabel)),
+            h("button",{type:"button",disabled:displayedWeightWeekOff===0,onClick:()=>setWeightWeekOff(v=>Math.max(0,v-1)),"aria-label":"Avancer d’une semaine",style:"background:var(--sf2);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-size:18px;width:38px;height:38px;opacity:"+(displayedWeightWeekOff===0?.3:1)},"›")
           ),
           h("div",{style:"border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);border-radius:10px;padding:7px"},
-            h("svg",{viewBox:"0 0 360 170",role:"img","aria-label":"Évolution du poids en "+weightMonthLabel,style:"display:block;width:100%;height:auto"},
+            h("svg",{viewBox:"0 0 360 170",role:"img","aria-label":"Évolution du poids sur 8 semaines : "+weightWindowLabel,style:"display:block;width:100%;height:auto"},
               [28,84,140].map(y=>h("line",{key:"grid"+y,x1:30,x2:330,y1:y,y2:y,stroke:"rgba(255,255,255,.12)","stroke-width":1})),
               h("text",{x:2,y:31,fill:"#94a3b8","font-size":10},weightLabel(graphHigh)),
               h("text",{x:2,y:143,fill:"#94a3b8","font-size":10},weightLabel(graphLow)),
@@ -368,11 +380,10 @@ export function HistoryTab({
                 h("circle",{cx:point.x,cy:point.y,r:16,fill:"transparent"}),
                 h("circle",{cx:point.x,cy:point.y,r:index===graphPoints.length-1?4:3,fill:index===graphPoints.length-1?"#c4b5fd":"#a78bfa",style:"pointer-events:none"})
               )),
-              h("text",{x:30,y:160,fill:"#94a3b8","font-size":10},"01/"+String(weightMonthStart.getMonth()+1).padStart(2,"0")),
-              h("text",{x:330,y:160,fill:"#94a3b8","font-size":10,"text-anchor":"end"},String(new Date(weightMonthEnd.getTime()-86400000).getDate()).padStart(2,"0")+"/"+String(weightMonthStart.getMonth()+1).padStart(2,"0"))
+              weightWindowTicks.map((tick,i)=>h("text",{key:"weight-week-"+i,x:tick.x,y:160,fill:"#94a3b8","font-size":8,"text-anchor":i===0?"start":"middle"},tick.label))
             )
           ),
-          !graphEntries.length&&h("div",{style:"font-size:10px;color:var(--td);margin-top:7px"},"Aucune pesée ce mois-ci.")
+          !graphEntries.length&&h("div",{style:"font-size:10px;color:var(--td);margin-top:7px"},"Aucune pesée sur ces 8 semaines.")
         ):h("div",{style:"font-size:12px;color:var(--td);text-align:center;padding:24px 0 8px"},"Aucune pesée enregistrée.")
       )
     ),
