@@ -2,7 +2,7 @@ import { ensureDailyBonusDraw } from "./bonusDraw.js?v=20261031-unique-stat-v1";
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
 import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20261031-german-v1";
 import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261031-german-v1";
-import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20261017-editor-v1";
+import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20261102-urgent-draw-v1";
 import {
   isDebtEligibleQuest,
   createQuestDebtState,
@@ -27,7 +27,7 @@ import {
 import { elanBonusPercent, xpMomentumAdjustment } from "./xpMomentum.js?v=20260817-xp-momentum-v1";
 import { BREACH_POOL, BREACH_RUPTURE_BOSSES } from "./breachDefs.js?v=20261017-editor-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20261017-editor-v1";
-import { DRAW_POOLS, cleanDrawPreferences, eligiblePool, snapshotDrawPools, dailyEligibleForDay } from "./drawPreferences.js?v=20261017-vacuum-v1";
+import { DRAW_POOLS, cleanDrawPreferences, eligiblePool, snapshotDrawPools, dailyEligibleForDay } from "./drawPreferences.js?v=20261102-urgent-draw-v1";
 import {
   dungeonRoomRewardPairs,
   dungeonRewardPairs,
@@ -42,7 +42,7 @@ import {
   expireSuspendedDungeonState,
   canValidateDungeonRoom
 } from "./dungeonEngine.js?v=20260910-dimensional-anchor-v1";
-import { INVENTORY_ITEMS } from "./itemDefs.js?v=20261017-editor-v1";
+import { INVENTORY_ITEMS } from "./itemDefs.js?v=20261102-no-ointment-v1";
 import {
   incrementLootState,
   pickRandomBreachLoot,
@@ -53,7 +53,7 @@ import {
   counterpartBalanceSacrificeEligibleIds,
   counterpartBalanceRewardEligibleIds,
   exchangeCounterpartBalanceState
-} from "./lootEngine.js?v=20261017-editor-v1";
+} from "./lootEngine.js?v=20261102-no-ointment-v1";
 import {
   eventDayStr,
   addDaysStr,
@@ -93,8 +93,8 @@ import {
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
 import { UiIcon } from "./uiIcons.js?v=20261031-german-icon-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261031-german-v1";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261031-german-v1";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261102-urgent-draw-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261102-urgent-draw-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -596,7 +596,7 @@ function App(){
     const cooldownOk=now>=sqCdUntil;
     const staleCooldownWithoutQuest=!hasActive&&!hasCompletedThisWindow&&sqCdUntil>now;
     if(base.sqFailureDay!==eventDayStr(now)&&base.breachTriggeredDay!==eventDayStr(now)&&!hasActive&&!hasCompletedThisWindow&&(cooldownOk||staleCooldownWithoutQuest)){
-      const result=pickRandomSq(sqs.filter(q=>!q.completedAt).map(q=>q.id),base.sqStatCycle,base.sqDrawLog,base.urgentCompassStat,injuryForDay(base,todayStr(now))?.zoneId,base.questTuning,todayStr(now));
+      const result=pickRandomSq(sqs.filter(q=>!q.completedAt).map(q=>q.id),base.sqStatCycle,base.sqDrawLog,base.urgentCompassStat,injuryForDay(base,todayStr(now))?.zoneId,base.questTuning,todayStr(now),eligiblePool(base,"urgent"));
       if(result){
         const {tpl,pickedStat,cycleReset,forced}=result;
         const sq={...tpl,sqid:"sq_"+now,progress:0,startedAt:now,expiresAt:next7AM(now),completedAt:null};
@@ -640,7 +640,6 @@ function App(){
   const [dungeonMapStatChoice,setDungeonMapStatChoice] = useState(false);
   const [specialItemChoice,setSpecialItemChoice] = useState(null);
   const [confirmTargetedItemUse,setConfirmTargetedItemUse] = useState(null);
-  const injuryDurationInputRef = useRef(null);
   const [balanceSacrificeChoice,setBalanceSacrificeChoice] = useState(null);
   const [balanceRewardChoice,setBalanceRewardChoice] = useState(null);
   const [confirmBalanceExchange,setConfirmBalanceExchange] = useState(null);
@@ -1246,7 +1245,7 @@ function App(){
         s.sqDrawLog,
         s.urgentCompassStat,
         injuryForDay(s,todayStr(t))?.zoneId,
-        s.questTuning,todayStr(t)
+        s.questTuning,todayStr(t),eligiblePool(s,"urgent")
       );
       if(!result) return s;
       const {tpl,pickedStat,cycleReset,forced}=result;
@@ -1660,7 +1659,7 @@ function App(){
       const hasActive = sqsNow.find(q=>!q.completedAt&&Date.now()<q.expiresAt);
       const cd = s.sqCooldownUntil||0;
       if(hasActive || Date.now()<cd || s.sqFailureDay===eventDayStr()) return s;
-      const result=pickRandomSq(sqsNow.filter(q=>!q.completedAt).map(q=>q.id),s.sqStatCycle,s.sqDrawLog,s.urgentCompassStat,injuryForDay(s,todayStr())?.zoneId,s.questTuning,todayStr());
+      const result=pickRandomSq(sqsNow.filter(q=>!q.completedAt).map(q=>q.id),s.sqStatCycle,s.sqDrawLog,s.urgentCompassStat,injuryForDay(s,todayStr())?.zoneId,s.questTuning,todayStr(),eligiblePool(s,"urgent"));
       if(!result)return s;
       const {tpl,pickedStat,cycleReset,forced}=result;
       const t = Date.now();
@@ -2026,7 +2025,7 @@ function App(){
       const completedToday=list.filter(q=>q.completedAt&&eventDayStr(q.completedAt)===day).sort((a,b)=>(b.completedAt||0)-(a.completedAt||0));
       if(hasActive || !completedToday.length) return s;
       const lastCompleted=completedToday[0];
-      const result=pickRandomSq([lastCompleted.id],s.sqStatCycle,s.sqDrawLog,null,injuryForDay(s,day)?.zoneId,s.questTuning,day);
+      const result=pickRandomSq([lastCompleted.id],s.sqStatCycle,s.sqDrawLog,null,injuryForDay(s,day)?.zoneId,s.questTuning,day,eligiblePool(s,"urgent"));
       if(!result) return s;
       const {tpl,pickedStat,cycleReset}=result;
       const sq={...tpl,sqid:"sq_token_"+t,progress:0,startedAt:t,expiresAt:next7AM(t),completedAt:null,summonedByToken:true};
@@ -2059,7 +2058,7 @@ function App(){
       );
 
       const usedIds=[active.id].filter(Boolean);
-      const result=pickRandomSq(usedIds,cycleBase,drawLogBeforeRewrite,null,injuryForDay(s,todayStr(t))?.zoneId,s.questTuning,todayStr(t));
+      const result=pickRandomSq(usedIds,cycleBase,drawLogBeforeRewrite,null,injuryForDay(s,todayStr(t))?.zoneId,s.questTuning,todayStr(t),eligiblePool(s,"urgent"));
       if(!result) return s;
 
       const {tpl,pickedStat,cycleReset}=result;
@@ -2101,7 +2100,7 @@ function App(){
   function launchNewSq(){
     setState(s=>{
       if(s.sqFailureDay===eventDayStr())return s;
-      const result=pickRandomSq((s.specialQuests||[]).filter(q=>!q.completedAt).map(q=>q.id),s.sqStatCycle,s.sqDrawLog,s.urgentCompassStat,injuryForDay(s,todayStr())?.zoneId,s.questTuning,todayStr());
+      const result=pickRandomSq((s.specialQuests||[]).filter(q=>!q.completedAt).map(q=>q.id),s.sqStatCycle,s.sqDrawLog,s.urgentCompassStat,injuryForDay(s,todayStr())?.zoneId,s.questTuning,todayStr(),eligiblePool(s,"urgent"));
       if(!result)return s;
       const {tpl,pickedStat,cycleReset,forced}=result;
       const t=Date.now();
@@ -4016,10 +4015,10 @@ function isUncappedProfessionalWeeklyQuest(obj){
     if(NEW_ITEM_ICON_DATA[id])return EmojiStyleItemImage(NEW_ITEM_ICON_DATA[id],size);
     return h(UiIcon,{iconKey:"item."+id,fallback:INVENTORY_ITEMS[id].emoji,slotSize:size,glyphSize:size});
   }
-  function itemQty(id){ return ["codex","regressionOrb","debtAcknowledgement","recoveryOintment"].includes(id)?1:id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
+  function itemQty(id){ return ["codex","regressionOrb","debtAcknowledgement"].includes(id)?1:id==="dungeonKey"?dungeonKeys:Math.max(0,Math.floor(Number(state.inventory&&state.inventory[id])||0)); }
   function Inventory(){
-    const permanentOrder=["codex","recoveryOintment","regressionOrb","debtAcknowledgement"];
-    const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","masterContract","destinyCompass","mysteryMap","dimensionalAnchor","rerollToken","rewriteRune","recordHammer","teleportCrystal","invisibilityCape","recoveryOintment","counterpartBalance"]
+    const permanentOrder=["codex","regressionOrb","debtAcknowledgement"];
+    const ids=["codex","regressionOrb","dungeonKey","debtAcknowledgement","masterContract","destinyCompass","mysteryMap","dimensionalAnchor","rerollToken","rewriteRune","recordHammer","teleportCrystal","invisibilityCape","counterpartBalance"]
       .sort((a,b)=>{
         const permanentIndexA=permanentOrder.indexOf(a);
         const permanentIndexB=permanentOrder.indexOf(b);
@@ -4089,7 +4088,6 @@ function isUncappedProfessionalWeeklyQuest(obj){
     if(id==="invisibilityCape")return "BOIRE";
     if(id==="debtAcknowledgement")return "SIGNER";
     if(id==="rerollToken")return "LANCER";
-    if(id==="recoveryOintment")return "APPLIQUER";
     return it.action;
   }
 
@@ -4204,8 +4202,6 @@ function isUncappedProfessionalWeeklyQuest(obj){
       else if(!reqDailyObjs.some(o=>isDebtEligibleQuest(o)&&(Number(tLog[o.id])||0)<getEffectiveTarget(o.id))){disabled=true;reason="Aucune quête éligible incomplète aujourd’hui.";}
     }else if(id==="recordHammer"){
       if(state.recordChallenge&&state.recordChallenge.week===wk){disabled=false;reason="Une Marque du dépassement est actuellement dessinée sur « "+(state.recordChallenge.name||"ce record")+" ».";}
-    }else if(id==="recoveryOintment"){
-      if(activeInjury){disabled=true;reason="Une blessure est déjà active jusqu’au "+activeInjury.endDay.split("-").reverse().join("/")+".";}
     }else if(id==="counterpartBalance"){
       const eligible=counterpartBalanceSacrificeEligibleIds(state);
       if(eligible.length<3){disabled=true;reason="Trois objets différents sont nécessaires pour utiliser la Balance ("+eligible.length+"/3 disponibles).";}
@@ -4239,8 +4235,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
           )
         ),
         reason&&h("div",{style:"font-size:10px;color:var(--td);text-align:center;margin-bottom:8px"},reason),
-        h("button",{disabled,onClick:()=>{const eraseRecord=id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk;const comboQueue=eraseRecord?[]:compatibleItemQueue(id);setInventoryItem(null);if(comboQueue.length)setItemComboPrompt({primaryId:id,eraseRecord,queue:comboQueue,index:0,selectingMap:false});else setConfirmItemUse({id,eraseRecord})},style:"width:100%;padding:12px;border-radius:9px;border:1px solid "+(disabled?"rgba(255,255,255,.08)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"#ef4444":rank.color))+";background:"+(disabled?"rgba(255,255,255,.03)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"rgba(239,68,68,.10)":rank.color+"18"))+";color:"+(disabled?"var(--td)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"#ef4444":rank.color))+";font-family:Orbitron,sans-serif;letter-spacing:1.3px;cursor:"+(disabled?"default":"pointer")},id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"EFFACER":inventoryActionLabel(id,it)),
-        id==="recoveryOintment"&&activeInjury&&h("button",{onClick:()=>{setInventoryItem(null);setConfirmTargetedItemUse({type:"cancelInjury"});},style:"width:100%;margin-top:10px;padding:12px;border-radius:9px;border:1px solid #ef4444;background:rgba(239,68,68,.10);color:#ef4444;font-family:Orbitron,sans-serif;letter-spacing:1px;cursor:pointer"},"ANNULER LA BLESSURE")
+        h("button",{disabled,onClick:()=>{const eraseRecord=id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk;const comboQueue=eraseRecord?[]:compatibleItemQueue(id);setInventoryItem(null);if(comboQueue.length)setItemComboPrompt({primaryId:id,eraseRecord,queue:comboQueue,index:0,selectingMap:false});else setConfirmItemUse({id,eraseRecord})},style:"width:100%;padding:12px;border-radius:9px;border:1px solid "+(disabled?"rgba(255,255,255,.08)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"#ef4444":rank.color))+";background:"+(disabled?"rgba(255,255,255,.03)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"rgba(239,68,68,.10)":rank.color+"18"))+";color:"+(disabled?"var(--td)":(id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"#ef4444":rank.color))+";font-family:Orbitron,sans-serif;letter-spacing:1.3px;cursor:"+(disabled?"default":"pointer")},id==="recordHammer"&&state.recordChallenge&&state.recordChallenge.week===wk?"EFFACER":inventoryActionLabel(id,it))
       )
     );
   }
@@ -4260,8 +4255,6 @@ function isUncappedProfessionalWeeklyQuest(obj){
               ?"Utiliser l’Ancre dimensionnelle pour sortir du donjon et figer sa progression ainsi que son temps restant ? Vous disposerez de 72 heures pour le reprendre."
           :id==="teleportCrystal"
             ?"Briser le Cristal de téléportation pour rejoindre un pays voisin et ouvrir un portail aléatoire ?"
-            :id==="recoveryOintment"
-              ?"Définir une blessure et sa durée avec l’Onguent de récupération ?"
             :id==="mysteryMap"
               ?"Déplier la Carte des profondeurs pour choisir la statistique du prochain donjon ?"
               :id==="counterpartBalance"
@@ -4309,8 +4302,6 @@ function isUncappedProfessionalWeeklyQuest(obj){
             setState(s=>({...s,inventory:{...(s.inventory||{}),masterContract:Math.max(0,(Number(s.inventory&&s.inventory.masterContract)||0)-1)},masterContractArmed:true}));setItemUseUp({id});
           }else if(id==="debtAcknowledgement"){
             setSpecialItemChoice({type:"debtAcknowledgement"});
-          }else if(id==="recoveryOintment"){
-            setSpecialItemChoice({type:"recoveryOintment"});
           }else if(id==="recordHammer"||id==="invisibilityCape"){
             setSpecialItemChoice({type:id});
           }else if(id==="counterpartBalance"){
@@ -4467,11 +4458,8 @@ function isUncappedProfessionalWeeklyQuest(obj){
     let options=[];
     if(type==="recordHammer")options=recordOptions().map(x=>({id:x.obj.id,label:x.obj.name+" — "+fmtNum(x.best)+" "+x.obj.unit,obj:x.obj,best:x.best}));
     if(type==="debtAcknowledgement")options=reqDailyObjs.filter(o=>isDebtEligibleQuest(o)&&(Number(tLog[o.id])||0)<getEffectiveTarget(o.id)).map(o=>({id:o.id,label:o.name+" — "+fmtNum(getEffectiveTarget(o.id)-(Number(tLog[o.id])||0))+" "+o.unit+" manquants",obj:o}));
-    if(type==="recoveryOintment"){
-      options=INJURY_ZONES.map(zone=>({id:zone.id,label:zone.label,zone}));
-    }
     if(type==="invisibilityCape"||type==="cape"){const d=activeDungeon;options=d?d.rooms.slice(0,-1).map((r,i)=>!(d.completedRooms||[]).includes(i)&&canValidateDungeonRoom(d,d,i)?{id:i,label:(i+1)+". "+r.name}:null).filter(Boolean):[];}
-    return h("div",{class:"modal-ov"},h("div",{class:"modal",style:"max-width:410px;width:calc(100% - 28px)"},h("div",{class:"mtitle"},type==="recordHammer"?"CHOISIR UN RECORD":type==="debtAcknowledgement"?"CRÉER UNE DETTE":type==="recoveryOintment"?"CHOISIR LA ZONE BLESSÉE":"PASSER UNE SALLE"),h("div",{style:"display:flex;flex-direction:column;gap:8px;margin-top:12px"},options.map(x=>h("button",{key:x.id,onClick:()=>{
+    return h("div",{class:"modal-ov"},h("div",{class:"modal",style:"max-width:410px;width:calc(100% - 28px)"},h("div",{class:"mtitle"},type==="recordHammer"?"CHOISIR UN RECORD":type==="debtAcknowledgement"?"CRÉER UNE DETTE":"PASSER UNE SALLE"),h("div",{style:"display:flex;flex-direction:column;gap:8px;margin-top:12px"},options.map(x=>h("button",{key:x.id,onClick:()=>{
       setSpecialItemChoice(null);
       setConfirmTargetedItemUse({type:type==="cape"?"invisibilityCape":type,choice:x});
     },style:"padding:11px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:var(--tx);font-family:Orbitron,sans-serif;font-size:9px;display:flex;align-items:center;justify-content:flex-start;gap:8px;text-align:left"},
@@ -4484,7 +4472,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
     const pending=confirmTargetedItemUse;
     const type=pending.type;
     const choice=pending.choice||null;
-    const color=(type==="destinyCompass"||type==="mysteryMap")?(STAT_COLOR[pending.stat]||rank.color):type==="masterContract"?"#f59e0b":type==="cancelInjury"?"#ef4444":rank.color;
+    const color=(type==="destinyCompass"||type==="mysteryMap")?(STAT_COLOR[pending.stat]||rank.color):type==="masterContract"?"#f59e0b":rank.color;
 
     let text="";
     let confirmLabel="Confirmer";
@@ -4504,12 +4492,6 @@ function isUncappedProfessionalWeeklyQuest(obj){
     }else if(type==="invisibilityCape"){
       text="Utiliser la Potion d’invisibilité éphémère pour traverser la salle « "+choice.label.replace(/^\d+\.\s*/,"")+" » sans gagner son XP ?";
       confirmLabel="Passer la salle";
-    }else if(type==="recoveryOintment"){
-      text="Déclarer une blessure sur "+choice.zone.label+" ? La quête journalière sera retirée pendant la durée choisie, dès aujourd’hui.";
-      confirmLabel="Déclarer la blessure";
-    }else if(type==="cancelInjury"){
-      text="Annuler la blessure sur "+(INJURY_ZONES.find(zone=>zone.id===activeInjury?.zoneId)?.label||"cette zone")+" ? La quête journalière réapparaîtra dès aujourd’hui.";
-      confirmLabel="Annuler la blessure";
     }else if(type==="masterContract"){
       text="Lancer ce donjon avec la contrainte « "+pending.label+" » et une récompense finale augmentée de 20 % ?";
       confirmLabel="Signer le contrat";
@@ -4567,25 +4549,6 @@ function isUncappedProfessionalWeeklyQuest(obj){
           return {...s,inventory:{...(s.inventory||{}),invisibilityCape:Math.max(0,(Number(s.inventory&&s.inventory.invisibilityCape)||0)-1)},activeDungeon:nextAd};
         });
         setItemUseUp({id:"invisibilityCape"});
-      }else if(type==="recoveryOintment"){
-        const input=injuryDurationInputRef.current;
-        const duration=Number(input?.value);
-        if(!input?.checkValidity()||!Number.isInteger(duration)||duration<1||duration>365){input?.reportValidity();return;}
-        setState(s=>{
-          if(injuryForDay(s,today))return s;
-          const injury={zoneId:choice.zone.id,startDay:today,endDay:addDaysStr(today,duration-1)};
-          return {...s,injuryPeriods:[...(s.injuryPeriods||[]),injury].slice(-200)};
-        });
-        setItemUseUp({id:"recoveryOintment",injuryZone:choice.zone.label,injuryDuration:duration});
-      }else if(type==="cancelInjury"){
-        setState(s=>{
-          const periods=[...(s.injuryPeriods||[])];
-          const index=periods.findLastIndex(entry=>entry.startDay<=today&&today<=entry.endDay);
-          if(index<0)return s;
-          if(periods[index].startDay===today)periods.splice(index,1);
-          else periods[index]={...periods[index],endDay:addDaysStr(today,-1)};
-          return {...s,injuryPeriods:periods};
-        });
       }else if(type==="masterContract"){
         startDungeon(pending.dungeonId,pending.constraint);
       }
@@ -4596,9 +4559,6 @@ function isUncappedProfessionalWeeklyQuest(obj){
       h("div",{class:"rucont",style:"width:min(500px,calc(100vw - 34px));background:rgba(15,15,18,.97);border:1px solid "+color+"88;border-radius:18px;padding:22px;box-shadow:0 0 30px "+color+"22"},
         h("div",{class:"ruevol",style:"color:"+color},"CONFIRMATION"),
         h("div",{style:"font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:#fff;text-align:center;line-height:1.5;max-width:360px"},text),
-        type==="recoveryOintment"&&h("label",{style:"display:flex;align-items:center;justify-content:center;gap:10px;margin-top:16px;font-size:12px;color:var(--tx)"},"Durée (jours)",
-          h("input",{ref:injuryDurationInputRef,type:"number",inputMode:"numeric",min:1,max:365,step:1,required:true,defaultValue:"7",style:"width:70px;padding:8px;border-radius:6px;background:#17191e;border:1px solid #86efac;color:#fff;font-size:16px;text-align:center"})
-        ),
         h("div",{style:"display:flex;gap:10px;margin-top:22px;width:100%"},
           h("button",{class:"rudis",style:"flex:1;min-width:0;display:flex;align-items:center;justify-content:center;text-align:center;box-sizing:border-box;padding-left:10px;padding-right:10px;--rc:#64748b;--rg:rgba(100,116,139,.5)",onClick:()=>setConfirmTargetedItemUse(null)},"Annuler"),
           h("button",{class:"rudis",style:"flex:1;min-width:0;display:flex;align-items:center;justify-content:center;text-align:center;box-sizing:border-box;padding-left:10px;padding-right:10px;--rc:"+color+";--rg:"+color+"66",onClick:confirmTarget},confirmLabel)
@@ -4710,7 +4670,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
       const nextCatalog=cleanQuestCatalog({...state.questCatalog,[id]:{...entry,id,from:nextDay}});
       if(!nextCatalog[id]){setGoalSettingsError("Vérifie les champs de la quête.");return;}
       const currentPools=cleanDrawPreferences(state.drawPreferences);
-      const destination=entry.kind==="daily"?"daily":entry.kind==="dungeon"?"dungeon":entry.kind==="breach"?"breach":null;
+      const destination=["daily","urgent","dungeon","breach"].includes(entry.kind)?entry.kind:null;
       const updatedPools=Object.fromEntries(Object.entries(currentPools).map(([pool,ids])=>[pool,pool===destination?[...new Set([...ids,id])]:ids.filter(choice=>choice!==id)]));
       const nextState={...state,questCatalog:nextCatalog,
         drawPreferences:updatedPools,
@@ -4843,12 +4803,12 @@ function isUncappedProfessionalWeeklyQuest(obj){
         Object.entries(DRAW_POOLS).map(([pool,items])=>h(Fragment,{key:"draw_"+pool},
           h("div",{class:"msec"},
             h("button",{type:"button",onClick:()=>setSettingsSectionOpen(v=>v==="draw_"+pool?null:"draw_"+pool),style:"display:flex;justify-content:space-between;align-items:center;width:100%;padding:4px 0;background:transparent;border:0;color:var(--tx);cursor:pointer;text-align:left"},
-              h("span",{class:"mlbl",style:"margin:0"},"Tirage des "+({daily:"quêtes journalières",dungeon:"donjons",breach:"portails"}[pool])),
+              h("span",{class:"mlbl",style:"margin:0"},"Tirage des "+({daily:"quêtes journalières",urgent:"quêtes urgentes",dungeon:"donjons",breach:"portails"}[pool])),
               h("span",{style:"color:var(--td);font-size:12px"},settingsSectionOpen==="draw_"+pool?"▲":"▼")
             ),
             settingsSectionOpen==="draw_"+pool&&h("div",null,
               h("div",{style:"font-size:11px;color:var(--td);line-height:1.45;margin:9px 0 14px"},
-                pool==="daily"?"Les quêtes décochées quittent le programme dès demain. Les variantes musculaires ci-dessous suivent le même tirage qu’avant.":pool==="dungeon"?"Seuls les donjons cochés pourront être tirés ou lancés. Un donjon en cours reste inchangé.":"Les portails décochés ne seront plus tirés. Le portail déjà actif reste inchangé."),
+                pool==="daily"?"Les quêtes décochées quittent le programme dès demain. Les variantes musculaires ci-dessous suivent le même tirage qu’avant.":pool==="urgent"?"Seules les quêtes cochées pourront être tirées. Une quête urgente déjà active reste inchangée.":pool==="dungeon"?"Seuls les donjons cochés pourront être tirés ou lancés. Un donjon en cours reste inchangé.":"Les portails décochés ne seront plus tirés. Le portail déjà actif reste inchangé."),
               items.map(item=>{
                 const checked=drawPreferences[pool].includes(item.id);
                 const last=checked&&drawPreferences[pool].length===1;
@@ -5632,7 +5592,6 @@ function isUncappedProfessionalWeeklyQuest(obj){
       teleportCrystal:{main:"#06b6d4",accent:"#a5f3fc"},
       invisibilityCape:{main:"#94a3b8",accent:"#e2e8f0"},
       debtAcknowledgement:{main:"#b91c1c",accent:"#f5d0a9"},
-      recoveryOintment:{main:"#22c55e",accent:"#d9f99d"},
       destinyCompass:{main:"#d4a84f",accent:"#60a5fa"},
       mysteryMap:{main:"#b7791f",accent:"#f5d08a"},
       dimensionalAnchor:{main:"#8b5cf6",accent:"#fbbf24"},
@@ -5747,11 +5706,10 @@ function isUncappedProfessionalWeeklyQuest(obj){
     const it=INVENTORY_ITEMS[itemUseUp.id];
     return h("div",{class:"ruov",style:"--rc:"+rank.color+";--rg:"+rank.glow},h("div",{class:"rucont"},
       h(NotificationHeader,null),
-      h("div",{class:"ruevol",style:"color:"+rank.color},itemUseUp.id==="recoveryOintment"?"BLESSURE DÉCLARÉE":itemUseUp.id==="teleportCrystal"&&itemUseUp.alliedTeleport?"ALLIANCE SCELLÉE":itemUseUp.id==="dungeonKey"?"Vous avez utilisé une":itemUseUp.id==="debtAcknowledgement"?"Dette créée avec une":itemUseUp.id==="destinyCompass"?"Boussole orientée":itemUseUp.id==="mysteryMap"?"Carte déployée":itemUseUp.id==="dimensionalAnchor"?(itemUseUp.dungeonResumed?"Donjon réintégré":"Donjon suspendu"):itemUseUp.id==="rerollToken"?"Quête urgente invoquée":itemUseUp.id==="rewriteRune"?"Destin retracé":itemUseUp.id==="counterpartBalance"?"Échange accompli":itemUseUp.id==="masterContract"?"Vous avez signé un":"Vous avez consommé un"),
+      h("div",{class:"ruevol",style:"color:"+rank.color},itemUseUp.id==="teleportCrystal"&&itemUseUp.alliedTeleport?"ALLIANCE SCELLÉE":itemUseUp.id==="dungeonKey"?"Vous avez utilisé une":itemUseUp.id==="debtAcknowledgement"?"Dette créée avec une":itemUseUp.id==="destinyCompass"?"Boussole orientée":itemUseUp.id==="mysteryMap"?"Carte déployée":itemUseUp.id==="dimensionalAnchor"?(itemUseUp.dungeonResumed?"Donjon réintégré":"Donjon suspendu"):itemUseUp.id==="rerollToken"?"Quête urgente invoquée":itemUseUp.id==="rewriteRune"?"Destin retracé":itemUseUp.id==="counterpartBalance"?"Échange accompli":itemUseUp.id==="masterContract"?"Vous avez signé un":"Vous avez consommé un"),
       h("div",{class:"rurank",style:responsiveItemAnimationTitleStyle(it.name,56),"data-r":it.name},it.name),
       itemUseUp.statChosen&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:"+(STAT_COLOR[itemUseUp.statChosen]||rank.color)},"La prochaine quête urgente appartiendra à la statistique "+(STAT_LBL[itemUseUp.statChosen]||itemUseUp.statChosen)+"."),
       itemUseUp.dungeonStatChosen&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:330px;line-height:1.5;color:"+(STAT_COLOR[itemUseUp.dungeonStatChosen]||rank.color)},"Le prochain donjon appartiendra à la statistique "+(STAT_LBL[itemUseUp.dungeonStatChosen]||itemUseUp.dungeonStatChosen)+"."),
-      itemUseUp.injuryZone&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:350px;line-height:1.5;color:#86efac"},itemUseUp.injuryZone+" · "+itemUseUp.injuryDuration+" jour"+(itemUseUp.injuryDuration>1?"s":"")+" de repos. L’Onguent reste dans l’inventaire."),
       itemUseUp.id==="masterContract"&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:350px;line-height:1.5;color:#fbbf24"},"Le prochain donjon sera soumis à une contrainte aléatoire, cachée jusqu’au moment où elle s’activera. Récompenses : +20 % XP si le donjon est terminé."),
       itemUseUp.dungeonPaused&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:350px;line-height:1.5"},"Le temps et la progression du donjon sont figés. Vous disposez de 72 heures pour le reprendre."),
       itemUseUp.dungeonResumed&&h("div",{class:"rulabel",style:"margin-top:12px;max-width:350px;line-height:1.5"},"Le donjon reprend avec ses salles validées, son XP acquise et exactement le temps qu’il lui restait."),

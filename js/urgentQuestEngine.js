@@ -48,7 +48,7 @@ export function appendUrgentQuestDrawLog(log,quest,drawnAt=Date.now()){
   return [...current,entry].slice(-120);
 }
 
-export function pickRandomSq(usedIds,statCycle,selectionLog,forcedStat=null,injuryZoneId=null,tuning=null,day=null){
+export function pickRandomSq(usedIds,statCycle,selectionLog,forcedStat=null,injuryZoneId=null,tuning=null,day=null,enabledIds=null){
   const configured=chosen=>({...chosen,tpl:day?applyQuestTuning(chosen.tpl,tuning,day):chosen.tpl});
   const stats=URGENT_QUEST_STATS;
   const cycle = [...new Set((statCycle||[]).filter(s=>stats.includes(s)))];
@@ -65,6 +65,7 @@ export function pickRandomSq(usedIds,statCycle,selectionLog,forcedStat=null,inju
   const lastDrawnId=(selectionLog||[]).slice().reverse().map(x=>typeof x==="string"?x:x&&x.id).find(Boolean)||null;
 
   const availableForStat = (s, respectCooldown=true) => (SP[s]||[]).filter(t =>
+    (!enabledIds || enabledIds.has(t.id)) &&
     !(usedIds||[]).includes(t.id) &&
     !urgentQuestBlockedByInjury(t.id,injuryZoneId) &&
     (!respectCooldown || !recentIds.includes(t.id))

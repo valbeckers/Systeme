@@ -1,6 +1,6 @@
 import { STATS } from "./config.js";
-import { DEFS, SP } from "./questDefs.js?v=20261017-vacuum-v1";
-import { BONUS_QUESTS } from "./bonusQuestDefs.js?v=20261030-bonus-draw-v1";
+import { DEFS, SP } from "./questDefs.js?v=20261031-german-v1";
+import { BONUS_QUESTS } from "./bonusQuestDefs.js?v=20261031-german-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20261017-editor-v1";
 import { todayStr, next7AM } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
@@ -8,7 +8,7 @@ import { normalizeActiveBreach } from "./breachEngine.js?v=20261017-editor-v1";
 import { cleanExerciseRotationByDay, cleanExerciseRotationEnabled } from "./exerciseRotation.js?v=20261017-editor-v1";
 import { cleanInjuryPeriods } from "./injuryEngine.js?v=20261017-editor-v1";
 import { cleanQuestTuning, applyQuestTuning } from "./questTuning.js?v=20261017-vacuum-v1";
-import { cleanDrawPreferences, cleanDrawSnapshots } from "./drawPreferences.js?v=20261017-vacuum-v1";
+import { cleanDrawPreferences, cleanDrawSnapshots } from "./drawPreferences.js?v=20261102-urgent-draw-v1";
 import { cleanQuestCatalog } from "./questCatalog.js?v=20261017-editor-v1";
 
 function migrateMergedEspritState(state){
@@ -402,7 +402,6 @@ export function cleanSystemState(raw){
       mysteryMap:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.mysteryMap)||0)),
       rerollToken:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.rerollToken)||0)),
       rewriteRune:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.rewriteRune)||0)),
-      recoveryOintment:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.recoveryOintment)||0)),
       counterpartBalance:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.counterpartBalance)||0))
       ,dimensionalAnchor:Math.max(0,Math.floor(Number(data.inventory&&data.inventory.dimensionalAnchor)||0))
     },
