@@ -10,12 +10,13 @@ const BASE_DEFS = [
   {id:"sleep",  name:"Dormir 8h",   unit:"h",     xpPer:18.75,daily:true, weekly:false,optional:false,stat:"Sante",         icon:"\uD83D\uDECF\uFE0F",         base:8,  fixedBase:true},
     // ─── FORCE ────────────────────────────────────────────────────────────
   {id:"push",   name:"Pecs & Triceps", unit:"rep", xpPer:3, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦾", base:30},
+  {id:"stomach_vacuum",name:"Stomach vacuum",unit:"rep",xpPer:10,daily:true,weekly:false,optional:false,stat:"Force",icon:"🫁",base:20,fixedBase:true,quickAmounts:[1,5,10],startDate:"2026-10-17",desc:"Sortir le ventre → Inspirer au max → Rentrer le ventre le plus possible → Apnée 5 sec → Expirer pour faire de la buée le plus longtemps possible. Variantes possibles : assis / à 4 pattes."},
+  {id:"bonus_german",name:"Cours d’allemand · 10min",icon:"🇩🇪",unit:"succès",target:1,xpPer:150,daily:true,weekly:false,optional:false,stat:"Esprit",binary:true,binaryXp:150,base:1,fixedBase:true,startDate:"2026-11-07"},
   {id:"negative_pullups",name:"Dos & Biceps",unit:"rep",xpPer:12,daily:true,weekly:false,optional:false,stat:"Force",icon:"💪🏼",base:8,startDate:"2026-10-12"},
   {id:"abs",    name:"Abdos", unit:"rep", xpPer:1.5, daily:true, weekly:false,optional:false,stat:"Force", icon:"🧱", base:60},
   {id:"squats", name:"Jambes", unit:"rep", xpPer:3, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦿", base:15, stat2:"Agilite", xpPer2:3},
   {id:"calves", name:"Mollets",unit:"rep", xpPer:2, daily:false, weekly:false,optional:false,legacyRotation:true,stat:"Force", icon:"🦵🏻", base:30, stat2:"Agilite", xpPer2:1},
   {id:"grips",  name:"Grip",      unit:"min",   xpPer:10,  daily:true, weekly:false,optional:true, stat:"Force",         icon:"\u270A\uD83C\uDFFB",         base:10, fixedBase:true},
-  {id:"stomach_vacuum",name:"Stomach vacuum",unit:"rep",xpPer:10,daily:true,weekly:false,optional:false,stat:"Force",icon:"🫁",base:20,fixedBase:true,quickAmounts:[1,5,10],startDate:"2026-10-17",desc:"Sortir le ventre → Inspirer au max → Rentrer le ventre le plus possible → Apnée 5 sec → Expirer pour faire de la buée le plus longtemps possible. Variantes possibles : assis / à 4 pattes."},
   // ─── OBJECTIFS PROFESSIONNELS HEBDOMADAIRES ───────────────────────────
   {id:"weekly_pro_meetings",name:"Entretiens/RDV",unit:"RDV",xpPer:25,completionBonusXp:200,daily:false,weekly:true,workweekOnly:true,optional:false,stat:"Discipline",icon:"🤝",target:12,hardCap:true},
   {id:"weekly_pro_actions",name:"Actions commerciales",unit:"action",xpPer:7.5,completionBonusXp:200,daily:false,weekly:true,workweekOnly:true,optional:false,stat:"Discipline",icon:"📞",target:40,hardCap:true},

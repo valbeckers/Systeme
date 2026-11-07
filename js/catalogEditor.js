@@ -1,4 +1,4 @@
-import { UiIcon } from "./uiIcons.js?v=20261017-vacuum-v1";
+import { UiIcon } from "./uiIcons.js?v=20261107-muscle-draw-german-v1";
 const {h}=window.preact;
 const {useState}=window.preactHooks;
 const STAT_LABEL={Sante:"Santé",Force:"Force",Esprit:"Esprit",Endurance:"Endurance",Agilite:"Agilité",Discipline:"Discipline"};

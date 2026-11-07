@@ -1,8 +1,8 @@
 import { ensureDailyBonusDraw } from "./bonusDraw.js?v=20261031-unique-stat-v1";
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
-import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20261031-german-v1";
-import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261031-german-v1";
-import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20261102-urgent-draw-v1";
+import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20261107-muscle-draw-german-v1";
+import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261107-muscle-draw-german-v1";
+import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20261107-muscle-draw-german-v1";
 import {
   isDebtEligibleQuest,
   createQuestDebtState,
@@ -27,7 +27,7 @@ import {
 import { elanBonusPercent, xpMomentumAdjustment } from "./xpMomentum.js?v=20260817-xp-momentum-v1";
 import { BREACH_POOL, BREACH_RUPTURE_BOSSES } from "./breachDefs.js?v=20261017-editor-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20261017-editor-v1";
-import { DRAW_POOLS, cleanDrawPreferences, eligiblePool, snapshotDrawPools, dailyEligibleForDay } from "./drawPreferences.js?v=20261102-urgent-draw-v1";
+import { DRAW_POOLS, cleanDrawPreferences, eligiblePool, snapshotDrawPools, dailyEligibleForDay } from "./drawPreferences.js?v=20261107-muscle-draw-german-v1";
 import {
   dungeonRoomRewardPairs,
   dungeonRewardPairs,
@@ -84,7 +84,7 @@ import {
   getAscensionXpRequired,
   getRankBase,
   sortStat
-} from "./progression.js?v=20261017-vacuum-v1";
+} from "./progression.js?v=20261107-muscle-draw-german-v1";
 import {
   REGRESSION_ORB_ICON_DATA,
   DUNGEON_KEY_ICON_DATA,
@@ -93,8 +93,8 @@ import {
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
 import { UiIcon } from "./uiIcons.js?v=20261031-german-icon-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261102-urgent-draw-v1";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261102-urgent-draw-v1";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261107-muscle-draw-german-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261107-muscle-draw-german-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -104,8 +104,8 @@ import {
   ensureExerciseRotationForDay,
   availableRotationOptions,
   rotatedQuestObjects
-} from "./exerciseRotation.js?v=20261017-editor-v1";
-import { applyQuestTuning, nextQuestTuning, questTuningForDay, saveQuestTuning } from "./questTuning.js?v=20261017-vacuum-v1";
+} from "./exerciseRotation.js?v=20261107-muscle-draw-german-v1";
+import { applyQuestTuning, nextQuestTuning, questTuningForDay, saveQuestTuning } from "./questTuning.js?v=20261107-muscle-draw-german-v1";
 import { cleanQuestCatalog, activeCatalogEntry } from "./questCatalog.js?v=20261017-editor-v1";
 import { CatalogEditor } from "./catalogEditor.js?v=20261017-rank-settings-v1";
 import {
@@ -815,7 +815,7 @@ function App(){
 
   useEffect(()=>{
     const row=(state.exerciseRotationByDay||{})[today]||{};
-    const complete=Object.entries(EXERCISE_ROTATIONS).every(([family,options])=>options.some(o=>o.id===row[family]));
+    const complete=["back","abs","legs"].includes(row.body)&&Object.entries(EXERCISE_ROTATIONS).every(([family,options])=>options.some(o=>o.id===row[family]));
     if(complete) return;
     setState(s=>ensureExerciseRotationForDay(s,today));
   },[today,state.exerciseRotationByDay]);
@@ -1074,9 +1074,15 @@ function App(){
     .sort((a,b)=>b.xp-a.xp);
 
   // 7. Quetes journalieres obligatoires toutes faites ?
-  const reqDailyObjs  = objs.filter(o=>!o.optional&&o.daily&&dailyEligibleForDay(state,today,o.id)&&!isInjuredQuest(state,today,o.id));
+  const activeMuscleBody=(state.exerciseRotationByDay||{})[today]?.body;
+  const muscleQuestId=activeMuscleBody==="back"?"negative_pullups":activeMuscleBody==="abs"?"abs":activeMuscleBody==="legs"?"squats":null;
+  const reqDailyObjs  = objs.filter(o=>!o.optional&&o.daily&&o.id!=="stomach_vacuum"&&dailyEligibleForDay(state,today,o.id)&&!isInjuredQuest(state,today,o.id)&&(!["negative_pullups","abs","squats"].includes(o.id)||o.id===muscleQuestId));
   // Quêtes actives pour un jour donné (exclut les quêtes ajoutées après ce jour)
-  const activeOn = (day) => objs.filter(o=>!o.optional&&o.daily&&(!o.startDate||o.startDate<=day)&&dailyEligibleForDay(state,day,o.id)&&!isInjuredQuest(state,day,o.id));
+  const activeOn = (day) => {
+    const body=(state.exerciseRotationByDay||{})[day]?.body;
+    const selected=body==="back"?"negative_pullups":body==="abs"?"abs":body==="legs"?"squats":null;
+    return objs.filter(o=>!o.optional&&o.daily&&(!o.startDate||o.startDate<=day)&&!(o.id==="stomach_vacuum"&&day>="2026-11-07")&&dailyEligibleForDay(state,day,o.id)&&!isInjuredQuest(state,day,o.id)&&(!["negative_pullups","abs","squats"].includes(o.id)||!selected||o.id===selected));
+  };
   // Variante et objectif réellement applicables pour un jour donné.
   const questForDay = (obj,day) => {
     if(!obj)return obj;
@@ -2555,7 +2561,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
                 :(fmtFrNum(obj.xpPer)+" XP/"+obj.unit+" · "+(STAT_LBL[obj.stat]||obj.stat))
         )
       ),
-      obj.id==="stomach_vacuum"&&h("div",{style:"margin-top:8px"},
+      (obj.id==="stomach_vacuum"||obj.exerciseId==="stomach_vacuum")&&h("div",{style:"margin-top:8px"},
         h("button",{type:"button","aria-expanded":vacuumDescriptionOpen,onClick:()=>setVacuumDescriptionOpen(v=>!v),style:"background:transparent;border:0;padding:3px 0;color:var(--rc);font-size:11px;cursor:pointer;text-align:left"},"Description "+(vacuumDescriptionOpen?"▲":"▼")),
         vacuumDescriptionOpen&&h("div",{style:"font-size:11px;line-height:1.5;color:var(--td);margin-top:5px"},obj.desc)
       ),
@@ -2666,7 +2672,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
         }
         const QUICK_IDS=["sleep","push","abs","squats","negative_pullups","calves","reading","flex","balance","grips","med","water","mob","stomach_vacuum"];
         const unitLabel={sleep:"h",push:obj.unit,abs:obj.unit,squats:obj.unit,negative_pullups:"rep",calves:obj.unit,reading:"min",flex:"min",balance:"min",grips:"min",med:"min",water:"verre",mob:"min"};
-        const unitLabelPlural={sleep:"h",push:obj.unit==="rep"?"reps":obj.unit,abs:obj.unit==="rep"?"reps":obj.unit,squats:obj.unit==="rep"?"reps":obj.unit,negative_pullups:"reps",calves:"reps",reading:"min",flex:"min",balance:"min",grips:"min",med:"min",water:"verres",mob:"min",stomach_vacuum:"reps"};
+        const unitLabelPlural={sleep:"h",push:obj.unit==="rep"?"reps":obj.unit,abs:obj.unit==="rep"?"reps":obj.unit,squats:obj.unit==="rep"?"reps":obj.unit,negative_pullups:"reps",calves:"reps",reading:"min",flex:"min",balance:"min",grips:"min",med:"min",water:"verres",mob:"min",stomach_vacuum:"reps",abs:obj.exerciseId==="stomach_vacuum"?"reps":undefined};
         if(QUICK_IDS.includes(obj.id)){
           const lbl=unitLabel[obj.id]||obj.unit;
           const lblPl=unitLabelPlural[obj.id]||obj.unit;
@@ -4632,7 +4638,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
     if(!showSet)return null;
     const ordered=[...sortStat(reqDailyObjs),...sortStat(objs.filter(o=>o.weekly))];
     const nextDay=addDaysStr(today,1);
-    const rotatingSourceIds=new Set(["push","negative_pullups","abs","squats"]);
+    const rotatingSourceIds=new Set(["push","negative_pullups","abs","squats","stomach_vacuum"]);
     const dailyGoalRows=[
       {label:"Quêtes journalières",items:DEFS.filter(q=>q.daily&&!q.optional&&!rotatingSourceIds.has(q.id)).map(q=>({
         id:q.id,label:q.name,kind:"daily",

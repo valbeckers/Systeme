@@ -3,11 +3,11 @@
 // sauvegarde courante ou, à défaut, des données historiques importées.
 // Il conserve également les migrations ponctuelles encore nécessaires.
 
-import { DEFS, SP } from "./questDefs.js?v=20261031-german-v1";
+import { DEFS, SP } from "./questDefs.js?v=20261107-muscle-draw-german-v1";
 import { next7AM, todayStr, addDaysStr } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
 import { loadStoredState } from "./storage.js";
-import { cleanSystemState } from "./stateSanitizer.js?v=20261102-urgent-draw-v1";
+import { cleanSystemState } from "./stateSanitizer.js?v=20261107-muscle-draw-german-v1";
 import { normalizeActiveBreach } from "./breachEngine.js?v=20261017-editor-v1";
 
 const loadState = () => loadStoredState(cleanSystemState);
@@ -154,6 +154,10 @@ export function buildInitialState(){
   // Les décochages faits ensuite dans Réglages restent respectés.
   const vacuumMigrationNeeded=saved.vacuumDailyAdded!==true;
   const vacuumDay=todayStr();
+  const vacuumRotationMigrationNeeded=saved.stomachVacuumRotationAdded!==true;
+  const exerciseRotationEnabled=vacuumRotationMigrationNeeded&&saved.exerciseRotationEnabled
+    ?{...saved.exerciseRotationEnabled,abs:[...new Set([...(saved.exerciseRotationEnabled.abs||[]),"stomach_vacuum"])]}
+    :saved.exerciseRotationEnabled||null;
   const drawPreferences=vacuumMigrationNeeded&&saved.drawPreferences
     ?{...saved.drawPreferences,daily:[...new Set([...(saved.drawPreferences.daily||[]),"stomach_vacuum"])]}
     :saved.drawPreferences||null;
@@ -198,7 +202,8 @@ export function buildInitialState(){
     selectedBonusQuestIdsByDay:saved.selectedBonusQuestIdsByDay||{},
     bonusFiveCompletionDay:saved.bonusFiveCompletionDay||null,
     exerciseRotationByDay:saved.exerciseRotationByDay||{},
-    exerciseRotationEnabled:saved.exerciseRotationEnabled||null,
+    exerciseRotationEnabled,
+    stomachVacuumRotationAdded:true,
     drawPreferences,
     dailyDrawByDay,
     vacuumDailyAdded:true,

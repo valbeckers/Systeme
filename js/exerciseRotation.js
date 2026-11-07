@@ -1,4 +1,4 @@
-import { statLevelTier, legRaiseTargetForForceLevel, getStatLevelTarget, pullupTargetForRank } from "./progression.js?v=20261017-vacuum-v1";
+import { statLevelTier, legRaiseTargetForForceLevel, getStatLevelTarget, pullupTargetForRank } from "./progression.js?v=20261107-muscle-draw-german-v1";
 import { applyRotationCatalog, activeCatalogEntry } from "./questCatalog.js?v=20261017-editor-v1";
 
 export const EXERCISE_ROTATIONS = {
@@ -16,6 +16,7 @@ export const EXERCISE_ROTATIONS = {
     {id:"leg_raises",label:"Levées de jambes",icon:"🦵🏻"},
     {id:"plank",label:"Gainage",icon:"🫳🏼"},
     {id:"side_plank",label:"Gainage obliques",icon:"🧎🏻‍♂️‍➡️"},
+    {id:"stomach_vacuum",label:"Stomach vacuum",icon:"🫁"},
   ],
   legs:[
     {id:"squats",label:"Squats",icon:"🦵🏻"},
@@ -69,6 +70,14 @@ export function ensureExerciseRotationForDay(state,day){
   const current={...(history[day]||{})};
   const enabled=cleanExerciseRotationEnabled(state.exerciseRotationEnabled);
   let changed=!history[day];
+  // Un seul groupe musculaire parmi Dos, Abdos et Jambes est retenu chaque jour.
+  if(!["back","abs","legs"].includes(current.body)){
+    const previousDays=Object.keys(history).filter(d=>d<day).sort().reverse();
+    const previousBody=previousDays.map(d=>history[d]?.body).find(v=>["back","abs","legs"].includes(v));
+    const bodyPick=weightedExercisePick(["back","abs","legs"].map(id=>({id})),previousBody);
+    current.body=bodyPick?.id||"back";
+    changed=true;
+  }
   for(const [family,allOptions] of Object.entries(EXERCISE_ROTATIONS)){
     const options=availableRotationOptions(allOptions);
     if(!options.length)continue;
@@ -92,6 +101,7 @@ export function cleanExerciseRotationByDay(raw){
     });
     // Migration d'une ancienne variante supprimée.
     if(row.abs==="reverse_plank" && !clean.abs) clean.abs="plank";
+    if(["back","abs","legs"].includes(row.body)) clean.body=row.body;
     if(Object.keys(clean).length) out[day]=clean;
   });
   return out;
@@ -115,6 +125,7 @@ export function rotatedQuestObjects(baseObjs,rotation,stats,totalXp,rankIdx=0,pr
       if(abs.id==="crunches") return {...obj,name:"Abdos - Crunches",icon:abs.icon,exerciseId:abs.id,exerciseIcon:abs.icon,rotationExercise:abs.label,target:getStatLevelTarget("abs",stats),unit:"rep",xpPer:1.5};
       if(abs.id==="leg_raises") return {...obj,name:"Abdos - Levées de jambes",icon:abs.icon,exerciseId:abs.id,exerciseIcon:abs.icon,rotationExercise:abs.label,target:legRaiseTargetForForceLevel(force),unit:"rep",xpPer:3};
       if(abs.id==="side_plank") return {...obj,name:"Abdos - Gainage obliques",icon:abs.icon,exerciseId:abs.id,exerciseIcon:abs.icon,rotationExercise:abs.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3};
+      if(abs.id==="stomach_vacuum") return {...obj,name:"Abdos - Stomach vacuum",icon:abs.icon,exerciseId:abs.id,exerciseIcon:abs.icon,rotationExercise:abs.label,target:20,unit:"rep",xpPer:10,fixedBase:true,quickAmounts:[1,5,10],desc:"Sortir le ventre → Inspirer au max → Rentrer le ventre le plus possible → Apnée 5 sec → Expirer pour faire de la buée le plus longtemps possible. Variantes possibles : assis / à 4 pattes."};
       return {...obj,name:"Abdos - Gainage",icon:abs.icon,exerciseId:abs.id,exerciseIcon:abs.icon,rotationExercise:abs.label,target:Math.max(1,Math.ceil(force/10)),unit:"min",xpPer:50};
     }
     if(obj.id==="squats"){
