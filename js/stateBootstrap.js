@@ -3,11 +3,11 @@
 // sauvegarde courante ou, à défaut, des données historiques importées.
 // Il conserve également les migrations ponctuelles encore nécessaires.
 
-import { DEFS, SP } from "./questDefs.js?v=20261107-muscle-draw-german-v1";
+import { DEFS, SP } from "./questDefs.js?v=20261108-german-bonus-guaranteed-v1";
 import { next7AM, todayStr, addDaysStr } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
 import { loadStoredState } from "./storage.js";
-import { cleanSystemState } from "./stateSanitizer.js?v=20261107-muscle-draw-german-v1";
+import { cleanSystemState } from "./stateSanitizer.js?v=20261108-german-bonus-guaranteed-v1";
 import { normalizeActiveBreach } from "./breachEngine.js?v=20261017-editor-v1";
 
 const loadState = () => loadStoredState(cleanSystemState);

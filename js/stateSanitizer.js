@@ -1,14 +1,14 @@
 import { STATS } from "./config.js";
-import { DEFS, SP } from "./questDefs.js?v=20261107-muscle-draw-german-v1";
-import { BONUS_QUESTS } from "./bonusQuestDefs.js?v=20261107-muscle-draw-german-v1";
+import { DEFS, SP } from "./questDefs.js?v=20261108-german-bonus-guaranteed-v1";
+import { BONUS_QUESTS } from "./bonusQuestDefs.js?v=20261108-german-bonus-guaranteed-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20261017-editor-v1";
 import { todayStr, next7AM } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
 import { normalizeActiveBreach } from "./breachEngine.js?v=20261017-editor-v1";
-import { cleanExerciseRotationByDay, cleanExerciseRotationEnabled } from "./exerciseRotation.js?v=20261107-muscle-draw-german-v1";
+import { cleanExerciseRotationByDay, cleanExerciseRotationEnabled } from "./exerciseRotation.js?v=20261108-german-bonus-guaranteed-v1";
 import { cleanInjuryPeriods } from "./injuryEngine.js?v=20261017-editor-v1";
-import { cleanQuestTuning, applyQuestTuning } from "./questTuning.js?v=20261107-muscle-draw-german-v1";
-import { cleanDrawPreferences, cleanDrawSnapshots } from "./drawPreferences.js?v=20261107-muscle-draw-german-v1";
+import { cleanQuestTuning, applyQuestTuning } from "./questTuning.js?v=20261108-german-bonus-guaranteed-v1";
+import { cleanDrawPreferences, cleanDrawSnapshots } from "./drawPreferences.js?v=20261108-german-bonus-guaranteed-v1";
 import { cleanQuestCatalog } from "./questCatalog.js?v=20261017-editor-v1";
 
 function migrateMergedEspritState(state){
@@ -239,7 +239,9 @@ function cleanSelectedBonusQuestIdsByDay(obj,dailyLog,catalog){
   // Migration douce : toute ancienne quête bonus réellement renseignée reste
   // sélectionnée sur son jour, sans inventer de sélection vide.
   Object.entries(dailyLog||{}).forEach(([day,row])=>{
-    const progressed=Object.keys(row||{}).filter(id=>allowed.has(id)&&Number(row[id])>0);
+    // bonus_german était une quête journalière avant son passage en bonus :
+    // ne pas reclasser rétroactivement ses anciennes réalisations.
+    const progressed=Object.keys(row||{}).filter(id=>allowed.has(id)&&id!=="bonus_german"&&Number(row[id])>0);
     if(progressed.length)out[day]=[...new Set([...(out[day]||[]),...progressed])];
   });
   return out;

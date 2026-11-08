@@ -11,6 +11,7 @@ export const BONUS_QUESTS = mergeQuestCatalog([
   {id:"bonus_dead_hang",name:"Dead hang",icon:"🫳🏼",unit:"min",base:5,fixedBase:true,xpPer:30,stat:"Force"},
 
   {id:"med",name:"Méditation",icon:"🧘🏻‍♂️",unit:"min",base:10,fixedBase:true,xpPer:15,stat:"Esprit"},
+  {id:"bonus_german",name:"Cours d’allemand · 10min",icon:"🇩🇪",unit:"succès",base:1,fixedBase:true,binary:true,binaryXp:150,stat:"Esprit"},
   {id:"bonus_coherence",name:"Cohérence cardiaque",icon:"💓",unit:"min",base:10,fixedBase:true,xpPer:10,stat:"Sante",xpPer2:5,stat2:"Esprit",category:"Esprit"},
   {id:"bonus_memory",name:"Mémorisation",icon:"🧠",unit:"min",base:10,fixedBase:true,xpPer:30,stat:"Esprit"},
 

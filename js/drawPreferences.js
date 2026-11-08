@@ -1,4 +1,4 @@
-import { DEFS, SP } from "./questDefs.js?v=20261107-muscle-draw-german-v1";
+import { DEFS, SP } from "./questDefs.js?v=20261108-german-bonus-guaranteed-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20261017-editor-v1";
 import { BREACH_POOL } from "./breachDefs.js?v=20261017-editor-v1";
 import { storedQuestCatalog } from "./questCatalog.js?v=20261017-editor-v1";
@@ -36,7 +36,7 @@ export function snapshotDrawPools(state,day){
 export function dailyEligibleForDay(state,day,id){
   const row=state.dailyDrawByDay?.[day];
   // Ces quêtes sont fixes et ne peuvent pas être retirées par les préférences de tirage.
-  if(["water","sleep","push","bonus_german"].includes(id)) return true;
+  if(["water","sleep","push"].includes(id)) return true;
   return !Array.isArray(row)||row.includes(id);
 }
 

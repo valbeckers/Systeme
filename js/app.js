@@ -1,8 +1,8 @@
-import { ensureDailyBonusDraw } from "./bonusDraw.js?v=20261031-unique-stat-v1";
+import { ensureDailyBonusDraw } from "./bonusDraw.js?v=20261108-german-bonus-guaranteed-v1";
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
-import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20261107-muscle-draw-german-v1";
-import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261107-muscle-draw-german-v1";
-import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20261107-muscle-draw-german-v1";
+import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20261108-german-bonus-guaranteed-v1";
+import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261108-german-bonus-guaranteed-v1";
+import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20261108-german-bonus-guaranteed-v1";
 import {
   isDebtEligibleQuest,
   createQuestDebtState,
@@ -27,7 +27,7 @@ import {
 import { elanBonusPercent, xpMomentumAdjustment } from "./xpMomentum.js?v=20260817-xp-momentum-v1";
 import { BREACH_POOL, BREACH_RUPTURE_BOSSES } from "./breachDefs.js?v=20261017-editor-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20261017-editor-v1";
-import { DRAW_POOLS, cleanDrawPreferences, eligiblePool, snapshotDrawPools, dailyEligibleForDay } from "./drawPreferences.js?v=20261107-muscle-draw-german-v1";
+import { DRAW_POOLS, cleanDrawPreferences, eligiblePool, snapshotDrawPools, dailyEligibleForDay } from "./drawPreferences.js?v=20261108-german-bonus-guaranteed-v1";
 import {
   dungeonRoomRewardPairs,
   dungeonRewardPairs,
@@ -84,7 +84,7 @@ import {
   getAscensionXpRequired,
   getRankBase,
   sortStat
-} from "./progression.js?v=20261107-muscle-draw-german-v1";
+} from "./progression.js?v=20261108-german-bonus-guaranteed-v1";
 import {
   REGRESSION_ORB_ICON_DATA,
   DUNGEON_KEY_ICON_DATA,
@@ -93,8 +93,8 @@ import {
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
 import { UiIcon } from "./uiIcons.js?v=20261031-german-icon-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261107-muscle-draw-german-v1";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261107-muscle-draw-german-v1";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261108-german-bonus-guaranteed-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261108-german-bonus-guaranteed-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -104,8 +104,8 @@ import {
   ensureExerciseRotationForDay,
   availableRotationOptions,
   rotatedQuestObjects
-} from "./exerciseRotation.js?v=20261107-muscle-draw-german-v1";
-import { applyQuestTuning, nextQuestTuning, questTuningForDay, saveQuestTuning } from "./questTuning.js?v=20261107-muscle-draw-german-v1";
+} from "./exerciseRotation.js?v=20261108-german-bonus-guaranteed-v1";
+import { applyQuestTuning, nextQuestTuning, questTuningForDay, saveQuestTuning } from "./questTuning.js?v=20261108-german-bonus-guaranteed-v1";
 import { cleanQuestCatalog, activeCatalogEntry } from "./questCatalog.js?v=20261017-editor-v1";
 import { CatalogEditor } from "./catalogEditor.js?v=20261017-rank-settings-v1";
 import {
@@ -877,7 +877,7 @@ function App(){
       const ids=[...(byDay[today]||[])].filter(questId=>!!BONUS_QUEST_BY_ID[questId]);
       const index=ids.indexOf(id);
       if(index>=0){
-        if(Number((((s.dailyLog||{})[today]||{})[id])||0)>0) return s;
+        if(id==="bonus_german"||Number((((s.dailyLog||{})[today]||{})[id])||0)>0) return s;
         ids.splice(index,1);
       }else{
         if(ids.length>=BONUS_QUEST_GOAL) return s;
@@ -3909,7 +3909,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
           group.items.map(obj=>{
             const active=selected.includes(obj.id);
             const progress=Number(tLog[obj.id])||0;
-            const locked=active&&progress>0;
+            const locked=active&&(progress>0||obj.id==="bonus_german");
             const atLimit=!active&&selected.length>=BONUS_QUEST_GOAL;
             const reward=obj.binary
               ? obj.binaryXp+" XP"

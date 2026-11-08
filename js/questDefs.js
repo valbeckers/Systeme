@@ -11,7 +11,6 @@ const BASE_DEFS = [
     // ─── FORCE ────────────────────────────────────────────────────────────
   {id:"push",   name:"Pecs & Triceps", unit:"rep", xpPer:3, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦾", base:30},
   {id:"stomach_vacuum",name:"Stomach vacuum",unit:"rep",xpPer:10,daily:true,weekly:false,optional:false,stat:"Force",icon:"🫁",base:20,fixedBase:true,quickAmounts:[1,5,10],startDate:"2026-10-17",desc:"Sortir le ventre → Inspirer au max → Rentrer le ventre le plus possible → Apnée 5 sec → Expirer pour faire de la buée le plus longtemps possible. Variantes possibles : assis / à 4 pattes."},
-  {id:"bonus_german",name:"Cours d’allemand · 10min",icon:"🇩🇪",unit:"succès",target:1,xpPer:150,daily:true,weekly:false,optional:false,stat:"Esprit",binary:true,binaryXp:150,base:1,fixedBase:true,startDate:"2026-11-07"},
   {id:"negative_pullups",name:"Dos & Biceps",unit:"rep",xpPer:12,daily:true,weekly:false,optional:false,stat:"Force",icon:"💪🏼",base:8,startDate:"2026-10-12"},
   {id:"abs",    name:"Abdos", unit:"rep", xpPer:1.5, daily:true, weekly:false,optional:false,stat:"Force", icon:"🧱", base:60},
   {id:"squats", name:"Jambes", unit:"rep", xpPer:3, daily:true, weekly:false,optional:false,stat:"Force", icon:"🦿", base:15, stat2:"Agilite", xpPer2:3},

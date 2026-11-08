@@ -1,9 +1,9 @@
-import { EXERCISE_ROTATIONS } from "./exerciseRotation.js?v=20261017-editor-v1";
-import { DEFS, SP } from "./questDefs.js?v=20261107-muscle-draw-german-v1";
-import { BONUS_QUESTS } from "./bonusQuestDefs.js?v=20261017-editor-v1";
-import { DUNGEONS } from "./dungeonDefs.js?v=20261017-editor-v1";
-import { BREACH_POOL } from "./breachDefs.js?v=20261017-editor-v1";
-import { storedQuestCatalog } from "./questCatalog.js?v=20261017-editor-v1";
+import { EXERCISE_ROTATIONS } from "./exerciseRotation.js?v=20261108-german-bonus-guaranteed-v1";
+import { DEFS, SP } from "./questDefs.js?v=20261108-german-bonus-guaranteed-v1";
+import { BONUS_QUESTS } from "./bonusQuestDefs.js?v=20261108-german-bonus-guaranteed-v1";
+import { DUNGEONS } from "./dungeonDefs.js?v=20261108-german-bonus-guaranteed-v1";
+import { BREACH_POOL } from "./breachDefs.js?v=20261108-german-bonus-guaranteed-v1";
+import { storedQuestCatalog } from "./questCatalog.js?v=20261108-german-bonus-guaranteed-v1";
 
 const TUNABLE_IDS=new Set([
   ...DEFS.filter(q=>q.daily&&!q.optional||q.weekly).map(q=>q.id),
