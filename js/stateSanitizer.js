@@ -1,14 +1,14 @@
 import { STATS } from "./config.js";
-import { DEFS, SP } from "./questDefs.js?v=20261110-manual-daily-quests-v1";
-import { BONUS_QUESTS } from "./bonusQuestDefs.js?v=20261110-manual-daily-quests-v1";
+import { DEFS, SP } from "./questDefs.js?v=20261108-german-bonus-guaranteed-v1";
+import { BONUS_QUESTS } from "./bonusQuestDefs.js?v=20261108-german-bonus-guaranteed-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20261017-editor-v1";
 import { todayStr, next7AM } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
 import { normalizeActiveBreach } from "./breachEngine.js?v=20261017-editor-v1";
-import { cleanExerciseRotationByDay, cleanExerciseRotationEnabled } from "./exerciseRotation.js?v=20261110-manual-daily-quests-v1";
+import { cleanExerciseRotationByDay, cleanExerciseRotationEnabled } from "./exerciseRotation.js?v=20261108-german-bonus-guaranteed-v1";
 import { cleanInjuryPeriods } from "./injuryEngine.js?v=20261017-editor-v1";
-import { cleanQuestTuning, applyQuestTuning } from "./questTuning.js?v=20261110-manual-daily-quests-v1";
-import { cleanDrawPreferences, cleanDrawSnapshots } from "./drawPreferences.js?v=20261110-manual-daily-quests-v1";
+import { cleanQuestTuning, applyQuestTuning } from "./questTuning.js?v=20261108-german-bonus-guaranteed-v1";
+import { cleanDrawPreferences, cleanDrawSnapshots } from "./drawPreferences.js?v=20261108-german-bonus-guaranteed-v1";
 import { cleanQuestCatalog } from "./questCatalog.js?v=20261017-editor-v1";
 
 function migrateMergedEspritState(state){
@@ -228,17 +228,6 @@ function cleanEnduranceChoiceByDay(obj){
   return out;
 }
 
-function cleanExtraDailyQuestIdsByDay(obj){
-  const allowed=new Set(DEFS.filter(q=>q.daily&&!q.optional&&q.id!=="stomach_vacuum").map(q=>q.id));
-  const out={};
-  Object.entries(obj||{}).forEach(([day,ids])=>{
-    if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(day)||!Array.isArray(ids))return;
-    const clean=[...new Set(ids.filter(id=>allowed.has(id)))];
-    if(clean.length)out[day]=clean;
-  });
-  return out;
-}
-
 function cleanSelectedBonusQuestIdsByDay(obj,dailyLog,catalog){
   const allowed=new Set(BONUS_QUESTS.map(q=>q.id));
   const out={};
@@ -439,7 +428,6 @@ export function cleanSystemState(raw){
     enduranceChoiceByDay:cleanEnduranceChoiceByDay(data.enduranceChoiceByDay),
     bonusDrawDays:[...new Set((Array.isArray(data.bonusDrawDays)?data.bonusDrawDays:[]).filter(day=>/^\d{4}-\d{2}-\d{2}$/.test(day)))],
     selectedBonusQuestIdsByDay:cleanSelectedBonusQuestIdsByDay(data.selectedBonusQuestIdsByDay,data.dailyLog,data.questCatalog),
-    extraDailyQuestIdsByDay:cleanExtraDailyQuestIdsByDay(data.extraDailyQuestIdsByDay),
     exerciseRotationByDay:cleanExerciseRotationByDay(data.exerciseRotationByDay),
     exerciseRotationEnabled:cleanExerciseRotationEnabled(data.exerciseRotationEnabled),
     drawPreferences:cleanDrawPreferences(data.drawPreferences,data.questCatalog),
