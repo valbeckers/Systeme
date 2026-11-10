@@ -1,8 +1,8 @@
-import { ensureDailyBonusDraw } from "./bonusDraw.js?v=20261108-german-bonus-editable-v2";
+import { ensureDailyBonusDraw } from "./bonusDraw.js?v=20261110-manual-daily-quests-v1";
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
-import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20261108-german-bonus-editable-v2";
-import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261108-german-bonus-editable-v2";
-import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20261108-german-bonus-editable-v2";
+import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20261110-manual-daily-quests-v1";
+import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261110-manual-daily-quests-v1";
+import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20261110-manual-daily-quests-v1";
 import {
   isDebtEligibleQuest,
   createQuestDebtState,
@@ -27,7 +27,7 @@ import {
 import { elanBonusPercent, xpMomentumAdjustment } from "./xpMomentum.js?v=20260817-xp-momentum-v1";
 import { BREACH_POOL, BREACH_RUPTURE_BOSSES } from "./breachDefs.js?v=20261017-editor-v1";
 import { DUNGEONS } from "./dungeonDefs.js?v=20261017-editor-v1";
-import { DRAW_POOLS, cleanDrawPreferences, eligiblePool, snapshotDrawPools, dailyEligibleForDay } from "./drawPreferences.js?v=20261108-german-bonus-editable-v2";
+import { DRAW_POOLS, cleanDrawPreferences, eligiblePool, snapshotDrawPools, dailyEligibleForDay } from "./drawPreferences.js?v=20261110-manual-daily-quests-v1";
 import {
   dungeonRoomRewardPairs,
   dungeonRewardPairs,
@@ -84,7 +84,7 @@ import {
   getAscensionXpRequired,
   getRankBase,
   sortStat
-} from "./progression.js?v=20261108-german-bonus-editable-v2";
+} from "./progression.js?v=20261110-manual-daily-quests-v1";
 import {
   REGRESSION_ORB_ICON_DATA,
   DUNGEON_KEY_ICON_DATA,
@@ -93,8 +93,8 @@ import {
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
 import { UiIcon } from "./uiIcons.js?v=20261031-german-icon-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261108-german-bonus-editable-v2";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261108-german-bonus-editable-v2";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261110-manual-daily-quests-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261110-manual-daily-quests-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -104,8 +104,8 @@ import {
   ensureExerciseRotationForDay,
   availableRotationOptions,
   rotatedQuestObjects
-} from "./exerciseRotation.js?v=20261108-german-bonus-editable-v2";
-import { applyQuestTuning, nextQuestTuning, questTuningForDay, saveQuestTuning } from "./questTuning.js?v=20261108-german-bonus-editable-v2";
+} from "./exerciseRotation.js?v=20261110-manual-daily-quests-v1";
+import { applyQuestTuning, nextQuestTuning, questTuningForDay, saveQuestTuning } from "./questTuning.js?v=20261110-manual-daily-quests-v1";
 import { cleanQuestCatalog, activeCatalogEntry } from "./questCatalog.js?v=20261017-editor-v1";
 import { CatalogEditor } from "./catalogEditor.js?v=20261017-rank-settings-v1";
 import {
@@ -674,6 +674,7 @@ function App(){
   const [floats,setFloats] = useState([]);
   const [showSet,setShowSet]       = useState(false);
   const [bonusPickerOpen,setBonusPickerOpen] = useState(false);
+  const [dailyPickerOpen,setDailyPickerOpen] = useState(false);
   const [xpTodayOpen,setXpTodayOpen] = useState(false);
   const [weeklySummaryUp,setWeeklySummaryUp] = useState(null);
   const [confirmReset,setConfirmReset] = useState(false);
@@ -681,6 +682,7 @@ function App(){
   const inputs = useRef({});
   const completedBreachRef = useRef(null);
   const bonusPickerScrollRef = useRef(null);
+  const dailyPickerScrollRef = useRef(null);
   const settingsScrollTopRef = useRef(0);
 
   function enqueueDungeonKeyLoot(kind){
@@ -868,6 +870,49 @@ function App(){
   function dailyBonusQuestObjects(){
     const ids=(state.selectedBonusQuestIdsByDay&&state.selectedBonusQuestIdsByDay[today])||[];
     return sortStat(ids.map(id=>BONUS_QUEST_BY_ID[id]&&applyQuestTuning(BONUS_QUEST_BY_ID[id],state.questTuning,today)).filter(Boolean));
+  }
+
+  // Quêtes journalières ajoutées manuellement pour la journée en cours.
+  // Elles restent distinctes du tirage obligatoire et ne modifient donc pas le streak.
+  function dailyExtraQuestCandidates(){
+    const requiredIds=new Set(reqDailyObjs.map(obj=>obj.id));
+    return objs.filter(obj=>
+      obj.daily&&!obj.optional&&obj.id!=="stomach_vacuum"&&
+      !requiredIds.has(obj.id)&&!isInjuredQuest(state,today,obj.id)
+    );
+  }
+
+  function dailyExtraQuestObjects(){
+    const ids=(state.extraDailyQuestIdsByDay&&state.extraDailyQuestIdsByDay[today])||[];
+    const candidates=new Map(dailyExtraQuestCandidates().map(obj=>[obj.id,obj]));
+    return sortStat(ids.map(id=>candidates.get(id)).filter(Boolean));
+  }
+
+  function toggleDailyExtraQuest(id){
+    const candidate=dailyExtraQuestCandidates().find(obj=>obj.id===id);
+    if(!candidate)return;
+    setState(s=>{
+      const byDay={...(s.extraDailyQuestIdsByDay||{})};
+      const allowed=new Set(dailyExtraQuestCandidates().map(obj=>obj.id));
+      const ids=[...new Set((byDay[today]||[]).filter(questId=>allowed.has(questId)))];
+      const index=ids.indexOf(id);
+      if(index>=0){
+        if(Number((((s.dailyLog||{})[today]||{})[id])||0)>0)return s;
+        ids.splice(index,1);
+      }else{
+        ids.push(id);
+      }
+      byDay[today]=ids;
+      return {...s,extraDailyQuestIdsByDay:byDay,lastActiveDay:todayStr()};
+    });
+  }
+
+  function toggleDailyExtraQuestKeepingScroll(id){
+    const scrollTop=dailyPickerScrollRef.current?.scrollTop||0;
+    toggleDailyExtraQuest(id);
+    requestAnimationFrame(()=>{
+      if(dailyPickerScrollRef.current)dailyPickerScrollRef.current.scrollTop=scrollTop;
+    });
   }
 
   function toggleBonusQuest(id){
@@ -3683,7 +3728,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
   }
 
   function Home(){
-    const dailyObjs = sortStat(reqDailyObjs);
+    const dailyObjs = sortStat([...reqDailyObjs,...dailyExtraQuestObjects()]);
     const hiddenDebtId=state.questDebt?.status==="active"||state.questDebt?.status==="paid"&&state.questDebt.sourceDay===today?state.questDebt.id:null;
     const weeklyObjs = sortStat(objs.filter(o=>o.weekly&&isQuestActiveNow(o,now)));
     const bonusObjs = dailyBonusQuestObjects();
@@ -3702,6 +3747,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
     const remainingWeekly = weeklyObjs.filter(o=>!isDone(o,true));
     const remainingBonus = bonusObjs.filter(o=>!isDone(o,false));
     const reqRemaining = remainingDaily.length;
+    const allVisibleDailyDone = allDailyDone&&dailyExtraQuestObjects().every(o=>isDone(o,false));
 
     const completedDungeonToday = [...(state.dungeonLog||[])]
       .reverse()
@@ -3719,7 +3765,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
     const completedDungeonParts = completedDungeonToday ? dungeonParts(completedDungeonToday.title) : null;
 
     const completedHomeCards = [
-      dailyObjs.length>0 && allDailyDone
+      dailyObjs.length>0 && allVisibleDailyDone
         ? {key:"daily",text:"Toutes les quêtes journalières ont été complétées.",color:"#4ade80"}
         : null,
       allBonusDone
@@ -3892,6 +3938,52 @@ function isUncappedProfessionalWeeklyQuest(obj){
 
   // ─── ONGLET QUETES ────────────────────────────────────────────────────
 
+  function DailyQuestPicker(){
+    if(!dailyPickerOpen)return null;
+    const candidates=dailyExtraQuestCandidates();
+    const selected=((state.extraDailyQuestIdsByDay&&state.extraDailyQuestIdsByDay[today])||[])
+      .filter(id=>candidates.some(obj=>obj.id===id));
+    const groups=STATS.map(stat=>({stat,items:candidates.filter(obj=>(obj.stat||"Discipline")===stat)}))
+      .filter(group=>group.items.length);
+    return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setDailyPickerOpen(false)}},
+      h("div",{ref:dailyPickerScrollRef,class:"modal",style:"max-width:440px;width:calc(100% - 24px);max-height:88vh;overflow:auto"},
+        h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px"},
+          h("div",{class:"mtitle",style:"margin:0"},"AJOUTER DES QUÊTES JOURNALIÈRES"),
+          h("button",{onClick:()=>setDailyPickerOpen(false),style:"border:0;background:transparent;color:#fff;font-size:22px"},"×")
+        ),
+        h("div",{style:"font-size:10px;color:var(--td);line-height:1.5;margin-bottom:10px"},
+          "Active librement les quêtes journalières qui n’ont pas été tirées aujourd’hui. Aucun plafond. Une quête commencée reste sélectionnée jusqu’au reset. Ces ajouts ne changent pas les conditions du streak."
+        ),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;color:var(--rc);margin-bottom:14px"},
+          selected.length+" quête"+(selected.length>1?"s":"")+" supplémentaire"+(selected.length>1?"s":"")+" sélectionnée"+(selected.length>1?"s":"")
+        ),
+        groups.map(group=>h("div",{key:group.stat,style:"margin-bottom:14px"},
+          h("div",{style:"font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1px;color:"+(STAT_COLOR[group.stat]||"var(--rc)")+";margin-bottom:7px;text-transform:uppercase"},
+            STAT_LBL[group.stat]||group.stat
+          ),
+          group.items.map(obj=>{
+            const active=selected.includes(obj.id);
+            const progress=Number(tLog[obj.id])||0;
+            const locked=active&&progress>0;
+            const reward=obj.binary
+              ? (obj.binaryXp||obj.xp||0)+" XP"
+              : fmtFrNum(obj.xpPer||0)+" XP/"+(obj.unit||"unité")+(obj.stat2?" + "+fmtFrNum(obj.xpPer2||0)+" XP "+(STAT_LBL[obj.stat2]||obj.stat2)+"/"+obj.unit:"");
+            return h("button",{key:obj.id,onClick:()=>toggleDailyExtraQuestKeepingScroll(obj.id),disabled:locked,
+              style:"width:100%;display:flex;align-items:center;gap:9px;text-align:left;padding:10px;margin-bottom:7px;border-radius:9px;border:1px solid "+(active?(STAT_COLOR[group.stat]||"#a855f7"):"rgba(255,255,255,.09)")+";background:"+(active?"rgba(168,85,247,.09)":"rgba(255,255,255,.025)")+";color:var(--tx);opacity:"+(locked?".8":"1")+";cursor:"+(locked?"not-allowed":"pointer")},
+              QuestIcon(obj.iconKey||obj.id,obj.icon,16),
+              h("span",{style:"flex:1;min-width:0"},
+                h("span",{style:"display:block;font-size:12px;font-weight:700},obj.name),
+                h("span",{style:"display:block;font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;margin-top:2px"},reward)
+              ),
+              h("span",{style:"color:"+(active?"#4ade80":"var(--td)")+";font-size:15px"},locked?"🔒":active?"✓":"+")
+            );
+          })
+        )),
+        h("button",{class:"mbtn mprim",style:"width:100%;margin-top:2px",onClick:()=>setDailyPickerOpen(false)},"Terminer")
+      )
+    );
+  }
+
   function BonusQuestPicker(){
     if(!bonusPickerOpen)return null;
     const selected=((state.selectedBonusQuestIdsByDay&&state.selectedBonusQuestIdsByDay[today])||[]).filter(id=>!!BONUS_QUEST_BY_ID[id]);
@@ -3929,6 +4021,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
 
   function Quests(){
     const reqBase=sortStat(reqDailyObjs);
+    const extraDailyBase=dailyExtraQuestObjects();
     const hiddenDebtId=state.questDebt?.status==="active"||state.questDebt?.status==="paid"&&state.questDebt.sourceDay===today?state.questDebt.id:null;
     const bonBase=dailyBonusQuestObjects();
     const wkBase=sortStat(objs.filter(o=>o.weekly&&isQuestActiveNow(o,now)));
@@ -3947,12 +4040,12 @@ function isUncappedProfessionalWeeklyQuest(obj){
       ...list.filter(o=>isQuestDone(o))
     ];
 
-    const req=moveCompletedLast(reqBase).filter(o=>o.id!==hiddenDebtId);
+    const req=moveCompletedLast([...reqBase,...extraDailyBase]).filter(o=>o.id!==hiddenDebtId);
     const bon=moveCompletedLast(bonBase);
     const wkq=moveCompletedLast(wkBase);
 
-    const reqDone=reqBase.filter(isQuestDone).length;
-    const reqTotal=reqBase.length;
+    const reqDone=[...reqBase,...extraDailyBase].filter(isQuestDone).length;
+    const reqTotal=reqBase.length+extraDailyBase.length;
     const bonDone=Math.min(BONUS_QUEST_GOAL,bonBase.filter(isQuestDone).length);
     const bonTotal=BONUS_QUEST_GOAL;
     const wkDone=wkBase.filter(isQuestDone).length;
@@ -3984,6 +4077,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
       suspendedDungeon&&h(SuspendedDungeonCard,{showResumeButton:true}),
       h("div",{class:"card"},
         h(SectionHeader,{title:"Quêtes journalières",done:reqDone,total:reqTotal}),
+        h("button",{class:"mbtn mprim",style:"width:100%;margin-bottom:"+(req.length?"12px":"0"),onClick:()=>setDailyPickerOpen(true)},"Ajouter des quêtes journalières"),
         req.map(o=>h(QI,{key:o.id,obj:o})),
       ),
       wkq.length>0&&h("div",{class:"card"},
@@ -6203,6 +6297,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
       ),
       h(Settings,null),
       h(WeeklySummaryModal,null),
+      h(DailyQuestPicker,null),
       h(BonusQuestPicker,null),
       h(XpTodayModal,null),
       h(RankUp,null),
