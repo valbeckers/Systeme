@@ -67,7 +67,7 @@ import {
   calcQuestTotalXp
 } from "./xp.js?v=20260811-linear-xp-v1";
 import { StatsTab } from "./statsView.js?v=20261026-radar-instant-v2";
-import { HistoryTab } from "./historyView.js?v=20261123-draw-history-blue-v1";
+import { HistoryTab } from "./historyView.js?v=20261123-manual-daily-activation-v1";
 import { regressionPenaltyForWeek, weeklyXpWithoutRegression } from "./weeklyRegressionXp.js?v=20261016-v1";
 import { INJURY_ZONES, injuryForDay, isInjuredQuest, injuryDaysRemaining } from "./injuryEngine.js?v=20261017-editor-v1";
 import {
@@ -91,8 +91,8 @@ import {
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
 import { UiIcon } from "./uiIcons.js?v=20261031-german-icon-v1";
 import { saveStoredState } from "./storage.js";
-import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261123-remove-momentum-v1";
-import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261123-remove-momentum-v1";
+import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261123-manual-daily-activation-v1";
+import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261123-manual-daily-activation-v1";
 import {
   EXERCISE_ROTATIONS,
   LEGACY_EXERCISE_DEFAULTS,
@@ -672,6 +672,7 @@ function App(){
   const [floats,setFloats] = useState([]);
   const [showSet,setShowSet]       = useState(false);
   const [bonusPickerOpen,setBonusPickerOpen] = useState(false);
+  const [manualDailyPickerOpen,setManualDailyPickerOpen] = useState(false);
   const [xpTodayOpen,setXpTodayOpen] = useState(false);
   const [weeklySummaryUp,setWeeklySummaryUp] = useState(null);
   const [confirmReset,setConfirmReset] = useState(false);
@@ -1070,12 +1071,14 @@ function App(){
   // 7. Quetes journalieres obligatoires toutes faites ?
   const activeMuscleBody=(state.exerciseRotationByDay||{})[today]?.body;
   const muscleQuestId=activeMuscleBody==="back"?"negative_pullups":activeMuscleBody==="abs"?"abs":activeMuscleBody==="legs"?"squats":null;
-  const reqDailyObjs  = objs.filter(o=>!o.optional&&o.daily&&o.id!=="stomach_vacuum"&&dailyEligibleForDay(state,today,o.id)&&!isInjuredQuest(state,today,o.id)&&(!["negative_pullups","abs","squats"].includes(o.id)||o.id===muscleQuestId));
+  const manualDailyIdsForToday=new Set((state.manualDailyQuestIdsByDay||{})[today]||[]);
+  const reqDailyObjs  = objs.filter(o=>!o.optional&&o.daily&&o.id!=="stomach_vacuum"&&(dailyEligibleForDay(state,today,o.id)||manualDailyIdsForToday.has(o.id))&&!isInjuredQuest(state,today,o.id)&&(!["negative_pullups","abs","squats"].includes(o.id)||o.id===muscleQuestId||manualDailyIdsForToday.has(o.id)));
   // Quêtes actives pour un jour donné (exclut les quêtes ajoutées après ce jour)
   const activeOn = (day) => {
     const body=(state.exerciseRotationByDay||{})[day]?.body;
     const selected=body==="back"?"negative_pullups":body==="abs"?"abs":body==="legs"?"squats":null;
-    return objs.filter(o=>!o.optional&&o.daily&&(!o.startDate||o.startDate<=day)&&!(o.id==="stomach_vacuum"&&day>="2026-11-07")&&dailyEligibleForDay(state,day,o.id)&&!isInjuredQuest(state,day,o.id)&&(!["negative_pullups","abs","squats"].includes(o.id)||!selected||o.id===selected));
+    const manuallyActivated=new Set((state.manualDailyQuestIdsByDay||{})[day]||[]);
+    return objs.filter(o=>!o.optional&&o.daily&&(!o.startDate||o.startDate<=day)&&!(o.id==="stomach_vacuum"&&day>="2026-11-07")&&(dailyEligibleForDay(state,day,o.id)||manuallyActivated.has(o.id))&&!isInjuredQuest(state,day,o.id)&&(!["negative_pullups","abs","squats"].includes(o.id)||!selected||o.id===selected||manuallyActivated.has(o.id)));
   };
   // Variante et objectif réellement applicables pour un jour donné.
   const questForDay = (obj,day) => {
@@ -3865,6 +3868,59 @@ function isUncappedProfessionalWeeklyQuest(obj){
 
   // ─── ONGLET QUETES ────────────────────────────────────────────────────
 
+  const MANUAL_DAILY_FAMILIES=[
+    {id:"negative_pullups",body:"back",label:"Dos & Biceps"},
+    {id:"abs",body:"abs",label:"Abdos"},
+    {id:"squats",body:"legs",label:"Jambes"}
+  ];
+  const manualDailyIdsToday=new Set((state.manualDailyQuestIdsByDay||{})[today]||[]);
+  function toggleManualDailyQuest(id){
+    if(!MANUAL_DAILY_FAMILIES.some(item=>item.id===id))return;
+    setState(s=>{
+      const byDay={...(s.manualDailyQuestIdsByDay||{})};
+      const ids=[...(byDay[today]||[])];
+      const row=(s.dailyLog||{})[today]||{};
+      if(ids.includes(id)){
+        if(Number(row[id])>0)return s;
+        byDay[today]=ids.filter(value=>value!==id);
+      }else{
+        byDay[today]=[...ids,id];
+      }
+      if(!byDay[today].length)delete byDay[today];
+      return {...s,manualDailyQuestIdsByDay:byDay,lastActiveDay:todayStr()};
+    });
+  }
+
+  function ManualDailyQuestPicker(){
+    if(!manualDailyPickerOpen)return null;
+    const body=(state.exerciseRotationByDay||{})[today]?.body;
+    const selectedBodyId=body==="back"?"negative_pullups":body==="abs"?"abs":body==="legs"?"squats":null;
+    const choices=MANUAL_DAILY_FAMILIES.filter(item=>item.id!==selectedBodyId);
+    return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setManualDailyPickerOpen(false)}},
+      h("div",{class:"modal",style:"max-width:440px;width:calc(100% - 24px);max-height:88vh;overflow:auto"},
+        h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px"},
+          h("div",{class:"mtitle",style:"margin:0"},"ACTIVER DES QUÊTES JOURNALIÈRES"),
+          h("button",{onClick:()=>setManualDailyPickerOpen(false),style:"border:0;background:transparent;color:#fff;font-size:22px"},"×")
+        ),
+        h("div",{style:"font-size:10px;color:var(--td);line-height:1.5;margin-bottom:12px"},"Ajoute une famille non tirée pour aujourd’hui. Une quête activée reste dans l’historique du jour, même si elle n’est pas validée."),
+        choices.map(item=>{
+          const active=manualDailyIdsToday.has(item.id);
+          const progress=Number(tLog[item.id])||0;
+          const locked=active&&progress>0;
+          const obj=objs.find(q=>q.id===item.id);
+          const name=obj?.name||item.label;
+          return h("button",{key:item.id,onClick:()=>toggleManualDailyQuest(item.id),disabled:locked,
+            style:"width:100%;display:flex;align-items:center;gap:9px;text-align:left;padding:10px;margin-bottom:7px;border-radius:9px;border:1px solid "+(active?"#4065e7":"rgba(255,255,255,.09)")+";background:"+(active?"rgba(64,101,231,.12)":"rgba(255,255,255,.025)")+";color:var(--tx);opacity:"+(locked?.8:1)+";cursor:"+(locked?"not-allowed":"pointer")},
+            QuestIcon(obj?.iconKey||item.id,obj?.icon,16),
+            h("span",{style:"flex:1;min-width:0;font-size:12px;font-weight:700"},name),
+            h("span",{style:"color:"+(active?"#4065e7":"var(--td)")+";font-size:15px"},locked?"🔒":active?"✓":"+")
+          );
+        }),
+        h("button",{class:"mbtn mprim",style:"width:100%;margin-top:2px",onClick:()=>setManualDailyPickerOpen(false)},"Terminer")
+      )
+    );
+  }
+
   function BonusQuestPicker(){
     if(!bonusPickerOpen)return null;
     const selected=((state.selectedBonusQuestIdsByDay&&state.selectedBonusQuestIdsByDay[today])||[]).filter(id=>!!BONUS_QUEST_BY_ID[id]);
@@ -3958,6 +4014,8 @@ function isUncappedProfessionalWeeklyQuest(obj){
       h("div",{class:"card"},
         h(SectionHeader,{title:"Quêtes journalières",done:reqDone,total:reqTotal}),
         req.map(o=>h(QI,{key:o.id,obj:o})),
+        h("button",{class:"mbtn mprim",style:"width:100%;margin-top:12px",onClick:()=>setManualDailyPickerOpen(true)},"Activer d’autres quêtes journalières"),
+        h(ManualDailyQuestPicker,null)
       ),
       wkq.length>0&&h("div",{class:"card"},
         h(SectionHeader,{title:"Quêtes hebdomadaires",done:wkDone,total:wkTotal}),

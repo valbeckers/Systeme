@@ -7,7 +7,7 @@ import { DEFS, SP } from "./questDefs.js?v=20261108-german-bonus-guaranteed-v1";
 import { next7AM, todayStr, addDaysStr } from "./dayCycle.js";
 import { getLvl } from "./xp.js";
 import { loadStoredState } from "./storage.js";
-import { cleanSystemState } from "./stateSanitizer.js?v=20261108-german-bonus-guaranteed-v1";
+import { cleanSystemState } from "./stateSanitizer.js?v=20261123-manual-daily-activation-v1";
 import { normalizeActiveBreach } from "./breachEngine.js?v=20261017-editor-v1";
 
 const loadState = () => loadStoredState(cleanSystemState);
@@ -89,6 +89,7 @@ const IMPORTED = {
   injuryPeriods:[],
   enduranceChoiceByDay:{},
   selectedBonusQuestIdsByDay:{},
+  manualDailyQuestIdsByDay:{},
   exerciseRotationByDay:{},
   exerciseRotationEnabled:null,
   dailyCompletionAnimDay:null,
@@ -199,6 +200,7 @@ export function buildInitialState(){
     injuryPeriods:saved.injuryPeriods||[],
     enduranceChoiceByDay:saved.enduranceChoiceByDay||{},
     selectedBonusQuestIdsByDay:saved.selectedBonusQuestIdsByDay||{},
+    manualDailyQuestIdsByDay:saved.manualDailyQuestIdsByDay||{},
     bonusFiveCompletionDay:saved.bonusFiveCompletionDay||null,
     exerciseRotationByDay:saved.exerciseRotationByDay||{},
     exerciseRotationEnabled,

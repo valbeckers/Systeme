@@ -204,12 +204,13 @@ export function HistoryTab({
     if(obj.startDate&&day<obj.startDate) return {txt:"·",color:"var(--td)",opacity:.45};
     // Les familles Dos, Abdos et Jambes sont tirées via la rotation quotidienne.
     // La famille non retenue ce jour-là n'était pas à faire : elle reçoit un cercle gris.
+    const manuallyActivated=new Set((state.manualDailyQuestIdsByDay||{})[day]||[]).has(obj.id);
     const bodyByQuest={negative_pullups:"back",abs:"abs",squats:"legs"};
     const bodyFamily=bodyByQuest[obj.id];
     const rotation=(state.exerciseRotationByDay||{})[day];
-    if(bodyFamily&&["back","abs","legs"].includes(rotation?.body)&&rotation.body!==bodyFamily)
+    if(!manuallyActivated&&bodyFamily&&["back","abs","legs"].includes(rotation?.body)&&rotation.body!==bodyFamily)
       return {txt:"⭘",color:"#4065e7",opacity:1};
-    if(obj.daily&&!obj.optional&&!dailyEligibleForDay(state,day,obj.id))
+    if(!manuallyActivated&&obj.daily&&!obj.optional&&!dailyEligibleForDay(state,day,obj.id))
       return {txt:"⭘",color:"#4065e7",opacity:1};
     if((obj.daily&&!obj.optional&&isInjuredQuest(state,day,obj.id)) ||
        (obj.id==="run"&&isInjuredQuest(state,day,"squats")))
@@ -220,8 +221,13 @@ export function HistoryTab({
     const target=dayTargetFor(dayObj,day);
     const validationTarget=obj.optional?Math.ceil(target*0.5):target;
     const previouslyValidated=day<today&&!!obj.daily&&!obj.optional&&hasValidatedDailyCompletion(state,day);
+    const manuallyActivatedIds=new Set((state.manualDailyQuestIdsByDay||{})[day]||[]);
+    const selectedBody=(state.exerciseRotationByDay||{})[day]?.body;
+    const bodyByQuestId={negative_pullups:"back",abs:"abs",squats:"legs"};
     const requiredForDay=objs
-      .filter(item=>item.daily&&!item.optional&&(!item.startDate||item.startDate<=day)&&dailyEligibleForDay(state,day,item.id))
+      .filter(item=>item.daily&&!item.optional&&(!item.startDate||item.startDate<=day)&&
+        (manuallyActivatedIds.has(item.id)||dailyEligibleForDay(state,day,item.id))&&
+        (!bodyByQuestId[item.id]||bodyByQuestId[item.id]===selectedBody||manuallyActivatedIds.has(item.id)))
       .map(item=>dailyQuestForHistoryDay(item,day));
     const legacyDebtQuestId=inferLegacyResolvedDebtQuestId(
       state,
@@ -234,7 +240,7 @@ export function HistoryTab({
 
     if(ok) return {txt:"✓",color:"#4ade80",opacity:1};
     if(day>today) return {txt:"·",color:"var(--td)",opacity:.45};
-    if(day===today) return {txt:"·",color:"var(--td)",opacity:.75};
+    if(day===today&&!manuallyActivated) return {txt:"·",color:"var(--td)",opacity:.75};
     return {txt:"✘",color:"#ef4444",opacity:1};
   }
 

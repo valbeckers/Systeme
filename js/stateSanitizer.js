@@ -228,6 +228,17 @@ function cleanEnduranceChoiceByDay(obj){
   return out;
 }
 
+function cleanManualDailyQuestIdsByDay(obj,dailyLog){
+  const allowed=new Set(["negative_pullups","abs","squats"]);
+  const out={};
+  Object.entries(obj||{}).forEach(([day,ids])=>{
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(day)||!Array.isArray(ids))return;
+    const clean=[...new Set(ids.filter(id=>allowed.has(id)))];
+    if(clean.length)out[day]=clean;
+  });
+  return out;
+}
+
 function cleanSelectedBonusQuestIdsByDay(obj,dailyLog,catalog){
   const allowed=new Set(BONUS_QUESTS.map(q=>q.id));
   const out={};
@@ -424,6 +435,7 @@ export function cleanSystemState(raw){
     enduranceChoiceByDay:cleanEnduranceChoiceByDay(data.enduranceChoiceByDay),
     bonusDrawDays:[...new Set((Array.isArray(data.bonusDrawDays)?data.bonusDrawDays:[]).filter(day=>/^\d{4}-\d{2}-\d{2}$/.test(day)))],
     selectedBonusQuestIdsByDay:cleanSelectedBonusQuestIdsByDay(data.selectedBonusQuestIdsByDay,data.dailyLog,data.questCatalog),
+    manualDailyQuestIdsByDay:cleanManualDailyQuestIdsByDay(data.manualDailyQuestIdsByDay,data.dailyLog),
     exerciseRotationByDay:cleanExerciseRotationByDay(data.exerciseRotationByDay),
     exerciseRotationEnabled:cleanExerciseRotationEnabled(data.exerciseRotationEnabled),
     drawPreferences:cleanDrawPreferences(data.drawPreferences,data.questCatalog),
