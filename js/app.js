@@ -616,6 +616,7 @@ function App(){
   const [debtUp,setDebtUp] = useState(null);
   const [confirmDebt,setConfirmDebt] = useState(null);
   const [confirmUrgentFailure,setConfirmUrgentFailure] = useState(null);
+  const [confirmSleepFailure,setConfirmSleepFailure] = useState(false);
   const [streakUp,setStreakUp] = useState(null);
   const [completionUp,setCompletionUp] = useState(null);
   const [completionQueue,setCompletionQueue] = useState([]);
@@ -2473,7 +2474,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
         ),
         h("div",{style:"display:flex;gap:8px;margin-top:8px"},
           h("button",{
-            onClick:e=>setBinary(0,e),
+            onClick:e=>{if(obj.id==="sleep")setConfirmSleepFailure(true);else setBinary(0,e);},
             style:"flex:"+failFlex+";padding:"+(validated&&done?"6px 4px":"10px")+";border-radius:8px;border:1px solid "+(validated&&!done?"var(--rc)":"rgba(255,255,255,0.08)")+";background:rgba(255,255,255,0.02);color:"+(validated&&!done?"#ef4444":"rgba(255,255,255,0.25)")+";font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px;transition:all .2s;white-space:nowrap;overflow:hidden"
           },"✘ Échec"),
           h("button",{
@@ -3676,7 +3677,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
     };
 
     const remainingDaily = dailyObjs.filter(o=>!isDone(o,false));
-    const visibleRemainingDaily=remainingDaily.filter(o=>o.id!==hiddenDebtId);
+    const visibleRemainingDaily=remainingDaily.filter(o=>o.id!==hiddenDebtId&&!(o.id==="sleep"&&tLog.sleep!==undefined));
     const remainingWeekly = weeklyObjs.filter(o=>!isDone(o,true));
     const remainingBonus = bonusObjs.filter(o=>!isDone(o,false));
     const reqRemaining = remainingDaily.length;
@@ -3984,9 +3985,10 @@ function isUncappedProfessionalWeeklyQuest(obj){
       const d = isWeekly ? (wLog[obj.id]||0) : (tLog[obj.id]||0);
       return hasResolvedQuestDebt(state,today,obj.id) || (obj.binary ? d>=1 : d>=target);
     };
+    const isSettledForQuestOrder=(obj)=>isQuestDone(obj)||(obj.id==="sleep"&&tLog.sleep!==undefined);
     const moveCompletedLast=(list)=>[
-      ...list.filter(o=>!isQuestDone(o)),
-      ...list.filter(o=>isQuestDone(o))
+      ...list.filter(o=>!isSettledForQuestOrder(o)),
+      ...list.filter(o=>isSettledForQuestOrder(o))
     ];
 
     const req=moveCompletedLast(reqBase).filter(o=>o.id!==hiddenDebtId);
@@ -5323,6 +5325,28 @@ function isUncappedProfessionalWeeklyQuest(obj){
     );
   }
 
+  function ConfirmSleepFailureModal(){
+    if(!confirmSleepFailure)return null;
+    return h("div",{class:"ruov",style:"--rc:#ef4444;--rg:rgba(239,68,68,.55);background:rgba(0,0,0,.92)",onClick:e=>{if(e.target===e.currentTarget)setConfirmSleepFailure(false);}},
+      h("div",{class:"rucont",style:"width:min(500px,calc(100vw - 34px));background:rgba(15,15,18,.97);border:1px solid #ef444488;border-radius:18px;padding:22px"},
+        h("div",{class:"ruevol",style:"color:#ef4444"},"CONFIRMATION"),
+        h("div",{style:"font-family:Orbitron,sans-serif;font-size:17px;font-weight:900;color:#fff;text-align:center;line-height:1.4;margin-top:10px"},"Déclarer l’échec de « Sommeil » ?"),
+        h("div",{style:"font-size:12px;color:var(--td);text-align:center;line-height:1.5;margin-top:12px"},"La quête sera marquée comme échouée et retirée de l’Accueil pour aujourd’hui."),
+        h("div",{style:"display:flex;gap:10px;width:100%;margin-top:20px"},
+          h("button",{onClick:()=>setConfirmSleepFailure(false),style:"flex:1;padding:12px;border-radius:9px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--td);font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},"ANNULER"),
+          h("button",{onClick:()=>{
+            setConfirmSleepFailure(false);
+            setState(s=>{
+              const d={...s.dailyLog};
+              d[today]={...(d[today]||{}),sleep:0};
+              return {...s,dailyLog:d,lastActiveDay:todayStr()};
+            });
+          },style:"flex:1;padding:12px;border-radius:9px;border:1px solid #ef4444;background:rgba(239,68,68,.15);color:#ef4444;font-family:Orbitron,sans-serif;font-size:10px;cursor:pointer"},"CONFIRMER L’ÉCHEC")
+        )
+      )
+    );
+  }
+
   function ConfirmUrgentFailureModal(){
     if(!confirmUrgentFailure)return null;
     const quest=confirmUrgentFailure;
@@ -6283,6 +6307,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
       h(RegressionUp,null),
       h(ConfirmDebtModal,null),
       h(ConfirmUrgentFailureModal,null),
+      h(ConfirmSleepFailureModal,null),
       h(ConfirmDungeonChoice,null),
       h(ImportModal,null),
       h(ExportCopiedModal,null),
