@@ -268,7 +268,7 @@ export function HistoryTab({
       h("div",{style:"display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:14px"},
         h("button",{type:"button",disabled:wkOff>=51,style:"background:var(--sf2);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-size:18px;width:40px;height:40px;cursor:pointer;opacity:"+(wkOff>=51?.3:.8),onClick:()=>setWkOff(o=>Math.min(o+1,51))},"\u2039"),
         h("div",{style:"text-align:center;flex:1"},
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:12px;color:var(--rc);letter-spacing:1px"},lbl),
+          h("button",{type:"button",onClick:()=>setWkOff(0),title:"Revenir à la semaine en cours","aria-label":"Revenir à la semaine en cours",style:"font-family:Orbitron,sans-serif;font-size:12px;color:var(--rc);letter-spacing:1px;background:transparent;border:0;padding:0;cursor:pointer"},lbl),
           h("div",{style:"font-size:10px;color:var(--td);margin-top:2px"},fmt(ws)+" \u2013 "+fmt(we))
         ),
         h("button",{type:"button",disabled:wkOff===0,style:"background:var(--sf2);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-size:18px;width:40px;height:40px;cursor:pointer;opacity:"+(wkOff===0?.3:.8),onClick:()=>setWkOff(o=>Math.max(o-1,0))},"\u203A")
@@ -332,7 +332,7 @@ export function HistoryTab({
       open.monthly&&h(Fragment,null,
         h("div",{style:"display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px"},
           h("button",{onClick:()=>{setMonthOff(v=>Math.min(v+1,36));setSelectedHistoryDay(null);},disabled:monthOff>=36,style:"background:var(--sf2);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-size:18px;width:38px;height:38px;opacity:"+(monthOff>=36?.3:1)},"‹"),
-          h("div",{style:"font-family:Orbitron,sans-serif;font-size:11px;color:var(--rc);text-align:center;text-transform:capitalize"},monthLabel),
+          h("button",{type:"button",onClick:()=>{setMonthOff(0);setSelectedHistoryDay(null);},title:"Revenir au mois en cours","aria-label":"Revenir au mois en cours",style:"font-family:Orbitron,sans-serif;font-size:11px;color:var(--rc);text-align:center;text-transform:capitalize;background:transparent;border:0;padding:0;cursor:pointer"},monthLabel),
           h("button",{onClick:()=>{setMonthOff(v=>Math.max(v-1,0));setSelectedHistoryDay(null);},disabled:monthOff===0,style:"background:var(--sf2);border:1px solid var(--rc);border-radius:8px;color:var(--rc);font-size:18px;width:38px;height:38px;opacity:"+(monthOff===0?.3:1)},"›")
         ),
         h("div",{style:"display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;margin-top:14px"},
