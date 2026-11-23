@@ -5855,7 +5855,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
       const period = isWeekly ? " / semaine" : " / jour";
       if(obj.binary) return "Validation simple";
       if(obj.tiers) return (obj.target||obj.base||1)+" "+unitPlural(obj.unit,obj.target||obj.base||1)+period;
-      const base = getEffectiveTarget(obj.id,isWeekly);
+      const base = obj.customTarget ? (Number(obj.target||obj.base)||1) : getEffectiveTarget(obj.id,isWeekly);
       return base+" "+unitPlural(obj.unit,base)+period;
     }
 
@@ -5868,18 +5868,24 @@ function isUncappedProfessionalWeeklyQuest(obj){
       function Reward({stat,xp}){
         return h(StatPill,{stat,xp,showPlus:false});
       }
-      function Exercise({iconKey,icon,name,target,unit,rewards}){
+      function Exercise({id,iconKey,icon,name,target,unit,rewards}){
+        const entry=state.questCatalog&&state.questCatalog[id];
+        const customized=entry&&entry.kind==="daily";
+        const shownName=customized?(entry.name||name):name;
+        const shownTarget=customized?(Number(entry.target)||target):target;
+        const shownUnit=customized?(entry.unit||unit):unit;
+        const shownRewards=customized?[{stat:entry.stat||"Force",xp:(Number(entry.xpPer)||0)+"/"+(entry.unit||unit)}]:rewards;
         const rewardNodes=[];
-        (rewards||[]).forEach((r,i)=>{
+        (shownRewards||[]).forEach((r,i)=>{
           rewardNodes.push(h(Reward,{key:"reward"+i,stat:r.stat,xp:r.xp}));
         });
         return h("div",{style:subStyle},
           h("div",{style:"display:flex;align-items:center;gap:8px"},
             h(UiIcon,{iconKey:"exercise."+iconKey,fallback:icon,slotSize:18,glyphSize:14}),
             h("div",{style:"flex:1;min-width:0"},
-              h("div",{style:"font-size:12px;color:var(--tx);font-weight:800"},name),
+              h("div",{style:"font-size:12px;color:var(--tx);font-weight:800"},shownName),
               h("div",{style:"margin-top:5px"},rewardNodes),
-              h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-top:4px"},"▸ Objectif : "+objective(target,unit))
+              h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-top:4px"},"▸ Objectif : "+objective(shownTarget,shownUnit))
             )
           )
         );
@@ -5902,27 +5908,27 @@ function isUncappedProfessionalWeeklyQuest(obj){
       return h(Fragment,null,
         h("div",{style:familyStyle},
           h(FamilyTitle,{label:"PECS & TRICEPS"}),
-          h(Exercise,{iconKey:"pushups",icon:"💪🏼",name:"Pompes",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
-          h(Exercise,{iconKey:"dips",icon:"💪🏼",name:"Dips",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]})
+          h(Exercise,{id:"pushups",iconKey:"pushups",icon:"💪🏼",name:"Pompes",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
+          h(Exercise,{id:"dips",iconKey:"dips",icon:"💪🏼",name:"Dips",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]})
         ),
         h("div",{style:familyStyle},
           h(FamilyTitle,{label:"DOS & BICEPS"}),
-          h(Exercise,{iconKey:"negative_pullups",icon:"💪🏼",name:"Tractions",target:backVariants.pullups.target,unit:"reps",rewards:[{stat:"Force",xp:fmtFrNum(backVariants.pullups.xpPer)+"/rep"}]}),
-          h(Exercise,{iconKey:"negative_pullups",icon:"💪🏼",name:"Tractions négatives",target:backVariants.negative_pullups.target,unit:"reps",rewards:[{stat:"Force",xp:fmtFrNum(backVariants.negative_pullups.xpPer)+"/rep"}]}),
-          h(Exercise,{iconKey:"australian_pullups",icon:"💪🏼",name:"Tractions australiennes",target:backVariants.australian_pullups.target,unit:"reps",rewards:[{stat:"Force",xp:fmtFrNum(backVariants.australian_pullups.xpPer)+"/rep"}]})
+          h(Exercise,{id:"pullups",iconKey:"negative_pullups",icon:"💪🏼",name:"Tractions",target:backVariants.pullups.target,unit:"reps",rewards:[{stat:"Force",xp:fmtFrNum(backVariants.pullups.xpPer)+"/rep"}]}),
+          h(Exercise,{id:"negative_pullups",iconKey:"negative_pullups",icon:"💪🏼",name:"Tractions négatives",target:backVariants.negative_pullups.target,unit:"reps",rewards:[{stat:"Force",xp:fmtFrNum(backVariants.negative_pullups.xpPer)+"/rep"}]}),
+          h(Exercise,{id:"australian_pullups",iconKey:"australian_pullups",icon:"💪🏼",name:"Tractions australiennes",target:backVariants.australian_pullups.target,unit:"reps",rewards:[{stat:"Force",xp:fmtFrNum(backVariants.australian_pullups.xpPer)+"/rep"}]})
         ),
         h("div",{style:familyStyle},
           h(FamilyTitle,{label:"ABDOS"}),
-          h(Exercise,{iconKey:"crunches",icon:"🧎🏻",name:"Crunches",target:absTarget,unit:"reps",rewards:[{stat:"Force",xp:"1,5/rep"}]}),
-          h(Exercise,{iconKey:"leg_raises",icon:"🦵🏻",name:"Levées de jambes",target:legRaiseTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
-          h(Exercise,{iconKey:"plank",icon:"🫳🏼",name:"Gainage",target:plankTarget,unit:"min",rewards:[{stat:"Force",xp:"50/min"}]}),
-          h(Exercise,{iconKey:"side_plank",icon:"🧎🏻‍♂️‍➡️",name:"Gainage obliques",target:sideTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
+          h(Exercise,{id:"crunches",iconKey:"crunches",icon:"🧎🏻",name:"Crunches",target:absTarget,unit:"reps",rewards:[{stat:"Force",xp:"1,5/rep"}]}),
+          h(Exercise,{id:"leg_raises",iconKey:"leg_raises",icon:"🦵🏻",name:"Levées de jambes",target:legRaiseTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
+          h(Exercise,{id:"plank",iconKey:"plank",icon:"🫳🏼",name:"Gainage",target:plankTarget,unit:"min",rewards:[{stat:"Force",xp:"50/min"}]}),
+          h(Exercise,{id:"side_plank",iconKey:"side_plank",icon:"🧎🏻‍♂️‍➡️",name:"Gainage obliques",target:sideTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
         ),
         h("div",{style:familyStyle},
           h(FamilyTitle,{label:"JAMBES"}),
-          h(Exercise,{iconKey:"squats",icon:"🦵🏻",name:"Squats",target:squatTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"},{stat:"Agilite",xp:"3/rep"}]}),
-          h(Exercise,{iconKey:"calves",icon:"🦵🏻",name:"Mollets",target:calvesTarget,unit:"reps",rewards:[{stat:"Force",xp:"2/rep"},{stat:"Agilite",xp:"1/rep"}]}),
-          h(Exercise,{iconKey:"lunges",icon:"🦵🏻",name:"Fentes",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]})
+          h(Exercise,{id:"squats",iconKey:"squats",icon:"🦵🏻",name:"Squats",target:squatTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"},{stat:"Agilite",xp:"3/rep"}]}),
+          h(Exercise,{id:"calves",iconKey:"calves",icon:"🦵🏻",name:"Mollets",target:calvesTarget,unit:"reps",rewards:[{stat:"Force",xp:"2/rep"},{stat:"Agilite",xp:"1/rep"}]}),
+          h(Exercise,{id:"lunges",iconKey:"lunges",icon:"🦵🏻",name:"Fentes",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]})
         )
       );
     }
@@ -6091,9 +6097,32 @@ function isUncappedProfessionalWeeklyQuest(obj){
       ));
     }
 
+    function codexCatalogQuest(obj,kind){
+      const entry=state.questCatalog&&state.questCatalog[obj.id];
+      if(!entry||entry.kind!==kind)return obj;
+      return {...obj,
+        name:entry.name||obj.name,
+        unit:entry.unit||obj.unit,
+        target:Number(entry.target)||obj.target||obj.base||1,
+        base:Number(entry.target)||obj.base||obj.target||1,
+        customTarget:true,
+        binary:entry.binary===true,
+        binaryXp:entry.binary?Number(entry.xpPer)||obj.binaryXp||obj.xp||0:undefined,
+        xp:undefined,
+        xpPer:entry.binary?undefined:Number(entry.xpPer)||obj.xpPer,
+        xp2:undefined,
+        xpPer2:entry.stat2?Number(entry.xpPer2)||undefined:undefined,
+        stat:entry.stat||obj.stat,
+        stat2:entry.stat2||undefined,
+        tiers:Array.isArray(entry.tiers)&&entry.tiers.length?entry.tiers:undefined,
+        icon:entry.icon||obj.icon,
+        category:entry.category||obj.category
+      };
+    }
+
     function renderRequiredCodex(){
       const rotatingIds=new Set(["push","negative_pullups","abs","squats","calves"]);
-      const staticRequired=objs.filter(o=>o.daily&&!o.optional&&!rotatingIds.has(o.id));
+      const staticRequired=objs.filter(o=>o.daily&&!o.optional&&!rotatingIds.has(o.id)).map(o=>codexCatalogQuest(o,"daily"));
       const groups=STATS.map(stat=>({stat,list:[]}));
       staticRequired.forEach(item=>{
         const stat=dominantStat(item,item.stat);
@@ -6111,10 +6140,10 @@ function isUncappedProfessionalWeeklyQuest(obj){
     }
 
     const required = objs.filter(o=>o.daily&&!o.optional);
-    const weeklyCodex = objs.filter(o=>o.weekly);
-    const bonus = BONUS_QUESTS;
+    const weeklyCodex = objs.filter(o=>o.weekly).map(o=>codexCatalogQuest(o,"weekly"));
+    const bonus = BONUS_QUESTS.map(o=>codexCatalogQuest(o,"bonus"));
     const hiddenBonus = [];
-    const specialList = STATS.flatMap(stat=>(SP[stat]||[]).map(q=>({...q,stat:q.stat||stat})));
+    const specialList = STATS.flatMap(stat=>(SP[stat]||[]).map(q=>codexCatalogQuest({...q,stat:q.stat||stat},"urgent")));
     const breachList=BREACH_POOL.map(q=>({...q,isBreach:true}));
 
     return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setInventoryItem(null)}},
