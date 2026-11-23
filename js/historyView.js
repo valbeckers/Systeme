@@ -105,7 +105,7 @@ export function HistoryTab({
   const lbl=wkOff===0?"Cette semaine":wkOff===1?"Semaine derni\u00e8re":fmt(ws)+" \u2013 "+fmt(we);
   const visibleInHistory=o=>!HIDDEN_FROM_HISTORY_IDS.has(o.id);
   const visibleInWeeklyActivity=o=>visibleInHistory(o)&&!HIDDEN_FROM_WEEKLY_ACTIVITY_IDS.has(o.id);
-  const ordered=[...sortStat(objs.filter(o=>visibleInWeeklyActivity(o)&&o.daily&&!o.optional)),...sortStat(objs.filter(o=>visibleInWeeklyActivity(o)&&o.weekly)),...sortStat(objs.filter(o=>visibleInWeeklyActivity(o)&&o.daily&&o.optional&&!o.bonusHidden))];
+  const ordered=[...sortStat(objs.filter(o=>visibleInWeeklyActivity(o)&&o.id!=="stomach_vacuum"&&o.daily&&!o.optional)),...sortStat(objs.filter(o=>visibleInWeeklyActivity(o)&&o.weekly)),...sortStat(objs.filter(o=>visibleInWeeklyActivity(o)&&o.daily&&o.optional&&!o.bonusHidden))];
 
   const exerciseHistoryDefs=RECORD_EXERCISE_DEFS;
   const rotatingSourceIds=new Set(["push","negative_pullups","abs","squats","calves"]);
@@ -201,14 +201,16 @@ export function HistoryTab({
     return getValidateThreshold(obj,day);
   }
   function dayMarkFor(obj,day){
-    if(obj.startDate&&day<obj.startDate) return {txt:"⭘",color:"#a3a3a3",opacity:1};
+    if(obj.startDate&&day<obj.startDate) return {txt:"·",color:"var(--td)",opacity:.45};
+    // Les familles Dos, Abdos et Jambes sont tirées via la rotation quotidienne.
+    // La famille non retenue ce jour-là n'était pas à faire : elle reçoit un cercle gris.
+    const bodyByQuest={negative_pullups:"back",abs:"abs",squats:"legs"};
+    const bodyFamily=bodyByQuest[obj.id];
+    const rotation=(state.exerciseRotationByDay||{})[day];
+    if(bodyFamily&&["back","abs","legs"].includes(rotation?.body)&&rotation.body!==bodyFamily)
+      return {txt:"⭘",color:"#a3a3a3",opacity:1};
     if(obj.daily&&!obj.optional&&!dailyEligibleForDay(state,day,obj.id))
       return {txt:"⭘",color:"#a3a3a3",opacity:1};
-    if(obj.daily&&obj.optional){
-      const selectedBonusIds=state.selectedBonusQuestIdsByDay?.[day];
-      if(Array.isArray(selectedBonusIds)&&!selectedBonusIds.includes(obj.id))
-        return {txt:"⭘",color:"#a3a3a3",opacity:1};
-    }
     if((obj.daily&&!obj.optional&&isInjuredQuest(state,day,obj.id)) ||
        (obj.id==="run"&&isInjuredQuest(state,day,"squats")))
       return {txt:"",color:"#86efac",opacity:1,injured:true};
