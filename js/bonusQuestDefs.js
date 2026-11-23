@@ -35,4 +35,4 @@ export const BONUS_QUESTS = mergeQuestCatalog([
   :q);
 
 export const BONUS_QUEST_BY_ID = Object.fromEntries(BONUS_QUESTS.map(q=>[q.id,q]));
-export const BONUS_QUEST_GOAL = 5;
+export const BONUS_QUEST_GOAL = 4;

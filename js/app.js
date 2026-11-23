@@ -1,7 +1,7 @@
 import { ensureDailyBonusDraw } from "./bonusDraw.js?v=20261108-german-bonus-editable-v2";
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
 import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20261108-german-bonus-editable-v2";
-import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261108-german-bonus-editable-v2";
+import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261123-bonus4-v1";
 import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20261108-german-bonus-editable-v2";
 import {
   isDebtEligibleQuest,
@@ -40,7 +40,7 @@ import {
   expireSuspendedDungeonState,
   canValidateDungeonRoom
 } from "./dungeonEngine.js?v=20260910-dimensional-anchor-v1";
-import { INVENTORY_ITEMS } from "./itemDefs.js?v=20261102-no-ointment-v1";
+import { INVENTORY_ITEMS } from "./itemDefs.js?v=20261123-bonus4-v1";
 import {
   incrementLootState,
   pickRandomBreachLoot,
@@ -3701,7 +3701,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
         ? {key:"daily",text:"Toutes les quêtes journalières ont été complétées.",color:"#4ade80"}
         : null,
       allBonusDone
-        ? {key:"bonus",text:"5 quêtes bonus ont été complétées.",color:BONUS_BADGE_COLOR}
+        ? {key:"bonus",text:"4 quêtes bonus ont été complétées.",color:BONUS_BADGE_COLOR}
         : null,
       completedSq
         ? {
