@@ -155,7 +155,7 @@ function cleanSqDrawLogEntry(q,map){
 }
 
 function cleanDailyExtraXp(extra){
-  const allowed=new Set(["eventBonus","sq","breach","dungeon","streak","debt","elanBonus","inertiaMalus","regressionMalus"]);
+  const allowed=new Set(["eventBonus","sq","breach","dungeon","streak","debt","regressionMalus"]);
   const out={};
   Object.entries(extra||{}).forEach(([day,row])=>{
     if(!row || typeof row!=="object") return;
@@ -356,10 +356,6 @@ export function cleanSystemState(raw){
     weeklyBonusWk:data.weeklyBonusWk||null,
     lastStreakDay:data.lastStreakDay||null,
     streakMilestones:Array.isArray(data.streakMilestones)?data.streakMilestones:[],
-    xpMomentumLastProcessedDay:data.xpMomentumLastProcessedDay||todayStr(),
-    xpMomentumVersion:Math.max(1,Math.floor(Number(data.xpMomentumVersion)||1)),
-    inertiaMissedDays:Math.max(0,Math.floor(Number(data.inertiaMissedDays)||0)),
-    inertiaPercent:Math.min(5,Math.max(0,Number(data.inertiaPercent)||0)),
     prestige:Number(data.prestige)||0,
     dailyLog:cleanQuestLogByIds(data.dailyLog,dailyIds),
     weightLog:cleanWeightLog(data.weightLog),
