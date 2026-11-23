@@ -203,7 +203,7 @@ export function HistoryTab({
   function dayMarkFor(obj,day){
     if(obj.startDate&&day<obj.startDate) return {txt:"·",color:"var(--td)",opacity:.45};
     if(obj.daily&&!obj.optional&&!dailyEligibleForDay(state,day,obj.id))
-      return {notDrawn:true};
+      return {txt:"·",color:"var(--td)",opacity:.45};
     if((obj.daily&&!obj.optional&&isInjuredQuest(state,day,obj.id)) ||
        (obj.id==="run"&&isInjuredQuest(state,day,"squats")))
       return {txt:"",color:"#86efac",opacity:1,injured:true};
@@ -274,8 +274,7 @@ export function HistoryTab({
               h("span",{style:"overflow:hidden;text-overflow:ellipsis;white-space:nowrap"},displayName)
             ),
             marks.map((mark,i)=>h("div",{key:obj.id+"_d"+i,title:mark.injured?"Blessure · quête suspendue":undefined,"aria-label":mark.injured?"Blessure · quête suspendue":undefined,style:"display:flex;align-items:center;justify-content:center;min-height:22px;text-align:center;font-family:Orbitron,sans-serif;font-size:12px;font-weight:700;color:"+mark.color+";opacity:"+mark.opacity},
-              mark.injured?h("img",{src:"./assets/ui/injury-bandage.png?v=20261003-v1",alt:"",width:20,height:20,draggable:false,style:"display:block;width:19.8px;height:19.8px;object-fit:contain"}):
-              mark.notDrawn?h("span",{"aria-hidden":"true",style:"display:block;width:12px;height:12px;box-sizing:border-box;border:1.5px solid #d1d5db;border-radius:50%;flex-shrink:0"}):mark.txt
+              mark.injured?h("img",{src:"./assets/ui/injury-bandage.png?v=20261003-v1",alt:"",width:20,height:20,draggable:false,style:"display:block;width:19.8px;height:19.8px;object-fit:contain"}):mark.txt
             ))
           );
         }),
