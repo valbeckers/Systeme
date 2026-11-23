@@ -208,9 +208,9 @@ export function HistoryTab({
     const bodyFamily=bodyByQuest[obj.id];
     const rotation=(state.exerciseRotationByDay||{})[day];
     if(bodyFamily&&["back","abs","legs"].includes(rotation?.body)&&rotation.body!==bodyFamily)
-      return {txt:"⭘",color:"#a3a3a3",opacity:1};
+      return {txt:"⭘",color:"#4065e7",opacity:1};
     if(obj.daily&&!obj.optional&&!dailyEligibleForDay(state,day,obj.id))
-      return {txt:"⭘",color:"#a3a3a3",opacity:1};
+      return {txt:"⭘",color:"#4065e7",opacity:1};
     if((obj.daily&&!obj.optional&&isInjuredQuest(state,day,obj.id)) ||
        (obj.id==="run"&&isInjuredQuest(state,day,"squats")))
       return {txt:"",color:"#86efac",opacity:1,injured:true};
