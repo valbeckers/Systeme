@@ -202,7 +202,14 @@ export function HistoryTab({
   }
   function dayMarkFor(obj,day){
     if(obj.startDate&&day<obj.startDate) return {txt:"·",color:"var(--td)",opacity:.45};
+    // Une quête journalière obligatoire n'est pas prévue si elle était désactivée
+    // dans l'instantané des préférences de tirage de ce jour.
     if(obj.daily&&!obj.optional&&!dailyEligibleForDay(state,day,obj.id))
+      return {txt:"",color:"#cbd5e1",opacity:1,notScheduled:true};
+    // Les quêtes bonus ont leur propre tirage quotidien. Ne marquer comme non
+    // prévue que si un tirage est effectivement enregistré pour cette date.
+    const bonusDraw=state.selectedBonusQuestIdsByDay?.[day];
+    if(obj.daily&&obj.optional&&obj.id.startsWith("bonus_")&&Array.isArray(bonusDraw)&&!bonusDraw.includes(obj.id))
       return {txt:"",color:"#cbd5e1",opacity:1,notScheduled:true};
     if((obj.daily&&!obj.optional&&isInjuredQuest(state,day,obj.id)) ||
        (obj.id==="run"&&isInjuredQuest(state,day,"squats")))
