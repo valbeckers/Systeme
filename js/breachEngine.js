@@ -43,7 +43,7 @@ function processDailyBreachRoll(state,now=Date.now()){
   }
   if(state.breachRollDay===day)return state;
   const candidates=BREACH_POOL.filter(b=>eligiblePool(state,"breach").has(b.id));
-  if(!candidates.length||Math.random()>=0.01)return {...state,activeBreach:null,breachRollDay:day};
+  if(!candidates.length||Math.random()>=0.05)return {...state,activeBreach:null,breachRollDay:day};
   const tpl=candidates[Math.floor(Math.random()*candidates.length)];
   return {...state,activeBreach:{...tpl,breachId:"breach_"+now,progress:0,startedAt:now,expiresAt:now+72*60*60*1000,completedAt:null,ruptureBoss:null,isBreach:true},breachRollDay:day,breachTriggeredDay:day,specialQuests:(state.specialQuests||[]).filter(q=>q.completedAt||now>=(q.expiresAt||0)),sqCooldownUntil:next7AM(now),sqRerollDay:null};
 }
