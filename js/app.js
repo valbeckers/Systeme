@@ -674,6 +674,7 @@ function App(){
   const [showSet,setShowSet]       = useState(false);
   const [bonusPickerOpen,setBonusPickerOpen] = useState(false);
   const [manualDailyPickerOpen,setManualDailyPickerOpen] = useState(false);
+  const [manualDailyFamilyChoice,setManualDailyFamilyChoice] = useState(null);
   const [xpTodayOpen,setXpTodayOpen] = useState(false);
   const [weeklySummaryUp,setWeeklySummaryUp] = useState(null);
   const [confirmReset,setConfirmReset] = useState(false);
@@ -3875,62 +3876,73 @@ function isUncappedProfessionalWeeklyQuest(obj){
     {questId:"squats",family:"legs",label:"Jambes",iconKey:"squats"}
   ];
   const manualDailyIdsToday=new Set((state.manualDailyQuestIdsByDay||{})[today]||[]);
-  function toggleManualDailyFamily(item){
-    if(!MANUAL_DAILY_FAMILIES.some(f=>f.questId===item.questId))return;
-    const alreadyActive=manualDailyIdsToday.has(item.questId);
-    let pickedVariant=null;
-    if(!alreadyActive){
-      const allOptions=EXERCISE_ROTATIONS[item.family]||[];
-      const available=availableRotationOptions(allOptions);
-      const enabledIds=state.exerciseRotationEnabled&&state.exerciseRotationEnabled[item.family];
-      const enabled=Array.isArray(enabledIds)?available.filter(option=>enabledIds.includes(option.id)):available;
-      const pool=enabled.length?enabled:available;
-      if(!pool.length)return;
-      pickedVariant=pool[Math.floor(Math.random()*pool.length)];
-    }
+  function manualDailyFamilyOptions(item){
+    const allOptions=EXERCISE_ROTATIONS[item.family]||[];
+    const available=availableRotationOptions(allOptions);
+    const enabledIds=state.exerciseRotationEnabled&&state.exerciseRotationEnabled[item.family];
+    const enabled=Array.isArray(enabledIds)?available.filter(option=>enabledIds.includes(option.id)):available;
+    return enabled.length?enabled:available;
+  }
+  function activateManualDailyFamily(item,pickedVariant){
+    if(!MANUAL_DAILY_FAMILIES.some(f=>f.questId===item.questId)||!pickedVariant)return;
     setState(s=>{
       const byDay={...(s.manualDailyQuestIdsByDay||{})};
       const ids=[...(byDay[today]||[])];
       const row=(s.dailyLog||{})[today]||{};
-      if(ids.includes(item.questId)){
-        if(Number(row[item.questId])>0)return s;
-        byDay[today]=ids.filter(value=>value!==item.questId);
-      }else{
-        byDay[today]=[...ids,item.questId];
-      }
-      if(!byDay[today].length)delete byDay[today];
+      if(ids.includes(item.questId)||Number(row[item.questId])>0)return s;
+      byDay[today]=[...ids,item.questId];
       const rotationByDay={...(s.exerciseRotationByDay||{})};
-      if(pickedVariant){
-        rotationByDay[today]={...(rotationByDay[today]||{}),[item.family]:pickedVariant.id};
-      }
+      rotationByDay[today]={...(rotationByDay[today]||{}),[item.family]:pickedVariant.id};
       return {...s,manualDailyQuestIdsByDay:byDay,exerciseRotationByDay:rotationByDay,lastActiveDay:todayStr()};
     });
+    setManualDailyFamilyChoice(null);
+    setManualDailyPickerOpen(false);
   }
 
   function ManualDailyQuestPicker(){
     if(!manualDailyPickerOpen)return null;
     const body=(state.exerciseRotationByDay||{})[today]?.body;
-    const choices=MANUAL_DAILY_FAMILIES.filter(item=>item.family!==body);
-    return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget)setManualDailyPickerOpen(false)}},
+    const choices=MANUAL_DAILY_FAMILIES.filter(item=>item.family!==body&&!manualDailyIdsToday.has(item.questId));
+    const selectedFamily=MANUAL_DAILY_FAMILIES.find(item=>item.family===manualDailyFamilyChoice)||null;
+    const options=selectedFamily?manualDailyFamilyOptions(selectedFamily):[];
+    return h("div",{class:"modal-ov",onClick:e=>{if(e.target===e.currentTarget){setManualDailyFamilyChoice(null);setManualDailyPickerOpen(false)}}},
       h("div",{class:"modal",style:"max-width:440px;width:calc(100% - 24px);max-height:88vh;overflow:auto"},
         h("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px"},
-          h("div",{class:"mtitle",style:"margin:0"},"ACTIVER DES FAMILLES DE QUÊTES"),
-          h("button",{onClick:()=>setManualDailyPickerOpen(false),style:"border:0;background:transparent;color:#fff;font-size:22px"},"×")
+          h("div",{class:"mtitle",style:"margin:0"},selectedFamily?"CHOISIR UNE QUÊTE":"ACTIVER DES FAMILLES DE QUÊTES"),
+          h("button",{onClick:()=>{setManualDailyFamilyChoice(null);setManualDailyPickerOpen(false)},style:"border:0;background:transparent;color:#fff;font-size:22px"},"×")
         ),
-        h("div",{style:"font-size:10px;color:var(--td);line-height:1.5;margin-bottom:12px"},"Sélectionne une famille non tirée : Système tirera une quête au hasard dans cette famille pour aujourd’hui."),
-        choices.map(item=>{
-          const active=manualDailyIdsToday.has(item.questId);
-          const progress=Number(tLog[item.questId])||0;
-          const locked=active&&progress>0;
-          const obj=objs.find(q=>q.id===item.questId);
-          return h("button",{key:item.family,onClick:()=>toggleManualDailyFamily(item),disabled:locked,
-            style:"width:100%;display:flex;align-items:center;gap:9px;text-align:left;padding:10px;margin-bottom:7px;border-radius:9px;border:1px solid "+(active?"#4065e7":"rgba(255,255,255,.09)")+";background:"+(active?"rgba(64,101,231,.12)":"rgba(255,255,255,.025)")+";color:var(--tx);opacity:"+(locked?.8:1)+";cursor:"+(locked?"not-allowed":"pointer")},
-            QuestIcon(obj?.iconKey||item.iconKey,obj?.icon,16),
-            h("span",{style:"flex:1;min-width:0;font-size:12px;font-weight:700"},item.label),
-            h("span",{style:"color:"+(active?"#4065e7":"var(--td)")+";font-size:15px"},locked?"🔒":active?"✓":"+")
-          );
-        }),
-        h("button",{class:"mbtn mprim",style:"width:100%;margin-top:2px",onClick:()=>setManualDailyPickerOpen(false)},"Terminer")
+        selectedFamily
+          ? h("div",null,
+              h("button",{onClick:()=>setManualDailyFamilyChoice(null),style:"border:0;background:transparent;color:var(--td);font-size:11px;padding:4px 0 10px"},"← Retour aux familles"),
+              h("div",{style:"font-size:10px;color:var(--td);line-height:1.5;margin-bottom:12px"},"Choisis la quête de la famille "+selectedFamily.label+" à activer aujourd’hui."),
+              options.map(option=>{
+                const obj=rotatedQuestObjects(baseObjs,{...todayExerciseRotation,[selectedFamily.family]:option.id},state.stats,state.totalXp,ri,prestige).find(q=>q.id===selectedFamily.questId)||objs.find(q=>q.id===selectedFamily.questId);
+                const label=option.label;
+                const details=obj?((obj.target||getEffectiveTarget(obj.id))+" "+(obj.unit||"")):"";
+                return h("button",{key:option.id,onClick:()=>activateManualDailyFamily(selectedFamily,option),
+                  style:"width:100%;display:flex;align-items:center;gap:9px;text-align:left;padding:10px;margin-bottom:7px;border-radius:9px;border:1px solid rgba(64,101,231,.35);background:rgba(255,255,255,.025);color:var(--tx);cursor:pointer"},
+                  QuestIcon(option.id,option.icon,16),
+                  h("span",{style:"flex:1;min-width:0"},
+                    h("span",{style:"display:block;font-size:12px;font-weight:700"},label),
+                    details&&h("span",{style:"display:block;font-size:9px;color:var(--td);font-family:Orbitron,sans-serif;margin-top:2px"},details)
+                  ),
+                  h("span",{style:"color:#4065e7;font-size:15px"},"+")
+                );
+              })
+            )
+          : h("div",null,
+              h("div",{style:"font-size:10px;color:var(--td);line-height:1.5;margin-bottom:12px"},"Sélectionne une famille non tirée aujourd’hui, puis choisis la quête que tu souhaites réaliser."),
+              choices.length?choices.map(item=>{
+                const obj=objs.find(q=>q.id===item.questId);
+                return h("button",{key:item.family,onClick:()=>setManualDailyFamilyChoice(item.family),
+                  style:"width:100%;display:flex;align-items:center;gap:9px;text-align:left;padding:10px;margin-bottom:7px;border-radius:9px;border:1px solid rgba(64,101,231,.35);background:rgba(255,255,255,.025);color:var(--tx);cursor:pointer"},
+                  QuestIcon(obj?.iconKey||item.iconKey,obj?.icon,16),
+                  h("span",{style:"flex:1;min-width:0;font-size:12px;font-weight:700"},item.label),
+                  h("span",{style:"color:#4065e7;font-size:15px"},"›")
+                );
+              }):h("div",{style:"font-size:11px;color:var(--td);text-align:center;padding:12px 0"},"Aucune famille de quête disponible.")
+            ),
+        !selectedFamily&&h("button",{class:"mbtn mprim",style:"width:100%;margin-top:2px",onClick:()=>setManualDailyPickerOpen(false)},"Terminer")
       )
     );
   }
