@@ -95,6 +95,7 @@ export const UI_ICON_IMAGES=Object.freeze({
   "quest.crunches":"./assets/ui/quest-abs.png?v=20260809-medallions-v4",
   "quest.abs":"./assets/ui/quest-abs.png?v=20260809-medallions-v4",
   "exercise.crunches":"./assets/ui/quest-abs.png?v=20260809-medallions-v4",
+  "exercise.stomach_vacuum":"./assets/ui/quest-abs.png?v=20260809-medallions-v4",
   "quest.ex_crunches":"./assets/ui/quest-abs.png?v=20260809-medallions-v4",
   "quest.leg_raises":"./assets/ui/quest-abs.png?v=20260809-medallions-v4",
   "exercise.leg_raises":"./assets/ui/quest-abs.png?v=20260809-medallions-v4",

@@ -1,6 +1,6 @@
 import { ensureDailyBonusDraw } from "./bonusDraw.js?v=20261108-german-bonus-editable-v2";
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
-import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20261108-german-bonus-editable-v2";
+import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20261125-stomach-vacuum-abs-move-v1";
 import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261123-bonus4-v1";
 import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20261108-german-bonus-editable-v2";
 import {
@@ -89,7 +89,7 @@ import {
   NEW_ITEM_ICON_DATA,
   DEBT_ACKNOWLEDGEMENT_ICON_DATA
 } from "./itemImages.js?v=20260910-dimensional-anchor-image-v2";
-import { UiIcon } from "./uiIcons.js?v=20261031-german-icon-v1";
+import { UiIcon } from "./uiIcons.js?v=20261125-stomach-vacuum-abs-move-v1";
 import { saveStoredState } from "./storage.js";
 import { cleanSystemState, exportSystemState } from "./stateSanitizer.js?v=20261123-manual-daily-activation-v1";
 import { buildInitialState, migrateGripsToMin } from "./stateBootstrap.js?v=20261123-manual-daily-activation-v1";
@@ -102,7 +102,7 @@ import {
   ensureExerciseRotationForDay,
   availableRotationOptions,
   rotatedQuestObjects
-} from "./exerciseRotation.js?v=20261108-german-bonus-editable-v2";
+} from "./exerciseRotation.js?v=20261125-stomach-vacuum-abs-move-v1";
 import { applyQuestTuning, nextQuestTuning, questTuningForDay, saveQuestTuning } from "./questTuning.js?v=20261108-german-bonus-editable-v2";
 import { cleanQuestCatalog, activeCatalogEntry } from "./questCatalog.js?v=20261017-editor-v1";
 import { CatalogEditor } from "./catalogEditor.js?v=20261017-rank-settings-v1";
@@ -5868,7 +5868,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
       function Reward({stat,xp}){
         return h(StatPill,{stat,xp,showPlus:false});
       }
-      function Exercise({id,iconKey,icon,name,target,unit,rewards}){
+      function Exercise({id,iconKey,icon,name,target,unit,rewards,desc}){
         const entry=state.questCatalog&&state.questCatalog[id];
         const customized=entry&&entry.kind==="daily";
         const shownName=customized?(entry.name||name):name;
@@ -5884,6 +5884,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
             h(UiIcon,{iconKey:"exercise."+iconKey,fallback:icon,slotSize:18,glyphSize:14}),
             h("div",{style:"flex:1;min-width:0"},
               h("div",{style:"font-size:12px;color:var(--tx);font-weight:800"},shownName),
+              desc&&h("details",{style:"font-size:10px;color:var(--td);margin-top:5px;line-height:1.4"},h("summary",{style:"cursor:pointer;color:var(--rc)"},"Description"),h("div",{style:"margin-top:5px"},desc)),
               h("div",{style:"margin-top:5px"},rewardNodes),
               h("div",{style:"font-size:10px;color:var(--td);font-family:Orbitron,sans-serif;line-height:1.45;margin-top:4px"},"▸ Objectif : "+objective(shownTarget,shownUnit))
             )
@@ -5923,7 +5924,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
           h(Exercise,{id:"leg_raises",iconKey:"leg_raises",icon:"🦵🏻",name:"Levées de jambes",target:legRaiseTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
           h(Exercise,{id:"plank",iconKey:"plank",icon:"🫳🏼",name:"Gainage",target:plankTarget,unit:"min",rewards:[{stat:"Force",xp:"50/min"}]}),
           h(Exercise,{id:"side_plank",iconKey:"side_plank",icon:"🧎🏻‍♂️‍➡️",name:"Gainage obliques",target:sideTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
-          h(Exercise,{id:"stomach_vacuum",iconKey:"crunches",icon:"🛡️",name:"Stomach vacuum",target:25,unit:"reps",rewards:[{stat:"Force",xp:"20/rep"}]}),
+          h(Exercise,{id:"stomach_vacuum",iconKey:"stomach_vacuum",icon:"🧱",name:"Stomach vacuum",target:25,unit:"reps",rewards:[{stat:"Force",xp:"20/rep"}],desc:"Sortir le ventre → Inspirer au max → Rentrer le ventre le plus possible → Apnée 5 sec → Expirer pour faire de la buée le plus longtemps possible. Variantes possibles : assis / à 4 pattes."}),
         ),
         h("div",{style:familyStyle},
           h(FamilyTitle,{label:"JAMBES"}),
@@ -6122,7 +6123,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
     }
 
     function renderRequiredCodex(){
-      const rotatingIds=new Set(["push","negative_pullups","abs","squats","calves"]);
+      const rotatingIds=new Set(["push","negative_pullups","abs","squats","calves","stomach_vacuum"]);
       const staticRequired=objs.filter(o=>o.daily&&!o.optional&&!rotatingIds.has(o.id)).map(o=>codexCatalogQuest(o,"daily"));
       const groups=STATS.map(stat=>({stat,list:[]}));
       staticRequired.forEach(item=>{
