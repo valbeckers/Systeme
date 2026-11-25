@@ -3911,7 +3911,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
     });
     setManualDailyDraftQuestId(null);
     setManualDailyFamilyChoice(null);
-    setManualDailyPickerOpen(true);
+    setManualDailyPickerOpen(false);
   }
 
   function ManualDailyQuestPicker(){
