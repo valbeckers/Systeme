@@ -5923,6 +5923,7 @@ function isUncappedProfessionalWeeklyQuest(obj){
           h(Exercise,{id:"leg_raises",iconKey:"leg_raises",icon:"🦵🏻",name:"Levées de jambes",target:legRaiseTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
           h(Exercise,{id:"plank",iconKey:"plank",icon:"🫳🏼",name:"Gainage",target:plankTarget,unit:"min",rewards:[{stat:"Force",xp:"50/min"}]}),
           h(Exercise,{id:"side_plank",iconKey:"side_plank",icon:"🧎🏻‍♂️‍➡️",name:"Gainage obliques",target:sideTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
+          h(Exercise,{id:"stomach_vacuum",iconKey:"crunches",icon:"🛡️",name:"Stomach vacuum",target:25,unit:"reps",rewards:[{stat:"Force",xp:"20/rep"}]}),
         ),
         h("div",{style:familyStyle},
           h(FamilyTitle,{label:"JAMBES"}),
