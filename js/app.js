@@ -1,7 +1,7 @@
 import { ensureDailyBonusDraw } from "./bonusDraw.js?v=20261108-german-bonus-editable-v2";
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
 import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20261125-stomach-vacuum-abs-move-v1";
-import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261123-bonus4-v1";
+import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261125-wall-sit-daily-v1";
 import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20261108-german-bonus-editable-v2";
 import {
   isDebtEligibleQuest,
@@ -40,7 +40,7 @@ import {
   expireSuspendedDungeonState,
   canValidateDungeonRoom
 } from "./dungeonEngine.js?v=20260910-dimensional-anchor-v1";
-import { INVENTORY_ITEMS } from "./itemDefs.js?v=20261123-bonus4-v1";
+import { INVENTORY_ITEMS } from "./itemDefs.js?v=20261125-wall-sit-daily-v1";
 import {
   incrementLootState,
   pickRandomBreachLoot,
@@ -116,7 +116,7 @@ import {
   normalizeActiveBreach,
   processDailyBreachRoll,
   pickBreachRuptureBoss
-} from "./breachEngine.js?v=20261124-breach-rate-5pct-v1";
+} from "./breachEngine.js?v=20261125-wall-sit-daily-v1";
 
 const { h, render, Fragment } = window.preact;
 const { useState, useEffect, useRef } = window.preactHooks;

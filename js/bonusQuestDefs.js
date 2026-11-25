@@ -7,7 +7,6 @@ export const BONUS_QUESTS = mergeQuestCatalog([
   {id:"bonus_cold_shower",name:"Douche froide · 3min",icon:"🚿",unit:"succès",base:1,binary:true,binaryXp:150,stat:"Sante"},
 
   {id:"grips",name:"Grip",icon:"✊🏻",unit:"min",base:10,fixedBase:true,xpPer:15,stat:"Force"},
-  {id:"bonus_wall_sit",name:"Wall-sit",icon:"🧱",unit:"min",base:5,fixedBase:true,xpPer:50,stat:"Force"},
   {id:"bonus_dead_hang",name:"Dead hang",icon:"🫳🏼",unit:"min",base:5,fixedBase:true,xpPer:30,stat:"Force"},
 
   {id:"med",name:"Méditation",icon:"🧘🏻‍♂️",unit:"min",base:10,fixedBase:true,xpPer:15,stat:"Esprit"},

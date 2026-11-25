@@ -1,4 +1,4 @@
-import { statLevelTier, legRaiseTargetForForceLevel, getStatLevelTarget, pullupTargetForRank } from "./progression.js?v=20261107-muscle-draw-german-v1";
+import { statLevelTier, legRaiseTargetForForceLevel, getStatLevelTarget, pullupTargetForRank } from "./progression.js?v=20261125-wall-sit-daily-v1";
 import { applyRotationCatalog, activeCatalogEntry } from "./questCatalog.js?v=20261017-editor-v1";
 
 export const EXERCISE_ROTATIONS = {
@@ -22,6 +22,7 @@ export const EXERCISE_ROTATIONS = {
     {id:"squats",label:"Squats",icon:"🦵🏻"},
     {id:"calves",label:"Mollets",icon:"🦵🏻"},
     {id:"lunges",label:"Fentes",icon:"🦵🏻"},
+    {id:"wall_sit",label:"Wall-sit",icon:"🦿"},
   ],
 };
 export const EXERCISE_FAMILY_LABELS={push:"Pecs & Triceps",negative_pullups:"Dos & Biceps",abs:"Abdos",squats:"Jambes"};
@@ -129,6 +130,7 @@ export function rotatedQuestObjects(baseObjs,rotation,stats,totalXp,rankIdx=0,pr
       return {...obj,name:"Abdos - Gainage",icon:abs.icon,exerciseId:abs.id,exerciseIcon:abs.icon,rotationExercise:abs.label,target:Math.max(1,Math.ceil(force/10)),unit:"min",xpPer:50};
     }
     if(obj.id==="squats"){
+      if(legs.id==="wall_sit") return {...obj,name:"Jambes - Wall-sit",icon:legs.icon,exerciseId:legs.id,exerciseIcon:legs.icon,rotationExercise:legs.label,target:5,unit:"min",xpPer:100,stat:"Force",stat2:null,xpPer2:null};
       if(legs.id==="calves") return {...obj,name:"Jambes - Mollets",icon:legs.icon,exerciseId:legs.id,exerciseIcon:legs.icon,rotationExercise:legs.label,target:getStatLevelTarget("calves",stats),unit:"rep",xpPer:2,stat2:"Agilite",xpPer2:1};
       if(legs.id==="lunges") return {...obj,name:"Jambes - Fentes",icon:legs.icon,exerciseId:legs.id,exerciseIcon:legs.icon,rotationExercise:legs.label,target:getStatLevelTarget("push",stats),unit:"rep",xpPer:3,stat2:null,xpPer2:null};
       return {...obj,name:"Jambes - Squats",icon:legs.icon,exerciseId:legs.id,exerciseIcon:legs.icon,rotationExercise:legs.label,target:getStatLevelTarget("squats",stats),unit:"rep",xpPer:3,stat2:"Agilite",xpPer2:3};
