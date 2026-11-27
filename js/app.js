@@ -1,7 +1,7 @@
-import { ensureDailyBonusDraw } from "./bonusDraw.js?v=20261108-german-bonus-editable-v2";
+import { ensureDailyBonusDraw } from "./bonusDraw.js?v=20261127-wall-sit-move-v2";
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
 import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20261125-stomach-vacuum-abs-move-v1";
-import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261125-wall-sit-daily-v1";
+import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261127-wall-sit-move-v2";
 import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20261108-german-bonus-editable-v2";
 import {
   isDebtEligibleQuest,
@@ -102,9 +102,9 @@ import {
   ensureExerciseRotationForDay,
   availableRotationOptions,
   rotatedQuestObjects
-} from "./exerciseRotation.js?v=20261125-stomach-vacuum-abs-move-v1";
+} from "./exerciseRotation.js?v=20261127-wall-sit-move-v2";
 import { applyQuestTuning, nextQuestTuning, questTuningForDay, saveQuestTuning } from "./questTuning.js?v=20261108-german-bonus-editable-v2";
-import { cleanQuestCatalog, activeCatalogEntry } from "./questCatalog.js?v=20261017-editor-v1";
+import { cleanQuestCatalog, activeCatalogEntry } from "./questCatalog.js?v=20261127-wall-sit-move-v2";
 import { CatalogEditor } from "./catalogEditor.js?v=20261017-rank-settings-v1";
 import {
   questRecordUnit,

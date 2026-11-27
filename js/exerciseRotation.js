@@ -37,7 +37,8 @@ export function cleanExerciseRotationEnabled(raw){
     const selected=Array.isArray(raw?.[family])
       ? [...new Set(raw[family].filter(id=>valid.has(id)))]
       : options.map(option=>option.id);
-    enabled[family]=selected.length?selected:options.map(option=>option.id);
+    const withNewDailyOptions=family==="legs"?[...new Set([...selected,"wall_sit"].filter(id=>valid.has(id)))]:selected;
+    enabled[family]=withNewDailyOptions.length?withNewDailyOptions:options.map(option=>option.id);
   }
   return enabled;
 }

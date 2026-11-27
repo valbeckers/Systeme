@@ -68,11 +68,15 @@ function catalogObject(q){
 }
 
 export function mergeQuestCatalog(defaults,kind){
-  const out=defaults.filter(q=>!active.some(c=>c.id===q.id&&c.kind!==kind&&!(kind==="daily"&&q.optional&&c.kind==="bonus"))).map(q=>{
+  // Wall-sit est désormais une variante journalière de Jambes. Ignore les
+  // anciennes entrées bonus conservées dans les sauvegardes locales.
+  const isLegacyWallSitBonus=q=>kind==="bonus"&&q&&q.kind==="bonus"&&(q.id==="bonus_wall_sit"||q.id==="wall_sit");
+  const cleanDefaults=defaults.filter(q=>!isLegacyWallSitBonus(q));
+  const out=cleanDefaults.filter(q=>!active.some(c=>c.id===q.id&&c.kind!==kind&&!(kind==="daily"&&q.optional&&c.kind==="bonus"))).map(q=>{
     const override=active.find(c=>c.id===q.id&&c.kind===kind);
     return override?(q.legacyRotation?{...q}: {...q,...catalogObject(override)}):q;
   });
-  for(const entry of active.filter(c=>c.kind===kind&&!out.some(q=>q.id===c.id)&&!(kind==="daily"&&ROTATION_IDS.has(c.id))))out.push(catalogObject(entry));
+  for(const entry of active.filter(c=>c.kind===kind&&!isLegacyWallSitBonus(c)&&!out.some(q=>q.id===c.id)&&!(kind==="daily"&&ROTATION_IDS.has(c.id))))out.push(catalogObject(entry));
   return out;
 }
 

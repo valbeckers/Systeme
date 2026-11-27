@@ -1,10 +1,17 @@
 // Le cours d'allemand est inclus au tirage initial, mais reste modifiable ensuite.
 export function ensureDailyBonusDraw(state,day,quests,goal=5,random=Math.random){
   const drawn=state.bonusDrawDays||[];
-  const byDay=state.selectedBonusQuestIdsByDay||{};
+  const originalByDay=state.selectedBonusQuestIdsByDay||{};
+  const byDay={...originalByDay};
+  let selectionsChanged=false;
+  for(const [savedDay,ids] of Object.entries(byDay)){
+    if(!Array.isArray(ids))continue;
+    const cleaned=ids.filter(id=>id!=="bonus_wall_sit"&&id!=="wall_sit");
+    if(cleaned.length!==ids.length){byDay[savedDay]=cleaned;selectionsChanged=true;}
+  }
   let selected=byDay[day];
   if(drawn.includes(day)){
-    return state;
+    return selectionsChanged?{...state,selectedBonusQuestIdsByDay:byDay}:state;
   }
   if(!Array.isArray(selected)){
     const german=quests.find(quest=>quest.id==="bonus_german");
