@@ -1,7 +1,7 @@
-import { ensureDailyBonusDraw } from "./bonusDraw.js?v=20261127-wall-sit-move-v2";
+import { ensureDailyBonusDraw } from "./bonusDraw.js?v=20261127-wall-sit-codex-v1";
 import { RANKS, RANK_STAT_REQUIREMENTS, STATS, STAT_COLOR, STAT_LBL } from "./config.js";
 import { DEFS, SP, SQ_TIER_COLOR, SQ_TIER_LABEL } from "./questDefs.js?v=20261125-stomach-vacuum-abs-move-v1";
-import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261127-wall-sit-move-v2";
+import { BONUS_QUESTS, BONUS_QUEST_BY_ID, BONUS_QUEST_GOAL } from "./bonusQuestDefs.js?v=20261127-wall-sit-codex-v1";
 import { pickRandomSq, appendUrgentQuestDrawLog } from "./urgentQuestEngine.js?v=20261108-german-bonus-editable-v2";
 import {
   isDebtEligibleQuest,
@@ -102,9 +102,9 @@ import {
   ensureExerciseRotationForDay,
   availableRotationOptions,
   rotatedQuestObjects
-} from "./exerciseRotation.js?v=20261127-wall-sit-move-v2";
+} from "./exerciseRotation.js?v=20261127-wall-sit-codex-v1";
 import { applyQuestTuning, nextQuestTuning, questTuningForDay, saveQuestTuning } from "./questTuning.js?v=20261108-german-bonus-editable-v2";
-import { cleanQuestCatalog, activeCatalogEntry } from "./questCatalog.js?v=20261127-wall-sit-move-v2";
+import { cleanQuestCatalog, activeCatalogEntry } from "./questCatalog.js?v=20261127-wall-sit-codex-v1";
 import { CatalogEditor } from "./catalogEditor.js?v=20261017-rank-settings-v1";
 import {
   questRecordUnit,
@@ -5967,7 +5967,8 @@ function isUncappedProfessionalWeeklyQuest(obj){
           h(FamilyTitle,{label:"JAMBES"}),
           h(Exercise,{id:"squats",iconKey:"squats",icon:"🦵🏻",name:"Squats",target:squatTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"},{stat:"Agilite",xp:"3/rep"}]}),
           h(Exercise,{id:"calves",iconKey:"calves",icon:"🦵🏻",name:"Mollets",target:calvesTarget,unit:"reps",rewards:[{stat:"Force",xp:"2/rep"},{stat:"Agilite",xp:"1/rep"}]}),
-          h(Exercise,{id:"lunges",iconKey:"lunges",icon:"🦵🏻",name:"Fentes",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]})
+          h(Exercise,{id:"lunges",iconKey:"lunges",icon:"🦵🏻",name:"Fentes",target:pushTarget,unit:"reps",rewards:[{stat:"Force",xp:"3/rep"}]}),
+          h(Exercise,{id:"wall_sit",iconKey:"squats",icon:"🦵🏻",name:"Wall-sit",target:5,unit:"min",rewards:[{stat:"Force",xp:"100/min"}]})
         )
       );
     }
